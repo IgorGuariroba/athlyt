@@ -10,13 +10,17 @@ A primeira versão deve fechar o ciclo medir → planejar → executar → regis
 
 Criar o **Physique Pilot**, uma PWA mobile-first de uso pessoal que atua como um coach adaptativo para treino, alimentação e evolução corporal.
 
-Após autenticação Google restrita por allowlist, o usuário passa por uma triagem progressiva. Enquanto faltarem dados mínimos, o sistema opera em **Modo Conservador**: oferece orientações de baixo risco e não aplica estratégia energética agressiva. Quando o perfil está suficiente, o **Motor Adaptativo** cria um **Plano Ativo** composto por um **Bloco de Treino** estável e um **Cardápio Diário** prescrito.
+A interface segue quatro abas — **Início**, **Diário**, **Progresso** e **Mais** — fundindo os padrões das referências Alpha Progression e MacroFactor documentadas em `workflow-imagens-references/`; o mapa completo de fluxos e telas vive em `specs/workflow.md` e `specs/workflow/telas/`.
 
-Durante a **Sessão de Treino**, o **Copiloto de Sessão** orienta aquecimento, exercício, carga, repetições, RIR e descanso. Online, usa IA para explicações e recomendações contextualizadas; offline, o **Coach Local** aplica apenas regras determinísticas auditáveis, mantém timer e registros e sincroniza os eventos posteriormente.
+Após autenticação Google restrita por allowlist, o usuário passa por uma triagem progressiva em cascata (uma pergunta por tela), que inclui uma **Importação de Histórico** opcional: o usuário cola texto livre ou anexa arquivos texto/CSV com seu histórico anterior de treino e alimentação, a IA extrai dados estruturados e nada vira dado real sem confirmação item a item, com proveniência `importado/estimado` e consentimento por operação antes do envio ao provedor. Enquanto faltarem dados mínimos, o sistema opera em **Modo Conservador**: oferece orientações de baixo risco e não aplica estratégia energética agressiva. Quando o perfil está suficiente, o **Motor Adaptativo** cria um **Plano Ativo** composto por um **Bloco de Treino** estável e um **Cardápio Diário** prescrito.
 
-O usuário registra alimentação por busca e entrada manual, confirma o que realmente consumiu e pode solicitar uma **Troca Equivalente**. Peso, circunferências, fotos e demais medidas seguem uma **Cadência Adaptativa** com limites explícitos contra excesso de medição e reação a ruído.
+Ao fim da triagem o plano é gerado automaticamente e apresentado em uma tela de revisão — resumo do programa, bloco dia a dia com justificativa por exercício e estratégia nutricional — onde o usuário pode substituir exercícios antes de ativar.
 
-Uma **Revisão Semanal** combina aderência, desempenho, tendência corporal, recuperação e utilidade das recomendações em um **Scorecard de Progresso**. Mudanças estruturais são **Experimentos de Plano** versionados, com hipótese, janela de avaliação, critérios de interrupção e rollback para o último plano estável. Cada decisão relevante gera uma **Trilha de Decisão** explicável ao usuário e um registro técnico com retenção controlada.
+Durante a **Sessão de Treino** — lista de exercícios com tabela de séries, no modelo do Alpha Progression — o **Copiloto de Sessão** orienta aquecimento, exercício, carga, repetições, RIR e descanso, e cada exercício oferece **Mídia de Execução** (animação/vídeo de banco licenciado hospedado em storage privado, com fallback de instruções em texto e músculos-alvo) para tirar dúvidas de execução. Online, usa IA para explicações e recomendações contextualizadas; offline, o **Coach Local** aplica apenas regras determinísticas auditáveis, mantém timer e registros e sincroniza os eventos posteriormente.
+
+A alimentação vive na linha do tempo do **Diário**, no padrão MacroFactor com uma camada de planejado vs confirmado: as refeições do Cardápio Diário aparecem como **Entradas Planejadas** (confirmar em um toque, editar ou solicitar **Troca Equivalente**), e qualquer consumo fora do plano entra pelos **Atalhos de Registro** — busca, entrada manual, favoritos/recorrentes, descrição por texto via IA, foto via IA e leitura de código de barras — sempre com confirmação item a item de estimativas e montagem múltipla pelo **Prato**. Peso, circunferências, fotos e prontidão (energia, sono, fadiga, dores, motivação) são agrupados em um **Check-in Diário** único solicitado pela **Cadência Adaptativa**, com limites explícitos contra excesso de medição e reação a ruído.
+
+Uma **Revisão Semanal** — evento guiado de três a cinco telas, anunciado por contagem regressiva na aba Progresso — combina aderência, desempenho, tendência corporal, recuperação e utilidade das recomendações em um **Scorecard de Progresso**. Ajustes pequenos dentro de limites versionados são auto-aplicados (com desfazer); mudanças estruturais são **Experimentos de Plano** versionados, com hipótese, janela de avaliação, critérios de interrupção e rollback para o último plano estável. Cada decisão relevante gera uma **Trilha de Decisão** explicável ao usuário e um registro técnico com retenção controlada.
 
 A segurança usa dois níveis. Um **Alerta de Cautela** permite override explícito e registrado. Um **Bloqueio de Alto Risco** interrompe recomendações de treino ou alimentação, não permite override e apresenta somente orientação para interromper a atividade e procurar atendimento adequado. O produto não diagnostica, não substitui profissionais de saúde e não prescreve drogas, hormônios, SARMs, diuréticos, doses tóxicas ou desidratação extrema.
 
@@ -30,6 +34,10 @@ A segurança usa dois níveis. Um **Alerta de Cautela** permite override explíc
 6. Como usuário, quero saber quais informações ainda faltam e como elas afetam a personalização, para decidir o que preencher em seguida.
 7. Como usuário, quero informar idade, sexo biológico relevante aos cálculos, altura e peso, para receber estimativas contextualizadas.
 8. Como usuário, quero registrar experiência de treino, disponibilidade semanal e duração possível das sessões, para receber um plano executável.
+8a. Como usuário, quero importar meu histórico anterior de treino e alimentação em texto livre ou arquivos texto/CSV, para que o plano inicial aproveite minha experiência real.
+8b. Como usuário, quero revisar e confirmar item a item o que a IA interpretou do meu histórico, para que nenhuma estimativa vire dado real sem meu aceite.
+8c. Como usuário, quero consentir explicitamente antes que meu histórico seja enviado ao provedor de IA, para controlar a exposição de dados sensíveis.
+8d. Como usuário, quero acessar a Importação de Histórico depois do onboarding, para completá-la quando tiver os dados em mãos.
 9. Como usuário, quero registrar academia, equipamentos disponíveis e limitações logísticas, para não receber exercícios inviáveis.
 10. Como usuário, quero registrar lesões, condições de saúde, medicamentos, desconfortos e contraindicações conhecidas, para que o plano respeite riscos informados.
 11. Como usuário, quero registrar preferências, alergias, intolerâncias, restrições alimentares, orçamento e tempo de preparo, para receber um cardápio praticável.
@@ -49,6 +57,8 @@ A segurança usa dois níveis. Um **Alerta de Cautela** permite override explíc
 25. Como usuário, quero abrir o treino do dia em poucos toques, para iniciar a sessão sem navegar por dashboards.
 26. Como usuário treinando com uma mão, quero botões grandes e uma ação principal por tela, para registrar séries com baixo atrito.
 27. Como usuário, quero ver a próxima série, meta de repetições, carga sugerida, RIR e descanso, para executar o plano corretamente.
+27a. Como usuário com dúvida na execução, quero abrir animação/vídeo, instruções e músculos-alvo do exercício, inclusive offline, para executar com técnica correta.
+27b. Como usuário, quero revisar o plano gerado antes de ativá-lo e substituir exercícios pontualmente, para começar com um bloco que confio.
 28. Como usuário, quero registrar carga, repetições concluídas e RIR de cada série, para alimentar os ajustes de desempenho.
 29. Como usuário, quero registrar dor, desconforto, falha técnica e motivo de interrupção, para impedir que desempenho ruim seja interpretado incorretamente.
 30. Como usuário, quero iniciar e receber alertas do timer de descanso, para manter a sessão consistente.
@@ -71,6 +81,11 @@ A segurança usa dois níveis. Um **Alerta de Cautela** permite override explíc
 47. Como usuário, quero buscar alimentos em uma base nutricional auditável, para registrar consumo com proveniência conhecida.
 48. Como usuário, quero registrar manualmente alimento, quantidade e unidade quando a busca não bastar, para não deixar refeições incompletas.
 49. Como usuário, quero salvar alimentos e refeições recorrentes, para reduzir o atrito diário.
+49a. Como usuário, quero descrever em texto livre o que comi e receber uma estimativa estruturada da IA, para registrar refeições sem procurar item por item.
+49b. Como usuário, quero fotografar meu prato e receber uma estimativa multimodal de itens e porções, para registrar com mínimo atrito.
+49c. Como usuário, quero ler o código de barras de um produto embalado, para registrá-lo com dados da base e proveniência conhecida.
+49d. Como usuário, quero montar vários alimentos em um Prato com subtotal de calorias e macros, para registrar uma refeição inteira de uma vez.
+49e. Como usuário, quero ver as refeições prescritas como Entradas Planejadas na linha do tempo do dia, para confirmar, editar ou trocar cada uma no contexto do meu dia.
 50. Como usuário, quero confirmar, editar ou rejeitar uma estimativa alimentar antes que ela seja tratada como consumo real, para evitar dados falsos.
 51. Como usuário, quero marcar uma refeição como consumida conforme planejada, para registrar aderência rapidamente.
 52. Como usuário, quero registrar desvios sem linguagem punitiva ou moralizante, para manter honestidade e aderência.
@@ -141,6 +156,9 @@ A segurança usa dois níveis. Um **Alerta de Cautela** permite override explíc
 117. Como usuário, quero avaliar se uma recomendação foi útil, para incluir qualidade percebida no Scorecard de Progresso.
 118. Como usuário, quero visualizar o estado atual do ciclo — medir, planejar, executar, registrar, revisar ou ajustar — para saber a próxima ação útil.
 119. Como usuário, quero que o dashboard priorize o treino, a próxima refeição e medições pendentes, para agir sem interpretar muitos gráficos.
+119a. Como usuário, quero personalizar a ordem e a visibilidade dos cartões do Início, para adaptar o dashboard à minha rotina.
+119b. Como usuário, quero registrar prontidão, peso e demais medições em um Check-in Diário único e rápido, para manter o ritual sem atrito.
+119c. Como usuário, quero que ajustes pequenos da Revisão Semanal sejam auto-aplicados dentro de limites versionados e com opção de desfazer, para não ser interrompido por aprovações triviais.
 120. Como usuário, quero que a interface seja acessível, responsiva e utilizável no celular, para operar o app na academia e na cozinha.
 
 ## Implementation Decisions
@@ -155,6 +173,19 @@ A segurança usa dois níveis. Um **Alerta de Cautela** permite override explíc
 - O Vercel AI SDK abstrairá a conexão com modelos. Modelos serão substituíveis e sua identidade/versão será registrada por decisão.
 - Tavily será o provedor de pesquisa futura. No MVP, protocolos e fontes serão curados/versionados; pesquisa dinâmica em tempo real fica fora do escopo.
 - O domínio será organizado em módulos coesos: Identidade e Acesso; Perfil e Triagem; Planejamento de Treino; Execução da Sessão; Nutrição; Medições e Evolução; Recuperação; Motor Adaptativo; Segurança; Evidências; Auditoria; Sincronização.
+- A navegação de topo terá quatro abas — Início, Diário, Progresso e Mais — conforme o mapa de fluxos em `specs/workflow.md`; as telas numeradas em `specs/workflow/telas/` são a referência de UI, ancoradas nas capturas de `workflow-imagens-references/`.
+- O Início será um dashboard de cartões em ordem de prioridade (estado do ciclo, treino do dia, Check-in Diário, próxima refeição, macros do dia, contagem até a Revisão Semanal, cartões condicionais), com ordem e visibilidade personalizáveis pelo usuário.
+- O onboarding será uma cascata longa de uma pergunta por tela com barra de progresso; abandono no meio deixa o app utilizável em Modo Conservador com cartão de completar perfil.
+- A Importação de Histórico aceitará texto livre e arquivos texto/CSV, será interpretada por IA com resumo estruturado e confiança por item, exigirá confirmação item a item, marcará dados aceitos com proveniência `importado/estimado` (confiança inferior a dados medidos no app) e exigirá consentimento por operação antes do envio. Ficará disponível na triagem e depois em Mais.
+- O Plano Ativo nascerá automaticamente ao fim da triagem e passará por uma tela de revisão (resumo do programa, dia a dia com justificativa por exercício, estratégia nutricional) com substituições pontuais pré-ativação registradas na Trilha de Decisão; não haverá wizard manual de criação de plano.
+- A Sessão de Treino usará o modelo lista: treino do dia em lista de exercícios, tabela de séries por exercício (carga, repetições, RIR), timer de descanso em overlay e notificação, resumo final com recordes.
+- Cada exercício terá Mídia de Execução de banco aberto/licenciado hospedada no storage privado do produto (disponível offline), com fallback de instruções em texto e diagrama de músculos-alvo quando faltar mídia.
+- O Diário será uma linha do tempo diária unificada (refeições, sessões, check-ins, medições): Entradas Planejadas do Cardápio Diário em estado planejado com ações confirmar/editar/trocar; consumo fora do plano pelos Atalhos de Registro; Prato para montagem múltipla com subtotal; painel de macros consumido vs restante no topo.
+- Os Atalhos de Registro incluirão busca, entrada manual, favoritos/recorrentes, descrição por texto via IA, foto via IA (multimodal, com consentimento por operação) e scanner de código de barras; a ordem dos atalhos será personalizável.
+- As medições serão agrupadas em um Check-in Diário único decidido pela Cadência Adaptativa: prontidão sempre, peso quando solicitado, circunferências e fotos nos dias devidos; aparecerá como cartão no Início e Entrada Planejada no Diário; registro avulso continua possível.
+- A Revisão Semanal será um fluxo guiado de três a cinco telas (planejado vs realizado → Scorecard → evidências → proposta); ajustes pequenos dentro de limites versionados serão auto-aplicados com opção de desfazer; mudanças estruturais e Experimentos de Plano exigirão aprovação explícita.
+- A aba Progresso terá um cartão de estratégia no topo (Plano Ativo, contagem regressiva até a Revisão, Experimento em andamento) sobre gráficos configuráveis (força por exercício-chave, tendência de peso por média móvel, circunferências, fotos lado a lado, volume semanal por músculo).
+- A IA conversacional será contextual e embutida — botões de coach na Sessão, no Diário, na Revisão e em cada recomendação (“por quê?” → Trilha de Decisão) — sem superfície de chat global.
 - O **Plano Ativo** referencia uma versão imutável do Bloco de Treino, estratégia nutricional e regras de cadência. Novas decisões criam versões, não sobrescrevem o passado.
 - O **Modo Conservador** será um estado explícito derivado da suficiência e qualidade dos dados. Ele não criará déficit/superávit agressivo nem progressões avançadas.
 - O Bloco de Treino permanecerá estável por quatro a oito semanas, salvo segurança, equipamento, desconforto ou contraindicação.
@@ -190,7 +221,7 @@ A segurança usa dois níveis. Um **Alerta de Cautela** permite override explíc
 - Horários serão persistidos em UTC com fuso do usuário para apresentação e definição do “dia” alimentar/treino.
 - Dados de identidade serão logicamente separados de saúde e fotos. Logs e analytics não receberão conteúdo sensível em texto aberto.
 - O produto exibirá claramente que é um coach adaptativo, não médico, nutricionista ou serviço de emergência.
-- O MVP terá busca/manual para alimentação. Foto alimentar, código de barras e reconhecimento multimodal avançado serão incrementos posteriores.
+- O MVP terá entrada alimentar completa: busca na base nutricional, entrada manual, alimentos/refeições salvos, descrição de refeição por texto interpretada por IA, foto de refeição interpretada por IA multimodal e leitura de código de barras. Toda estimativa gerada por IA ou por base externa exigirá confirmação item a item antes de virar consumo real e será marcada com proveniência e confiança apropriadas.
 - Open Wearables será uma integração self-hosted futura. Sua interface deverá normalizar sinais, preservar fonte/qualidade e degradar com confirmação humana quando incompleta.
 
 ## Testing Decisions
@@ -205,6 +236,10 @@ A segurança usa dois níveis. Um **Alerta de Cautela** permite override explíc
 - O comportamento offline será testado desligando a rede durante a sessão, verificando continuidade local, indicação de degradação, fila idempotente e reconciliação sem duplicação.
 - Conflitos de sincronização serão testados pela resposta pública: resolução segura quando possível e solicitação humana quando ambígua.
 - Nutrição será testada com cardápio, confirmação de consumo, desvio, Troca Equivalente e recálculo do restante do dia dentro das tolerâncias declaradas.
+- Os métodos de entrada por IA (texto e foto) e o scanner serão testados na costura da jornada com provedores falsos por contrato: o teste verifica o funil estimativa → confirmação item a item → Consumo Confirmado com proveniência/confiança, e a degradação segura em falha do provedor; a acurácia dos modelos reais não é alegada pelos testes do app.
+- A Importação de Histórico será testada pelo funil observável: consentimento antes do envio, interpretação com estimativas marcadas, confirmação item a item, proveniência `importado/estimado` nos dados aceitos e descarte limpo dos rejeitados.
+- A Mídia de Execução será testada pelo comportamento observável: exercício com mídia exibe demonstração inclusive offline; exercício sem mídia exibe o fallback de instruções e músculos-alvo.
+- Os Ajustes Auto-aplicados da Revisão Semanal serão testados nos dois lados da fronteira: ajuste dentro dos limites versionados aplica sem aprovação e permite desfazer; mudança estrutural nunca auto-aplica e exige aprovação explícita.
 - Proveniência nutricional será testada observando fonte/confiança e a escolha ponderada diante de valores conflitantes.
 - Cadência Adaptativa será testada com passagem de tempo e histórico variável, garantindo os limites máximos e a redução por ansiedade.
 - Tendências serão testadas com séries contendo flutuações diárias, garantindo que uma medição isolada não gere mudança estrutural.
@@ -238,7 +273,7 @@ A segurança usa dois níveis. Um **Alerta de Cautela** permite override explíc
 - Percentual de gordura apresentado como valor exato derivado de fotografia.
 - Open Wearables e integração efetiva com wearables no MVP; apenas a fronteira arquitetural será preservada.
 - Pesquisa web dinâmica via Tavily influenciando decisões em produção no MVP.
-- Foto de refeição, reconhecimento visual de porções, leitura de código de barras e importação ampla de receitas no MVP.
+- Importação ampla de receitas de fontes externas no MVP.
 - Modelo generativo executado no dispositivo; o modo offline usa regras locais determinísticas.
 - Microfone continuamente ativo ou gravação ambiental da academia.
 - Aplicativos nativos para iOS/Android ou acesso direto a HealthKit/Health Connect.
@@ -249,7 +284,7 @@ A segurança usa dois níveis. Um **Alerta de Cautela** permite override explíc
 
 ## Further Notes
 
-- Termos canônicos iniciais do domínio: **Modo Conservador**, **Plano Ativo**, **Bloco de Treino**, **Sessão de Treino**, **Copiloto de Sessão**, **Coach Local**, **Cardápio Diário**, **Troca Equivalente**, **Cadência Adaptativa**, **Revisão Semanal**, **Scorecard de Progresso**, **Experimento de Plano**, **Plano Estável**, **Trilha de Decisão**, **Alerta de Cautela** e **Bloqueio de Alto Risco**. O futuro glossário deve preservar esses nomes ou registrar explicitamente sua substituição.
+- Termos canônicos do domínio: **Modo Conservador**, **Plano Ativo**, **Bloco de Treino**, **Sessão de Treino**, **Copiloto de Sessão**, **Coach Local**, **Cardápio Diário**, **Troca Equivalente**, **Cadência Adaptativa**, **Revisão Semanal**, **Scorecard de Progresso**, **Experimento de Plano**, **Plano Estável**, **Trilha de Decisão**, **Alerta de Cautela**, **Bloqueio de Alto Risco**, **Início**, **Diário**, **Progresso**, **Mais**, **Entrada Planejada**, **Consumo Confirmado**, **Prato**, **Atalhos de Registro**, **Check-in Diário**, **Importação de Histórico**, **Mídia de Execução** e **Ajuste Auto-aplicado**. O glossário em `CONTEXT.md` é a referência; substituições devem ser registradas lá.
 - “Maior velocidade dentro de limites seguros” significa acelerar somente enquanto aderência, recuperação, desempenho e tendência corporal permanecem aceitáveis. Não significa minimizar prazo a qualquer custo.
 - O alvo Men's Physique orienta proporções e construção de base, mas resultados são limitados por estrutura óssea, genética, experiência, rotina e aderência.
 - A fase de base precede a escolha de evento. O app poderá futuramente sugerir critérios de prontidão, sem prometer elegibilidade competitiva.
