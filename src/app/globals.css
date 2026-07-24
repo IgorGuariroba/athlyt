@@ -1,0 +1,140 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+/*
+ ---break---
+ */
+@custom-variant dark (&:is(.dark *));
+
+/*
+ * Tokens derivados de DESIGN.md (MacroFactor Visual System).
+ * O produto é dark-first por decisão de produto ("o preto é estrutural,
+ * não apenas modo escuro") — não há alternância por prefers-color-scheme
+ * nem tema claro nesta fase.
+ */
+:root {
+  --background: #111111;
+  --surface: #171717;
+  --surface-container: #1d1d1d;
+  --surface-container-high: #242424;
+  --on-surface: #f2f2f2;
+  --on-surface-strong: #ffffff;
+  --muted-color: #808080;
+  --border-color: #343434;
+  --border-strong: #565656;
+  --inverse-surface: #ffffff;
+  --inverse-on-surface: #111111;
+  --success: #66b98a;
+  --warning: #f3d765;
+  --error: #d75a5a;
+  --info: #5878f3;
+  --nutrition-protein: #f58a5b;
+  --nutrition-fat: #f3d765;
+  --nutrition-carbs: #66b98a;
+  --nutrition-calories: #5878f3;
+  --data-violet: #8b5cf6;
+  --radius: 0.375rem;
+
+  --card: var(--surface-container);
+  --card-foreground: var(--on-surface);
+  --popover: var(--surface-container-high);
+  --popover-foreground: var(--on-surface);
+  --primary: var(--inverse-surface);
+  --primary-foreground: var(--inverse-on-surface);
+  --secondary: var(--surface-container-high);
+  --secondary-foreground: var(--on-surface);
+  --muted: var(--surface-container);
+  --muted-foreground: var(--muted-color);
+  --accent: var(--surface-container-high);
+  --accent-foreground: var(--on-surface);
+  --destructive: var(--error);
+  --border: var(--border-color);
+  --input: var(--border-color);
+  --ring: var(--border-strong);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--on-surface);
+  --color-surface: var(--surface);
+  --color-surface-container: var(--surface-container);
+  --color-surface-container-high: var(--surface-container-high);
+  --color-on-surface: var(--on-surface);
+  --color-on-surface-strong: var(--on-surface-strong);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-error: var(--error);
+  --color-info: var(--info);
+  --color-nutrition-protein: var(--nutrition-protein);
+  --color-nutrition-fat: var(--nutrition-fat);
+  --color-nutrition-carbs: var(--nutrition-carbs);
+  --color-nutrition-calories: var(--nutrition-calories);
+  --color-data-violet: var(--data-violet);
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 6px);
+  --radius-2xl: calc(var(--radius) + 10px);
+  --radius-pill: 999px;
+
+  --font-sans: var(--font-dm-sans), system-ui, -apple-system, BlinkMacSystemFont,
+    sans-serif;
+
+  /* Escala tipográfica de DESIGN.md > Typography > Hierarquia */
+  --text-display: 40px;
+  --text-display--line-height: 44px;
+  --text-display--font-weight: 700;
+  --text-headline-lg: 28px;
+  --text-headline-lg--line-height: 32px;
+  --text-headline-lg--font-weight: 700;
+  --text-headline-md: 22px;
+  --text-headline-md--line-height: 28px;
+  --text-headline-md--font-weight: 700;
+  --text-title: 18px;
+  --text-title--line-height: 24px;
+  --text-title--font-weight: 700;
+  --text-body-lg: 16px;
+  --text-body-lg--line-height: 24px;
+  --text-body-md: 14px;
+  --text-body-md--line-height: 20px;
+  --text-body-sm: 12px;
+  --text-body-sm--line-height: 16px;
+  --text-label-lg: 14px;
+  --text-label-lg--line-height: 20px;
+  --text-label-lg--font-weight: 600;
+  --text-label-md: 12px;
+  --text-label-md--line-height: 16px;
+  --text-label-md--font-weight: 600;
+  --text-caption: 10px;
+  --text-caption--line-height: 14px;
+  --text-caption--font-weight: 500;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+  }
+}
