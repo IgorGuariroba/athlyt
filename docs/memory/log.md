@@ -1,0 +1,1 @@
+# Histórico da memória
