@@ -31,18 +31,29 @@ const MODELOS_PRODUCAO: Record<OperacaoIA, string> = {
 };
 
 /**
- * Só entram aqui modelos `:free` com suporte a structured outputs e
- * tool calling — sem isso o `Output.object` do executor falha e o
- * teste local não exercita o caminho de produção.
+ * Só entram aqui modelos `:free` que declaram `structured_outputs` e
+ * `tools` em `supported_parameters` — sem isso o `Output.object` do
+ * executor falha e o teste local deixa de exercitar o caminho de
+ * produção. Em julho/2026 apenas quatro `:free` cumprem o requisito,
+ * e só o Gemma 4 26B soma visão, exigida por `refeicao-foto`.
+ *
+ * Declarar o parâmetro não basta: `openai/gpt-oss-20b:free` anuncia
+ * `structured_outputs` mas devolveu prosa em 3 de 3 tentativas, e por
+ * isso ficou de fora. Os três abaixo acertaram 3 de 3.
+ *
+ * O catálogo gratuito rotaciona sem aviso; quando um slug sair do ar,
+ * `npm run ia:verificar` falha e a lista se refaz com:
+ *   curl -s https://openrouter.ai/api/v1/models \
+ *     -H "Authorization: Bearer $OPENROUTER_API_KEY"
  */
 const MODELOS_DESENVOLVIMENTO: Record<OperacaoIA, string> = {
-  "copiloto-sessao": "google/gemini-2.0-flash-exp:free",
-  "revisao-semanal": "google/gemini-2.0-flash-exp:free",
-  "plano-inicial": "google/gemini-2.0-flash-exp:free",
-  "refeicao-texto": "google/gemini-2.0-flash-exp:free",
-  // Precisa de visão: manter um modelo multimodal mesmo em dev.
-  "refeicao-foto": "google/gemini-2.0-flash-exp:free",
-  "importacao-historico": "google/gemini-2.0-flash-exp:free",
+  "copiloto-sessao": "nvidia/nemotron-nano-9b-v2:free",
+  "revisao-semanal": "nvidia/nemotron-3-super-120b-a12b:free",
+  "plano-inicial": "nvidia/nemotron-3-super-120b-a12b:free",
+  "refeicao-texto": "nvidia/nemotron-nano-9b-v2:free",
+  // Único `:free` com structured outputs e entrada de imagem.
+  "refeicao-foto": "google/gemma-4-26b-a4b-it:free",
+  "importacao-historico": "nvidia/nemotron-3-super-120b-a12b:free",
 };
 
 /**
@@ -88,6 +99,12 @@ export function openrouter() {
       name: "openrouter",
       baseURL: exigirEnv("OPENROUTER_BASE_URL"),
       apiKey: exigirEnv("OPENROUTER_API_KEY"),
+      // Sem isto o provider assume `false`, descarta o `json_schema` e
+      // passa a pedir JSON por instrução no prompt. O modelo responde
+      // JSON — mas com os campos que quiser, e a validação Zod falha
+      // com "response did not match schema". O OpenRouter suporta
+      // structured outputs; quem precisa saber disso é o cliente.
+      supportsStructuredOutputs: true,
     });
   }
   return cache;
