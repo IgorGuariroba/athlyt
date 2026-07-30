@@ -21,7 +21,7 @@ A spec (`specs/mvp-vertical.md`) já fixa TypeScript + Next.js App Router (PWA),
 | Testes | Vitest para jornadas via API (fakes por contrato, relógio controlado) + Playwright para E2E mobile com vídeo | Só Playwright (lento p/ matrizes determinísticas), só Vitest (não cobre E2E real) | A spec exige os dois regimes explicitamente |
 | Estrutura do repo | Package único: módulos de domínio em `src/`, worker pg-boss como segundo entrypoint da mesma imagem Docker | Monorepo com workspaces | Time de uma pessoa, um deploy; monorepo só se surgir um segundo artefato real |
 
-Decisões com ADR próprio: offline via outbox de eventos custom (ADR 0001), fila de jobs no Postgres com pg-boss (ADR 0002) e OmniRoute self-hosted como conector de IA (ADR 0004).
+Decisões com ADR próprio: offline via outbox de eventos custom (ADR 0001), fila de jobs no Postgres com pg-boss (ADR 0002) e OpenRouter como conector de IA (ADR 0005, que substitui a ADR 0004).
 
 ## Consequências
 

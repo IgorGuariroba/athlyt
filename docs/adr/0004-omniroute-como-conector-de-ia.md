@@ -2,7 +2,7 @@
 
 ## Status
 
-Aceita — 2026-02-10
+Substituída pela ADR 0005 (OpenRouter como conector de modelos de IA) — 2026-07-30. Aceita originalmente em 2026-02-10.
 
 ## Contexto
 
