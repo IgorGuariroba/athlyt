@@ -106,3 +106,23 @@ Interrupção sem override das recomendações diante de sintomas de alto risco;
 
 **Trilha de Decisão**:
 Registro explicável de uma decisão do sistema: dados usados, qualidade, regra/cálculo ou modelo, versões, fontes, riscos e resultado.
+
+### Contexto de IA
+
+**Contexto do Atleta**:
+Projeção derivada e versionada do estado do usuário enviada ao modelo em cada decisão, composta pelo Núcleo mais um Recorte de Contexto. Não é dump do banco nem subconjunto "seguro": inclui dado sensível quando ele for pertinente à operação.
+_Avoid_: Prompt, contexto (isolado), payload
+
+**Núcleo**:
+Parte do Contexto do Atleta presente em toda chamada — objetivo, fase, Plano Ativo, Modo Conservador, restrições, lesões ativas e equipamentos — suficiente para nunca prescrever algo inviável ou inseguro.
+
+**Recorte de Contexto**:
+Conjunto versionado de campos que uma operação de IA declara usar, montado sob demanda. Sua declaração de campos é a fonte de verdade do texto de consentimento e do registro na Trilha de Decisão.
+_Avoid_: Filtro, subconjunto
+
+**Ferramenta de Leitura**:
+Consulta que o modelo invoca durante o raciocínio para obter dado fora do Recorte de Contexto (histórico de um exercício, tendência de peso), com cada chamada registrada na Trilha de Decisão.
+_Avoid_: Tool, function call
+
+**Proveniência**:
+Marcação de origem e recência de cada valor do Contexto do Atleta — `medido`, `importado` ou `estimado` — usada para ponderar confiança e alimentar o Modo Conservador.
