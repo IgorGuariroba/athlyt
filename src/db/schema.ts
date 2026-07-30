@@ -6,6 +6,7 @@ import {
   integer,
   uuid,
   jsonb,
+  boolean,
 } from "drizzle-orm/pg-core";
 import type { AdapterAccountType } from "next-auth/adapters";
 
@@ -93,4 +94,57 @@ export const profileVersions = pgTable("profile_version", {
   version: integer("version").notNull(),
   respostas: jsonb("respostas").notNull(),
   createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
+});
+
+/**
+ * Trilha de Decisão (specs/mvp-vertical.md, user stories 91–92, 116;
+ * ADR 0006). Registra, por decisão de IA, o Recorte de Contexto
+ * efetivamente enviado, as Ferramentas de Leitura consultadas e o
+ * modelo resolvido pelo provedor — não o nome lógico solicitado.
+ *
+ * `auditavel = false` marca respostas em que o provedor não
+ * identificou o modelo resolvido; a ADR 0005 exige tratá-las como
+ * não auditáveis.
+ */
+export const decisionTrails = pgTable("decision_trail", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: uuid("userId")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  operacao: text("operacao").notNull(),
+  recorteVersao: integer("recorte_versao").notNull(),
+  perfilVersao: integer("perfil_versao").notNull(),
+  modeloSolicitado: text("modelo_solicitado").notNull(),
+  modeloResolvido: text("modelo_resolvido"),
+  auditavel: boolean("auditavel").notNull(),
+  degradado: boolean("degradado").notNull(),
+  camposEnviados: jsonb("campos_enviados").notNull(),
+  camposOmitidos: jsonb("campos_omitidos").notNull(),
+  ferramentasConsultadas: jsonb("ferramentas_consultadas").notNull(),
+  resultado: jsonb("resultado"),
+  erro: text("erro"),
+  createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
+});
+
+/**
+ * Consentimento por operação (user stories 105–107). Vinculado ao id
+ * de campo declarado no Recorte de Contexto, não a categorias soltas
+ * — é o que permite derivar o texto exibido da própria declaração.
+ *
+ * `revogadoEm` preserva o histórico: revogar afeta usos futuros sem
+ * apagar decisões passadas necessárias à auditoria (user story 107).
+ */
+export const consents = pgTable("consent", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: uuid("userId")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  operacao: text("operacao").notNull(),
+  campo: text("campo").notNull(),
+  recorteVersao: integer("recorte_versao").notNull(),
+  provedor: text("provedor").notNull(),
+  concedidoEm: timestamp("concedido_em", { mode: "date" })
+    .notNull()
+    .defaultNow(),
+  revogadoEm: timestamp("revogado_em", { mode: "date" }),
 });

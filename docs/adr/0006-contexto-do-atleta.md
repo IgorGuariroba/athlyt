@@ -52,3 +52,19 @@ Introduzir o **Contexto do Atleta**: projeção derivada, versionada e auditáve
 - Risco assumido: um recorte mal desenhado piora a decisão de forma silenciosa. Mitigação é avaliar por operação com casos-teste e comparar recortes candidatos, não presumir.
 - Tool calling exige modelos que o suportem bem; a seleção no OpenRouter (ADR 0005) fica restrita a esses nas operações que dependem de ferramentas.
 - Ponto de revisita: se o custo de manter recortes superar o ganho em operações de baixo risco, admitir um recorte amplo padrão para elas — mantendo os específicos onde há dado sensível ou decisão estrutural.
+
+## Implementação
+
+O módulo vive em `src/domain/ia/`, seguindo o layout por domínio do repo:
+
+- `contexto/tipos.ts` — `Proveniencia`, `ValorContexto`, declaração de recorte.
+- `contexto/nucleo.ts` — monta o Núcleo do perfil de triagem vigente.
+- `contexto/recortes.ts` — declaração versionada de campos por operação.
+- `contexto/montagem.ts` — filtra por declaração e consentimento, renderiza com proveniência e deriva o texto de consentimento.
+- `consentimento.ts` — concessão/revogação por campo, amarrada à versão do recorte.
+- `provedor.ts` — OpenRouter, mapa de modelo por operação, `allow_fallbacks: false`.
+- `trilha.ts` — gravação da Trilha de Decisão.
+- `decidir.ts` — executor único que amarra contexto, chamada e trilha.
+- `operacoes/` — uma operação por arquivo, começando por `copiloto-sessao.ts`.
+
+O executor usa `generateText` com `Output.object` em vez de `generateObject`: no AI SDK v7 só esse caminho admite tool calling, que as Ferramentas de Leitura exigem.

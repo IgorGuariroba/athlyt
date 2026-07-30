@@ -15,6 +15,13 @@
       "when": 1784914847302,
       "tag": "0001_soft_vision",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1785440757588,
+      "tag": "0002_romantic_scorpion",
+      "breakpoints": true
     }
   ]
 }
