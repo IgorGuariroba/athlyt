@@ -30,11 +30,24 @@ jobs:
       - run: npm run lint
       - run: npm run typecheck
 
-  # Apesar do nome, a suíte não é puramente de unidade: perfil.test.ts e
-  # sessions.test.ts exercitam Drizzle contra um Postgres real, então o
-  # job precisa de banco e migrations como o E2E.
+  # Portão rápido: *.unit.test.ts não toca infraestrutura nenhuma, então
+  # este job não provisiona banco de propósito — se algum teste passar a
+  # exigir Postgres, a falha aqui é o sinal de que ele deveria ser .int.
   unidade:
     name: Testes de unidade
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+      - run: npm ci
+      - run: npm run test:unit
+
+  # *.int.test.ts exercitam Drizzle contra um Postgres real.
+  integracao:
+    name: Testes de integração
     runs-on: ubuntu-latest
     services:
       postgres:
@@ -51,7 +64,7 @@ jobs:
           --health-retries 10
     env:
       DATABASE_URL: postgres://athlyt:athlyt@localhost:5432/athlyt
-      AUTH_SECRET: ci-unit-secret
+      AUTH_SECRET: ci-int-secret
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -60,7 +73,7 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run db:migrate
-      - run: npm test
+      - run: npm run test:int
 
   build:
     name: Build de produção
@@ -82,7 +95,7 @@ jobs:
   e2e:
     name: E2E mobile
     runs-on: ubuntu-latest
-    needs: [estatica, unidade]
+    needs: [estatica, unidade, integracao]
     services:
       postgres:
         image: postgres:16
