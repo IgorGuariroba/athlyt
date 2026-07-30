@@ -1,5 +1,6 @@
 "use client";
 
+import { BookOpen, ChartLine, Ellipsis, House } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
@@ -10,10 +11,10 @@ import { cn } from "@/lib/utils";
  * navigation; specs/workflow.md > Decisões estruturais).
  */
 const ABAS = [
-  { href: "/inicio", label: "Início" },
-  { href: "/diario", label: "Diário" },
-  { href: "/progresso", label: "Progresso" },
-  { href: "/mais", label: "Mais" },
+  { href: "/inicio", label: "Início", Icone: House },
+  { href: "/diario", label: "Diário", Icone: BookOpen },
+  { href: "/progresso", label: "Progresso", Icone: ChartLine },
+  { href: "/mais", label: "Mais", Icone: Ellipsis },
 ] as const;
 
 export function BottomNav() {
@@ -36,6 +37,7 @@ export function BottomNav() {
               ativo ? "text-on-surface-strong" : "text-muted-foreground",
             )}
           >
+            <aba.Icone aria-hidden="true" className="size-5" />
             {aba.label}
           </Link>
         );
