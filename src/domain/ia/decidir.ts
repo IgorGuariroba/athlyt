@@ -8,6 +8,7 @@ import {
 } from "./contexto/montagem";
 import type { NucleoContexto } from "./contexto/nucleo";
 import type { OperacaoIA } from "./contexto/tipos";
+import { observarOperacao } from "@/observabilidade/operacao";
 import {
   modeloDe,
   NOME_PROVEDOR,
@@ -63,6 +64,19 @@ export type ResultadoDecisao<T> =
     };
 
 export async function decidir<T>(
+  entrada: EntradaDecisao<T>,
+): Promise<ResultadoDecisao<T>> {
+  return observarOperacao(
+    "ia.decisao",
+    {
+      "ia.operacao": entrada.operacao,
+      "ia.modelo": modeloDe(entrada.operacao),
+    },
+    () => decidirInternamente(entrada),
+  );
+}
+
+async function decidirInternamente<T>(
   entrada: EntradaDecisao<T>,
 ): Promise<ResultadoDecisao<T>> {
   const contexto = montarContexto({
