@@ -10,7 +10,10 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  NODE_VERSION: "24"
+  # Versão exata, não a faixa "24": o npm que acompanha cada patch do
+  # Node resolve o lockfile de forma um pouco diferente, e uma faixa
+  # deixa `npm ci` quebrar sozinho quando o runner atualiza.
+  NODE_VERSION: "24.18.0"
 
 jobs:
   # Portão barato: erros de estilo/tipo param a esteira em ~1 min.
