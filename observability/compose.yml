@@ -1,0 +1,14 @@
+services:
+  lgtm:
+    image: grafana/otel-lgtm:0.11.10
+    container_name: athlyt-observability
+    ports:
+      - "3001:3000" # Grafana
+      - "4317:4317" # OTLP gRPC
+      - "4318:4318" # OTLP HTTP
+    volumes:
+      - athlyt-observability-data:/data
+    restart: unless-stopped
+
+volumes:
+  athlyt-observability-data:
