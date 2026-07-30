@@ -18,8 +18,9 @@ O app conecta-se ao OpenRouter via `@ai-sdk/openai-compatible`, configurado por 
 
 O que muda em relação à ADR 0004:
 
+- **Dois catálogos de modelo, um por ambiente.** `IA_AMBIENTE=desenvolvimento` usa variantes `:free`; `producao` usa os modelos pagos. O código exercitado é idêntico nos dois — muda só o slug —, de forma que validar localmente passe pelo caminho real de rede, roteamento e parsing sem consumir crédito. Foi por isso que se descartou usar a assinatura ChatGPT via Codex em dev: o Codex expõe o loop de um agente de codificação (`app-server`/`mcp-server`), não um endpoint de modelo com saída estruturada, e a própria documentação da OpenAI direciona uso programático para API key. Modelos `:free` são fortemente limitados por taxa e podem sair do catálogo sem aviso — servem para validar integração, nunca para julgar qualidade de resposta.
 - **O mapa de nomes lógicos volta para o app.** O OmniRoute oferecia um dashboard que traduzia `refeicao-foto` → provedor+modelo concreto. O OpenRouter não tem essa camada, então o mapeamento vira código versionado em `src/lib/ia/`. Isso é uma troca aceitável: perde-se trocar modelo sem deploy, ganha-se o mapeamento sob revisão de código e no histórico do git.
-- **Roteamento fixo, sem fallback silencioso.** Toda chamada envia `provider: { allow_fallbacks: false }` e ordem de provedor explícita. Sem isso, o OpenRouter pode servir a requisição por um provedor diferente do consentido, o que quebraria o requisito de consentimento da spec. Fallback automático é proibido nas operações que enviam dado sensível.
+- **Roteamento fixo, sem fallback silencioso.** Toda chamada envia `provider: { allow_fallbacks: false, require_parameters: true }`. Sem `allow_fallbacks: false`, o OpenRouter pode servir a requisição por um provedor diferente do consentido, o que quebraria o requisito de consentimento da spec. `require_parameters: true` restringe o roteamento a endpoints que suportam os parâmetros enviados: o mesmo modelo é servido por vários provedores e nem todos honram `response_format`, de modo que sem ele uma requisição com JSON Schema pode cair num endpoint que devolve texto livre.
 - **O consentimento cita a cadeia inteira.** O texto por operação informa OpenRouter como intermediário *e* o provedor final. Omitir o intermediário tornaria o consentimento falso.
 
 O que permanece inalterado da ADR 0004:
@@ -34,5 +35,6 @@ O que permanece inalterado da ADR 0004:
 - Existe um terceiro a mais na cadeia de dados sensíveis. Mitigado por roteamento fixo e consentimento explícito, mas é uma perda genuína de privacidade em relação à decisão anterior, aceita conscientemente pelo perfil single-user.
 - Trocar de modelo agora exige deploy, não mais configuração em dashboard.
 - Custo vira pós-pago por token no OpenRouter, com créditos e teto de gasto configuráveis na conta — em vez do custo fixo de rodar um serviço.
+- Como os mocks não provam que `providerOptions` chega intacto ao gateway, `scripts/verificar-ia.ts` (`npm run ia:verificar`) faz uma chamada real e falha se o modelo resolvido divergir do solicitado ou se a resposta não identificar o modelo. É a única evidência de que o roteamento fixo funciona de fato.
 - Custo de saída continua baixo: qualquer endpoint OpenAI-compatível (inclusive voltar ao OmniRoute) é uma troca de base URL.
 - Ponto de revisita: se o app deixar de ser single-user, o argumento de privacidade da ADR 0004 volta a valer e esta decisão deve ser reavaliada.
