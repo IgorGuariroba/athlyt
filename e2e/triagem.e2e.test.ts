@@ -37,11 +37,18 @@ test.describe("Triagem em cascata", () => {
     await page.getByRole("button", { name: "Continuar" }).click();
 
     await expect(page).toHaveURL("/triagem/peso");
-    await page.getByLabel("Peso (kg)").fill("82");
+    const seletorPeso = page.getByRole("slider", {
+      name: "Peso em quilogramas",
+    });
+    await seletorPeso.focus();
+    for (let incremento = 0; incremento < 70; incremento += 1) {
+      await seletorPeso.press("ArrowRight");
+    }
+    await expect(seletorPeso).toHaveAttribute("aria-valuenow", "82");
     await page.getByRole("button", { name: "Continuar" }).click();
 
     await expect(page).toHaveURL("/triagem/objetivo");
-    await page.getByLabel("Confirmo este objetivo").click();
+    await page.getByRole("checkbox").click();
     await page.getByRole("button", { name: "Continuar" }).click();
 
     await expect(page).toHaveURL("/triagem/experiencia");
