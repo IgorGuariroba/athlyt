@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+# Paliativo local enquanto o repositório não tem branch protection
+# (privado em plano Free — rulesets exigem GitHub Pro/Team).
+#
+# Não substitui proteção no servidor: qualquer clone sem
+# core.hooksPath configurado ignora este arquivo.
+#
+# Ative com: git config core.hooksPath .githooks
+set -euo pipefail
+
+BRANCH_PROTEGIDA="refs/heads/main"
+
+while read -r _local_ref local_sha remote_ref _remote_sha; do
+  [ "$remote_ref" = "$BRANCH_PROTEGIDA" ] || continue
+
+  # Deleção de branch
+  if [ "$local_sha" = "0000000000000000000000000000000000000000" ]; then
+    echo "pre-push: recusado — deleção da main." >&2
+    exit 1
+  fi
+
+  echo "pre-push: push direto para main detectado."
+  echo "pre-push: o fluxo esperado é pull request com CI verde."
+  echo "pre-push: rodando os portões rápidos localmente..."
+
+  npm run lint
+  npm run typecheck
+  npm test
+
+  echo "pre-push: portões locais OK (build e E2E NÃO foram executados)."
+done
