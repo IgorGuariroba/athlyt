@@ -52,7 +52,7 @@ refaça essa varredura antes de qualquer mudança de visibilidade.
 O ruleset `main protegida` (id 20077396) está **ativo** e sem bypass actors —
 nem o dono da conta escapa. Verificado empiricamente: um push direto na `main`
 é recusado com `Changes must be made through a pull request` +
-`5 of 5 required status checks are expected`.
+`6 of 6 required status checks are expected`.
 
 Regras em vigor:
 
@@ -71,7 +71,7 @@ git switch -c minha-mudanca
 # ... commits ...
 git push -u origin minha-mudanca
 gh pr create --fill
-gh pr merge --squash   # só passa com os 5 checks verdes
+gh pr merge --squash   # só passa com os 6 checks verdes
 ```
 
 O hook local `.githooks/pre-push` (ative com `git config core.hooksPath .githooks`)

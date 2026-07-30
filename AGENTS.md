@@ -12,7 +12,7 @@ O projeto usa os cinco rótulos canônicos: `needs-triage`, `needs-info`, `ready
 
 ### CI e proteção da main
 
-A esteira de CI vive em `.github/workflows/ci.yml` e a `main` é protegida por ruleset: toda mudança entra por pull request com os cinco checks verdes e o branch atualizado. Consulte `docs/agents/ci.md`.
+A esteira de CI vive em `.github/workflows/ci.yml` e a `main` é protegida por ruleset: toda mudança entra por pull request com os seis checks verdes e o branch atualizado. Testes são separados por sufixo (`*.unit`, `*.int`, `*.e2e`). Consulte `docs/agents/ci.md`.
 
 ### Domain docs
 
