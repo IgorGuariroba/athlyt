@@ -30,9 +30,28 @@ jobs:
       - run: npm run lint
       - run: npm run typecheck
 
+  # Apesar do nome, a suíte não é puramente de unidade: perfil.test.ts e
+  # sessions.test.ts exercitam Drizzle contra um Postgres real, então o
+  # job precisa de banco e migrations como o E2E.
   unidade:
     name: Testes de unidade
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: athlyt
+          POSTGRES_PASSWORD: athlyt
+          POSTGRES_DB: athlyt
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgres://athlyt:athlyt@localhost:5432/athlyt
+      AUTH_SECRET: ci-unit-secret
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -40,6 +59,7 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: npm
       - run: npm ci
+      - run: npm run db:migrate
       - run: npm test
 
   build:
