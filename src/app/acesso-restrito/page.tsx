@@ -25,10 +25,10 @@ export default async function AcessoRestritoPage({
           {email ? (
             <>
               O e-mail <span className="text-on-surface">{email}</span> não
-              está autorizado a usar o Physique Pilot nesta versão.
+              está autorizado a usar o Athlyt nesta versão.
             </>
           ) : (
-            "Este e-mail não está autorizado a usar o Physique Pilot nesta versão."
+            "Este e-mail não está autorizado a usar o Athlyt nesta versão."
           )}
         </p>
         <p className="max-w-sm text-body-sm text-muted-foreground">

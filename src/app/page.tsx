@@ -20,7 +20,7 @@ export default async function BoasVindasPage() {
 
       <div className="flex flex-col items-center gap-3">
         <h1 className="text-headline-lg font-bold tracking-tight text-on-surface-strong">
-          Physique Pilot
+          Athlyt
         </h1>
         <p className="max-w-xs text-body-lg text-muted-foreground">
           Seu coach adaptativo pessoal de treino, alimentação e evolução
@@ -35,7 +35,7 @@ export default async function BoasVindasPage() {
           </Button>
         </form>
         <p className="text-body-sm text-muted-foreground">
-          O Physique Pilot não é um serviço médico, nutricional ou de
+          O Athlyt não é um serviço médico, nutricional ou de
           emergência.
         </p>
       </div>

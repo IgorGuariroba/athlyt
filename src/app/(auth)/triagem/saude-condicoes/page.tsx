@@ -14,7 +14,7 @@ export default function SaudeCondicoesPage() {
   return (
     <CascataShell titulo="Condições de saúde ou medicamentos?" indice={indice} total={total}>
       <p className="text-body-sm text-muted-foreground">
-        O Physique Pilot não diagnostica nem substitui um profissional de
+        O Athlyt não diagnostica nem substitui um profissional de
         saúde — use este campo para contextualizar riscos conhecidos.
       </p>
       <EtapaForm

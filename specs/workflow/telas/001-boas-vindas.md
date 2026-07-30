@@ -8,7 +8,7 @@
 
 ## Propósito
 
-Apresentar o Physique Pilot e oferecer a única forma de acesso: conta Google.
+Apresentar o Athlyt e oferecer a única forma de acesso: conta Google.
 
 ## Elementos e comportamento
 

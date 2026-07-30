@@ -12,7 +12,7 @@ import { seedAuthenticatedSession, allowEmail } from "./helpers/seed-session";
 test.describe("Acesso e casco autenticado", () => {
   test("boas-vindas mostra o único ponto de entrada", async ({ page }) => {
     await page.goto("/");
-    await expect(page.getByRole("heading", { name: "Physique Pilot" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Athlyt" })).toBeVisible();
     await expect(
       page.getByRole("button", { name: "Entrar com Google" }),
     ).toBeVisible();
@@ -51,7 +51,7 @@ test.describe("Acesso e casco autenticado", () => {
   }) => {
     await page.goto("/inicio");
     await expect(page).toHaveURL("/");
-    await expect(page.getByRole("heading", { name: "Physique Pilot" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Athlyt" })).toBeVisible();
   });
 
   test("sair encerra a sessão e volta às boas-vindas", async ({

@@ -14,7 +14,7 @@ export default function SaudeLesoesPage() {
   return (
     <CascataShell titulo="Lesões ou desconfortos recorrentes?" indice={indice} total={total}>
       <p className="text-body-sm text-muted-foreground">
-        Deixe em branco se não houver. O Physique Pilot não diagnostica —
+        Deixe em branco se não houver. O Athlyt não diagnostica —
         use este campo só para orientar exercícios a evitar.
       </p>
       <EtapaForm

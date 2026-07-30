@@ -1,4 +1,4 @@
-# Physique Pilot
+# Athlyt
 
 Coach adaptativo pessoal (PWA mobile-first) para treino, alimentação e evolução corporal rumo a uma base natural de Men's Physique. Fecha o ciclo medir → planejar → executar → registrar → revisar → ajustar.
 

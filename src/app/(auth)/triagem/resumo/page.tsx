@@ -43,7 +43,7 @@ export default async function ResumoTriagemPage() {
         <Card className="p-4">
           <p className="text-body-md text-on-surface">
             Enquanto os dados obrigatórios não estiverem completos, o
-            Physique Pilot oferece apenas orientações de baixo risco, sem
+            Athlyt oferece apenas orientações de baixo risco, sem
             estratégia energética agressiva.
           </p>
         </Card>

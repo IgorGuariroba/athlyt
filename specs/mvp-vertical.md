@@ -8,7 +8,7 @@ A primeira versão deve fechar o ciclo medir → planejar → executar → regis
 
 ## Solution
 
-Criar o **Physique Pilot**, uma PWA mobile-first de uso pessoal que atua como um coach adaptativo para treino, alimentação e evolução corporal.
+Criar o **Athlyt**, uma PWA mobile-first de uso pessoal que atua como um coach adaptativo para treino, alimentação e evolução corporal.
 
 A interface segue quatro abas — **Início**, **Diário**, **Progresso** e **Mais** — fundindo os padrões das referências Alpha Progression e MacroFactor documentadas em `workflow-imagens-references/`; o mapa completo de fluxos e telas vive em `specs/workflow.md` e `specs/workflow/telas/`.
 
@@ -163,7 +163,7 @@ A segurança usa dois níveis. Um **Alerta de Cautela** permite override explíc
 
 ## Implementation Decisions
 
-- O produto se chamará **Physique Pilot** e será uma aplicação nova, pessoal e hospedada em produção.
+- O produto se chamará **Athlyt** e será uma aplicação nova, pessoal e hospedada em produção.
 - A primeira entrega é um MVP vertical que fecha o ciclo completo de acompanhamento; integrações mais sofisticadas serão adicionadas depois de validar esse ciclo.
 - O frontend e backend web usarão TypeScript com Next.js App Router em formato PWA mobile-first.
 - O sistema usará PostgreSQL como banco relacional e Auth.js com Google como autenticação.

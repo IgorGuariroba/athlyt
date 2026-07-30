@@ -9,13 +9,13 @@ const dmSans = DM_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "Physique Pilot",
+  title: "Athlyt",
   description: "Seu coach adaptativo pessoal de treino, alimentação e evolução corporal.",
   manifest: "/manifest.webmanifest",
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
-    title: "Physique Pilot",
+    title: "Athlyt",
   },
 };
 

@@ -1,4 +1,4 @@
-# Physique Pilot
+# Athlyt
 
 PWA mobile-first de uso pessoal para acompanhamento adaptativo de treino, alimentação e evolução corporal, orientada à construção de uma base natural de Men's Physique.
 

@@ -1,4 +1,4 @@
-# Workflow — Physique Pilot
+# Workflow — Athlyt
 
 Mapa de fluxos do MVP, derivado de `specs/mvp-vertical.md` e das referências em `workflow-imagens-references/` (Alpha Progression, Fitbod, MacroFactor). Cada fluxo é expandido em telas numeradas em `specs/workflow/telas/`, no mesmo padrão das referências. Termos canônicos em `CONTEXT.md`.
 

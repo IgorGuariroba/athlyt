@@ -44,6 +44,8 @@ next-env.d.ts
 /playwright-report
 /test-results
 /blob-report
+/evidencias-e2e
+/.playwright-cli
 
 # service worker gerado (Serwist)
 /public/sw.js
