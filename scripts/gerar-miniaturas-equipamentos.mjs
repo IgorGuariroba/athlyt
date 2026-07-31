@@ -14,6 +14,9 @@ const preenchido = (conteudo) => `<svg xmlns="http://www.w3.org/2000/svg" viewBo
 </svg>\n`;
 
 const miniaturas = {
+  // Ilustração neutra para nomes livres: mantém a anatomia visual do
+  // cartão sem fingir conhecer a aparência do equipamento informado.
+  "personalizado": linha(`<path d="M28 58h70M39 47v22M48 42v32M78 47v22M87 42v32"/><circle cx="122" cy="42" r="20"/><path d="M122 32v20M112 42h20"/>`),
   "halteres": linha(`<path d="M39 42v28M48 36v40M112 36v40M121 42v28M48 56h64"/><path d="M31 47v18M129 47v18"/>`),
   "barra-olimpica": linha(`<path d="M18 56h124M34 44v24M42 40v32M118 40v32M126 44v24"/>`),
   "barra-w": linha(`<path d="M18 56h25l13-12 16 24 16-24 16 12h38M30 45v22M130 45v22"/>`),
