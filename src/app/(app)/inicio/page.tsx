@@ -58,7 +58,7 @@ export default async function InicioPage() {
               ))}
           </ul>
           <Button asChild size="sm" className="w-fit">
-            <Link href="/triagem">Completar perfil</Link>
+            <Link href="/triagem?retomar=1">Completar perfil</Link>
           </Button>
         </Card>
       ) : null}

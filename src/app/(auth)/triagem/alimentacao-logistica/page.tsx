@@ -1,21 +1,24 @@
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { RadioGroup } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { posicaoNaCascata, proximoDestinoCascata } from "@/domain/triagem/etapas";
 import { CascataShell } from "../_components/cascata-shell";
+import { carregarRespostasTriagem } from "../_lib/carregar-respostas";
 import { EtapaForm } from "../_components/etapa-form";
+import { CartaoRadio } from "../_components/opcao-cartao";
 
 const ORCAMENTOS = [
-  { value: "baixo", label: "Baixo" },
-  { value: "medio", label: "Médio" },
-  { value: "alto", label: "Alto" },
+  { value: "baixo", label: "Baixo", descricao: "Prioriza alimentos mais econômicos" },
+  { value: "medio", label: "Médio", descricao: "Alguma flexibilidade nas escolhas" },
+  { value: "alto", label: "Alto", descricao: "Sem grandes restrições de custo" },
 ] as const;
 
 /**
  * Tela 022 — Orçamento e preparo
  * (specs/workflow/telas/022-alimentacao-logistica.md).
  */
-export default function AlimentacaoLogisticaPage() {
+export default async function AlimentacaoLogisticaPage() {
+  const respostas = await carregarRespostasTriagem();
   const { indice, total } = posicaoNaCascata("alimentacao-logistica");
 
   return (
@@ -24,20 +27,24 @@ export default function AlimentacaoLogisticaPage() {
         etapaAtual="alimentacao-logistica"
         proximaEtapa={proximoDestinoCascata("alimentacao-logistica")}
       >
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-3">
           <p className="text-label-md text-muted-foreground">
             Orçamento alimentar
           </p>
-          <RadioGroup name="orcamentoAlimentar" required className="gap-3">
+          <RadioGroup
+            name="orcamentoAlimentar"
+            defaultValue={respostas.orcamentoAlimentar}
+            required
+            className="gap-3"
+          >
             {ORCAMENTOS.map((opcao) => (
-              <Label
+              <CartaoRadio
                 key={opcao.value}
-                htmlFor={`orcamento-${opcao.value}`}
-                className="flex min-h-[52px] items-center justify-between rounded-lg border border-border bg-surface-container px-4 py-3 text-body-lg text-on-surface has-data-checked:border-border-strong"
-              >
-                {opcao.label}
-                <RadioGroupItem id={`orcamento-${opcao.value}`} value={opcao.value} />
-              </Label>
+                id={`orcamento-${opcao.value}`}
+                value={opcao.value}
+                titulo={opcao.label}
+                descricao={opcao.descricao}
+              />
             ))}
           </RadioGroup>
         </div>
@@ -53,6 +60,7 @@ export default function AlimentacaoLogisticaPage() {
             inputMode="numeric"
             min={0}
             max={240}
+            defaultValue={respostas.tempoPreparoMin}
             required
             className="h-12 text-base"
           />

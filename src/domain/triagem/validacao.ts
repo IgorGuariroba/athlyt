@@ -74,12 +74,18 @@ const SCHEMAS: Record<EtapaId, (formData: FormData) => ResultadoParse> = {
   },
   objetivo: (fd) => {
     const parsed = z
-      .object({ objetivoConfirmado: z.literal("true") })
-      .safeParse({ objetivoConfirmado: fd.get("objetivoConfirmado") });
+      .object({
+        objetivoComposicao: z.enum([
+          "recomposicao",
+          "perder-gordura",
+          "ganhar-massa",
+        ]),
+      })
+      .safeParse({ objetivoComposicao: fd.get("objetivoComposicao") });
     if (!parsed.success) {
-      return { ok: false, erro: "Confirme o objetivo para continuar." };
+      return { ok: false, erro: "Selecione seu objetivo para continuar." };
     }
-    return { ok: true, dados: { objetivoConfirmado: true } };
+    return { ok: true, dados: parsed.data };
   },
   experiencia: (fd) => {
     const parsed = z

@@ -37,6 +37,11 @@ export type NivelAtividade =
   | "ativo"
   | "muito-ativo";
 
+export type ObjetivoComposicao =
+  | "recomposicao"
+  | "perder-gordura"
+  | "ganhar-massa";
+
 /**
  * Snapshot completo do perfil de triagem. Cada campo é opcional
  * porque a cascata é progressiva — o snapshot mais recente é sempre
@@ -47,6 +52,8 @@ export interface RespostasTriagem {
   sexoBiologico?: SexoBiologico;
   alturaCm?: number;
   pesoKg?: number;
+  objetivoComposicao?: ObjetivoComposicao;
+  /** Compatibilidade com perfis registrados antes da seleção de objetivo. */
   objetivoConfirmado?: boolean;
   experienciaTreino?: ExperienciaTreino;
   diasDisponiveis?: DiaSemana[];
@@ -129,7 +136,7 @@ export const ETAPAS_TRIAGEM: readonly DefinicaoEtapa[] = [
   {
     id: "objetivo",
     titulo: "Objetivo",
-    campos: ["objetivoConfirmado"],
+    campos: ["objetivoComposicao"],
     obrigatoria: true,
     destrava: "Priorização de proporções, desempenho e composição corporal",
   },

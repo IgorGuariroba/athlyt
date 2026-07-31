@@ -1,21 +1,44 @@
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Label } from "@/components/ui/label";
+import { Award, Dumbbell, Sprout, TrendingUp } from "lucide-react";
+import { RadioGroup } from "@/components/ui/radio-group";
 import { posicaoNaCascata, proximoDestinoCascata } from "@/domain/triagem/etapas";
 import { CascataShell } from "../_components/cascata-shell";
+import { carregarRespostasTriagem } from "../_lib/carregar-respostas";
 import { EtapaForm } from "../_components/etapa-form";
+import { CartaoRadio } from "../_components/opcao-cartao";
 
 const OPCOES = [
-  { value: "nunca-treinou", label: "Nunca treinei" },
-  { value: "iniciante", label: "Iniciante (menos de 1 ano)" },
-  { value: "intermediario", label: "Intermediário (1 a 3 anos)" },
-  { value: "avancado", label: "Avançado (mais de 3 anos)" },
+  {
+    value: "nunca-treinou",
+    label: "Nunca treinei",
+    descricao: "Sem experiência prévia com musculação",
+    Icone: Sprout,
+  },
+  {
+    value: "iniciante",
+    label: "Iniciante",
+    descricao: "Menos de 1 ano de treino consistente",
+    Icone: Dumbbell,
+  },
+  {
+    value: "intermediario",
+    label: "Intermediário",
+    descricao: "Entre 1 e 3 anos de treino consistente",
+    Icone: TrendingUp,
+  },
+  {
+    value: "avancado",
+    label: "Avançado",
+    descricao: "Mais de 3 anos de treino consistente",
+    Icone: Award,
+  },
 ] as const;
 
 /**
  * Tela 010 — Experiência de treino
  * (specs/workflow/telas/010-experiencia-treino.md).
  */
-export default function ExperienciaPage() {
+export default async function ExperienciaPage() {
+  const respostas = await carregarRespostasTriagem();
   const { indice, total } = posicaoNaCascata("experiencia");
 
   return (
@@ -24,16 +47,21 @@ export default function ExperienciaPage() {
         etapaAtual="experiencia"
         proximaEtapa={proximoDestinoCascata("experiencia")}
       >
-        <RadioGroup name="experienciaTreino" required className="gap-3">
+        <RadioGroup
+          name="experienciaTreino"
+          defaultValue={respostas.experienciaTreino}
+          required
+          className="gap-3"
+        >
           {OPCOES.map((opcao) => (
-            <Label
+            <CartaoRadio
               key={opcao.value}
-              htmlFor={`experiencia-${opcao.value}`}
-              className="flex min-h-[52px] items-center justify-between rounded-lg border border-border bg-surface-container px-4 py-3 text-body-lg text-on-surface has-data-checked:border-border-strong"
-            >
-              {opcao.label}
-              <RadioGroupItem id={`experiencia-${opcao.value}`} value={opcao.value} />
-            </Label>
+              id={`experiencia-${opcao.value}`}
+              value={opcao.value}
+              titulo={opcao.label}
+              descricao={opcao.descricao}
+              Icone={opcao.Icone}
+            />
           ))}
         </RadioGroup>
       </EtapaForm>

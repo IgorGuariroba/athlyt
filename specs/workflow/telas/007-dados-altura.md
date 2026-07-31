@@ -12,7 +12,7 @@ Coletar altura com unidade configurável.
 
 ## Elementos e comportamento
 
-Seletor numérico grande; alternância cm/pol; 'Continuar'.
+Seletor numérico vertical em formato de régua, com o valor ativo centralizado; alternância entre centímetros e pés/polegadas; suporte a gesto vertical e teclado; 'Continuar'.
 
 ## Sequência
 

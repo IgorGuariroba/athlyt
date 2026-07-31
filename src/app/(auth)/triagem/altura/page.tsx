@@ -1,31 +1,20 @@
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
 import { posicaoNaCascata, proximoDestinoCascata } from "@/domain/triagem/etapas";
 import { CascataShell } from "../_components/cascata-shell";
+import { carregarRespostasTriagem } from "../_lib/carregar-respostas";
 import { EtapaForm } from "../_components/etapa-form";
+import { SeletorAltura } from "./_components/seletor-altura";
 
 /**
  * Tela 007 — Altura (specs/workflow/telas/007-dados-altura.md).
  */
-export default function AlturaPage() {
+export default async function AlturaPage() {
+  const respostas = await carregarRespostasTriagem();
   const { indice, total } = posicaoNaCascata("altura");
 
   return (
     <CascataShell titulo="Qual é a sua altura?" indice={indice} total={total}>
       <EtapaForm etapaAtual="altura" proximaEtapa={proximoDestinoCascata("altura")}>
-        <div className="flex flex-col gap-2">
-          <Label htmlFor="alturaCm">Altura (cm)</Label>
-          <Input
-            id="alturaCm"
-            name="alturaCm"
-            type="number"
-            inputMode="numeric"
-            min={100}
-            max={250}
-            required
-            className="h-12 text-base"
-          />
-        </div>
+        <SeletorAltura alturaInicialCm={respostas.alturaCm} />
       </EtapaForm>
     </CascataShell>
   );
