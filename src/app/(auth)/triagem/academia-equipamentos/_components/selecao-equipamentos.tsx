@@ -298,19 +298,35 @@ export function SelecaoEquipamentos({
             {personalizados.map((nome) => (
               <div
                 key={normalizar(nome)}
-                className="flex min-h-16 items-center gap-3 rounded-xl border-2 border-on-surface-strong bg-surface px-4 py-3"
+                className="flex min-h-24 items-center gap-4 rounded-xl border-2 border-on-surface-strong bg-surface px-3 py-3"
               >
-                <Dumbbell className="size-6 shrink-0 text-on-surface-strong" aria-hidden="true" />
-                <span className="flex-1 text-title text-on-surface-strong">{nome}</span>
+                {/*
+                  Mesma anatomia e dimensões de `CartaoEquipamento`.
+                  A miniatura genérica não tenta adivinhar a aparência
+                  de um nome livre, mas mantém o conjunto visualmente
+                  estável até ele entrar no catálogo canônico.
+                */}
+                <span className="flex size-20 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-white p-1">
+                  <Image
+                    src="/equipamentos/personalizado.svg"
+                    alt=""
+                    width={160}
+                    height={112}
+                    className="h-full w-full object-contain"
+                  />
+                </span>
+                <span className="flex-1 text-title text-on-surface-strong">
+                  {nome}
+                </span>
                 <button
                   type="button"
                   onClick={() =>
                     setPersonalizados((atuais) => atuais.filter((item) => item !== nome))
                   }
                   aria-label={`Remover ${nome}`}
-                  className="flex size-9 items-center justify-center rounded-full border-2 border-border-strong text-on-surface-strong"
+                  className="flex size-7 shrink-0 items-center justify-center rounded-full border-4 border-border-strong text-on-surface-strong"
                 >
-                  <X className="size-5" aria-hidden="true" />
+                  <X className="size-4" aria-hidden="true" />
                 </button>
                 <input type="hidden" name="equipamentosPersonalizados" value={nome} />
               </div>

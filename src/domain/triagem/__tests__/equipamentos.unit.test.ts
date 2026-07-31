@@ -46,6 +46,16 @@ describe("catálogo de equipamentos", () => {
     expect(rotuloEquipamento("nao-existe")).toBeUndefined();
   });
 
+  it("possui miniatura genérica para equipamento personalizado", () => {
+    const svg = readFileSync(
+      join(process.cwd(), "public/equipamentos/personalizado.svg"),
+      "utf8",
+    );
+    expect(svg).toContain('viewBox="0 0 160 112"');
+    expect(svg).toContain('fill="#fff"');
+    expect(svg).toContain("#111");
+  });
+
   it("todo item possui miniatura SVG padronizada em preto e branco", () => {
     for (const equipamento of EQUIPAMENTOS) {
       const caminhoPublico = imagemEquipamento(equipamento.id);
