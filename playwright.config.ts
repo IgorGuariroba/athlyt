@@ -8,13 +8,22 @@ loadEnv({ path: ".env" });
  * "Testes E2E reais em navegador deverão cobrir viewport mobile e
  * serem gravados em vídeo como evidência durante validação."
  */
+/**
+ * `PLAYWRIGHT_BASE_URL` permite apontar a suíte para um servidor já no
+ * ar em outra porta. É o que torna possível validar E2E localmente sem
+ * derrubar a instância da porta 3000 — e sem cair na armadilha do
+ * `AUTH_URL` descasado (docs/memory/e2e-auth-url-local.md), já que o
+ * servidor de teste sobe com o host e a porta que a suíte usa.
+ */
+const baseURL = process.env.PLAYWRIGHT_BASE_URL ?? "http://localhost:3000";
+
 export default defineConfig({
   testDir: "./e2e",
   fullyParallel: false,
   workers: 1,
   reporter: [["list"], ["html", { open: "never" }]],
   use: {
-    baseURL: "http://localhost:3000",
+    baseURL,
     trace: "retain-on-failure",
     video: "on",
   },
@@ -26,7 +35,7 @@ export default defineConfig({
   ],
   webServer: {
     command: "npm run dev",
-    url: "http://localhost:3000",
+    url: baseURL,
     reuseExistingServer: true,
     timeout: 30_000,
   },

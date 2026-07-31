@@ -150,6 +150,36 @@ describe("parseRespostaEtapa", () => {
     });
   });
 
+  it("academia-equipamentos: descarta id fora do catálogo em vez de recusar a etapa", () => {
+    expect(
+      parseRespostaEtapa(
+        "academia-equipamentos",
+        formData({
+          localTreino: "academia-completa",
+          equipamentos: ["halteres", "maquina-inexistente", "leg-press"],
+        }),
+      ),
+    ).toEqual({
+      ok: true,
+      dados: {
+        localTreino: "academia-completa",
+        equipamentos: ["halteres", "leg-press"],
+      },
+    });
+  });
+
+  it("academia-equipamentos: aceita o local sem equipamentos", () => {
+    expect(
+      parseRespostaEtapa(
+        "academia-equipamentos",
+        formData({ localTreino: "sem-equipamentos" }),
+      ),
+    ).toEqual({
+      ok: true,
+      dados: { localTreino: "sem-equipamentos", equipamentos: [] },
+    });
+  });
+
   it("academia-equipamentos: aceita nenhum equipamento selecionado como lista vazia", () => {
     expect(
       parseRespostaEtapa(

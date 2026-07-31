@@ -1,5 +1,6 @@
 import { z } from "zod";
 import type { DiaSemana, EtapaId, RespostasTriagem } from "./etapas";
+import { isEquipamentoId } from "./equipamentos";
 
 export type ResultadoParse =
   | { ok: true; dados: Partial<RespostasTriagem> }
@@ -144,8 +145,22 @@ const SCHEMAS: Record<EtapaId, (formData: FormData) => ResultadoParse> = {
   "academia-equipamentos": (fd) => {
     const parsed = z
       .object({
-        localTreino: z.enum(["academia-completa", "condominio", "casa"]),
-        equipamentos: z.array(z.string()),
+        localTreino: z.enum([
+          "academia-completa",
+          "condominio",
+          "casa",
+          "sem-equipamentos",
+        ]),
+        /**
+         * Ids fora do catálogo são descartados em vez de rejeitados: a
+         * lista chega do formulário e um id obsoleto (catálogo mudou
+         * entre a montagem da página e o envio) não deve custar a
+         * etapa inteira ao usuário. O que não existe simplesmente não
+         * entra no perfil — e portanto não vira exercício prescrito.
+         */
+        equipamentos: z
+          .array(z.string())
+          .transform((ids) => ids.filter(isEquipamentoId)),
       })
       .safeParse({
         localTreino: fd.get("localTreino"),

@@ -110,7 +110,15 @@ test.describe("Triagem em cascata", () => {
     await page.getByRole("button", { name: "Continuar" }).click();
 
     await expect(page).toHaveURL("/triagem/academia-equipamentos");
+    // Escolher o local pré-marca os equipamentos plausíveis; a lista só
+    // aparece depois dessa escolha (specs/workflow/telas/018).
     await page.getByText("Academia completa").click();
+    await expect(page.getByRole("checkbox", { name: "Leg press" })).toBeChecked();
+    // A revisão manual continua soberana sobre a sugestão.
+    await page.getByRole("checkbox", { name: "Leg press" }).click();
+    await expect(
+      page.getByRole("checkbox", { name: "Leg press" }),
+    ).not.toBeChecked();
     await page.getByRole("button", { name: "Continuar" }).click();
 
     // A partir daqui as etapas são complementares — pular para o resumo
