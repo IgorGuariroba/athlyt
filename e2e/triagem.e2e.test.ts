@@ -212,7 +212,9 @@ test.describe("Triagem em cascata", () => {
 
     await page.getByRole("link", { name: "Gerar meu plano" }).click();
     await expect(page).toHaveURL("/plano/revisao");
-    await expect(page.getByRole("heading", { name: "Revise seu Plano Ativo" })).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: "Seu Plano Ativo está pronto" }),
+    ).toBeVisible();
     await expect(page.getByText(/kcal/).first()).toBeVisible();
 
     await page.getByRole("link", { name: "Revisar treinos" }).click();
