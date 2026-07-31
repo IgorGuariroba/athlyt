@@ -19,6 +19,41 @@ const nomesEquipamentosPersonalizados = z
     });
   });
 
+export function validarEquipamentosPersonalizados(entrada: {
+  cadastrados: readonly string[];
+  selecionados: readonly string[];
+}):
+  | {
+      ok: true;
+      cadastrados: string[];
+      selecionados: string[];
+    }
+  | { ok: false } {
+  const resultado = z
+    .object({
+      cadastrados: nomesEquipamentosPersonalizados,
+      selecionados: nomesEquipamentosPersonalizados,
+    })
+    .safeParse(entrada);
+  if (!resultado.success) return { ok: false };
+
+  const cadastrados = new Set(
+    resultado.data.cadastrados.map((nome) =>
+      nome.toLocaleLowerCase("pt-BR"),
+    ),
+  );
+  return {
+    ok: true,
+    cadastrados: resultado.data.cadastrados,
+    // Um nome não cadastrado não pode ser selecionado. Essa defesa
+    // também impede um cliente adulterado de injetar texto só no
+    // Contexto do Atleta.
+    selecionados: resultado.data.selecionados.filter((nome) =>
+      cadastrados.has(nome.toLocaleLowerCase("pt-BR")),
+    ),
+  };
+}
+
 const ORDEM_DIAS: readonly DiaSemana[] = [
   "segunda",
   "terca",

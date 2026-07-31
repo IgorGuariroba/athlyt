@@ -4,7 +4,10 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { registrarRespostas } from "@/domain/triagem/perfil";
-import { parseRespostaEtapa } from "@/domain/triagem/validacao";
+import {
+  parseRespostaEtapa,
+  validarEquipamentosPersonalizados,
+} from "@/domain/triagem/validacao";
 import { isEtapaId, type EtapaId } from "@/domain/triagem/etapas";
 
 /**
@@ -18,6 +21,48 @@ import { isEtapaId, type EtapaId } from "@/domain/triagem/etapas";
  * o formulário com o erro — mantendo "uma pergunta por tela" mesmo em
  * caso de engano do usuário.
  */
+/**
+ * Persiste imediatamente o inventário personalizado. Diferente dos
+ * campos comuns da etapa, cadastrar/excluir um equipamento é uma
+ * operação completa por si só: usar Voltar não pode desfazê-la só
+ * porque o formulário maior ainda não foi enviado.
+ */
+export async function salvarEquipamentosPersonalizados(entrada: {
+  localTreino: string;
+  equipamentos: string[];
+  cadastrados: string[];
+  selecionados: string[];
+}): Promise<{ ok: true } | { ok: false; erro: string }> {
+  const session = await auth();
+  const userId = session?.user?.id;
+  if (!userId) return { ok: false, erro: "Sessão expirada." };
+
+  const validado = validarEquipamentosPersonalizados(entrada);
+  if (!validado.ok) {
+    return { ok: false, erro: "Não foi possível salvar os equipamentos." };
+  }
+
+  // A operação imediata precisa persistir um snapshot coerente da
+  // etapa. Em um perfil novo, salvar apenas o nome livre deixaria o
+  // local ainda indefinido; ao voltar, a tela esconderia toda a seção
+  // de equipamentos e daria a impressão de que o cadastro sumiu.
+  const formData = new FormData();
+  formData.set("localTreino", entrada.localTreino);
+  for (const id of entrada.equipamentos) formData.append("equipamentos", id);
+  for (const nome of validado.selecionados) {
+    formData.append("equipamentosPersonalizados", nome);
+  }
+  for (const nome of validado.cadastrados) {
+    formData.append("equipamentosPersonalizadosCadastrados", nome);
+  }
+  const etapa = parseRespostaEtapa("academia-equipamentos", formData);
+  if (!etapa.ok) return { ok: false, erro: etapa.erro };
+
+  await registrarRespostas(userId, etapa.dados);
+  revalidatePath("/triagem", "layout");
+  return { ok: true };
+}
+
 export async function submeterEtapaTriagem(
   etapaAtual: string,
   proximaEtapa: string,

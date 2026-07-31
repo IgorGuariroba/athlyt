@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { parseRespostaEtapa } from "../validacao";
+import {
+  parseRespostaEtapa,
+  validarEquipamentosPersonalizados,
+} from "../validacao";
 
 function formData(entries: Record<string, string | string[]>): FormData {
   const fd = new FormData();
@@ -19,6 +22,21 @@ function formData(entries: Record<string, string | string[]>): FormData {
  * 005-010, 016-023). Sem I/O — cobre a validação de entrada antes de
  * qualquer persistência.
  */
+describe("validarEquipamentosPersonalizados", () => {
+  it("mantém na seleção somente nomes presentes no inventário", () => {
+    expect(
+      validarEquipamentosPersonalizados({
+        cadastrados: ["Belt squat"],
+        selecionados: ["Belt squat", "Equipamento injetado"],
+      }),
+    ).toEqual({
+      ok: true,
+      cadastrados: ["Belt squat"],
+      selecionados: ["Belt squat"],
+    });
+  });
+});
+
 describe("parseRespostaEtapa", () => {
   it("idade: aceita data de nascimento válida", () => {
     const resultado = parseRespostaEtapa(
