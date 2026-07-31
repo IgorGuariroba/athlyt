@@ -29,6 +29,13 @@
       "when": 1785511367363,
       "tag": "0003_mute_ogun",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1785515338091,
+      "tag": "0004_fat_shooting_star",
+      "breakpoints": true
     }
   ]
 }

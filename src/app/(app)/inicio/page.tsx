@@ -8,6 +8,7 @@ import { Card } from "@/components/ui/card";
 import { obterPerfilVigente } from "@/domain/triagem/perfil";
 import { montarResumoTriagem } from "@/domain/triagem/resumo";
 import { obterPlanoAtivo } from "@/domain/plano/repositorio";
+import { iniciarSessaoAction } from "../sessao/actions";
 
 /**
  * Casco da aba Início (telas 029–031). Os cartões de treino do dia,
@@ -47,6 +48,18 @@ export default async function InicioPage() {
       </Card>
 
       {planoAtivo ? (
+        <>
+        <section className="overflow-hidden rounded-2xl border-2 border-on-surface-strong bg-surface-container">
+          <div className="p-5">
+            <p className="mb-2 text-label-md font-semibold tracking-wide text-muted-foreground uppercase">Treino do dia</p>
+            <h2 className="text-headline-md font-bold text-on-surface-strong">{planoAtivo.conteudo.bloco.dias[0].nome}</h2>
+            <p className="mt-1 text-body-md text-muted-foreground">{planoAtivo.conteudo.bloco.dias[0].exercicios.length} exercícios · {planoAtivo.conteudo.bloco.dias[0].exercicios.reduce((total, exercicio) => total + exercicio.series, 0)} séries</p>
+          </div>
+          <form action={iniciarSessaoAction}>
+            <input type="hidden" name="diaId" value={planoAtivo.conteudo.bloco.dias[0].id} />
+            <Button type="submit" size="lg" className="h-14 w-full rounded-none text-base font-bold">Iniciar sessão <ArrowRight className="size-5" /></Button>
+          </form>
+        </section>
         <section
           aria-labelledby="plano-ativo-titulo"
           className="overflow-hidden rounded-2xl border border-border bg-surface-container"
@@ -168,6 +181,7 @@ export default async function InicioPage() {
             </div>
           </div>
         </section>
+        </>
       ) : !resumo.modoConservador ? (
         <section
           aria-labelledby="plano-pronto-titulo"
