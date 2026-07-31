@@ -1,54 +1,70 @@
-import { Dumbbell } from "lucide-react";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Label } from "@/components/ui/label";
+import { redirect } from "next/navigation";
+import { Dumbbell, Flame, RefreshCw } from "lucide-react";
+import { auth } from "@/auth";
+import { RadioGroup } from "@/components/ui/radio-group";
 import { posicaoNaCascata, proximoDestinoCascata } from "@/domain/triagem/etapas";
+import { obterPerfilVigente } from "@/domain/triagem/perfil";
 import { CascataShell } from "../_components/cascata-shell";
 import { EtapaForm } from "../_components/etapa-form";
+import { CartaoRadio } from "../_components/opcao-cartao";
 
-/**
- * Tela 009 — Objetivo (specs/workflow/telas/009-objetivo.md).
- */
-export default function ObjetivoPage() {
+const OBJETIVOS = [
+  {
+    value: "recomposicao",
+    titulo: "Recomposição corporal",
+    descricao:
+      "Reduzir a gordura de cerca de 30% para próximo de 10% enquanto maximiza a massa muscular",
+    Icone: RefreshCw,
+  },
+  {
+    value: "perder-gordura",
+    titulo: "Priorizar perda de gordura",
+    descricao: "Reduzir gordura corporal preservando o máximo de massa muscular",
+    Icone: Flame,
+  },
+  {
+    value: "ganhar-massa",
+    titulo: "Priorizar ganho de massa muscular",
+    descricao: "Maximizar hipertrofia com ganho de gordura controlado",
+    Icone: Dumbbell,
+  },
+] as const;
+
+/** Tela 009 — Objetivo (specs/workflow/telas/009-objetivo.md). */
+export default async function ObjetivoPage() {
+  const session = await auth();
+  const userId = session?.user?.id;
+  if (!userId) redirect("/");
+
+  const perfil = await obterPerfilVigente(userId);
   const { indice, total } = posicaoNaCascata("objetivo");
 
   return (
-    <CascataShell
-      titulo="Qual é o seu objetivo?"
-      indice={indice}
-      total={total}
-    >
+    <CascataShell titulo="Qual é o seu objetivo atual?" indice={indice} total={total}>
       <EtapaForm etapaAtual="objetivo" proximaEtapa={proximoDestinoCascata("objetivo")}>
-        <Label
-          htmlFor="objetivoConfirmado"
-          className="group flex min-h-40 cursor-pointer items-center gap-5 rounded-xl border-2 border-border-strong bg-surface px-5 py-6 transition-colors hover:bg-surface-container has-data-checked:border-on-surface-strong"
+        <RadioGroup
+          name="objetivoComposicao"
+          defaultValue={perfil?.respostas.objetivoComposicao}
+          required
+          className="gap-3"
         >
-          <span className="flex size-14 shrink-0 items-center justify-center rounded-lg bg-on-surface-strong text-background">
-            <Dumbbell className="size-7" aria-hidden="true" />
-          </span>
-
-          <span className="flex flex-1 flex-col gap-1">
-            <span className="text-title text-on-surface-strong">
-              Construir um físico atlético
-            </span>
-            <span className="text-body-sm font-normal text-muted-foreground">
-              Proporções, força e composição corporal
-            </span>
-          </span>
-
-          <Checkbox
-            id="objetivoConfirmado"
-            name="objetivoConfirmado"
-            value="true"
-            required
-            className="size-7 rounded-full border-4 border-border-strong bg-transparent data-checked:border-on-surface-strong data-checked:bg-on-surface-strong [&_svg]:size-4"
-          />
-        </Label>
+          {OBJETIVOS.map(({ value, titulo, descricao, Icone }) => (
+            <CartaoRadio
+              key={value}
+              id={`objetivo-${value}`}
+              value={value}
+              titulo={titulo}
+              descricao={descricao}
+              Icone={Icone}
+            />
+          ))}
+        </RadioGroup>
 
         <div className="rounded-xl bg-surface-container px-4 py-4">
           <p className="text-body-sm text-muted-foreground">
-            Vamos priorizar uma base natural de Men&apos;s Physique. Seus
-            resultados dependem de genética, estrutura, experiência, rotina e
-            aderência — sem promessas de prazo ou resultado específico.
+            Vamos buscar uma base natural de Men&apos;s Physique. A estratégia será
+            ajustada com segurança conforme sua resposta ao plano, sem promessas
+            de prazo ou resultado específico.
           </p>
         </div>
       </EtapaForm>

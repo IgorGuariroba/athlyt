@@ -23,9 +23,22 @@ test.describe("Triagem em cascata", () => {
     await autenticar(page, context);
 
     await page.goto("/triagem");
+    await expect(page.getByRole("heading", { name: "Vamos começar" })).toBeVisible();
+    await page.getByRole("link", { name: "Começar" }).click();
     await expect(page).toHaveURL("/triagem/idade");
 
+    // Na primeira etapa, Voltar retorna à introdução sem sair da triagem.
+    await page.getByRole("link", { name: "Voltar" }).click();
+    await expect(page).toHaveURL("/triagem");
+    await expect(page.getByRole("heading", { name: "Vamos começar" })).toBeVisible();
+    await page.getByRole("link", { name: "Começar" }).click();
+
     await page.getByLabel("Data de nascimento").fill("1994-05-01");
+    await page.getByRole("button", { name: "Continuar" }).click();
+
+    await expect(page).toHaveURL("/triagem/sexo");
+    await page.getByRole("link", { name: "Voltar" }).click();
+    await expect(page.getByLabel("Data de nascimento")).toHaveValue("1994-05-01");
     await page.getByRole("button", { name: "Continuar" }).click();
 
     await expect(page).toHaveURL("/triagem/sexo");
@@ -33,7 +46,17 @@ test.describe("Triagem em cascata", () => {
     await page.getByRole("button", { name: "Continuar" }).click();
 
     await expect(page).toHaveURL("/triagem/altura");
-    await page.getByLabel("Altura (cm)").fill("178");
+    await page.getByRole("link", { name: "Voltar" }).click();
+    await expect(page.getByRole("radio", { name: "Masculino" })).toBeChecked();
+    await page.getByRole("button", { name: "Continuar" }).click();
+
+    await expect(page).toHaveURL("/triagem/altura");
+    const seletorAltura = page.getByRole("slider", { name: "Altura" });
+    await seletorAltura.focus();
+    await seletorAltura.press("ArrowUp");
+    await seletorAltura.press("ArrowUp");
+    await seletorAltura.press("ArrowUp");
+    await expect(seletorAltura).toHaveAttribute("aria-valuenow", "178");
     await page.getByRole("button", { name: "Continuar" }).click();
 
     await expect(page).toHaveURL("/triagem/peso");
@@ -48,16 +71,38 @@ test.describe("Triagem em cascata", () => {
     await page.getByRole("button", { name: "Continuar" }).click();
 
     await expect(page).toHaveURL("/triagem/objetivo");
-    await page.getByRole("checkbox").click();
+
+    // O retorno restaura também controles customizados, como a régua de peso.
+    await page.getByRole("link", { name: "Voltar" }).click();
+    await expect(page).toHaveURL("/triagem/peso");
+    await expect(
+      page.getByRole("slider", { name: "Peso em quilogramas" }),
+    ).toHaveAttribute("aria-valuenow", "82");
+    await page.getByRole("button", { name: "Continuar" }).click();
+
+    await page.getByText("Recomposição corporal").click();
     await page.getByRole("button", { name: "Continuar" }).click();
 
     await expect(page).toHaveURL("/triagem/experiencia");
-    await page.getByText("Intermediário (1 a 3 anos)").click();
+    await page.getByRole("link", { name: "Voltar" }).click();
+    await expect(
+      page.getByRole("radio", { name: /Recomposição corporal/ }),
+    ).toBeChecked();
+    await page.getByRole("button", { name: "Continuar" }).click();
+
+    await expect(page).toHaveURL("/triagem/experiencia");
+    await page.getByText("Intermediário", { exact: true }).click();
     await page.getByRole("button", { name: "Continuar" }).click();
 
     await expect(page).toHaveURL("/triagem/disponibilidade");
     await page.getByText("Segunda", { exact: true }).click();
     await page.getByText("Quarta", { exact: true }).click();
+    await page.getByRole("button", { name: "Continuar" }).click();
+
+    await expect(page).toHaveURL("/triagem/duracao-sessao");
+    await page.getByRole("link", { name: "Voltar" }).click();
+    await expect(page.getByRole("checkbox", { name: "Segunda" })).toBeChecked();
+    await expect(page.getByRole("checkbox", { name: "Quarta" })).toBeChecked();
     await page.getByRole("button", { name: "Continuar" }).click();
 
     await expect(page).toHaveURL("/triagem/duracao-sessao");

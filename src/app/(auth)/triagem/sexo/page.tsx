@@ -1,13 +1,21 @@
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Label } from "@/components/ui/label";
+import { Mars, Venus } from "lucide-react";
+import { RadioGroup } from "@/components/ui/radio-group";
 import { posicaoNaCascata, proximoDestinoCascata } from "@/domain/triagem/etapas";
 import { CascataShell } from "../_components/cascata-shell";
+import { carregarRespostasTriagem } from "../_lib/carregar-respostas";
 import { EtapaForm } from "../_components/etapa-form";
+import { CartaoRadio } from "../_components/opcao-cartao";
+
+const OPCOES = [
+  { value: "feminino", label: "Feminino", Icone: Venus },
+  { value: "masculino", label: "Masculino", Icone: Mars },
+] as const;
 
 /**
  * Tela 006 — Sexo biológico (specs/workflow/telas/006-dados-sexo.md).
  */
-export default function SexoPage() {
+export default async function SexoPage() {
+  const respostas = await carregarRespostasTriagem();
   const { indice, total } = posicaoNaCascata("sexo");
 
   return (
@@ -16,19 +24,20 @@ export default function SexoPage() {
         Usado apenas para contextualizar cálculos de necessidades energéticas.
       </p>
       <EtapaForm etapaAtual="sexo" proximaEtapa={proximoDestinoCascata("sexo")}>
-        <RadioGroup name="sexoBiologico" required className="gap-3">
-          {[
-            { value: "masculino", label: "Masculino" },
-            { value: "feminino", label: "Feminino" },
-          ].map((opcao) => (
-            <Label
+        <RadioGroup
+          name="sexoBiologico"
+          defaultValue={respostas.sexoBiologico}
+          required
+          className="gap-3"
+        >
+          {OPCOES.map((opcao) => (
+            <CartaoRadio
               key={opcao.value}
-              htmlFor={`sexo-${opcao.value}`}
-              className="flex min-h-[52px] items-center justify-between rounded-lg border border-border bg-surface-container px-4 py-3 text-body-lg text-on-surface has-data-checked:border-border-strong"
-            >
-              {opcao.label}
-              <RadioGroupItem id={`sexo-${opcao.value}`} value={opcao.value} />
-            </Label>
+              id={`sexo-${opcao.value}`}
+              value={opcao.value}
+              titulo={opcao.label}
+              Icone={opcao.Icone}
+            />
           ))}
         </RadioGroup>
       </EtapaForm>
