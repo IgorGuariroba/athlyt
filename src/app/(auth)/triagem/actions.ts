@@ -1,5 +1,6 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { registrarRespostas } from "@/domain/triagem/perfil";
@@ -38,6 +39,12 @@ export async function submeterEtapaTriagem(
   }
 
   await registrarRespostas(userId, resultado.dados);
+
+  // A cascata permite avançar e retornar. Sem invalidação explícita, o
+  // App Router pode reutilizar o payload RSC que montou a etapa antes
+  // da gravação e esconder respostas recém-persistidas — especialmente
+  // listas adicionadas no cliente, como equipamentos personalizados.
+  revalidatePath("/triagem", "layout");
 
   const destino: EtapaId | "resumo" = isEtapaId(proximaEtapa)
     ? proximaEtapa
