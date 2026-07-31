@@ -30,6 +30,9 @@ export default async function AcademiaEquipamentosPage() {
           equipamentosPersonalizadosIniciais={
             respostas.equipamentosPersonalizados
           }
+          equipamentosPersonalizadosCadastradosIniciais={
+            respostas.equipamentosPersonalizadosCadastrados
+          }
         />
       </EtapaForm>
     </CascataShell>

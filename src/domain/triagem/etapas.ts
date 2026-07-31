@@ -71,6 +71,12 @@ export interface RespostasTriagem {
    * validação confunda texto humano com uma identidade canônica.
    */
   equipamentosPersonalizados?: string[];
+  /**
+   * Inventário de nomes livres já cadastrados. É separado da seleção:
+   * desmarcar um item deve removê-lo do plano, não apagar o equipamento
+   * que existe na academia do atleta.
+   */
+  equipamentosPersonalizadosCadastrados?: string[];
   lesoes?: string;
   condicoes?: string;
   restricoesAlimentares?: string[];

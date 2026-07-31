@@ -150,6 +150,7 @@ describe("parseRespostaEtapa", () => {
         localTreino: "casa",
         equipamentos: ["halteres"],
         equipamentosPersonalizados: [],
+        equipamentosPersonalizadosCadastrados: [],
       },
     });
   });
@@ -169,6 +170,7 @@ describe("parseRespostaEtapa", () => {
         localTreino: "academia-completa",
         equipamentos: ["halteres", "leg-press"],
         equipamentosPersonalizados: [],
+        equipamentosPersonalizadosCadastrados: [],
       },
     });
   });
@@ -184,6 +186,11 @@ describe("parseRespostaEtapa", () => {
             "belt squat",
             "Máquina pendular",
           ],
+          equipamentosPersonalizadosCadastrados: [
+            "Belt squat",
+            "Máquina pendular",
+            "Máquina não selecionada",
+          ],
         }),
       ),
     ).toEqual({
@@ -192,6 +199,11 @@ describe("parseRespostaEtapa", () => {
         localTreino: "academia-completa",
         equipamentos: [],
         equipamentosPersonalizados: ["Belt squat", "Máquina pendular"],
+        equipamentosPersonalizadosCadastrados: [
+          "Belt squat",
+          "Máquina pendular",
+          "Máquina não selecionada",
+        ],
       },
     });
   });
@@ -208,6 +220,7 @@ describe("parseRespostaEtapa", () => {
         localTreino: "sem-equipamentos",
         equipamentos: [],
         equipamentosPersonalizados: [],
+        equipamentosPersonalizadosCadastrados: [],
       },
     });
   });
@@ -224,6 +237,7 @@ describe("parseRespostaEtapa", () => {
         localTreino: "academia-completa",
         equipamentos: [],
         equipamentosPersonalizados: [],
+        equipamentosPersonalizadosCadastrados: [],
       },
     });
   });

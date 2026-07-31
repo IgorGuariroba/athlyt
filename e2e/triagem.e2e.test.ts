@@ -126,6 +126,15 @@ test.describe("Triagem em cascata", () => {
       .fill("Belt squat pendular");
     await page.getByRole("button", { name: "Adicionar" }).click();
     await expect(page.getByText("Belt squat pendular")).toBeVisible();
+    const personalizado = page.getByRole("checkbox", {
+      name: "Belt squat pendular",
+    });
+    await expect(personalizado).toBeChecked();
+    await personalizado.click();
+    await expect(personalizado).not.toBeChecked();
+    // Desmarcar retira o item do plano, mas não apaga o equipamento que
+    // o atleta acabou de cadastrar na sua academia.
+    await expect(page.getByText("Belt squat pendular")).toBeVisible();
     await page.getByRole("button", { name: "Continuar" }).click();
 
     // A partir daqui as etapas são complementares — pular para o resumo

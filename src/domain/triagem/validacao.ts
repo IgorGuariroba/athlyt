@@ -6,6 +6,19 @@ export type ResultadoParse =
   | { ok: true; dados: Partial<RespostasTriagem> }
   | { ok: false; erro: string };
 
+const nomesEquipamentosPersonalizados = z
+  .array(z.string().trim().min(2).max(80))
+  .max(20)
+  .transform((nomes) => {
+    const vistos = new Set<string>();
+    return nomes.filter((nome) => {
+      const chave = nome.toLocaleLowerCase("pt-BR");
+      if (vistos.has(chave)) return false;
+      vistos.add(chave);
+      return true;
+    });
+  });
+
 const ORDEM_DIAS: readonly DiaSemana[] = [
   "segunda",
   "terca",
@@ -161,24 +174,18 @@ const SCHEMAS: Record<EtapaId, (formData: FormData) => ResultadoParse> = {
         equipamentos: z
           .array(z.string())
           .transform((ids) => ids.filter(isEquipamentoId)),
-        equipamentosPersonalizados: z
-          .array(z.string().trim().min(2).max(80))
-          .max(20)
-          .transform((nomes) => {
-            const vistos = new Set<string>();
-            return nomes.filter((nome) => {
-              const chave = nome.toLocaleLowerCase("pt-BR");
-              if (vistos.has(chave)) return false;
-              vistos.add(chave);
-              return true;
-            });
-          }),
+        equipamentosPersonalizados: nomesEquipamentosPersonalizados,
+        equipamentosPersonalizadosCadastrados:
+          nomesEquipamentosPersonalizados,
       })
       .safeParse({
         localTreino: fd.get("localTreino"),
         equipamentos: fd.getAll("equipamentos"),
         equipamentosPersonalizados: fd.getAll(
           "equipamentosPersonalizados",
+        ),
+        equipamentosPersonalizadosCadastrados: fd.getAll(
+          "equipamentosPersonalizadosCadastrados",
         ),
       });
     if (!parsed.success) {
