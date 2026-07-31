@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ArrowRight, Dumbbell } from "lucide-react";
 import { auth } from "@/auth";
 import { sair } from "../../(auth)/actions";
 import { Button } from "@/components/ui/button";
@@ -6,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { obterPerfilVigente } from "@/domain/triagem/perfil";
 import { montarResumoTriagem } from "@/domain/triagem/resumo";
+import { obterPlanoAtivo } from "@/domain/plano/repositorio";
 
 /**
  * Casco da aba Início (telas 029–031). Os cartões de treino do dia,
@@ -16,7 +18,9 @@ import { montarResumoTriagem } from "@/domain/triagem/resumo";
 export default async function InicioPage() {
   const session = await auth();
   const userId = session?.user?.id;
-  const perfil = userId ? await obterPerfilVigente(userId) : null;
+  const [perfil, planoAtivo] = userId
+    ? await Promise.all([obterPerfilVigente(userId), obterPlanoAtivo(userId)])
+    : [null, null];
   const resumo = montarResumoTriagem(perfil?.respostas ?? {});
 
   return (
@@ -41,6 +45,59 @@ export default async function InicioPage() {
         Olá, {session?.user?.name ?? session?.user?.email}. Seus cartões de
         prioridade do dia vão aparecer aqui.
       </Card>
+
+      {planoAtivo ? (
+        <Card className="flex flex-col gap-3 p-4">
+          <div className="flex items-center justify-between">
+            <strong>Plano Ativo v{planoAtivo.versao}</strong>
+            <Badge>{planoAtivo.conteudo.bloco.duracaoSemanas} semanas</Badge>
+          </div>
+          <p className="text-body-md text-on-surface">
+            {planoAtivo.conteudo.bloco.dias.length} treinos por semana · {planoAtivo.conteudo.nutricao.calorias} kcal por dia
+          </p>
+          <p className="text-body-sm text-muted-foreground">
+            {planoAtivo.conteudo.bloco.divisao}
+          </p>
+        </Card>
+      ) : !resumo.modoConservador ? (
+        <section
+          aria-labelledby="plano-pronto-titulo"
+          className="flex flex-col overflow-hidden rounded-2xl border-2 border-border-strong bg-surface-container"
+        >
+          <div className="flex flex-col gap-5 p-5">
+            <div className="flex size-12 items-center justify-center rounded-full bg-on-surface-strong text-background">
+              <Dumbbell className="size-6" aria-hidden="true" />
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <p className="text-label-md font-semibold tracking-wide text-muted-foreground uppercase">
+                Próxima etapa
+              </p>
+              <h2
+                id="plano-pronto-titulo"
+                className="text-headline-sm font-bold text-on-surface-strong"
+              >
+                Seu perfil está pronto
+              </h2>
+              <p className="text-body-md leading-relaxed text-muted-foreground">
+                Vamos montar seu Bloco de Treino e suas metas nutricionais com
+                base nas respostas da triagem.
+              </p>
+            </div>
+          </div>
+
+          <Button
+            asChild
+            size="lg"
+            className="h-14 w-full rounded-none text-base font-bold"
+          >
+            <Link href="/plano/gerando">
+              Gerar meu Plano Ativo
+              <ArrowRight className="size-5" aria-hidden="true" />
+            </Link>
+          </Button>
+        </section>
+      ) : null}
 
       {resumo.modoConservador ? (
         <Card className="flex flex-col gap-3 p-4">

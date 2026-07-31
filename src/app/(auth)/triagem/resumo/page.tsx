@@ -15,8 +15,7 @@ import { TransicaoEtapa } from "../_components/transicao-etapa";
  * cada dado destrava; declara o estado do Modo Conservador (user
  * stories 6, 14, 15).
  *
- * "Gerar meu plano" (tela 025+) chega no ticket "Plano Ativo v1" — por
- * ora o botão leva ao Início, já em Modo Conservador se aplicável.
+ * O resumo desemboca na geração determinística do Plano Ativo (tela 025).
  */
 export default async function ResumoTriagemPage() {
   const session = await auth();
@@ -81,7 +80,7 @@ export default async function ResumoTriagemPage() {
         </ul>
 
         <Button asChild size="lg" className="h-12 w-full">
-          <Link href="/inicio">Ir para o Início</Link>
+          <Link href="/plano/gerando">Gerar meu plano</Link>
         </Button>
       </TransicaoEtapa>
     </main>

@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { auth } from "@/auth";
 import { sair, sairDeTodosDispositivos } from "../../(auth)/actions";
 import { Button } from "@/components/ui/button";
@@ -29,9 +30,11 @@ export default async function MaisPage() {
 
       <Card className="flex flex-col gap-3 p-4">
         <p className="text-body-md text-muted-foreground">
-          Perfil, plano, Trilhas de Decisão e demais configurações vão
-          aparecer aqui.
+          Consulte os dados, regras e resultados que sustentaram as recomendações do Athlyt.
         </p>
+        <Button asChild variant="outline" className="w-fit">
+          <Link href="/mais/trilhas">Ver Trilhas de Decisão</Link>
+        </Button>
       </Card>
 
       <div className="flex flex-col gap-2">
