@@ -70,6 +70,24 @@ describe("montarNucleo", () => {
     expect(nucleo.modoConservador).toBe(true);
   });
 
+  it("envia ao modelo rótulos canônicos e nomes personalizados juntos", () => {
+    const nucleo = montarNucleo({
+      perfilVersao: 1,
+      respostas: {
+        equipamentos: ["halteres", "leg-press"],
+        equipamentosPersonalizados: ["Belt squat pendular"],
+      },
+      respondidoEm: RESPONDIDO,
+      agora: AGORA,
+    });
+
+    expect(nucleo.equipamentos?.valor).toEqual([
+      "Halteres",
+      "Leg press",
+      "Belt squat pendular",
+    ]);
+  });
+
   it("marca como importado os campos vindos da Importação de Histórico", () => {
     const nucleo = montarNucleo({
       perfilVersao: 2,

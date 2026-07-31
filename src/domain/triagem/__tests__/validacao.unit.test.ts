@@ -146,7 +146,11 @@ describe("parseRespostaEtapa", () => {
       ),
     ).toEqual({
       ok: true,
-      dados: { localTreino: "casa", equipamentos: ["halteres"] },
+      dados: {
+        localTreino: "casa",
+        equipamentos: ["halteres"],
+        equipamentosPersonalizados: [],
+      },
     });
   });
 
@@ -164,6 +168,30 @@ describe("parseRespostaEtapa", () => {
       dados: {
         localTreino: "academia-completa",
         equipamentos: ["halteres", "leg-press"],
+        equipamentosPersonalizados: [],
+      },
+    });
+  });
+
+  it("academia-equipamentos: aceita nomes personalizados e remove duplicatas", () => {
+    expect(
+      parseRespostaEtapa(
+        "academia-equipamentos",
+        formData({
+          localTreino: "academia-completa",
+          equipamentosPersonalizados: [
+            "  Belt squat  ",
+            "belt squat",
+            "Máquina pendular",
+          ],
+        }),
+      ),
+    ).toEqual({
+      ok: true,
+      dados: {
+        localTreino: "academia-completa",
+        equipamentos: [],
+        equipamentosPersonalizados: ["Belt squat", "Máquina pendular"],
       },
     });
   });
@@ -176,7 +204,11 @@ describe("parseRespostaEtapa", () => {
       ),
     ).toEqual({
       ok: true,
-      dados: { localTreino: "sem-equipamentos", equipamentos: [] },
+      dados: {
+        localTreino: "sem-equipamentos",
+        equipamentos: [],
+        equipamentosPersonalizados: [],
+      },
     });
   });
 
@@ -188,7 +220,11 @@ describe("parseRespostaEtapa", () => {
       ),
     ).toEqual({
       ok: true,
-      dados: { localTreino: "academia-completa", equipamentos: [] },
+      dados: {
+        localTreino: "academia-completa",
+        equipamentos: [],
+        equipamentosPersonalizados: [],
+      },
     });
   });
 

@@ -135,6 +135,15 @@ export function rotuloEquipamento(id: string): string | undefined {
 }
 
 /**
+ * Caminho estável da miniatura vetorial monocromática do equipamento.
+ * Derivá-lo do id impede que catálogo e pasta de imagens divirjam por
+ * um segundo identificador mantido à mão.
+ */
+export function imagemEquipamento(id: string): string {
+  return `/equipamentos/${id}.svg`;
+}
+
+/**
  * Sugestão inicial para um local de treino. "Sugestão" é literal: o
  * usuário revisa e ajusta, como nas referências. Um local sem
  * equipamentos (peso do corpo) devolve lista vazia — estado válido,

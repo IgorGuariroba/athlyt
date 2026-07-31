@@ -63,7 +63,14 @@ export interface RespostasTriagem {
   diasDisponiveis?: DiaSemana[];
   duracaoSessaoMin?: number;
   localTreino?: LocalTreino;
+  /** IDs estáveis dos itens presentes no catálogo canônico. */
   equipamentos?: string[];
+  /**
+   * Nomes livres informados pelo atleta quando a academia possui algo
+   * que ainda não existe no catálogo. Separar nomes de ids evita que a
+   * validação confunda texto humano com uma identidade canônica.
+   */
+  equipamentosPersonalizados?: string[];
   lesoes?: string;
   condicoes?: string;
   restricoesAlimentares?: string[];

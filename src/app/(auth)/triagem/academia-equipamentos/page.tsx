@@ -27,6 +27,9 @@ export default async function AcademiaEquipamentosPage() {
         <SelecaoEquipamentos
           localInicial={respostas.localTreino as LocalTreinoId | undefined}
           equipamentosIniciais={respostas.equipamentos}
+          equipamentosPersonalizadosIniciais={
+            respostas.equipamentosPersonalizados
+          }
         />
       </EtapaForm>
     </CascataShell>
