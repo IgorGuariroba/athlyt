@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ArrowRight, Dumbbell } from "lucide-react";
 import { auth } from "@/auth";
 import { sair } from "../../(auth)/actions";
 import { Button } from "@/components/ui/button";
@@ -59,12 +60,43 @@ export default async function InicioPage() {
           </p>
         </Card>
       ) : !resumo.modoConservador ? (
-        <Card className="flex flex-col gap-3 p-4">
-          <p>Seu perfil está pronto. Gere o Plano Ativo para começar.</p>
-          <Button asChild size="sm" className="w-fit">
-            <Link href="/plano/gerando">Gerar plano</Link>
+        <section
+          aria-labelledby="plano-pronto-titulo"
+          className="flex flex-col overflow-hidden rounded-2xl border-2 border-border-strong bg-surface-container"
+        >
+          <div className="flex flex-col gap-5 p-5">
+            <div className="flex size-12 items-center justify-center rounded-full bg-on-surface-strong text-background">
+              <Dumbbell className="size-6" aria-hidden="true" />
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <p className="text-label-md font-semibold tracking-wide text-muted-foreground uppercase">
+                Próxima etapa
+              </p>
+              <h2
+                id="plano-pronto-titulo"
+                className="text-headline-sm font-bold text-on-surface-strong"
+              >
+                Seu perfil está pronto
+              </h2>
+              <p className="text-body-md leading-relaxed text-muted-foreground">
+                Vamos montar seu Bloco de Treino e suas metas nutricionais com
+                base nas respostas da triagem.
+              </p>
+            </div>
+          </div>
+
+          <Button
+            asChild
+            size="lg"
+            className="h-14 w-full rounded-none text-base font-bold"
+          >
+            <Link href="/plano/gerando">
+              Gerar meu Plano Ativo
+              <ArrowRight className="size-5" aria-hidden="true" />
+            </Link>
           </Button>
-        </Card>
+        </section>
       ) : null}
 
       {resumo.modoConservador ? (
