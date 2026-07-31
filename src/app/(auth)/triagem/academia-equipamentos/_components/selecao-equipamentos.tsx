@@ -9,6 +9,7 @@ import {
   PersonStanding,
   Plus,
   Search,
+  Trash2,
 } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
@@ -330,21 +331,41 @@ export function SelecaoEquipamentos({
                 <span className="flex-1 text-title text-on-surface-strong">
                   {nome}
                 </span>
-                <Checkbox
-                  name="equipamentosPersonalizados"
-                  value={nome}
-                  checked={personalizadosSelecionados.has(nome)}
-                  onCheckedChange={(estado) =>
-                    setPersonalizadosSelecionados((atuais) => {
-                      const proximos = new Set(atuais);
-                      if (estado === true) proximos.add(nome);
-                      else proximos.delete(nome);
-                      return proximos;
-                    })
-                  }
-                  aria-label={nome}
-                  className="size-7 shrink-0 rounded-full border-4 border-border-strong data-checked:border-on-surface-strong data-checked:bg-on-surface-strong [&>*>svg]:size-4"
-                />
+                <span className="flex shrink-0 items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setPersonalizadosCadastrados((atuais) =>
+                        atuais.filter((item) => item !== nome),
+                      );
+                      setPersonalizadosSelecionados((atuais) => {
+                        const proximos = new Set(atuais);
+                        proximos.delete(nome);
+                        return proximos;
+                      });
+                    }}
+                    aria-label={`Excluir ${nome}`}
+                    title={`Excluir ${nome}`}
+                    className="flex size-7 items-center justify-center rounded-full border-2 border-border-strong text-muted-foreground transition-colors hover:border-on-surface-strong hover:text-on-surface-strong"
+                  >
+                    <Trash2 className="size-4" aria-hidden="true" />
+                  </button>
+                  <Checkbox
+                    name="equipamentosPersonalizados"
+                    value={nome}
+                    checked={personalizadosSelecionados.has(nome)}
+                    onCheckedChange={(estado) =>
+                      setPersonalizadosSelecionados((atuais) => {
+                        const proximos = new Set(atuais);
+                        if (estado === true) proximos.add(nome);
+                        else proximos.delete(nome);
+                        return proximos;
+                      })
+                    }
+                    aria-label={nome}
+                    className="size-7 shrink-0 rounded-full border-4 border-border-strong data-checked:border-on-surface-strong data-checked:bg-on-surface-strong [&>*>svg]:size-4"
+                  />
+                </span>
                 <input
                   type="hidden"
                   name="equipamentosPersonalizadosCadastrados"

@@ -135,6 +135,18 @@ test.describe("Triagem em cascata", () => {
     // Desmarcar retira o item do plano, mas não apaga o equipamento que
     // o atleta acabou de cadastrar na sua academia.
     await expect(page.getByText("Belt squat pendular")).toBeVisible();
+
+    // Excluir é uma ação separada para corrigir um cadastro digitado
+    // errado; não pode depender do checkbox.
+    await page
+      .getByRole("textbox", { name: "Nome do equipamento" })
+      .fill("Belt squat errada");
+    await page.getByRole("button", { name: "Adicionar" }).click();
+    await page
+      .getByRole("button", { name: "Excluir Belt squat errada" })
+      .click();
+    await expect(page.getByText("Belt squat errada")).not.toBeVisible();
+    await expect(page.getByText("Belt squat pendular")).toBeVisible();
     await page.getByRole("button", { name: "Continuar" }).click();
 
     // A partir daqui as etapas são complementares — pular para o resumo
