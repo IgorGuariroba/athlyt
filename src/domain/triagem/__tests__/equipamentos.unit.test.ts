@@ -1,9 +1,12 @@
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { describe, it, expect } from "vitest";
 import {
   CATEGORIAS_EQUIPAMENTO,
   EQUIPAMENTOS,
   equipamentosDaCategoria,
   equipamentosSugeridos,
+  imagemEquipamento,
   isEquipamentoId,
   rotuloEquipamento,
 } from "../equipamentos";
@@ -41,6 +44,21 @@ describe("catálogo de equipamentos", () => {
   it("resolve o rótulo de exibição a partir do id", () => {
     expect(rotuloEquipamento("leg-press")).toBe("Leg press");
     expect(rotuloEquipamento("nao-existe")).toBeUndefined();
+  });
+
+  it("todo item possui miniatura SVG padronizada em preto e branco", () => {
+    for (const equipamento of EQUIPAMENTOS) {
+      const caminhoPublico = imagemEquipamento(equipamento.id);
+      expect(caminhoPublico).toBe(`/equipamentos/${equipamento.id}.svg`);
+
+      const svg = readFileSync(
+        join(process.cwd(), "public", caminhoPublico),
+        "utf8",
+      );
+      expect(svg).toContain('viewBox="0 0 160 112"');
+      expect(svg).toContain('fill="#fff"');
+      expect(svg).toContain("#111");
+    }
   });
 });
 

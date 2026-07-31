@@ -119,6 +119,13 @@ test.describe("Triagem em cascata", () => {
     await expect(
       page.getByRole("checkbox", { name: "Leg press" }),
     ).not.toBeChecked();
+    // O catálogo é um atalho, não uma lista fechada: a academia pode
+    // possuir equipamentos que o produto ainda não conhece.
+    await page
+      .getByRole("textbox", { name: "Nome do equipamento" })
+      .fill("Belt squat pendular");
+    await page.getByRole("button", { name: "Adicionar" }).click();
+    await expect(page.getByText("Belt squat pendular")).toBeVisible();
     await page.getByRole("button", { name: "Continuar" }).click();
 
     // A partir daqui as etapas são complementares — pular para o resumo

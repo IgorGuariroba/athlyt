@@ -1,4 +1,5 @@
 import type { RespostasTriagem } from "@/domain/triagem/etapas";
+import { rotuloEquipamento } from "@/domain/triagem/equipamentos";
 import { avaliarSuficiencia } from "@/domain/triagem/suficiencia";
 import { importado, medido, type ValorContexto } from "./tipos";
 
@@ -92,7 +93,18 @@ export function montarNucleo(entrada: {
     ),
     duracaoSessaoMin: anota("duracaoSessaoMin", respostas.duracaoSessaoMin),
     localTreino: anota("localTreino", respostas.localTreino),
-    equipamentos: anota("equipamentos", respostas.equipamentos),
+    equipamentos: anota(
+      "equipamentos",
+      respostas.equipamentos === undefined &&
+        respostas.equipamentosPersonalizados === undefined
+        ? undefined
+        : [
+            ...(respostas.equipamentos ?? []).map(
+              (id) => rotuloEquipamento(id) ?? id,
+            ),
+            ...(respostas.equipamentosPersonalizados ?? []),
+          ],
+    ),
     lesoes: anota("lesoes", respostas.lesoes),
     condicoes: anota("condicoes", respostas.condicoes),
     restricoesAlimentares: anota(

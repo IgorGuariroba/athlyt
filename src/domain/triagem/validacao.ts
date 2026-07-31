@@ -161,10 +161,25 @@ const SCHEMAS: Record<EtapaId, (formData: FormData) => ResultadoParse> = {
         equipamentos: z
           .array(z.string())
           .transform((ids) => ids.filter(isEquipamentoId)),
+        equipamentosPersonalizados: z
+          .array(z.string().trim().min(2).max(80))
+          .max(20)
+          .transform((nomes) => {
+            const vistos = new Set<string>();
+            return nomes.filter((nome) => {
+              const chave = nome.toLocaleLowerCase("pt-BR");
+              if (vistos.has(chave)) return false;
+              vistos.add(chave);
+              return true;
+            });
+          }),
       })
       .safeParse({
         localTreino: fd.get("localTreino"),
         equipamentos: fd.getAll("equipamentos"),
+        equipamentosPersonalizados: fd.getAll(
+          "equipamentosPersonalizados",
+        ),
       });
     if (!parsed.success) {
       return { ok: false, erro: "Selecione onde você treina." };
