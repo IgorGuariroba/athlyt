@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRight, Dumbbell } from "lucide-react";
+import { ArrowRight, CalendarDays, Dumbbell, Flame } from "lucide-react";
 import { auth } from "@/auth";
 import { sair } from "../../(auth)/actions";
 import { Button } from "@/components/ui/button";
@@ -47,18 +47,127 @@ export default async function InicioPage() {
       </Card>
 
       {planoAtivo ? (
-        <Card className="flex flex-col gap-3 p-4">
-          <div className="flex items-center justify-between">
-            <strong>Plano Ativo v{planoAtivo.versao}</strong>
-            <Badge>{planoAtivo.conteudo.bloco.duracaoSemanas} semanas</Badge>
+        <section
+          aria-labelledby="plano-ativo-titulo"
+          className="overflow-hidden rounded-2xl border border-border bg-surface-container"
+        >
+          <div className="flex items-start justify-between p-5 pb-4">
+            <div className="flex gap-3">
+              <div className="flex size-11 shrink-0 items-center justify-center rounded-full bg-on-surface-strong text-background">
+                <Dumbbell className="size-5" aria-hidden="true" />
+              </div>
+              <div>
+                <div className="mb-1 flex items-center gap-2">
+                  <span className="size-2 rounded-full bg-[#78b990]" />
+                  <p className="text-label-md font-semibold tracking-wide text-muted-foreground uppercase">
+                    Plano Ativo
+                  </p>
+                </div>
+                <h2
+                  id="plano-ativo-titulo"
+                  className="text-title-lg font-bold text-on-surface-strong"
+                >
+                  {planoAtivo.conteudo.bloco.divisao}
+                </h2>
+              </div>
+            </div>
+            <span className="text-body-sm text-muted-foreground">
+              v{planoAtivo.versao}
+            </span>
           </div>
-          <p className="text-body-md text-on-surface">
-            {planoAtivo.conteudo.bloco.dias.length} treinos por semana · {planoAtivo.conteudo.nutricao.calorias} kcal por dia
-          </p>
-          <p className="text-body-sm text-muted-foreground">
-            {planoAtivo.conteudo.bloco.divisao}
-          </p>
-        </Card>
+
+          <div className="grid grid-cols-2 gap-px bg-border">
+            <div className="bg-background p-4">
+              <CalendarDays
+                className="mb-3 size-5 text-muted-foreground"
+                aria-hidden="true"
+              />
+              <strong className="block text-headline-sm tabular-nums text-on-surface-strong">
+                {planoAtivo.conteudo.bloco.duracaoSemanas} semanas
+              </strong>
+              <span className="text-body-sm text-muted-foreground">
+                duração do bloco
+              </span>
+            </div>
+            <div className="bg-background p-4">
+              <Dumbbell
+                className="mb-3 size-5 text-muted-foreground"
+                aria-hidden="true"
+              />
+              <strong className="block text-headline-sm tabular-nums text-on-surface-strong">
+                {planoAtivo.conteudo.bloco.dias.length}
+              </strong>
+              <span className="text-body-sm text-muted-foreground">
+                treinos por semana
+              </span>
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-4 p-5">
+            <div className="flex items-end justify-between">
+              <div>
+                <p className="text-body-sm text-muted-foreground">
+                  Meta nutricional
+                </p>
+                <strong className="text-headline-md tabular-nums text-on-surface-strong">
+                  {planoAtivo.conteudo.nutricao.calorias} kcal
+                </strong>
+              </div>
+              <Flame
+                className="size-6 text-muted-foreground"
+                aria-hidden="true"
+              />
+            </div>
+
+            <div
+              className="flex h-3 overflow-hidden rounded-full bg-surface-container-high"
+              aria-label={`${planoAtivo.conteudo.nutricao.proteinaG} gramas de proteína, ${planoAtivo.conteudo.nutricao.carboidratosG} gramas de carboidratos e ${planoAtivo.conteudo.nutricao.gordurasG} gramas de gorduras`}
+            >
+              <span
+                className="h-full bg-[#f18562]"
+                style={{
+                  flex: planoAtivo.conteudo.nutricao.proteinaG * 4,
+                }}
+              />
+              <span
+                className="h-full bg-[#78b990]"
+                style={{
+                  flex: planoAtivo.conteudo.nutricao.carboidratosG * 4,
+                }}
+              />
+              <span
+                className="h-full bg-[#f3cf6b]"
+                style={{
+                  flex: planoAtivo.conteudo.nutricao.gordurasG * 9,
+                }}
+              />
+            </div>
+
+            <div className="grid grid-cols-3 gap-2 text-body-sm">
+              <div>
+                <span className="mb-1 block size-2 rounded-full bg-[#f18562]" />
+                <strong className="tabular-nums">
+                  {planoAtivo.conteudo.nutricao.proteinaG} g
+                </strong>
+                <span className="block text-muted-foreground">Proteína</span>
+              </div>
+              <div>
+                <span className="mb-1 block size-2 rounded-full bg-[#78b990]" />
+                <strong className="tabular-nums">
+                  {planoAtivo.conteudo.nutricao.carboidratosG} g
+                </strong>
+                <span className="block text-muted-foreground">Carboidratos</span>
+              </div>
+              <div>
+                <span className="mb-1 block size-2 rounded-full bg-[#f3cf6b]" />
+                <strong className="tabular-nums">
+                  {planoAtivo.conteudo.nutricao.gordurasG} g
+                </strong>
+                <span className="block text-muted-foreground">Gorduras</span>
+              </div>
+            </div>
+          </div>
+        </section>
       ) : !resumo.modoConservador ? (
         <section
           aria-labelledby="plano-pronto-titulo"
