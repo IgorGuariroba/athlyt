@@ -19,8 +19,11 @@ test("executa o treino do dia, usa o timer e consulta o resumo no histórico", a
 
   await page.goto("/inicio");
   await expect(page.getByRole("heading", { name: "Superior A" })).toBeVisible();
-  await page.getByRole("button", { name: /Iniciar sessão/ }).click();
+  await page.getByRole("link", { name: /Ver treino/ }).click();
+  await expect(page.getByText("1 exercícios · 1 séries")).toBeVisible();
+  await page.getByRole("button", { name: /Iniciar treino/ }).click();
   await expect(page.getByText("SESSÃO EM ANDAMENTO")).toBeVisible();
+  await expect(page.getByRole("button", { name: /Complete 1 séries/ })).toBeDisabled();
 
   await page.getByLabel("Registrar série 1").click();
   await expect(page.getByRole("dialog", { name: "Timer de descanso" })).toBeVisible();

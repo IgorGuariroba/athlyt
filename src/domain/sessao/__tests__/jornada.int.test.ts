@@ -81,7 +81,9 @@ describe("jornada pública da Sessão de Treino", () => {
     expect((await listarHistoricoSessoes(userId))[0].id).toBe(iniciada.id);
 
     const segunda = await iniciarSessao(userId, "segunda-superior");
+    expect(segunda.exercicios[0].series[0]).toEqual(expect.objectContaining({ cargaSugeridaKg: 26, melhorCargaAnteriorKg: 26 }));
     await registrarSerie(userId, segunda.id, { exercicioId: "supino-reto-halteres", numero: 1, cargaKg: 20, repeticoes: 10, rir: 2 });
+    await registrarSerie(userId, segunda.id, { exercicioId: "supino-reto-halteres", numero: 2, cargaKg: 20, repeticoes: 8, rir: 2 });
     const segundoResumo = await concluirSessao(userId, segunda.id);
     expect(segundoResumo.recordes).toEqual([]);
   });
@@ -89,6 +91,7 @@ describe("jornada pública da Sessão de Treino", () => {
   it("abandona com motivo e mantém o desfecho distinguível no histórico", async () => {
     const { userId } = await contexto();
     const iniciada = await iniciarSessao(userId, "segunda-superior");
+    await expect(concluirSessao(userId, iniciada.id)).rejects.toThrow("séries planejadas");
     await abandonarSessao(userId, iniciada.id, "dor");
 
     const sessao = await obterSessao(userId, iniciada.id);

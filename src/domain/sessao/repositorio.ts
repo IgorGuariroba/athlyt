@@ -10,6 +10,8 @@ export interface SerieSessao {
   numero: number;
   repeticoesSugeridas: string;
   cargaKg: number | null;
+  cargaSugeridaKg: number;
+  melhorCargaAnteriorKg: number;
   repeticoes: number | null;
   rir: number;
   concluida: boolean;
@@ -27,14 +29,27 @@ export interface ResumoSessao extends SessaoTreino {
   recordes: Array<{ exercicioId: string; nome: string; tipo: "maior_carga"; valor: number }>;
 }
 
-function planejarExercicios(dia: DiaTreino): ExercicioSessao[] {
+function planejarExercicios(dia: DiaTreino, melhoresCargas: Map<string, number>): ExercicioSessao[] {
   return dia.exercicios.map((exercicio) => ({
     exercicioId: exercicio.exercicioId, nome: exercicio.nome, descansoSeg: exercicio.descansoSeg,
     series: Array.from({ length: exercicio.series }, (_, indice) => ({
       numero: indice + 1, repeticoesSugeridas: exercicio.repeticoes, cargaKg: null,
+      cargaSugeridaKg: melhoresCargas.get(exercicio.exercicioId) ?? 0,
+      melhorCargaAnteriorKg: melhoresCargas.get(exercicio.exercicioId) ?? 0,
       repeticoes: null, rir: exercicio.rir, concluida: false,
     })),
   }));
+}
+
+async function melhoresCargasDoHistorico(userId: string): Promise<Map<string, number>> {
+  const anteriores = await db.select({ exercicios: workoutSessions.exercicios }).from(workoutSessions)
+    .where(and(eq(workoutSessions.userId, userId), eq(workoutSessions.estado, "concluida")));
+  const melhores = new Map<string, number>();
+  for (const linha of anteriores) for (const exercicio of linha.exercicios as ExercicioSessao[]) {
+    const maior = Math.max(0, ...exercicio.series.filter((serie) => serie.concluida).map((serie) => serie.cargaKg ?? 0));
+    melhores.set(exercicio.exercicioId, Math.max(melhores.get(exercicio.exercicioId) ?? 0, maior));
+  }
+  return melhores;
 }
 
 async function eventos(sessionId: string): Promise<EventoSessao[]> {
@@ -57,9 +72,10 @@ export async function iniciarSessao(userId: string, diaId: string): Promise<Sess
   if (!plano) throw new Error("Plano Ativo não encontrado.");
   const dia = (plano.conteudo as PlanoGerado).bloco.dias.find((item) => item.id === diaId);
   if (!dia) throw new Error("Treino não pertence ao Plano Ativo.");
+  const melhoresCargas = await melhoresCargasDoHistorico(userId);
   return db.transaction(async (tx) => {
     const [linha] = await tx.insert(workoutSessions).values({
-      userId, planId: plano.id, diaId, nome: dia.nome, estado: "em_andamento", exercicios: planejarExercicios(dia),
+      userId, planId: plano.id, diaId, nome: dia.nome, estado: "em_andamento", exercicios: planejarExercicios(dia, melhoresCargas),
     }).returning();
     await tx.insert(workoutEvents).values({ sessionId: linha.id, userId, tipo: "sessao_iniciada", dados: { planoId: plano.id, diaId } });
     return mapear(linha);
@@ -130,6 +146,9 @@ async function encerrar(userId: string, sessionId: string, estado: "concluida" |
   const atualizada = await db.transaction(async (tx) => {
     const [linha] = await tx.select().from(workoutSessions).where(and(eq(workoutSessions.id, sessionId), eq(workoutSessions.userId, userId))).limit(1).for("update");
     if (!linha || linha.estado !== "em_andamento") throw new Error("Sessão não está em andamento.");
+    if (estado === "concluida" && !(linha.exercicios as ExercicioSessao[]).every((exercicio) => exercicio.series.every((serie) => serie.concluida))) {
+      throw new Error("Registre todas as séries planejadas antes de concluir.");
+    }
     const [encerrada] = await tx.update(workoutSessions).set({ estado, endedAt: new Date(), motivoAbandono: motivo ?? null }).where(eq(workoutSessions.id, sessionId)).returning();
     await tx.insert(workoutEvents).values({ sessionId, userId, tipo: estado === "concluida" ? "sessao_concluida" : "sessao_abandonada", dados: motivo ? { motivo } : {} });
     return encerrada;
