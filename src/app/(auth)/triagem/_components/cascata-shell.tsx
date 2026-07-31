@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { ETAPAS_TRIAGEM } from "@/domain/triagem/etapas";
+import { TransicaoEtapa } from "./transicao-etapa";
 
 /**
  * Moldura visual comum da cascata: barra de progresso + título +
@@ -41,11 +42,13 @@ export function CascataShell({
         </p>
       </div>
 
-      <h1 className="text-headline-md font-bold text-on-surface-strong">
-        {titulo}
-      </h1>
+      <TransicaoEtapa indice={indice}>
+        <h1 className="text-headline-md font-bold text-on-surface-strong">
+          {titulo}
+        </h1>
 
-      {children}
+        {children}
+      </TransicaoEtapa>
     </main>
   );
 }

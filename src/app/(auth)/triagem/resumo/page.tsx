@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { obterPerfilVigente } from "@/domain/triagem/perfil";
 import { montarResumoTriagem } from "@/domain/triagem/resumo";
+import { ETAPAS_TRIAGEM } from "@/domain/triagem/etapas";
+import { TransicaoEtapa } from "../_components/transicao-etapa";
 
 /**
  * Tela 024 — Resumo da triagem (specs/workflow/telas/024-resumo-
@@ -28,57 +30,60 @@ export default async function ResumoTriagemPage() {
 
   return (
     <main className="flex flex-1 flex-col gap-6 bg-background px-6 py-8">
-      <div className="flex items-center justify-between">
-        <h1 className="text-headline-md font-bold text-on-surface-strong">
-          Resumo da triagem
-        </h1>
+      {/* Fim da cascata: entra sempre no sentido do avanço. */}
+      <TransicaoEtapa indice={ETAPAS_TRIAGEM.length + 1}>
+        <div className="flex items-center justify-between">
+          <h1 className="text-headline-md font-bold text-on-surface-strong">
+            Resumo da triagem
+          </h1>
+          {resumo.modoConservador ? (
+            <Badge variant="secondary">Modo Conservador</Badge>
+          ) : (
+            <Badge>Perfil completo</Badge>
+          )}
+        </div>
+
         {resumo.modoConservador ? (
-          <Badge variant="secondary">Modo Conservador</Badge>
-        ) : (
-          <Badge>Perfil completo</Badge>
-        )}
-      </div>
+          <Card className="p-4">
+            <p className="text-body-md text-on-surface">
+              Enquanto os dados obrigatórios não estiverem completos, o Athlyt
+              oferece apenas orientações de baixo risco, sem estratégia
+              energética agressiva.
+            </p>
+          </Card>
+        ) : null}
 
-      {resumo.modoConservador ? (
-        <Card className="p-4">
-          <p className="text-body-md text-on-surface">
-            Enquanto os dados obrigatórios não estiverem completos, o
-            Athlyt oferece apenas orientações de baixo risco, sem
-            estratégia energética agressiva.
-          </p>
-        </Card>
-      ) : null}
-
-      <ul className="flex flex-col gap-2">
-        {resumo.itens.map((item) => (
-          <li key={item.id}>
-            <Card className="flex flex-row items-center justify-between p-4">
-              <div className="flex flex-col">
-                <span className="text-body-md text-on-surface">
-                  {item.titulo}
-                  {!item.obrigatoria && (
-                    <span className="ml-2 text-body-sm text-muted-foreground">
-                      (opcional)
-                    </span>
-                  )}
-                </span>
-                {!item.respondida ? (
-                  <span className="text-body-sm text-muted-foreground">
-                    {item.destrava}
+        <ul className="flex flex-col gap-2">
+          {resumo.itens.map((item) => (
+            <li key={item.id}>
+              <Card className="flex flex-row items-center justify-between p-4">
+                <div className="flex flex-col">
+                  <span className="text-body-md text-on-surface">
+                    {item.titulo}
+                    {!item.obrigatoria && (
+                      <span className="ml-2 text-body-sm text-muted-foreground">
+                        (opcional)
+                      </span>
+                    )}
                   </span>
-                ) : null}
-              </div>
-              <Badge variant={item.respondida ? "default" : "outline"}>
-                {item.respondida ? "Preenchido" : "Pendente"}
-              </Badge>
-            </Card>
-          </li>
-        ))}
-      </ul>
+                  {!item.respondida ? (
+                    <span className="text-body-sm text-muted-foreground">
+                      {item.destrava}
+                    </span>
+                  ) : null}
+                </div>
+                <Badge variant={item.respondida ? "default" : "outline"}>
+                  {item.respondida ? "Preenchido" : "Pendente"}
+                </Badge>
+              </Card>
+            </li>
+          ))}
+        </ul>
 
-      <Button asChild size="lg" className="h-12 w-full">
-        <Link href="/inicio">Ir para o Início</Link>
-      </Button>
+        <Button asChild size="lg" className="h-12 w-full">
+          <Link href="/inicio">Ir para o Início</Link>
+        </Button>
+      </TransicaoEtapa>
     </main>
   );
 }
