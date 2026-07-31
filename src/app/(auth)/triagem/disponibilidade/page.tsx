@@ -1,8 +1,8 @@
-import { Checkbox } from "@/components/ui/checkbox";
-import { Label } from "@/components/ui/label";
 import { posicaoNaCascata, proximoDestinoCascata } from "@/domain/triagem/etapas";
 import { CascataShell } from "../_components/cascata-shell";
+import { carregarRespostasTriagem } from "../_lib/carregar-respostas";
 import { EtapaForm } from "../_components/etapa-form";
+import { CartaoCheckbox } from "../_components/opcao-cartao";
 
 const DIAS = [
   { value: "segunda", label: "Segunda" },
@@ -18,7 +18,8 @@ const DIAS = [
  * Tela 016 — Disponibilidade semanal
  * (specs/workflow/telas/016-disponibilidade-dias.md).
  */
-export default function DisponibilidadePage() {
+export default async function DisponibilidadePage() {
+  const respostas = await carregarRespostasTriagem();
   const { indice, total } = posicaoNaCascata("disponibilidade");
 
   return (
@@ -27,20 +28,19 @@ export default function DisponibilidadePage() {
         etapaAtual="disponibilidade"
         proximaEtapa={proximoDestinoCascata("disponibilidade")}
       >
-        <div className="grid grid-cols-1 gap-2">
+        <p className="text-body-sm text-muted-foreground">
+          Selecione todos os dias em que consegue treinar.
+        </p>
+        <div className="grid grid-cols-1 gap-3">
           {DIAS.map((dia) => (
-            <Label
+            <CartaoCheckbox
               key={dia.value}
-              htmlFor={`dia-${dia.value}`}
-              className="flex min-h-[52px] items-center justify-between rounded-lg border border-border bg-surface-container px-4 py-3 text-body-lg text-on-surface"
-            >
-              {dia.label}
-              <Checkbox
-                id={`dia-${dia.value}`}
-                name="diasDisponiveis"
-                value={dia.value}
-              />
-            </Label>
+              id={`dia-${dia.value}`}
+              name="diasDisponiveis"
+              value={dia.value}
+              titulo={dia.label}
+              defaultChecked={respostas.diasDisponiveis?.includes(dia.value)}
+            />
           ))}
         </div>
       </EtapaForm>
