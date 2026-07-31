@@ -1,11 +1,10 @@
 import { RadioGroup } from "@/components/ui/radio-group";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
 import { posicaoNaCascata, proximoDestinoCascata } from "@/domain/triagem/etapas";
 import { CascataShell } from "../_components/cascata-shell";
 import { carregarRespostasTriagem } from "../_lib/carregar-respostas";
 import { EtapaForm } from "../_components/etapa-form";
 import { CartaoRadio } from "../_components/opcao-cartao";
+import { SeletorTempoPreparo } from "./_components/seletor-tempo-preparo";
 
 const ORCAMENTOS = [
   { value: "baixo", label: "Baixo", descricao: "Prioriza alimentos mais econômicos" },
@@ -50,20 +49,10 @@ export default async function AlimentacaoLogisticaPage() {
         </div>
 
         <div className="flex flex-col gap-2">
-          <Label htmlFor="tempoPreparoMin">
-            Tempo de preparo por refeição (minutos)
-          </Label>
-          <Input
-            id="tempoPreparoMin"
-            name="tempoPreparoMin"
-            type="number"
-            inputMode="numeric"
-            min={0}
-            max={240}
-            defaultValue={respostas.tempoPreparoMin}
-            required
-            className="h-12 text-base"
-          />
+          <p className="text-label-md text-muted-foreground">
+            Tempo de preparo por refeição
+          </p>
+          <SeletorTempoPreparo tempoInicialMin={respostas.tempoPreparoMin} />
         </div>
       </EtapaForm>
     </CascataShell>

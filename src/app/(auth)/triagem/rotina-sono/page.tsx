@@ -1,11 +1,10 @@
 import { RadioGroup } from "@/components/ui/radio-group";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
 import { posicaoNaCascata, proximoDestinoCascata } from "@/domain/triagem/etapas";
 import { CascataShell } from "../_components/cascata-shell";
 import { carregarRespostasTriagem } from "../_lib/carregar-respostas";
 import { EtapaForm } from "../_components/etapa-form";
 import { CartaoRadio } from "../_components/opcao-cartao";
+import { SeletorHorasSono } from "./_components/seletor-horas-sono";
 
 const NIVEIS = [
   {
@@ -72,18 +71,10 @@ export default async function RotinaSonoPage() {
         </div>
 
         <div className="flex flex-col gap-2">
-          <Label htmlFor="horasSono">Horas de sono por noite</Label>
-          <Input
-            id="horasSono"
-            name="horasSono"
-            type="number"
-            inputMode="numeric"
-            min={0}
-            max={24}
-            defaultValue={respostas.horasSono}
-            required
-            className="h-12 text-base"
-          />
+          <p className="text-label-md text-muted-foreground">
+            Horas de sono por noite
+          </p>
+          <SeletorHorasSono horasIniciais={respostas.horasSono} />
         </div>
       </EtapaForm>
     </CascataShell>
