@@ -36,6 +36,13 @@
       "when": 1785515338091,
       "tag": "0004_fat_shooting_star",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1785529310765,
+      "tag": "0005_young_chronomancer",
+      "breakpoints": true
     }
   ]
 }

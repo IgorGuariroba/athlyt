@@ -3,7 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
-import { abandonarSessao, concluirSessao, iniciarSessao, registrarSerie, type MotivoAbandono } from "@/domain/sessao/repositorio";
+import type { MotivoSubstituicao } from "@/domain/plano/substituicoes";
+import { abandonarSessao, concluirSessao, iniciarSessao, registrarSerie, substituirExercicioNaSessao, type MotivoAbandono } from "@/domain/sessao/repositorio";
 
 async function usuario() {
   const session = await auth();
@@ -25,6 +26,18 @@ export async function registrarSerieAction(sessionId: string, formData: FormData
     rir: Number(formData.get("rir")),
   });
   revalidatePath(`/sessao/${sessionId}`);
+}
+
+export async function substituirExercicioAction(sessionId: string, formData: FormData) {
+  const observacao = String(formData.get("observacao") ?? "").trim();
+  const sessao = await substituirExercicioNaSessao(await usuario(), sessionId, {
+    exercicioId: String(formData.get("exercicioId")),
+    novoExercicioId: String(formData.get("novoExercicioId")),
+    motivo: String(formData.get("motivo")) as MotivoSubstituicao,
+    observacao: observacao || undefined,
+  });
+  const indice = sessao.exercicios.findIndex((item) => item.exercicioId === String(formData.get("novoExercicioId")));
+  redirect(`/sessao/${sessionId}?exercicio=${Math.max(indice, 0)}`);
 }
 
 export async function concluirSessaoAction(sessionId: string) {

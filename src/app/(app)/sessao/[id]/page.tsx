@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { ChevronLeft, Check, CircleDot, Dumbbell, MoreHorizontal } from "lucide-react";
+import { ChevronLeft, Check, CircleDot, Dumbbell, MoreHorizontal, Repeat2 } from "lucide-react";
 import Link from "next/link";
 import { auth } from "@/auth";
 import { Badge } from "@/components/ui/badge";
@@ -48,7 +48,17 @@ export default async function SessaoPage({ params, searchParams }: { params: Pro
         <div className="flex items-center gap-3 border-b border-border p-4">
           <div className={`flex size-12 items-center justify-center rounded-xl ${feito ? "bg-success/15 text-success" : "bg-surface-container-high"}`}><Dumbbell className="size-5" /></div>
           <div className="min-w-0 flex-1"><p className="text-caption font-semibold tracking-wide text-muted-foreground uppercase">Exercício {indiceAtual + 1} de {sessao.exercicios.length}</p><h2 className="truncate text-title font-bold">{exercicio.nome}</h2><p className="text-body-sm text-muted-foreground">{exercicio.series.length} séries · {exercicio.series[0].repeticoesSugeridas} reps · RIR {exercicio.series[0].rir}</p></div>
+          {exercicio.series.some((serie) => serie.concluida) ? null : (
+            <Button asChild variant="ghost" size="icon" className="shrink-0">
+              <Link href={`/sessao/${sessao.id}/substituir?exercicio=${exercicio.exercicioId}`} aria-label={`Substituir ${exercicio.nome}`}><Repeat2 /></Link>
+            </Button>
+          )}
         </div>
+        {exercicio.substituiuNome ? (
+          <p className="border-b border-border bg-surface-container-high px-4 py-2 text-body-sm text-muted-foreground">
+            Substitui <strong className="text-on-surface">{exercicio.substituiuNome}</strong> · motivo: {exercicio.motivoSubstituicao}
+          </p>
+        ) : null}
         <details className="border-b border-border px-4 py-3 text-body-sm"><summary className="cursor-pointer font-semibold">O que é RIR?</summary><p className="mt-2 text-muted-foreground">É quantas repetições você ainda conseguiria fazer com boa técnica ao encerrar a série. Quanto menor o RIR, mais difícil foi a série.</p></details>
         <div className="px-3">
           {exercicio.series.map((serie) => <RegistroSerie key={serie.numero} sessionId={sessao.id} exercicioId={exercicio.exercicioId} numero={serie.numero} repeticoesSugeridas={serie.repeticoesSugeridas} rirSugerido={serie.rir} descansoSeg={exercicio.descansoSeg} concluida={serie.concluida} cargaInicial={serie.cargaKg} cargaSugerida={serie.cargaSugeridaKg ?? 0} melhorCargaAnterior={serie.melhorCargaAnteriorKg ?? 0} repeticoesIniciais={serie.repeticoes} />)}

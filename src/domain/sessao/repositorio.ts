@@ -1,6 +1,9 @@
 import { and, asc, desc, eq } from "drizzle-orm";
 import { db } from "@/db/client";
-import { plans, workoutEvents, workoutSessions } from "@/db/schema";
+import { decisionTrails, exerciseSubstitutions, plans, workoutEvents, workoutSessions } from "@/db/schema";
+import { encontrarExercicio, regioesLesionadas } from "@/domain/plano/exercicios";
+import { alternativasEquivalentes, motivoPersistente, type Alternativa, type MotivoSubstituicao } from "@/domain/plano/substituicoes";
+import { obterPerfilVigente } from "@/domain/triagem/perfil";
 import type { DiaTreino, PlanoGerado } from "@/domain/plano/tipos";
 
 export type MotivoAbandono = "tempo" | "equipamento" | "dor" | "outro";
@@ -18,8 +21,17 @@ export interface SerieSessao {
 }
 export interface ExercicioSessao {
   exercicioId: string; nome: string; descansoSeg: number; series: SerieSessao[];
+  /** Presente quando este exercício entrou no lugar de outro. */
+  substituiuExercicioId?: string;
+  substituiuNome?: string;
+  motivoSubstituicao?: MotivoSubstituicao;
 }
-export interface EventoSessao { id: string; tipo: "sessao_iniciada" | "serie_registrada" | "sessao_concluida" | "sessao_abandonada"; dados: unknown; createdAt: Date }
+
+export interface Substituicao {
+  diaId: string; exercicioOriginalId: string; exercicioNovoId: string;
+  motivo: MotivoSubstituicao; persistente: boolean; observacao: string | null; createdAt: Date;
+}
+export interface EventoSessao { id: string; tipo: "sessao_iniciada" | "serie_registrada" | "sessao_concluida" | "sessao_abandonada" | "exercicio_substituido"; dados: unknown; createdAt: Date }
 export interface SessaoTreino {
   id: string; diaId: string; nome: string; estado: EstadoSessao; exercicios: ExercicioSessao[];
   startedAt: Date; endedAt: Date | null; motivoAbandono: string | null; eventos: EventoSessao[];
@@ -73,9 +85,10 @@ export async function iniciarSessao(userId: string, diaId: string): Promise<Sess
   const dia = (plano.conteudo as PlanoGerado).bloco.dias.find((item) => item.id === diaId);
   if (!dia) throw new Error("Treino não pertence ao Plano Ativo.");
   const melhoresCargas = await melhoresCargasDoHistorico(userId);
+  const exercicios = await aplicarSubstituicoesPersistentes(userId, diaId, planejarExercicios(dia, melhoresCargas));
   return db.transaction(async (tx) => {
     const [linha] = await tx.insert(workoutSessions).values({
-      userId, planId: plano.id, diaId, nome: dia.nome, estado: "em_andamento", exercicios: planejarExercicios(dia, melhoresCargas),
+      userId, planId: plano.id, diaId, nome: dia.nome, estado: "em_andamento", exercicios,
     }).returning();
     await tx.insert(workoutEvents).values({ sessionId: linha.id, userId, tipo: "sessao_iniciada", dados: { planoId: plano.id, diaId } });
     return mapear(linha);
@@ -154,6 +167,127 @@ async function encerrar(userId: string, sessionId: string, estado: "concluida" |
     return encerrada;
   });
   return mapear(atualizada);
+}
+
+/**
+ * Substituições persistentes já registradas para o dia, indexadas
+ * pelo exercício original; a mais recente vence. É o que dá estabilidade aos
+ * exercícios-chave: quem trocou por falta de equipamento ou por dor
+ * não precisa repetir a troca toda sessão, e quem trocou por
+ * preferência volta ao exercício prescrito na sessão seguinte.
+ */
+async function substituicoesVigentes(userId: string, diaId: string): Promise<Map<string, Substituicao>> {
+  const linhas = await db.select().from(exerciseSubstitutions)
+    .where(and(eq(exerciseSubstitutions.userId, userId), eq(exerciseSubstitutions.diaId, diaId), eq(exerciseSubstitutions.persistente, true)))
+    .orderBy(asc(exerciseSubstitutions.createdAt));
+  const vigentes = new Map<string, Substituicao>();
+  for (const linha of linhas) {
+    vigentes.set(linha.exercicioOriginalId, {
+      diaId: linha.diaId, exercicioOriginalId: linha.exercicioOriginalId, exercicioNovoId: linha.exercicioNovoId,
+      motivo: linha.motivo, persistente: linha.persistente, observacao: linha.observacao, createdAt: linha.createdAt,
+    });
+  }
+  return vigentes;
+}
+
+async function aplicarSubstituicoesPersistentes(userId: string, diaId: string, exercicios: ExercicioSessao[]): Promise<ExercicioSessao[]> {
+  const vigentes = await substituicoesVigentes(userId, diaId);
+  if (vigentes.size === 0) return exercicios;
+  const melhores = await melhoresCargasDoHistorico(userId);
+  return exercicios.map((exercicio) => {
+    const troca = vigentes.get(exercicio.exercicioId);
+    const novo = troca ? encontrarExercicio(troca.exercicioNovoId) : undefined;
+    return troca && novo ? trocarNoExercicio(exercicio, novo.id, novo.nome, troca.motivo, melhores.get(novo.id) ?? 0) : exercicio;
+  });
+}
+
+function trocarNoExercicio(exercicio: ExercicioSessao, novoId: string, novoNome: string, motivo: MotivoSubstituicao, melhorCarga: number): ExercicioSessao {
+  return {
+    ...exercicio, exercicioId: novoId, nome: novoNome,
+    substituiuExercicioId: exercicio.substituiuExercicioId ?? exercicio.exercicioId,
+    substituiuNome: exercicio.substituiuNome ?? exercicio.nome,
+    motivoSubstituicao: motivo,
+    // A prescrição (séries, reps, RIR, descanso) permanece: o que muda
+    // é o exercício, não o estímulo pretendido. As cargas voltam à
+    // referência histórica do novo exercício, que é outra barra.
+    series: exercicio.series.map((serie) => serie.concluida ? serie : { ...serie, cargaSugeridaKg: melhorCarga, melhorCargaAnteriorKg: melhorCarga }),
+  };
+}
+
+/**
+ * Alternativas oferecidas para um exercício da sessão em andamento,
+ * já filtradas pelo equipamento e pelas limitações do perfil vigente.
+ */
+export async function alternativasParaSessao(userId: string, sessionId: string, entrada: { exercicioId: string; motivo: MotivoSubstituicao; relatoDor?: string }): Promise<Alternativa[]> {
+  const sessao = await obterSessao(userId, sessionId);
+  if (!sessao) throw new Error("Sessão não encontrada.");
+  const perfil = await obterPerfilVigente(userId);
+  const respostas = perfil?.respostas ?? {};
+  const plano = await db.select({ modoConservador: plans.modoConservador }).from(plans).where(and(eq(plans.userId, userId), eq(plans.estado, "ativo"))).limit(1);
+  return alternativasEquivalentes({
+    exercicioId: entrada.exercicioId,
+    motivo: entrada.motivo,
+    equipamentos: respostas.equipamentos ?? [],
+    regioesLesionadas: regioesLesionadas(respostas.lesoes),
+    regioesDoloridas: regioesLesionadas(entrada.relatoDor),
+    modoConservador: plano[0]?.modoConservador ?? false,
+    exerciciosNoTreino: sessao.exercicios.map((e) => e.exercicioId),
+  });
+}
+
+/**
+ * Troca um exercício da sessão em andamento. Séries já registradas
+ * bloqueiam a troca: o histórico de carga pertence ao exercício que
+ * foi de fato executado, e reescrevê-lo falsificaria a progressão.
+ */
+export async function substituirExercicioNaSessao(userId: string, sessionId: string, entrada: { exercicioId: string; novoExercicioId: string; motivo: MotivoSubstituicao; observacao?: string }): Promise<SessaoTreino> {
+  // A alternativa é revalidada no servidor: a lista mostrada na tela
+  // não é autoridade sobre o que é viável para este perfil.
+  const alternativas = await alternativasParaSessao(userId, sessionId, { exercicioId: entrada.exercicioId, motivo: entrada.motivo, relatoDor: entrada.observacao });
+  const escolhida = alternativas.find((a) => a.exercicioId === entrada.novoExercicioId);
+  if (!escolhida) throw new Error("Alternativa não preserva o estímulo ou não é viável para o seu perfil.");
+  const novo = encontrarExercicio(entrada.novoExercicioId)!;
+  const melhores = await melhoresCargasDoHistorico(userId);
+  const persistente = motivoPersistente(entrada.motivo);
+  const perfilVersao = (await obterPerfilVigente(userId))?.version ?? 0;
+
+  const atualizada = await db.transaction(async (tx) => {
+    const [linha] = await tx.select().from(workoutSessions).where(and(eq(workoutSessions.id, sessionId), eq(workoutSessions.userId, userId))).limit(1).for("update");
+    if (!linha || linha.estado !== "em_andamento") throw new Error("Sessão não está em andamento.");
+    const exercicios = structuredClone(linha.exercicios as ExercicioSessao[]);
+    const indice = exercicios.findIndex((item) => item.exercicioId === entrada.exercicioId);
+    if (indice < 0) throw new Error("Exercício não pertence à sessão.");
+    if (exercicios[indice].series.some((serie) => serie.concluida)) throw new Error("Não é possível substituir um exercício com séries já registradas.");
+    exercicios[indice] = trocarNoExercicio(exercicios[indice], novo.id, novo.nome, entrada.motivo, melhores.get(novo.id) ?? 0);
+
+    const [atualizada] = await tx.update(workoutSessions).set({ exercicios }).where(eq(workoutSessions.id, sessionId)).returning();
+    const dados = { de: entrada.exercicioId, para: entrada.novoExercicioId, motivo: entrada.motivo, preservaEstimulo: escolhida.preservaEstimulo, persistente, observacao: entrada.observacao ?? null };
+    await tx.insert(workoutEvents).values({ sessionId, userId, tipo: "exercicio_substituido", dados });
+    await tx.insert(exerciseSubstitutions).values({
+      userId, sessionId, diaId: linha.diaId, exercicioOriginalId: exercicios[indice].substituiuExercicioId ?? entrada.exercicioId,
+      exercicioNovoId: entrada.novoExercicioId, motivo: entrada.motivo, observacao: entrada.observacao ?? null, persistente,
+    });
+    await tx.insert(decisionTrails).values({
+      userId, operacao: "copiloto-sessao", recorteVersao: 1, perfilVersao,
+      modeloSolicitado: "motor-adaptativo", modeloResolvido: "motor-substituicao-v1", auditavel: true, degradado: false,
+      camposEnviados: ["equipamentos", "lesoes", "exerciciosDaSessao"], camposOmitidos: [], ferramentasConsultadas: [],
+      resultado: { tipo: "substituicao-em-sessao", sessionId, ...dados, justificativa: escolhida.justificativa },
+    });
+    return atualizada;
+  });
+  // `mapear` lê eventos fora da transação de propósito: dentro dela o
+  // insert recém-feito ainda não estaria visível à conexão do pool.
+  return mapear(atualizada);
+}
+
+export async function listarSubstituicoes(userId: string, diaId?: string): Promise<Substituicao[]> {
+  const linhas = await db.select().from(exerciseSubstitutions)
+    .where(diaId ? and(eq(exerciseSubstitutions.userId, userId), eq(exerciseSubstitutions.diaId, diaId)) : eq(exerciseSubstitutions.userId, userId))
+    .orderBy(desc(exerciseSubstitutions.createdAt));
+  return linhas.map((linha) => ({
+    diaId: linha.diaId, exercicioOriginalId: linha.exercicioOriginalId, exercicioNovoId: linha.exercicioNovoId,
+    motivo: linha.motivo, persistente: linha.persistente, observacao: linha.observacao, createdAt: linha.createdAt,
+  }));
 }
 
 export async function listarHistoricoSessoes(userId: string): Promise<SessaoTreino[]> {
