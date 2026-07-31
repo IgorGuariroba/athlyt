@@ -149,6 +149,18 @@ test.describe("Triagem em cascata", () => {
     await expect(page.getByText("Belt squat pendular")).toBeVisible();
     await page.getByRole("button", { name: "Continuar" }).click();
 
+    // Regressão: avançar e usar o Voltar da própria cascata deve montar
+    // a etapa com o perfil recém-persistido, não com o payload RSC que
+    // existia antes do submit.
+    await expect(page).toHaveURL("/triagem/saude-lesoes");
+    await page.getByRole("link", { name: "Voltar" }).click();
+    await expect(page).toHaveURL("/triagem/academia-equipamentos");
+    await expect(page.getByText("Belt squat pendular")).toBeVisible();
+    await expect(
+      page.getByRole("checkbox", { name: "Belt squat pendular" }),
+    ).not.toBeChecked();
+    await page.getByRole("button", { name: "Continuar" }).click();
+
     // A partir daqui as etapas são complementares — pular para o resumo
     // pulando as respostas ainda é permitido pelo teste ir direto à URL,
     // mas a jornada real do produto passa por elas; simulamos aqui só
