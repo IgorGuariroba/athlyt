@@ -134,6 +134,27 @@ export const decisionTrails = pgTable("decision_trail", {
  * `revogadoEm` preserva o histórico: revogar afeta usos futuros sem
  * apagar decisões passadas necessárias à auditoria (user story 107).
  */
+/**
+ * Planos — rascunhos podem receber substituições durante a revisão;
+ * ativar materializa uma nova versão imutável. `conteudo` é o snapshot
+ * completo produzido pelo Motor Adaptativo, de modo que uma versão
+ * continue reproduzível mesmo depois de catálogo e regras evoluírem.
+ */
+export const plans = pgTable("plan", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: uuid("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  perfilVersao: integer("perfil_versao").notNull(),
+  versao: integer("versao"),
+  estado: text("estado").$type<"rascunho" | "ativo" | "arquivado">().notNull(),
+  regraVersao: text("regra_versao").notNull(),
+  modoConservador: boolean("modo_conservador").notNull(),
+  conteudo: jsonb("conteudo").notNull(),
+  createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
+  activatedAt: timestamp("activated_at", { mode: "date" }),
+});
+
 export const consents = pgTable("consent", {
   id: uuid("id").primaryKey().defaultRandom(),
   userId: uuid("userId")

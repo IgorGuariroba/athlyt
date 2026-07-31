@@ -210,8 +210,23 @@ test.describe("Triagem em cascata", () => {
     await expect(page.getByText("Perfil completo")).toBeVisible();
     await expect(page.getByText("Modo Conservador")).not.toBeVisible();
 
-    await page.getByRole("link", { name: "Ir para o Início" }).click();
+    await page.getByRole("link", { name: "Gerar meu plano" }).click();
+    await expect(page).toHaveURL("/plano/revisao");
+    await expect(page.getByRole("heading", { name: "Revise seu Plano Ativo" })).toBeVisible();
+    await expect(page.getByText(/kcal/).first()).toBeVisible();
+
+    await page.getByRole("link", { name: "Revisar treinos" }).click();
+    await expect(page).toHaveURL("/plano/revisao/treino");
+    await expect(page.getByText("Por que este exercício?").first()).toBeVisible();
+    await expect(page.getByText(/RIR/).first()).toBeVisible();
+
+    await page.getByRole("link", { name: "Revisar nutrição" }).click();
+    await expect(page).toHaveURL("/plano/revisao/nutricao");
+    await expect(page.getByRole("heading", { name: "Estratégia nutricional" })).toBeVisible();
+    await page.getByRole("button", { name: "Ativar plano" }).click();
+
     await expect(page).toHaveURL("/inicio");
+    await expect(page.getByText("Plano Ativo v1")).toBeVisible();
     await expect(page.getByText("Modo Conservador")).not.toBeVisible();
   });
 

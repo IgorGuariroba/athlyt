@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { obterPerfilVigente } from "@/domain/triagem/perfil";
 import { montarResumoTriagem } from "@/domain/triagem/resumo";
+import { obterPlanoAtivo } from "@/domain/plano/repositorio";
 
 /**
  * Casco da aba Início (telas 029–031). Os cartões de treino do dia,
@@ -16,7 +17,9 @@ import { montarResumoTriagem } from "@/domain/triagem/resumo";
 export default async function InicioPage() {
   const session = await auth();
   const userId = session?.user?.id;
-  const perfil = userId ? await obterPerfilVigente(userId) : null;
+  const [perfil, planoAtivo] = userId
+    ? await Promise.all([obterPerfilVigente(userId), obterPlanoAtivo(userId)])
+    : [null, null];
   const resumo = montarResumoTriagem(perfil?.respostas ?? {});
 
   return (
@@ -41,6 +44,28 @@ export default async function InicioPage() {
         Olá, {session?.user?.name ?? session?.user?.email}. Seus cartões de
         prioridade do dia vão aparecer aqui.
       </Card>
+
+      {planoAtivo ? (
+        <Card className="flex flex-col gap-3 p-4">
+          <div className="flex items-center justify-between">
+            <strong>Plano Ativo v{planoAtivo.versao}</strong>
+            <Badge>{planoAtivo.conteudo.bloco.duracaoSemanas} semanas</Badge>
+          </div>
+          <p className="text-body-md text-on-surface">
+            {planoAtivo.conteudo.bloco.dias.length} treinos por semana · {planoAtivo.conteudo.nutricao.calorias} kcal por dia
+          </p>
+          <p className="text-body-sm text-muted-foreground">
+            {planoAtivo.conteudo.bloco.divisao}
+          </p>
+        </Card>
+      ) : !resumo.modoConservador ? (
+        <Card className="flex flex-col gap-3 p-4">
+          <p>Seu perfil está pronto. Gere o Plano Ativo para começar.</p>
+          <Button asChild size="sm" className="w-fit">
+            <Link href="/plano/gerando">Gerar plano</Link>
+          </Button>
+        </Card>
+      ) : null}
 
       {resumo.modoConservador ? (
         <Card className="flex flex-col gap-3 p-4">
