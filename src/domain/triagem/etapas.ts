@@ -28,7 +28,11 @@ export type DiaSemana =
   | "sabado"
   | "domingo";
 
-export type LocalTreino = "academia-completa" | "condominio" | "casa";
+export type LocalTreino =
+  | "academia-completa"
+  | "condominio"
+  | "casa"
+  | "sem-equipamentos";
 
 export type NivelAtividade =
   | "sedentario"
@@ -259,17 +263,6 @@ export function proximoDestinoCascata(id: EtapaId): EtapaId | "resumo" {
  * a triagem e futuras telas de edição (Mais > Perfil) usem a mesma
  * lista.
  */
-export const EQUIPAMENTOS_DISPONIVEIS: readonly string[] = [
-  "Barra e anilhas",
-  "Halteres",
-  "Máquinas guiadas",
-  "Cabos/polia",
-  "Kettlebell",
-  "Elásticos",
-  "Banco",
-  "Peso do corpo apenas",
-];
-
 export const RESTRICOES_ALIMENTARES_COMUNS: readonly string[] = [
   "Vegetariano",
   "Vegano",

@@ -64,6 +64,13 @@ export function CartaoRadio({
   );
 }
 
+/**
+ * Aceita tanto o modo não-controlado (`defaultChecked`, usado pelas
+ * etapas que apenas coletam) quanto o controlado (`checked` +
+ * `onCheckedChange`), necessário onde a seleção é derivada de outra
+ * resposta — como o catálogo de equipamentos, pré-marcado pelo local
+ * de treino.
+ */
 export function CartaoCheckbox({
   id,
   name,
@@ -72,6 +79,8 @@ export function CartaoCheckbox({
   descricao,
   Icone,
   defaultChecked,
+  checked,
+  onCheckedChange,
 }: {
   id: string;
   name: string;
@@ -80,6 +89,8 @@ export function CartaoCheckbox({
   descricao?: string;
   Icone?: LucideIcon;
   defaultChecked?: boolean;
+  checked?: boolean;
+  onCheckedChange?: (marcado: boolean) => void;
 }) {
   return (
     <Label htmlFor={id} className={BASE_CARTAO}>
@@ -89,6 +100,12 @@ export function CartaoCheckbox({
         name={name}
         value={value}
         defaultChecked={defaultChecked}
+        checked={checked}
+        onCheckedChange={
+          onCheckedChange
+            ? (estado) => onCheckedChange(estado === true)
+            : undefined
+        }
         className={`${CONTROLE} rounded-full [&>*>svg]:size-4`}
       />
     </Label>
