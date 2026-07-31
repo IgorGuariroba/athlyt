@@ -20,6 +20,12 @@ test.describe("Triagem em cascata", () => {
     page,
     context,
   }) => {
+    // A jornada percorre as 14 etapas e agora faz uma ida e volta extra
+    // para provar a persistência imediata. Em runners compartilhados,
+    // 30 s não representam falha funcional; `slow` triplica o timeout
+    // apenas deste fluxo e mantém os testes curtos estritos.
+    test.slow();
+
     await autenticar(page, context);
 
     await page.goto("/triagem");
@@ -126,6 +132,16 @@ test.describe("Triagem em cascata", () => {
       .fill("Belt squat pendular");
     await page.getByRole("button", { name: "Adicionar" }).click();
     await expect(page.getByText("Belt squat pendular")).toBeVisible();
+
+    // Cadastrar é uma operação persistente por si só: voltar antes de
+    // enviar o restante do formulário não pode apagar o novo item.
+    await page.getByRole("link", { name: "Voltar" }).click();
+    await expect(page).toHaveURL("/triagem/duracao-sessao");
+    await page.getByText("60 minutos").click();
+    await page.getByRole("button", { name: "Continuar" }).click();
+    await expect(page).toHaveURL("/triagem/academia-equipamentos");
+    await expect(page.getByText("Belt squat pendular")).toBeVisible();
+
     const personalizado = page.getByRole("checkbox", {
       name: "Belt squat pendular",
     });

@@ -23,6 +23,7 @@ import {
   type LocalTreinoId,
 } from "@/domain/triagem/equipamentos";
 import { CartaoRadio } from "../../_components/opcao-cartao";
+import { salvarEquipamentosPersonalizados } from "../../actions";
 
 const LOCAIS = [
   {
@@ -156,8 +157,32 @@ export function SelecaoEquipamentos({
       () => new Set(equipamentosPersonalizadosIniciais ?? []),
     );
   const [erroPersonalizado, setErroPersonalizado] = useState<string>();
+  const [salvandoPersonalizados, setSalvandoPersonalizados] = useState(false);
 
-  function adicionarPersonalizado() {
+  async function persistirPersonalizados(
+    cadastrados: string[],
+    personalizadosAtivos: Set<string>,
+  ): Promise<boolean> {
+    if (!local) {
+      setErroPersonalizado("Selecione primeiro onde você treina.");
+      return false;
+    }
+    setSalvandoPersonalizados(true);
+    const resultado = await salvarEquipamentosPersonalizados({
+      localTreino: local,
+      equipamentos: [...selecionados],
+      cadastrados,
+      selecionados: [...personalizadosAtivos],
+    });
+    setSalvandoPersonalizados(false);
+    if (!resultado.ok) {
+      setErroPersonalizado(resultado.erro);
+      return false;
+    }
+    return true;
+  }
+
+  async function adicionarPersonalizado() {
     const nome = nomePersonalizado.trim();
     if (nome.length < 2) {
       setErroPersonalizado("Digite o nome do equipamento.");
@@ -179,8 +204,18 @@ export function SelecaoEquipamentos({
       setErroPersonalizado("Esse equipamento já foi adicionado.");
       return;
     }
-    setPersonalizadosCadastrados((atuais) => [...atuais, nome]);
-    setPersonalizadosSelecionados((atuais) => new Set(atuais).add(nome));
+    const proximosCadastrados = [...personalizadosCadastrados, nome];
+    const proximosSelecionados = new Set(personalizadosSelecionados).add(nome);
+    if (
+      !(await persistirPersonalizados(
+        proximosCadastrados,
+        proximosSelecionados,
+      ))
+    ) {
+      return;
+    }
+    setPersonalizadosCadastrados(proximosCadastrados);
+    setPersonalizadosSelecionados(proximosSelecionados);
     setNomePersonalizado("");
     setErroPersonalizado(undefined);
   }
@@ -296,7 +331,8 @@ export function SelecaoEquipamentos({
               <button
                 type="button"
                 onClick={adicionarPersonalizado}
-                className="flex h-12 shrink-0 items-center gap-2 rounded-xl bg-on-surface-strong px-4 text-label-md text-background"
+                disabled={salvandoPersonalizados}
+                className="flex h-12 shrink-0 items-center gap-2 rounded-xl bg-on-surface-strong px-4 text-label-md text-background disabled:cursor-wait disabled:opacity-60"
               >
                 <Plus className="size-5" aria-hidden="true" />
                 Adicionar
@@ -334,16 +370,27 @@ export function SelecaoEquipamentos({
                 <span className="flex shrink-0 items-center gap-2">
                   <button
                     type="button"
-                    onClick={() => {
-                      setPersonalizadosCadastrados((atuais) =>
-                        atuais.filter((item) => item !== nome),
+                    onClick={async () => {
+                      const proximosCadastrados =
+                        personalizadosCadastrados.filter(
+                          (item) => item !== nome,
+                        );
+                      const proximosSelecionados = new Set(
+                        personalizadosSelecionados,
                       );
-                      setPersonalizadosSelecionados((atuais) => {
-                        const proximos = new Set(atuais);
-                        proximos.delete(nome);
-                        return proximos;
-                      });
+                      proximosSelecionados.delete(nome);
+                      if (
+                        !(await persistirPersonalizados(
+                          proximosCadastrados,
+                          proximosSelecionados,
+                        ))
+                      ) {
+                        return;
+                      }
+                      setPersonalizadosCadastrados(proximosCadastrados);
+                      setPersonalizadosSelecionados(proximosSelecionados);
                     }}
+                    disabled={salvandoPersonalizados}
                     aria-label={`Excluir ${nome}`}
                     title={`Excluir ${nome}`}
                     className="flex size-7 items-center justify-center rounded-full border-2 border-border-strong text-muted-foreground transition-colors hover:border-on-surface-strong hover:text-on-surface-strong"
@@ -354,14 +401,20 @@ export function SelecaoEquipamentos({
                     name="equipamentosPersonalizados"
                     value={nome}
                     checked={personalizadosSelecionados.has(nome)}
-                    onCheckedChange={(estado) =>
-                      setPersonalizadosSelecionados((atuais) => {
-                        const proximos = new Set(atuais);
-                        if (estado === true) proximos.add(nome);
-                        else proximos.delete(nome);
-                        return proximos;
-                      })
-                    }
+                    onCheckedChange={async (estado) => {
+                      const proximos = new Set(personalizadosSelecionados);
+                      if (estado === true) proximos.add(nome);
+                      else proximos.delete(nome);
+                      if (
+                        await persistirPersonalizados(
+                          personalizadosCadastrados,
+                          proximos,
+                        )
+                      ) {
+                        setPersonalizadosSelecionados(proximos);
+                      }
+                    }}
+                    disabled={salvandoPersonalizados}
                     aria-label={nome}
                     className="size-7 shrink-0 rounded-full border-4 border-border-strong data-checked:border-on-surface-strong data-checked:bg-on-surface-strong [&>*>svg]:size-4"
                   />
