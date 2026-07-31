@@ -193,12 +193,17 @@ test.describe("Triagem em cascata", () => {
 
     await expect(page).toHaveURL("/triagem/alimentacao-logistica");
     await page.getByText("Médio", { exact: true }).click();
-    await page.getByLabel("Tempo de preparo por refeição (minutos)").fill("30");
+    await expect(
+      page.getByRole("slider", { name: "Tempo de preparo por refeição" }),
+    ).toHaveAttribute("aria-valuetext", "30 minutos");
     await page.getByRole("button", { name: "Continuar" }).click();
 
     await expect(page).toHaveURL("/triagem/rotina-sono");
     await page.getByText("Moderado", { exact: true }).click();
-    await page.getByLabel("Horas de sono por noite").fill("7");
+    const sono = page.getByRole("slider", { name: "Horas de sono por noite" });
+    await sono.focus();
+    await sono.press("ArrowRight");
+    await expect(sono).toHaveAttribute("aria-valuetext", "7 horas e 30 minutos");
     await page.getByRole("button", { name: "Continuar" }).click();
 
     await expect(page).toHaveURL("/triagem/resumo");
