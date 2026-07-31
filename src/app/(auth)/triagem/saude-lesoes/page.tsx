@@ -2,13 +2,15 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { posicaoNaCascata, proximoDestinoCascata } from "@/domain/triagem/etapas";
 import { CascataShell } from "../_components/cascata-shell";
+import { carregarRespostasTriagem } from "../_lib/carregar-respostas";
 import { EtapaForm } from "../_components/etapa-form";
 
 /**
  * Tela 019 — Lesões e desconfortos
  * (specs/workflow/telas/019-saude-lesoes.md).
  */
-export default function SaudeLesoesPage() {
+export default async function SaudeLesoesPage() {
+  const respostas = await carregarRespostasTriagem();
   const { indice, total } = posicaoNaCascata("saude-lesoes");
 
   return (
@@ -23,7 +25,12 @@ export default function SaudeLesoesPage() {
       >
         <div className="flex flex-col gap-2">
           <Label htmlFor="lesoes">Lesões e desconfortos (opcional)</Label>
-          <Textarea id="lesoes" name="lesoes" rows={4} />
+          <Textarea
+            id="lesoes"
+            name="lesoes"
+            rows={4}
+            defaultValue={respostas.lesoes}
+          />
         </div>
       </EtapaForm>
     </CascataShell>

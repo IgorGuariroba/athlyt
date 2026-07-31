@@ -8,11 +8,11 @@
 
 ## Propósito
 
-Registrar o objetivo de base natural de Men's Physique que orienta proporções, desempenho e composição.
+Registrar qual estratégia de composição corporal deve orientar a construção de uma base natural de Men's Physique.
 
 ## Elementos e comportamento
 
-Cartão do objetivo com explicação honesta de limites (genética, prazo); confirmação; 'Continuar'.
+Seleção única entre recomposição corporal, priorizar perda de gordura e priorizar ganho de massa muscular. A recomposição descreve a meta atual de reduzir a gordura de cerca de 30% para próximo de 10% enquanto maximiza a massa muscular. Exibe explicação honesta de limites (genética, prazo), retorno por seta no topo e 'Continuar'.
 
 ## Sequência
 
