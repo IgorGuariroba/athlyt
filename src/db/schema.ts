@@ -155,6 +155,33 @@ export const plans = pgTable("plan", {
   activatedAt: timestamp("activated_at", { mode: "date" }),
 });
 
+/**
+ * Sessão de Treino — o snapshot planejado congela o dia do Plano Ativo no
+ * momento do início; eventos append-only preservam a execução factual e já
+ * formam a base do futuro outbox offline.
+ */
+export const workoutSessions = pgTable("workout_session", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  planId: uuid("plan_id").notNull().references(() => plans.id),
+  diaId: text("dia_id").notNull(),
+  nome: text("nome").notNull(),
+  estado: text("estado").$type<"em_andamento" | "concluida" | "abandonada">().notNull(),
+  exercicios: jsonb("exercicios").notNull(),
+  startedAt: timestamp("started_at", { mode: "date" }).notNull().defaultNow(),
+  endedAt: timestamp("ended_at", { mode: "date" }),
+  motivoAbandono: text("motivo_abandono"),
+});
+
+export const workoutEvents = pgTable("workout_event", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  sessionId: uuid("session_id").notNull().references(() => workoutSessions.id, { onDelete: "cascade" }),
+  userId: uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  tipo: text("tipo").$type<"sessao_iniciada" | "serie_registrada" | "sessao_concluida" | "sessao_abandonada">().notNull(),
+  dados: jsonb("dados").notNull(),
+  createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
+});
+
 export const consents = pgTable("consent", {
   id: uuid("id").primaryKey().defaultRandom(),
   userId: uuid("userId")
