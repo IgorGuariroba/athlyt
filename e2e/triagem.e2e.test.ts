@@ -228,7 +228,8 @@ test.describe("Triagem em cascata", () => {
     await page.getByRole("button", { name: "Ativar plano" }).click();
 
     await expect(page).toHaveURL("/inicio");
-    await expect(page.getByText("Plano Ativo v1")).toBeVisible();
+    await expect(page.getByText("Plano Ativo", { exact: true })).toBeVisible();
+    await expect(page.getByText("v1", { exact: true })).toBeVisible();
     await expect(page.getByText("Modo Conservador")).not.toBeVisible();
   });
 
