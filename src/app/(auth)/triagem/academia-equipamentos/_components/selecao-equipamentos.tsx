@@ -9,7 +9,6 @@ import {
   PersonStanding,
   Plus,
   Search,
-  X,
 } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
@@ -129,10 +128,12 @@ export function SelecaoEquipamentos({
   localInicial,
   equipamentosIniciais,
   equipamentosPersonalizadosIniciais,
+  equipamentosPersonalizadosCadastradosIniciais,
 }: {
   localInicial?: LocalTreinoId;
   equipamentosIniciais?: readonly string[];
   equipamentosPersonalizadosIniciais?: readonly string[];
+  equipamentosPersonalizadosCadastradosIniciais?: readonly string[];
 }) {
   const [local, setLocal] = useState<LocalTreinoId | undefined>(localInicial);
   const [selecionados, setSelecionados] = useState<Set<string>>(
@@ -140,9 +141,19 @@ export function SelecaoEquipamentos({
   );
   const [busca, setBusca] = useState("");
   const [nomePersonalizado, setNomePersonalizado] = useState("");
-  const [personalizados, setPersonalizados] = useState<string[]>(
-    () => [...(equipamentosPersonalizadosIniciais ?? [])],
-  );
+  const [personalizadosCadastrados, setPersonalizadosCadastrados] =
+    useState<string[]>(() => [
+      ...new Set([
+        ...(equipamentosPersonalizadosCadastradosIniciais ?? []),
+        // Compatibilidade com perfis salvos antes de cadastro e seleção
+        // serem conceitos separados.
+        ...(equipamentosPersonalizadosIniciais ?? []),
+      ]),
+    ]);
+  const [personalizadosSelecionados, setPersonalizadosSelecionados] =
+    useState<Set<string>>(
+      () => new Set(equipamentosPersonalizadosIniciais ?? []),
+    );
   const [erroPersonalizado, setErroPersonalizado] = useState<string>();
 
   function adicionarPersonalizado() {
@@ -155,19 +166,20 @@ export function SelecaoEquipamentos({
       setErroPersonalizado("Use no máximo 80 caracteres.");
       return;
     }
-    if (personalizados.length >= 20) {
+    if (personalizadosCadastrados.length >= 20) {
       setErroPersonalizado("Você pode adicionar até 20 equipamentos.");
       return;
     }
     if (
-      personalizados.some(
+      personalizadosCadastrados.some(
         (existente) => normalizar(existente) === normalizar(nome),
       )
     ) {
       setErroPersonalizado("Esse equipamento já foi adicionado.");
       return;
     }
-    setPersonalizados((atuais) => [...atuais, nome]);
+    setPersonalizadosCadastrados((atuais) => [...atuais, nome]);
+    setPersonalizadosSelecionados((atuais) => new Set(atuais).add(nome));
     setNomePersonalizado("");
     setErroPersonalizado(undefined);
   }
@@ -249,8 +261,8 @@ export function SelecaoEquipamentos({
           </div>
 
           <p aria-live="polite" className="text-body-sm text-muted-foreground">
-            {selecionados.size + personalizados.length} selecionado
-            {selecionados.size + personalizados.length === 1 ? "" : "s"}
+            {selecionados.size + personalizadosSelecionados.size} selecionado
+            {selecionados.size + personalizadosSelecionados.size === 1 ? "" : "s"}
           </p>
 
           <section className="flex flex-col gap-2" aria-labelledby="outro-equipamento">
@@ -295,7 +307,7 @@ export function SelecaoEquipamentos({
               </p>
             ) : null}
 
-            {personalizados.map((nome) => (
+            {personalizadosCadastrados.map((nome) => (
               <div
                 key={normalizar(nome)}
                 className="flex min-h-24 items-center gap-4 rounded-xl border-2 border-on-surface-strong bg-surface px-3 py-3"
@@ -318,17 +330,26 @@ export function SelecaoEquipamentos({
                 <span className="flex-1 text-title text-on-surface-strong">
                   {nome}
                 </span>
-                <button
-                  type="button"
-                  onClick={() =>
-                    setPersonalizados((atuais) => atuais.filter((item) => item !== nome))
+                <Checkbox
+                  name="equipamentosPersonalizados"
+                  value={nome}
+                  checked={personalizadosSelecionados.has(nome)}
+                  onCheckedChange={(estado) =>
+                    setPersonalizadosSelecionados((atuais) => {
+                      const proximos = new Set(atuais);
+                      if (estado === true) proximos.add(nome);
+                      else proximos.delete(nome);
+                      return proximos;
+                    })
                   }
-                  aria-label={`Remover ${nome}`}
-                  className="flex size-7 shrink-0 items-center justify-center rounded-full border-4 border-border-strong text-on-surface-strong"
-                >
-                  <X className="size-4" aria-hidden="true" />
-                </button>
-                <input type="hidden" name="equipamentosPersonalizados" value={nome} />
+                  aria-label={nome}
+                  className="size-7 shrink-0 rounded-full border-4 border-border-strong data-checked:border-on-surface-strong data-checked:bg-on-surface-strong [&>*>svg]:size-4"
+                />
+                <input
+                  type="hidden"
+                  name="equipamentosPersonalizadosCadastrados"
+                  value={nome}
+                />
               </div>
             ))}
           </section>
