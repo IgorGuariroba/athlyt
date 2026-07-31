@@ -84,17 +84,23 @@ describe("parseRespostaEtapa", () => {
     });
   });
 
-  it("objetivo: aceita confirmação explícita", () => {
+  it("objetivo: aceita recomposição corporal", () => {
     expect(
-      parseRespostaEtapa("objetivo", formData({ objetivoConfirmado: "true" })),
-    ).toEqual({ ok: true, dados: { objetivoConfirmado: true } });
+      parseRespostaEtapa("objetivo", formData({ objetivoComposicao: "recomposicao" })),
+    ).toEqual({ ok: true, dados: { objetivoComposicao: "recomposicao" } });
   });
 
-  it("objetivo: rejeita quando não confirmado", () => {
+  it("objetivo: aceita perda de gordura e ganho de massa", () => {
     expect(
-      parseRespostaEtapa("objetivo", formData({ objetivoConfirmado: "false" }))
-        .ok,
-    ).toBe(false);
+      parseRespostaEtapa("objetivo", formData({ objetivoComposicao: "perder-gordura" })),
+    ).toEqual({ ok: true, dados: { objetivoComposicao: "perder-gordura" } });
+    expect(
+      parseRespostaEtapa("objetivo", formData({ objetivoComposicao: "ganhar-massa" })),
+    ).toEqual({ ok: true, dados: { objetivoComposicao: "ganhar-massa" } });
+  });
+
+  it("objetivo: rejeita quando não selecionado", () => {
+    expect(parseRespostaEtapa("objetivo", formData({})).ok).toBe(false);
   });
 
   it("experiencia: aceita uma das faixas válidas", () => {

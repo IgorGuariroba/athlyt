@@ -16,6 +16,13 @@ export function etapaRespondida(
 ): boolean {
   const etapa = ETAPAS_TRIAGEM.find((e) => e.id === etapaId);
   if (!etapa) return false;
+  if (
+    etapaId === "objetivo" &&
+    respostas.objetivoComposicao === undefined &&
+    respostas.objetivoConfirmado === true
+  ) {
+    return true;
+  }
   return etapa.campos.every((campo) => respostas[campo] !== undefined);
 }
 
