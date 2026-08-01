@@ -1,12 +1,14 @@
 import { notFound } from "next/navigation";
-import { ChevronLeft, Check, CircleDot, Dumbbell, MoreHorizontal, Repeat2 } from "lucide-react";
+import { ChevronLeft, Check, Dumbbell, MoreHorizontal, Repeat2 } from "lucide-react";
 import Link from "next/link";
 import { auth } from "@/auth";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { obterSessao } from "@/domain/sessao/repositorio";
 import { abandonarSessaoAction, concluirSessaoAction } from "../actions";
+import { BadgeConexao, ProvedorConexao } from "./estado-conexao";
+import { PainelCoach } from "./painel-coach";
 import { RegistroSerie } from "./registro-serie";
+import { ConclusaoSessao } from "./conclusao-sessao";
 
 export default async function SessaoPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ exercicio?: string }> }) {
   const { id } = await params;
@@ -19,10 +21,13 @@ export default async function SessaoPage({ params, searchParams }: { params: Pro
   const indiceAtual = Math.min(Math.max(Number(exercicioParam ?? 0), 0), sessao.exercicios.length - 1);
   const exercicio = sessao.exercicios[indiceAtual];
   const feito = exercicio.series.every((serie) => serie.concluida);
-  const treinoCompleto = concluidas === total;
   const proximoIndice = Math.min(indiceAtual + 1, sessao.exercicios.length - 1);
 
   return (
+    <ProvedorConexao
+      sessionId={sessao.id}
+      seriesConfirmadas={sessao.exercicios.flatMap((item) => item.series.filter((s) => s.concluida).map((s) => ({ exercicioId: item.exercicioId, numero: s.numero })))}
+    >
     <div className="flex flex-col gap-5 p-4 pb-28">
       <header className="flex items-center justify-between">
         <Button asChild variant="ghost" size="icon"><Link href="/inicio" aria-label="Voltar ao Início"><ChevronLeft /></Link></Button>
@@ -32,7 +37,7 @@ export default async function SessaoPage({ params, searchParams }: { params: Pro
 
       <section className="flex items-center justify-between rounded-xl bg-surface-container p-4">
         <div><strong className="text-headline-md tabular-nums">{concluidas}/{total}</strong><p className="text-body-sm text-muted-foreground">séries registradas</p></div>
-        <Badge variant="secondary" className="gap-1"><CircleDot className="size-3 text-success" /> Online</Badge>
+        <BadgeConexao />
       </section>
 
       <nav aria-label="Exercícios do treino" className="flex gap-2 overflow-x-auto pb-1">
@@ -63,14 +68,15 @@ export default async function SessaoPage({ params, searchParams }: { params: Pro
             Substitui <strong className="text-on-surface">{exercicio.substituiuNome}</strong> · motivo: {exercicio.motivoSubstituicao}
           </p>
         ) : null}
+        <PainelCoach exercicio={exercicio} />
         <details className="border-b border-border px-4 py-3 text-body-sm"><summary className="cursor-pointer font-semibold">O que é RIR?</summary><p className="mt-2 text-muted-foreground">É quantas repetições você ainda conseguiria fazer com boa técnica ao encerrar a série. Quanto menor o RIR, mais difícil foi a série.</p></details>
         <div className="px-3">
-          {exercicio.series.map((serie) => <RegistroSerie key={serie.numero} sessionId={sessao.id} exercicioId={exercicio.exercicioId} numero={serie.numero} repeticoesSugeridas={serie.repeticoesSugeridas} rirSugerido={serie.rir} descansoSeg={exercicio.descansoSeg} concluida={serie.concluida} cargaInicial={serie.cargaKg} cargaSugerida={serie.cargaSugeridaKg ?? 0} melhorCargaAnterior={serie.melhorCargaAnteriorKg ?? 0} repeticoesIniciais={serie.repeticoes} />)}
+          {exercicio.series.map((serie) => <RegistroSerie key={serie.numero} exercicioId={exercicio.exercicioId} numero={serie.numero} repeticoesSugeridas={serie.repeticoesSugeridas} rirSugerido={serie.rir} descansoSeg={exercicio.descansoSeg} concluida={serie.concluida} cargaInicial={serie.cargaKg} cargaSugerida={serie.cargaSugeridaKg ?? 0} melhorCargaAnterior={serie.melhorCargaAnteriorKg ?? 0} repeticoesIniciais={serie.repeticoes} />)}
         </div>
       </section>
 
       {feito && indiceAtual < sessao.exercicios.length - 1 ? <Button asChild size="lg" className="h-14 w-full text-base font-bold"><Link href={`/sessao/${sessao.id}?exercicio=${proximoIndice}`}>Próximo exercício</Link></Button> : null}
-      <form action={concluirSessaoAction.bind(null, sessao.id)}><Button size="lg" disabled={!treinoCompleto} className="h-14 w-full text-base font-bold">{treinoCompleto ? "Concluir treino" : `Complete ${total - concluidas} séries para concluir`}</Button></form>
+      <ConclusaoSessao concluirAction={concluirSessaoAction.bind(null, sessao.id)} seriesPendentes={total - concluidas} />
       <details className="rounded-xl border border-border p-4">
         <summary className="cursor-pointer text-center text-label-lg text-muted-foreground">Abandonar sessão</summary>
         <form action={abandonarSessaoAction.bind(null, sessao.id)} className="mt-4 flex flex-col gap-3">
@@ -80,5 +86,6 @@ export default async function SessaoPage({ params, searchParams }: { params: Pro
         </form>
       </details>
     </div>
+    </ProvedorConexao>
   );
 }

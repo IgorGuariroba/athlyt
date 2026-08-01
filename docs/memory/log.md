@@ -10,4 +10,5 @@
 
 ## 2026-08-01
 
+- Criada [estado-offline-fora-do-react.md](estado-offline-fora-do-react.md): ao implementar o outbox offline (issue #21), três reescritas sucessivas não satisfizeram `react-hooks/set-state-in-effect` porque o modelo estava errado — a fila em IndexedDB e a conectividade não são estado do componente. Registrada porque o mesmo padrão vai reaparecer no Diário e no Check-in, e porque a janela de inconsistência é invisível em teste manual. Fonte: issue #21.
 - Criada [persistencia-visivel-apos-retorno.md](persistencia-visivel-apos-retorno.md): terceira ocorrência do relato "não persistiu" — depois de dois casos na triagem (#49 e #50), o cartão "Treino do dia" do Início voltou a oferecer o treino recém-concluído. Registrada porque as três causas são distintas (escrita, invalidação e derivação) e o padrão comum é o teste terminar na tela de sucesso sem voltar por navegação real ao ponto de partida. Fontes: commits 5f0ed54, 2c5eefd e 29f0d78.

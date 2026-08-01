@@ -37,6 +37,15 @@ export default async function MaisPage() {
         </Button>
       </Card>
 
+      <Card className="flex flex-col gap-3 p-4">
+        <p className="text-body-md text-muted-foreground">
+          Veja o que ainda não foi enviado ao servidor e resolva conflitos entre o que ficou gravado aqui e lá.
+        </p>
+        <Button asChild variant="outline" className="w-fit">
+          <Link href="/mais/sincronizacao">Estado da sincronização</Link>
+        </Button>
+      </Card>
+
       <div className="flex flex-col gap-2">
         <form action={sair}>
           <Button type="submit" variant="secondary" className="w-full">

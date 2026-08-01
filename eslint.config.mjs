@@ -15,6 +15,11 @@ const eslintConfig = defineConfig([
     // Service worker gerado pelo Serwist em build de produção (ver
     // next.config.ts) — não é código-fonte do projeto.
     "public/sw.js",
+    // Artefatos do Playwright (já no .gitignore). O relatório HTML
+     // embute bundles minificados que o lint tenta analisar como
+     // fonte, afogando erros reais em milhares de falsos positivos.
+    "playwright-report/**",
+    "test-results/**",
   ]),
 ]);
 
