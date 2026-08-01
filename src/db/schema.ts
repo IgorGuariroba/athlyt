@@ -7,6 +7,7 @@ import {
   uuid,
   jsonb,
   boolean,
+  uniqueIndex,
 } from "drizzle-orm/pg-core";
 import type { AdapterAccountType } from "next-auth/adapters";
 
@@ -180,7 +181,45 @@ export const workoutEvents = pgTable("workout_event", {
   tipo: text("tipo").$type<"sessao_iniciada" | "serie_registrada" | "sessao_concluida" | "sessao_abandonada" | "exercicio_substituido">().notNull(),
   dados: jsonb("dados").notNull(),
   createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
-});
+  /**
+   * Identificador estável gerado no dispositivo (ADR 0001). É a chave
+   * de idempotência do outbox: o índice único abaixo é o que faz o
+   * reenvio da fila ser inofensivo mesmo sob corrida entre duas abas
+   * ou entre a fila e uma escrita online. Nulo para eventos nascidos
+   * no servidor.
+   */
+  clientEventId: uuid("client_event_id"),
+  /** Timestamp do dispositivo; pode divergir de `createdAt`. */
+  ocorridoEm: timestamp("ocorrido_em", { mode: "date" }),
+  /** Ordem lógica monotônica por sessão, atribuída no dispositivo. */
+  ordem: integer("ordem"),
+}, (tabela) => [
+  uniqueIndex("workout_event_client_event_id_idx").on(tabela.clientEventId),
+]);
+
+/**
+ * Conflitos de sincronização que exigem decisão humana (tela 085).
+ *
+ * Só chega aqui o que o merge não consegue resolver com segurança —
+ * uma série já gravada com valores diferentes, um encerramento sobre
+ * sessão já encerrada. Guardar as duas versões lado a lado é o que
+ * impede a perda silenciosa que a spec proíbe: nada é descartado até
+ * o atleta escolher.
+ */
+export const syncConflicts = pgTable("sync_conflict", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  sessionId: uuid("session_id").notNull().references(() => workoutSessions.id, { onDelete: "cascade" }),
+  clientEventId: uuid("client_event_id").notNull(),
+  motivo: text("motivo").$type<"serie_divergente" | "sessao_ja_encerrada">().notNull(),
+  servidor: jsonb("servidor").notNull(),
+  dispositivo: jsonb("dispositivo").notNull(),
+  resolucao: text("resolucao").$type<"servidor" | "dispositivo">(),
+  resolvidoEm: timestamp("resolvido_em", { mode: "date" }),
+  createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
+}, (tabela) => [
+  uniqueIndex("sync_conflict_client_event_id_idx").on(tabela.clientEventId),
+]);
 
 /**
  * Substituições de exercício com motivo (user story 23; tela 035).

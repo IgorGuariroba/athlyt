@@ -63,7 +63,14 @@ _Avoid_: Workout, treino (quando se referir ao evento registrado)
 Orientação contextual durante a Sessão de Treino — IA online, Coach Local offline — para ajustes de carga, repetição e descanso entre séries.
 
 **Coach Local**:
-Pacote determinístico e versionado disponível no dispositivo; offline, aplica somente regras auditáveis de baixo risco previamente autorizadas.
+Pacote determinístico e versionado disponível no dispositivo; offline, aplica somente regras auditáveis de baixo risco previamente autorizadas. Toda orientação que ele produz declara origem "regra local" e a versão da regra.
+
+**Outbox**:
+Fila local de eventos da Sessão de Treino em IndexedDB. Cada evento tem identificador estável gerado no dispositivo, timestamp do aparelho e ordem lógica, e é reenviado a endpoint idempotente até ser confirmado.
+_Avoid_: fila de sincronização, sync queue
+
+**Conflito de Sincronização**:
+Divergência entre o que o dispositivo registrou offline e o que o servidor já tem gravado, quando não há resolução segura automática. Fica pendente até escolha explícita do atleta; nada é descartado silenciosamente.
 
 **Mídia de Execução**:
 Animação/vídeo demonstrativo do exercício vindo de banco aberto/licenciado hospedado em storage privado, com fallback de instruções em texto e diagrama de músculos-alvo.
