@@ -25,6 +25,14 @@ export interface ExercicioSessao {
   substituiuExercicioId?: string;
   substituiuNome?: string;
   motivoSubstituicao?: MotivoSubstituicao;
+  /**
+   * Exercício encerrado antes do previsto porque foi substituído no
+   * meio da execução. Mantém as séries que o atleta realmente fez
+   * — elas são histórico de carga legítimo — e deixa de exigir as
+   * que não fará.
+   */
+  interrompido?: boolean;
+  seriesPlanejadas?: number;
 }
 
 export interface Substituicao {
@@ -215,6 +223,49 @@ function trocarNoExercicio(exercicio: ExercicioSessao, novoId: string, novoNome:
 }
 
 /**
+ * Substituição no meio da execução: o problema que motiva a troca
+ * costuma aparecer *durante* o exercício — uma dor que só se
+ * manifesta na segunda série é o caso central, não a exceção.
+ *
+ * O que foi executado não pode ser reescrito, então a troca não
+ * sobrescreve: o exercício original fica na sessão com as séries que
+ * o atleta de fato fez, marcado como interrompido, e o substituto
+ * entra logo em seguida com as séries que restavam. A sessão continua
+ * somando o mesmo número de séries, e o histórico de carga de cada
+ * exercício continua sendo dele.
+ */
+function dividirNaSubstituicao(exercicio: ExercicioSessao, novoId: string, novoNome: string, motivo: MotivoSubstituicao, melhorCarga: number): ExercicioSessao[] {
+  const feitas = exercicio.series.filter((serie) => serie.concluida);
+  const restantes = exercicio.series.filter((serie) => !serie.concluida);
+  if (feitas.length === 0) return [trocarNoExercicio(exercicio, novoId, novoNome, motivo, melhorCarga)];
+
+  const interrompido: ExercicioSessao = {
+    ...exercicio,
+    series: feitas,
+    interrompido: true,
+    seriesPlanejadas: exercicio.seriesPlanejadas ?? exercicio.series.length,
+    motivoSubstituicao: motivo,
+  };
+  const substituto: ExercicioSessao = {
+    ...exercicio,
+    exercicioId: novoId,
+    nome: novoNome,
+    substituiuExercicioId: exercicio.substituiuExercicioId ?? exercicio.exercicioId,
+    substituiuNome: exercicio.substituiuNome ?? exercicio.nome,
+    motivoSubstituicao: motivo,
+    interrompido: false,
+    seriesPlanejadas: restantes.length,
+    // A numeração recém-começa: as séries do substituto são dele, e
+    // `registrarSerie` casa por (exercicioId, numero).
+    series: restantes.map((serie, indice) => ({
+      ...serie, numero: indice + 1, cargaKg: null, repeticoes: null,
+      cargaSugeridaKg: melhorCarga, melhorCargaAnteriorKg: melhorCarga, concluida: false,
+    })),
+  };
+  return [interrompido, substituto];
+}
+
+/**
  * Alternativas oferecidas para um exercício da sessão em andamento,
  * já filtradas pelo equipamento e pelas limitações do perfil vigente.
  */
@@ -257,14 +308,16 @@ export async function substituirExercicioNaSessao(userId: string, sessionId: str
     const exercicios = structuredClone(linha.exercicios as ExercicioSessao[]);
     const indice = exercicios.findIndex((item) => item.exercicioId === entrada.exercicioId);
     if (indice < 0) throw new Error("Exercício não pertence à sessão.");
-    if (exercicios[indice].series.some((serie) => serie.concluida)) throw new Error("Não é possível substituir um exercício com séries já registradas.");
-    exercicios[indice] = trocarNoExercicio(exercicios[indice], novo.id, novo.nome, entrada.motivo, melhores.get(novo.id) ?? 0);
+    const original = exercicios[indice];
+    if (original.interrompido) throw new Error("Este exercício já foi substituído nesta sessão.");
+    const seriesJaFeitas = original.series.filter((serie) => serie.concluida).length;
+    exercicios.splice(indice, 1, ...dividirNaSubstituicao(original, novo.id, novo.nome, entrada.motivo, melhores.get(novo.id) ?? 0));
 
     const [atualizada] = await tx.update(workoutSessions).set({ exercicios }).where(eq(workoutSessions.id, sessionId)).returning();
-    const dados = { de: entrada.exercicioId, para: entrada.novoExercicioId, motivo: entrada.motivo, preservaEstimulo: escolhida.preservaEstimulo, persistente, observacao: entrada.observacao ?? null };
+    const dados = { de: entrada.exercicioId, para: entrada.novoExercicioId, motivo: entrada.motivo, preservaEstimulo: escolhida.preservaEstimulo, persistente, observacao: entrada.observacao ?? null, seriesJaFeitas };
     await tx.insert(workoutEvents).values({ sessionId, userId, tipo: "exercicio_substituido", dados });
     await tx.insert(exerciseSubstitutions).values({
-      userId, sessionId, diaId: linha.diaId, exercicioOriginalId: exercicios[indice].substituiuExercicioId ?? entrada.exercicioId,
+      userId, sessionId, diaId: linha.diaId, exercicioOriginalId: original.substituiuExercicioId ?? entrada.exercicioId,
       exercicioNovoId: entrada.novoExercicioId, motivo: entrada.motivo, observacao: entrada.observacao ?? null, persistente,
     });
     await tx.insert(decisionTrails).values({

@@ -29,7 +29,12 @@ export default async function ResumoPage({ params }: { params: Promise<{ id: str
 
     {resumo.recordes.length ? <section><h2 className="mb-3 text-title font-bold">Recordes da sessão</h2><div className="flex flex-col gap-2">{resumo.recordes.map((recorde) => <div key={recorde.exercicioId} className="flex items-center justify-between rounded-xl border border-warning/30 bg-warning/10 p-4"><div><p className="text-label-md font-semibold text-warning">MAIOR CARGA</p><p className="text-body-md font-bold">{recorde.nome}</p></div><strong className="text-headline-md tabular-nums">{recorde.valor} kg</strong></div>)}</div></section> : null}
 
-    <section><h2 className="mb-3 text-title font-bold">Exercícios</h2>{resumo.exercicios.map((exercicio) => <div key={exercicio.exercicioId} className="mb-2 rounded-xl bg-surface-container p-4"><strong>{exercicio.nome}</strong><p className="text-body-sm text-muted-foreground">{exercicio.series.filter((s) => s.concluida).map((s) => `${s.repeticoes} reps × ${s.cargaKg} kg`).join(" · ") || "Sem séries registradas"}</p></div>)}</section>
+    <section><h2 className="mb-3 text-title font-bold">Exercícios</h2>{resumo.exercicios.map((exercicio, indice) => <div key={`${exercicio.exercicioId}-${indice}`} className="mb-2 rounded-xl bg-surface-container p-4">
+      <strong>{exercicio.nome}</strong>
+      <p className="text-body-sm text-muted-foreground">{exercicio.series.filter((s) => s.concluida).map((s) => `${s.repeticoes} reps × ${s.cargaKg} kg`).join(" · ") || "Sem séries registradas"}</p>
+      {exercicio.interrompido ? <p className="mt-1 text-caption text-muted-foreground">Interrompido após {exercicio.series.length} de {exercicio.seriesPlanejadas ?? exercicio.series.length} séries · substituído por {exercicio.motivoSubstituicao}</p>
+        : exercicio.substituiuNome ? <p className="mt-1 text-caption text-muted-foreground">Entrou no lugar de {exercicio.substituiuNome} · motivo: {exercicio.motivoSubstituicao}</p> : null}
+    </div>)}</section>
 
     <Button asChild size="lg" className="h-14 w-full text-base font-bold"><Link href="/sessao/historico">Ver histórico de sessões</Link></Button>
     <Button asChild variant="ghost"><Link href="/inicio">Concluído</Link></Button>

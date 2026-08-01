@@ -19,7 +19,7 @@ const plano: PlanoGerado = {
   bloco: {
     duracaoSemanas: 6, divisao: "Superior", dias: [{
       id: "superior-a", nome: "Superior A", diaSemana: "segunda",
-      exercicios: [{ exercicioId: "supino-barra", nome: "Supino reto com barra", padrao: "empurrar-horizontal", series: 1, repeticoes: "6–10", rir: 2, descansoSeg: 120, justificativa: "Base de força" }],
+      exercicios: [{ exercicioId: "supino-barra", nome: "Supino reto com barra", padrao: "empurrar-horizontal", series: 3, repeticoes: "6–10", rir: 2, descansoSeg: 120, justificativa: "Base de força" }],
     }],
   },
 };
@@ -53,7 +53,7 @@ describe("substituição de exercício na Sessão de Treino", () => {
     expect(atualizada.exercicios[0]).toEqual(expect.objectContaining({
       exercicioId: "supino-halteres", substituiuExercicioId: "supino-barra", motivoSubstituicao: "equipamento",
     }));
-    expect(atualizada.exercicios[0].series).toHaveLength(1);
+    expect(atualizada.exercicios[0].series).toHaveLength(3);
     expect(atualizada.exercicios[0].series[0].repeticoesSugeridas).toBe("6–10");
     expect(atualizada.eventos.at(-1)).toEqual(expect.objectContaining({
       tipo: "exercicio_substituido",
@@ -85,20 +85,62 @@ describe("substituição de exercício na Sessão de Treino", () => {
     })).rejects.toThrow("não preserva o estímulo");
   });
 
-  it("recusa trocar exercício com série já registrada", async () => {
+  it("troca no meio da execução: preserva o que foi feito e transfere as séries restantes", async () => {
+    const userId = await contexto();
+    const sessao = await iniciarSessao(userId, "superior-a"); // 3 séries prescritas
+    await registrarSerie(userId, sessao.id, { exercicioId: "supino-barra", numero: 1, cargaKg: 60, repeticoes: 8, rir: 2 });
+
+    // A dor apareceu durante a execução — o caso central, não a exceção.
+    const atualizada = await substituirExercicioNaSessao(userId, sessao.id, {
+      exercicioId: "supino-barra", novoExercicioId: "supino-maquina-peito", motivo: "dor", observacao: "dor no ombro",
+    });
+
+    expect(atualizada.exercicios).toHaveLength(2);
+    const [interrompido, substituto] = atualizada.exercicios;
+
+    // O que foi executado continua sendo do exercício que o atleta fez.
+    expect(interrompido).toEqual(expect.objectContaining({ exercicioId: "supino-barra", interrompido: true, seriesPlanejadas: 3 }));
+    expect(interrompido.series).toHaveLength(1);
+    expect(interrompido.series[0]).toEqual(expect.objectContaining({ cargaKg: 60, repeticoes: 8, concluida: true }));
+
+    // O substituto herda apenas o que faltava, renumerado e em branco.
+    expect(substituto).toEqual(expect.objectContaining({ exercicioId: "supino-maquina-peito", substituiuExercicioId: "supino-barra", seriesPlanejadas: 2 }));
+    expect(substituto.series.map((serie) => serie.numero)).toEqual([1, 2]);
+    expect(substituto.series.every((serie) => !serie.concluida && serie.cargaKg === null)).toBe(true);
+
+    // A sessão fecha registrando só as séries que restaram.
+    await registrarSerie(userId, atualizada.id, { exercicioId: "supino-maquina-peito", numero: 1, cargaKg: 40, repeticoes: 10, rir: 2 });
+    await registrarSerie(userId, atualizada.id, { exercicioId: "supino-maquina-peito", numero: 2, cargaKg: 40, repeticoes: 10, rir: 2 });
+    const resumo = await concluirSessao(userId, atualizada.id);
+    expect(resumo.totalSeries).toBe(3);
+    expect(resumo.estado).toBe("concluida");
+  });
+
+  it("não permite substituir de novo um exercício já interrompido", async () => {
     const userId = await contexto();
     const sessao = await iniciarSessao(userId, "superior-a");
     await registrarSerie(userId, sessao.id, { exercicioId: "supino-barra", numero: 1, cargaKg: 60, repeticoes: 8, rir: 2 });
+    await substituirExercicioNaSessao(userId, sessao.id, { exercicioId: "supino-barra", novoExercicioId: "supino-halteres", motivo: "dor", observacao: "dor no punho" });
     await expect(substituirExercicioNaSessao(userId, sessao.id, {
+      exercicioId: "supino-barra", novoExercicioId: "supino-maquina-peito", motivo: "equipamento",
+    })).rejects.toThrow("já foi substituído");
+  });
+
+  it("substituir sem nenhuma série feita troca no lugar, sem dividir", async () => {
+    const userId = await contexto();
+    const sessao = await iniciarSessao(userId, "superior-a");
+    const atualizada = await substituirExercicioNaSessao(userId, sessao.id, {
       exercicioId: "supino-barra", novoExercicioId: "supino-halteres", motivo: "equipamento",
-    })).rejects.toThrow("séries já registradas");
+    });
+    expect(atualizada.exercicios).toHaveLength(1);
+    expect(atualizada.exercicios[0].series).toHaveLength(3);
   });
 
   it("motivo persistente mantém a troca nas sessões seguintes; preferência vale só na sessão", async () => {
     const userId = await contexto();
     const primeira = await iniciarSessao(userId, "superior-a");
     await substituirExercicioNaSessao(userId, primeira.id, { exercicioId: "supino-barra", novoExercicioId: "supino-halteres", motivo: "dor", observacao: "dor no punho ao segurar a barra" });
-    await registrarSerie(userId, primeira.id, { exercicioId: "supino-halteres", numero: 1, cargaKg: 24, repeticoes: 10, rir: 2 });
+    for (const numero of [1, 2, 3]) await registrarSerie(userId, primeira.id, { exercicioId: "supino-halteres", numero, cargaKg: 24, repeticoes: 10, rir: 2 });
     await concluirSessao(userId, primeira.id);
 
     const segunda = await iniciarSessao(userId, "superior-a");
@@ -106,7 +148,7 @@ describe("substituição de exercício na Sessão de Treino", () => {
     expect(segunda.exercicios[0].series[0].melhorCargaAnteriorKg).toBe(24);
 
     await substituirExercicioNaSessao(userId, segunda.id, { exercicioId: "supino-halteres", novoExercicioId: "supino-maquina-peito", motivo: "preferencia" });
-    await registrarSerie(userId, segunda.id, { exercicioId: "supino-maquina-peito", numero: 1, cargaKg: 40, repeticoes: 10, rir: 2 });
+    for (const numero of [1, 2, 3]) await registrarSerie(userId, segunda.id, { exercicioId: "supino-maquina-peito", numero, cargaKg: 40, repeticoes: 10, rir: 2 });
     await concluirSessao(userId, segunda.id);
 
     const terceira = await iniciarSessao(userId, "superior-a");
