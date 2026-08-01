@@ -38,6 +38,7 @@ export async function substituirExercicioAction(sessionId: string, formData: For
     observacao: observacao || undefined,
   });
   const indice = sessao.exercicios.findIndex((item) => item.exercicioId === String(formData.get("novoExercicioId")));
+  revalidatePath(`/sessao/${sessionId}`);
   redirect(`/sessao/${sessionId}?exercicio=${Math.max(indice, 0)}`);
 }
 

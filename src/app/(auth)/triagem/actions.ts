@@ -60,6 +60,10 @@ export async function salvarEquipamentosPersonalizados(entrada: {
 
   await registrarRespostas(userId, etapa.dados);
   revalidatePath("/triagem", "layout");
+  // O perfil também decide o Modo Conservador e os pendentes exibidos
+  // no Início: invalidar só a cascata deixaria a outra aba mostrando o
+  // estado anterior à gravação.
+  revalidatePath("/inicio");
   return { ok: true };
 }
 
@@ -90,6 +94,7 @@ export async function submeterEtapaTriagem(
   // da gravação e esconder respostas recém-persistidas — especialmente
   // listas adicionadas no cliente, como equipamentos personalizados.
   revalidatePath("/triagem", "layout");
+  revalidatePath("/inicio");
 
   const destino: EtapaId | "resumo" = isEtapaId(proximaEtapa)
     ? proximaEtapa
