@@ -177,8 +177,32 @@ export const workoutEvents = pgTable("workout_event", {
   id: uuid("id").primaryKey().defaultRandom(),
   sessionId: uuid("session_id").notNull().references(() => workoutSessions.id, { onDelete: "cascade" }),
   userId: uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
-  tipo: text("tipo").$type<"sessao_iniciada" | "serie_registrada" | "sessao_concluida" | "sessao_abandonada">().notNull(),
+  tipo: text("tipo").$type<"sessao_iniciada" | "serie_registrada" | "sessao_concluida" | "sessao_abandonada" | "exercicio_substituido">().notNull(),
   dados: jsonb("dados").notNull(),
+  createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
+});
+
+/**
+ * Substituições de exercício com motivo (user story 23; tela 035).
+ *
+ * A linha é o registro durável do motivo, e não apenas do par
+ * trocado: é ele que decide se a troca vale só para a sessão em que
+ * aconteceu (preferência) ou se persiste nas próximas sessões do
+ * bloco (equipamento indisponível, dor). Sem esse registro, um
+ * exercício-chave mudaria de sessão para sessão sem rastro, que é
+ * exatamente o que a user story proíbe.
+ */
+export const exerciseSubstitutions = pgTable("exercise_substitution", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  sessionId: uuid("session_id").references(() => workoutSessions.id, { onDelete: "set null" }),
+  diaId: text("dia_id").notNull(),
+  exercicioOriginalId: text("exercicio_original_id").notNull(),
+  exercicioNovoId: text("exercicio_novo_id").notNull(),
+  motivo: text("motivo").$type<"equipamento" | "dor" | "preferencia">().notNull(),
+  observacao: text("observacao"),
+  /** Falso para trocas pontuais; verdadeiro enquanto valer adiante. */
+  persistente: boolean("persistente").notNull(),
   createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
 });
 

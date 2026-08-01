@@ -7,7 +7,10 @@ import { allowEmail, seedAuthenticatedSession } from "./helpers/seed-session";
 const plano: PlanoGerado = {
   regraVersao: "motor-plano-v1", modoConservador: false, perfilVersao: 1, dadosUsados: [],
   nutricao: { calorias: 2400, proteinaG: 160, carboidratosG: 300, gordurasG: 62, fibrasG: 30, estrategia: "Manutenção", refeicoes: [] },
-  bloco: { duracaoSemanas: 6, divisao: "Superior / Inferior", dias: [{ id: "superior-a", nome: "Superior A", diaSemana: "segunda", exercicios: [{ exercicioId: "supino-reto-halteres", nome: "Supino reto com halteres", padrao: "empurrar-horizontal", series: 1, repeticoes: "8–10", rir: 2, descansoSeg: 2, justificativa: "Base de força" }] }] },
+  bloco: { duracaoSemanas: 6, divisao: "Superior / Inferior", dias: [
+    { id: "superior-a", nome: "Superior A", diaSemana: "segunda", exercicios: [{ exercicioId: "supino-reto-halteres", nome: "Supino reto com halteres", padrao: "empurrar-horizontal", series: 1, repeticoes: "8–10", rir: 2, descansoSeg: 2, justificativa: "Base de força" }] },
+    { id: "inferior-a", nome: "Inferior A", diaSemana: "quinta", exercicios: [{ exercicioId: "agachamento-peso-corpo", nome: "Agachamento com peso do corpo", padrao: "agachar", series: 1, repeticoes: "10–15", rir: 2, descansoSeg: 2, justificativa: "Base de pernas" }] },
+  ] },
 };
 
 test("executa o treino do dia, usa o timer e consulta o resumo no histórico", async ({ page, context }) => {
@@ -35,4 +38,12 @@ test("executa o treino do dia, usa o timer e consulta o resumo no histórico", a
   await expect(page.getByText("1", { exact: true }).first()).toBeVisible();
   await page.getByRole("link", { name: "Ver histórico de sessões" }).click();
   await expect(page.getByText("Concluída", { exact: true })).toBeVisible();
+
+  // O Início precisa refletir o treino concluído em vez de reoferecer
+  // o mesmo card como se nada tivesse acontecido.
+  await page.goto("/inicio");
+  await expect(page.getByText("Treino de hoje")).toBeVisible();
+  await expect(page.getByText("Concluído", { exact: true })).toBeVisible();
+  await expect(page.getByText("1 de 2 treinos concluídos nos últimos 7 dias")).toBeVisible();
+  await expect(page.getByRole("link", { name: /Ver resumo do treino/ })).toBeVisible();
 });

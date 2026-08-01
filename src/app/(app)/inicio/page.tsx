@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRight, CalendarDays, Dumbbell, Flame } from "lucide-react";
+import { ArrowRight, CalendarDays, CheckCircle2, Dumbbell, Flame } from "lucide-react";
 import { auth } from "@/auth";
 import { sair } from "../../(auth)/actions";
 import { Button } from "@/components/ui/button";
@@ -8,6 +8,8 @@ import { Card } from "@/components/ui/card";
 import { obterPerfilVigente } from "@/domain/triagem/perfil";
 import { montarResumoTriagem } from "@/domain/triagem/resumo";
 import { obterPlanoAtivo } from "@/domain/plano/repositorio";
+import { listarHistoricoSessoes } from "@/domain/sessao/repositorio";
+import { escolherTreinoDoDia } from "@/domain/sessao/treino-do-dia";
 
 /**
  * Casco da aba Início (telas 029–031). Os cartões de treino do dia,
@@ -18,10 +20,13 @@ import { obterPlanoAtivo } from "@/domain/plano/repositorio";
 export default async function InicioPage() {
   const session = await auth();
   const userId = session?.user?.id;
-  const [perfil, planoAtivo] = userId
-    ? await Promise.all([obterPerfilVigente(userId), obterPlanoAtivo(userId)])
-    : [null, null];
+  const [perfil, planoAtivo, historico] = userId
+    ? await Promise.all([obterPerfilVigente(userId), obterPlanoAtivo(userId), listarHistoricoSessoes(userId)])
+    : [null, null, []];
   const resumo = montarResumoTriagem(perfil?.respostas ?? {});
+  const treinoDoDia = planoAtivo
+    ? escolherTreinoDoDia(planoAtivo.conteudo.bloco.dias, historico)
+    : null;
 
   return (
     <div className="flex flex-col gap-6 p-4">
@@ -48,16 +53,38 @@ export default async function InicioPage() {
 
       {planoAtivo ? (
         <>
-        <section className="overflow-hidden rounded-2xl border-2 border-on-surface-strong bg-surface-container">
+        {treinoDoDia ? (
+        <section className={`overflow-hidden rounded-2xl border-2 bg-surface-container ${treinoDoDia.estado === "concluido_hoje" ? "border-success" : "border-on-surface-strong"}`}>
           <div className="p-5">
-            <p className="mb-2 text-label-md font-semibold tracking-wide text-muted-foreground uppercase">Treino do dia</p>
-            <h2 className="text-headline-md font-bold text-on-surface-strong">{planoAtivo.conteudo.bloco.dias[0].nome}</h2>
-            <p className="mt-1 text-body-md text-muted-foreground">{planoAtivo.conteudo.bloco.dias[0].exercicios.length} exercícios · {planoAtivo.conteudo.bloco.dias[0].exercicios.reduce((total, exercicio) => total + exercicio.series, 0)} séries</p>
+            <div className="mb-2 flex items-center gap-2">
+              <p className="text-label-md font-semibold tracking-wide text-muted-foreground uppercase">
+                {treinoDoDia.estado === "concluido_hoje" ? "Treino de hoje" : treinoDoDia.estado === "em_andamento" ? "Sessão em andamento" : "Treino do dia"}
+              </p>
+              {treinoDoDia.estado === "concluido_hoje" ? (
+                <Badge variant="secondary" className="gap-1"><CheckCircle2 className="size-3 text-success" /> Concluído</Badge>
+              ) : null}
+            </div>
+            <h2 className="text-headline-md font-bold text-on-surface-strong">{treinoDoDia.dia.nome}</h2>
+            <p className="mt-1 text-body-md text-muted-foreground">
+              {treinoDoDia.estado === "concluido_hoje"
+                ? "Você já treinou hoje. O próximo treino do bloco libera amanhã."
+                : `${treinoDoDia.dia.exercicios.length} exercícios · ${treinoDoDia.dia.exercicios.reduce((total, exercicio) => total + exercicio.series, 0)} séries`}
+            </p>
+            <p className="mt-2 text-body-sm text-muted-foreground">
+              {treinoDoDia.concluidasNaSemana} de {planoAtivo.conteudo.bloco.dias.length} treinos concluídos nos últimos 7 dias
+            </p>
           </div>
-          <Button asChild size="lg" className="h-14 w-full rounded-none text-base font-bold">
-            <Link href={`/sessao/previa/${planoAtivo.conteudo.bloco.dias[0].id}`}>Ver treino <ArrowRight className="size-5" /></Link>
+          <Button asChild size="lg" variant={treinoDoDia.estado === "concluido_hoje" ? "secondary" : "default"} className="h-14 w-full rounded-none text-base font-bold">
+            {treinoDoDia.estado === "em_andamento" ? (
+              <Link href={`/sessao/${treinoDoDia.sessaoId}`}>Retomar treino <ArrowRight className="size-5" /></Link>
+            ) : treinoDoDia.estado === "concluido_hoje" ? (
+              <Link href={`/sessao/${treinoDoDia.sessaoId}/resumo`}>Ver resumo do treino <ArrowRight className="size-5" /></Link>
+            ) : (
+              <Link href={`/sessao/previa/${treinoDoDia.dia.id}`}>Ver treino <ArrowRight className="size-5" /></Link>
+            )}
           </Button>
         </section>
+        ) : null}
         <section
           aria-labelledby="plano-ativo-titulo"
           className="overflow-hidden rounded-2xl border border-border bg-surface-container"
