@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { eq } from "drizzle-orm";
 import { db } from "@/db/client";
 import { decisionTrails, plans, users } from "@/db/schema";
-import { ativarExperimentoPlano, obterExperimentoAtivo, obterOuGerarRascunho, ativarPlano, reverterAoPlanoEstavel, substituirNoRascunho } from "../repositorio";
+import { aplicarReducaoVolumeAutomatica, ativarExperimentoPlano, desfazerAjusteAutomatico, obterExperimentoAtivo, obterOuGerarRascunho, ativarPlano, reverterAoPlanoEstavel, substituirNoRascunho } from "../repositorio";
 import type { RespostasTriagem } from "@/domain/triagem/etapas";
 
 const respostas: RespostasTriagem = {
@@ -51,6 +51,16 @@ describe("ciclo do Plano Ativo", () => {
     await expect(ativarPlano(userId, rascunho.id)).rejects.toThrow("já ativado");
     const dia = ativo.conteudo.bloco.dias[0];
     await expect(substituirNoRascunho(userId, { planoId: ativo.id, diaId: dia.id, exercicioId: dia.exercicios[0].exercicioId, novoExercicioId: "prancha" }, respostas)).rejects.toThrow("rascunho");
+  });
+
+  it("Ajuste Auto-aplicado reduz até 10% do volume e desfazer cria nova versão", async () => {
+    const userId = await usuario(); const rascunho = await obterOuGerarRascunho(userId, { version: 1, respostas }); const baseline = await ativarPlano(userId, rascunho.id);
+    const ajuste = await aplicarReducaoVolumeAutomatica(userId, randomUUID()); expect(ajuste).not.toBeNull();
+    const [aplicado] = await db.select().from(plans).where(eq(plans.id, ajuste!.appliedPlanId));
+    const series = (conteudo: typeof baseline.conteudo) => conteudo.bloco.dias.flatMap((dia) => dia.exercicios).reduce((total, exercicio) => total + exercicio.series, 0);
+    expect(series(aplicado.conteudo as typeof baseline.conteudo)).toBe(series(baseline.conteudo) - Math.floor(series(baseline.conteudo) * 0.1));
+    const restaurado = await desfazerAjusteAutomatico(userId, { reviewId: randomUUID(), baselinePlanId: baseline.id });
+    expect(restaurado.versao).toBe(3); expect(restaurado.conteudo).toEqual(baseline.conteudo);
   });
 
   it("Experimento de Plano preserva baseline e rollback cria nova versão", async () => {

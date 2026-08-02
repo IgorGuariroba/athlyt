@@ -87,6 +87,40 @@ export async function obterPlanoAtivo(userId: string): Promise<PlanoPersistido |
   return linha ? mapear(linha) : null;
 }
 
+export async function aplicarReducaoVolumeAutomatica(userId: string, reviewId: string) {
+  return db.transaction(async (tx) => {
+    const [baseline] = await tx.select().from(plans).where(and(eq(plans.userId, userId), eq(plans.estado, "ativo"))).limit(1).for("update");
+    if (!baseline) return null;
+    const conteudo = structuredClone(baseline.conteudo as PlanoGerado);
+    const exercicios = conteudo.bloco.dias.flatMap((dia) => dia.exercicios);
+    const totalSeries = exercicios.reduce((total, exercicio) => total + exercicio.series, 0);
+    let reducoes = Math.floor(totalSeries * 0.1);
+    if (reducoes < 1) return null;
+    for (const exercicio of [...exercicios].reverse()) {
+      if (reducoes === 0) break;
+      if (exercicio.series > 1) { exercicio.series -= 1; reducoes -= 1; }
+    }
+    conteudo.regraVersao = "ajuste-recuperacao-v1";
+    conteudo.dadosUsados = [...conteudo.dadosUsados, `revisao-semanal:${reviewId}`];
+    await tx.update(plans).set({ estado: "arquivado" }).where(eq(plans.id, baseline.id));
+    const [aplicado] = await tx.insert(plans).values({ userId, perfilVersao: baseline.perfilVersao, versao: (baseline.versao ?? 0) + 1, estado: "ativo", regraVersao: conteudo.regraVersao, modoConservador: baseline.modoConservador, conteudo, activatedAt: new Date() }).returning();
+    await tx.insert(decisionTrails).values({ userId, operacao: "revisao-semanal", recorteVersao: 2, perfilVersao: baseline.perfilVersao, modeloSolicitado: "motor-adaptativo", modeloResolvido: "ajuste-recuperacao-v1", auditavel: true, degradado: false, camposEnviados: ["recuperacao", "volume-semanal"], camposOmitidos: [], ferramentasConsultadas: [], resultado: { tipo: "ajuste-auto-aplicado", reviewId, baselinePlanId: baseline.id, appliedPlanId: aplicado.id, limitePercentual: 10 } });
+    return { baselinePlanId: baseline.id, appliedPlanId: aplicado.id };
+  });
+}
+
+export async function desfazerAjusteAutomatico(userId: string, entrada: { reviewId: string; baselinePlanId: string }) {
+  return db.transaction(async (tx) => {
+    const [baseline] = await tx.select().from(plans).where(and(eq(plans.id, entrada.baselinePlanId), eq(plans.userId, userId))).limit(1);
+    const [atual] = await tx.select().from(plans).where(and(eq(plans.userId, userId), eq(plans.estado, "ativo"))).limit(1).for("update");
+    if (!baseline || !atual) throw new Error("Versão para desfazer não encontrada.");
+    await tx.update(plans).set({ estado: "arquivado" }).where(eq(plans.id, atual.id));
+    const [rollback] = await tx.insert(plans).values({ userId, perfilVersao: baseline.perfilVersao, versao: (atual.versao ?? 0) + 1, estado: "ativo", regraVersao: baseline.regraVersao, modoConservador: baseline.modoConservador, conteudo: baseline.conteudo, activatedAt: new Date() }).returning();
+    await tx.insert(decisionTrails).values({ userId, operacao: "revisao-semanal", recorteVersao: 2, perfilVersao: baseline.perfilVersao, modeloSolicitado: "motor-adaptativo", modeloResolvido: "rollback-ajuste-v1", auditavel: true, degradado: false, camposEnviados: ["ajuste-auto-aplicado", "plano-estavel"], camposOmitidos: [], ferramentasConsultadas: [], resultado: { tipo: "ajuste-desfeito", reviewId: entrada.reviewId, de: atual.id, para: rollback.id, baselinePlanId: baseline.id } });
+    return mapear(rollback);
+  });
+}
+
 export async function ativarExperimentoPlano(userId: string, entrada: { planoId: string; hipotese: string; variaveis: string[]; criterioSucesso: string; criterioInterrupcao: string; janelaMinimaSemanas: number }) {
   if (!entrada.hipotese.trim() || !entrada.criterioSucesso.trim() || !entrada.criterioInterrupcao.trim() || entrada.variaveis.length === 0) throw new Error("Experimento incompleto.");
   return db.transaction(async (tx) => {
@@ -98,6 +132,7 @@ export async function ativarExperimentoPlano(userId: string, entrada: { planoId:
     await tx.update(plans).set({ estado: "arquivado" }).where(eq(plans.id, baseline.id));
     const [ativo] = await tx.update(plans).set({ estado: "ativo", versao: (baseline.versao ?? 0) + 1, activatedAt: new Date() }).where(eq(plans.id, rascunho.id)).returning();
     const [linha] = await tx.insert(planExperiments).values({ userId, baselinePlanId: baseline.id, experimentPlanId: ativo.id, hipotese: entrada.hipotese, variaveis: entrada.variaveis, criterioSucesso: entrada.criterioSucesso, criterioInterrupcao: entrada.criterioInterrupcao, janelaMinimaSemanas: Math.max(1, Math.min(8, entrada.janelaMinimaSemanas)) }).returning();
+    await tx.insert(decisionTrails).values({ userId, operacao: "revisao-semanal", recorteVersao: 2, perfilVersao: ativo.perfilVersao, modeloSolicitado: "motor-adaptativo", modeloResolvido: "experimento-plano-v1", auditavel: true, degradado: false, camposEnviados: ["hipotese", "variaveis", "criterios", "plano-estavel"], camposOmitidos: [], ferramentasConsultadas: [], resultado: { tipo: "experimento-ativado", experimentId: linha.id, baselinePlanId: baseline.id, experimentPlanId: ativo.id, hipotese: entrada.hipotese, variaveis: entrada.variaveis } });
     return linha;
   });
 }

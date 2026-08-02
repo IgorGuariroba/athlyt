@@ -199,6 +199,9 @@ export const weeklyBodyReviews = pgTable("weekly_body_review", {
   evidencias: jsonb("evidencias").notNull(),
   proposta: jsonb("proposta").notNull(),
   estado: text("estado").$type<"pendente" | "aplicada" | "rejeitada" | "desfeita">().notNull().default("pendente"),
+  baselinePlanId: uuid("baseline_plan_id"),
+  appliedPlanId: uuid("applied_plan_id"),
+  rollbackPlanId: uuid("rollback_plan_id"),
   metodologiaVersao: text("metodologia_versao").notNull(),
   createdAt: timestamp("created_at", { mode: "date", withTimezone: true }).notNull().defaultNow(),
 }, (t) => [index("weekly_body_review_user_date_idx").on(t.userId, t.periodoFim)]);

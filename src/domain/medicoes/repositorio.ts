@@ -101,8 +101,18 @@ export async function registrarRevisaoCorporal(userId: string, entrada: { period
   });
 }
 
-export async function atualizarEstadoRevisaoCorporal(userId: string, reviewId: string, estado: "aplicada" | "rejeitada" | "desfeita") {
-  const [linha] = await db.update(weeklyBodyReviews).set({ estado }).where(and(eq(weeklyBodyReviews.id, reviewId), eq(weeklyBodyReviews.userId, userId))).returning();
+export async function vincularAjusteAutomatico(userId: string, reviewId: string, entrada: { baselinePlanId: string; appliedPlanId: string }) {
+  const [linha] = await db.update(weeklyBodyReviews).set({ estado: "aplicada", ...entrada }).where(and(eq(weeklyBodyReviews.id, reviewId), eq(weeklyBodyReviews.userId, userId))).returning();
+  return linha ?? null;
+}
+
+export async function obterRevisaoCorporal(userId: string, reviewId: string) {
+  const [linha] = await db.select().from(weeklyBodyReviews).where(and(eq(weeklyBodyReviews.id, reviewId), eq(weeklyBodyReviews.userId, userId))).limit(1);
+  return linha ?? null;
+}
+
+export async function atualizarEstadoRevisaoCorporal(userId: string, reviewId: string, estado: "aplicada" | "rejeitada" | "desfeita", rollbackPlanId?: string) {
+  const [linha] = await db.update(weeklyBodyReviews).set({ estado, rollbackPlanId }).where(and(eq(weeklyBodyReviews.id, reviewId), eq(weeklyBodyReviews.userId, userId))).returning();
   return linha ?? null;
 }
 

@@ -58,16 +58,19 @@ export async function enviarFotosCorporais(fd: FormData) {
   const retencaoDias = Number(fd.get("retencaoDias") ?? 0);
   const excluirEm = Number.isFinite(retencaoDias) && retencaoDias > 0 ? new Date(Date.now() + Math.min(retencaoDias, 3650) * 86_400_000) : undefined;
   const gravadas: string[] = [];
+  const registros: string[] = [];
   try {
     for (const [pose, arquivo] of arquivos) {
       const preparada = await prepararFotoCorporal({ bytes: new Uint8Array(await arquivo.arrayBuffer()), contentType: arquivo.type });
       const chave = `usuarios/${userId}/progresso/${randomUUID()}.webp`;
       await storage.gravar({ chave, ...preparada });
       gravadas.push(chave);
-      await registrarFotoProgresso(userId, { assessmentId: avaliacao.id, pose, objectKey: chave, condicoes: String(fd.get("condicoes") ?? "") || undefined, excluirEm });
+      const registro = await registrarFotoProgresso(userId, { assessmentId: avaliacao.id, pose, objectKey: chave, condicoes: String(fd.get("condicoes") ?? "") || undefined, excluirEm });
+      registros.push(registro.id);
     }
   } catch (erro) {
     await Promise.allSettled(gravadas.map((chave) => storage.excluir(chave)));
+    await excluirFotosProgresso(userId, registros);
     throw erro;
   }
   revalidatePath("/progresso"); revalidatePath("/inicio");

@@ -19,10 +19,10 @@ export function produzirRevisaoCorporal(entrada: {
   const podePropor = entrada.semanasObservadas >= 2 && confiaveis >= 4 && !contraAlta && !entrada.riscoSaude;
   const proposta = entrada.riscoSaude
     ? { tipo: "manter" as const, exigeAprovacao: false, justificativa: "Saúde e recuperação prevalecem; mantenha o Plano Estável e investigue os sinais relatados." }
-    : podePropor && geral < 55
-      ? { tipo: "estrutural" as const, exigeAprovacao: true, justificativa: "Evidências consistentes indicam que uma mudança estrutural pode ser avaliada." }
-      : podePropor && geral >= 75
-        ? { tipo: "auto_aplicado" as const, exigeAprovacao: false, justificativa: "A resposta consistente permite um ajuste pequeno dentro dos limites versionados." }
+    : podePropor && entrada.dimensoes.recuperacao < 50 && entrada.confiancas.saudeRecuperacao === "confiavel"
+      ? { tipo: "auto_aplicado" as const, exigeAprovacao: false, justificativa: "Recuperação baixa e confiável: reduzir até 10% do volume por uma versão e permitir desfazer.", ajuste: { tipo: "reduzir-volume" as const, limitePercentual: 10, regraVersao: "ajuste-recuperacao-v1" } }
+      : podePropor && geral < 55
+        ? { tipo: "estrutural" as const, exigeAprovacao: true, justificativa: "Evidências consistentes indicam que uma mudança estrutural pode ser avaliada." }
         : { tipo: "manter" as const, exigeAprovacao: false, justificativa: "Ainda não há evidência comparável suficiente para mudar o Plano Ativo." };
   return {
     scorecard: { ...entrada.dimensoes, geral, metodologiaVersao: SCORECARD_CORPORAL_VERSAO },

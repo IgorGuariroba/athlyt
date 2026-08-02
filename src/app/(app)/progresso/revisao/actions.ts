@@ -7,9 +7,9 @@ import { auth } from "@/auth";
 import { db } from "@/db/client";
 import { foodEntries, workoutSessions } from "@/db/schema";
 import { avaliarConfiancaCorporal } from "@/domain/medicoes";
-import { atualizarEstadoRevisaoCorporal, obterPanoramaCorporal, registrarRevisaoCorporal } from "@/domain/medicoes/repositorio";
+import { atualizarEstadoRevisaoCorporal, obterPanoramaCorporal, obterRevisaoCorporal, registrarRevisaoCorporal, vincularAjusteAutomatico } from "@/domain/medicoes/repositorio";
 import { produzirRevisaoCorporal, type EvidenciaCorporal } from "@/domain/medicoes/revisao-corporal";
-import { ativarExperimentoPlano, obterOuGerarRascunho, obterPlanoAtivo, reverterAoPlanoEstavel } from "@/domain/plano/repositorio";
+import { aplicarReducaoVolumeAutomatica, ativarExperimentoPlano, desfazerAjusteAutomatico, obterOuGerarRascunho, obterPlanoAtivo, reverterAoPlanoEstavel } from "@/domain/plano/repositorio";
 import { obterPerfilVigente } from "@/domain/triagem/perfil";
 
 const limitar = (valor: number) => Math.max(0, Math.min(100, Math.round(valor)));
@@ -38,7 +38,11 @@ export async function gerarRevisaoSemanal() {
   const datas = [...panorama.medicoes.map((item) => item.observadoEm), ...panorama.pesos.map((item) => item.observadoEm)];
   const semanasObservadas = datas.length ? Math.max(1, Math.floor((fim.getTime() - Math.min(...datas.map(Number))) / (7 * 86_400_000))) : 0;
   const revisao = produzirRevisaoCorporal({ dimensoes: { aderencia: Math.round((aderenciaTreino + aderenciaNutricao) / 2), desempenho: concluidas ? 70 : 40, tendenciaCorporal: panorama.medicoes.length >= 3 ? 65 : 40, recuperacao: respostas.lesoes || respostas.condicoes ? 45 : 65, utilidade: 50 }, confiancas, evidencias, semanasObservadas, riscoSaude: Boolean(respostas.lesoes?.trim() || respostas.condicoes?.trim()) });
-  await registrarRevisaoCorporal(session.user.id, { periodoInicio: inicio, periodoFim: fim, revisao, perfilVersao: perfil?.version });
+  const linha = await registrarRevisaoCorporal(session.user.id, { periodoInicio: inicio, periodoFim: fim, revisao, perfilVersao: perfil?.version });
+  if (revisao.proposta.tipo === "auto_aplicado") {
+    const ajuste = await aplicarReducaoVolumeAutomatica(session.user.id, linha.id);
+    if (ajuste) await vincularAjusteAutomatico(session.user.id, linha.id, ajuste);
+  }
   revalidatePath("/progresso/revisao"); redirect("/progresso/revisao/scorecard");
 }
 
@@ -70,6 +74,11 @@ export async function executarRollback(fd: FormData) {
 
 export async function desfazerRevisao(fd: FormData) {
   const session = await auth(); if (!session?.user?.id) redirect("/");
-  await atualizarEstadoRevisaoCorporal(session.user.id, String(fd.get("reviewId")), "desfeita");
+  const reviewId = String(fd.get("reviewId")); const revisao = await obterRevisaoCorporal(session.user.id, reviewId);
+  if (!revisao) redirect("/progresso/revisao");
+  if (revisao.baselinePlanId) {
+    const rollback = await desfazerAjusteAutomatico(session.user.id, { reviewId, baselinePlanId: revisao.baselinePlanId });
+    await atualizarEstadoRevisaoCorporal(session.user.id, reviewId, "desfeita", rollback.id);
+  } else await atualizarEstadoRevisaoCorporal(session.user.id, reviewId, "desfeita");
   revalidatePath("/progresso/revisao"); redirect("/progresso/revisao/proposta");
 }

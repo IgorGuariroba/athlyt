@@ -43,6 +43,11 @@ describe("Revisão Semanal corporal", () => {
     expect(revisao.proposta.exigeAprovacao).toBe(false);
   });
 
+  it("propõe redução pequena e reversível quando recuperação baixa é confiável", () => {
+    const revisao = produzirRevisaoCorporal({ dimensoes: { aderencia: 80, desempenho: 70, tendenciaCorporal: 65, recuperacao: 40, utilidade: 70 }, confiancas: { composicaoCorporal: "confiavel", proporcoes: "confiavel", simetriaBilateral: "confiavel", treinamento: "confiavel", nutricao: "confiavel", saudeRecuperacao: "confiavel" }, evidencias: [], semanasObservadas: 3 });
+    expect(revisao.proposta).toMatchObject({ tipo: "auto_aplicado", exigeAprovacao: false, ajuste: { limitePercentual: 10, regraVersao: "ajuste-recuperacao-v1" } });
+  });
+
   it("risco de saúde impede proposta estética mesmo com tendência favorável", () => {
     const revisao = produzirRevisaoCorporal({ dimensoes: { aderencia: 90, desempenho: 90, tendenciaCorporal: 90, recuperacao: 20, utilidade: 90 }, confiancas: { composicaoCorporal: "confiavel", proporcoes: "confiavel", simetriaBilateral: "confiavel", treinamento: "confiavel", nutricao: "confiavel", saudeRecuperacao: "limitada" }, evidencias: [], semanasObservadas: 4, riscoSaude: true });
     expect(revisao.proposta.tipo).toBe("manter");
