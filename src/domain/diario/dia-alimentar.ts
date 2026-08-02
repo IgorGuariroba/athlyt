@@ -56,6 +56,20 @@ export function intervaloUtcDoDia(
   return { inicio, fim };
 }
 
+/**
+ * Dia local vizinho (`passo` negativo = anterior).
+ *
+ * A âncora é o meio-dia local, não a meia-noite: partindo de 00:00,
+ * subtrair um dia "com folga" para absorver horário de verão aterrissa
+ * nas últimas horas do dia *retrasado* e pula um dia inteiro. O
+ * meio-dia deixa 12 horas de margem para cada lado, mais do que
+ * qualquer transição de fuso exige.
+ */
+export function diaVizinho(dia: string, passo: number, fuso: string = FUSO_PADRAO): string {
+  const meioDia = instanteDeHoraLocal(dia, "12:00", fuso);
+  return diaAlimentar(new Date(meioDia.getTime() + passo * 24 * 60 * 60 * 1000), fuso);
+}
+
 /** Hora local `HH:MM` do instante, para exibição na linha do tempo. */
 export function horaLocal(instante: Date, fuso: string = FUSO_PADRAO): string {
   return new Intl.DateTimeFormat("pt-BR", {

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   diaAlimentar,
+  diaVizinho,
   horaLocal,
   instanteDeHoraLocal,
   intervaloUtcDoDia,
@@ -26,6 +27,24 @@ describe("dia alimentar no fuso do usuário", () => {
     const { inicio, fim } = intervaloUtcDoDia("2026-03-08", "America/New_York");
     for (let t = inicio.getTime(); t < fim.getTime(); t += 30 * 60_000) {
       expect(diaAlimentar(new Date(t), "America/New_York")).toBe("2026-03-08");
+    }
+  });
+
+  it("o dia vizinho anda exatamente um dia, sem pular nem repetir", () => {
+    // Regressão: a âncora na meia-noite fazia "dia anterior" saltar de
+    // 02/08 para 31/07, escondendo um dia inteiro do Diário.
+    expect(diaVizinho("2026-08-02", -1, "America/Sao_Paulo")).toBe("2026-08-01");
+    expect(diaVizinho("2026-08-02", 1, "America/Sao_Paulo")).toBe("2026-08-03");
+    expect(diaVizinho("2026-01-01", -1, "America/Sao_Paulo")).toBe("2025-12-31");
+    expect(diaVizinho("2026-03-01", -1, "America/Sao_Paulo")).toBe("2026-02-28");
+  });
+
+  it("navegar 60 dias para trás e voltar retorna ao mesmo dia, mesmo com horário de verão", () => {
+    for (const fuso of ["America/Sao_Paulo", "America/New_York", "UTC"]) {
+      let dia = "2026-04-15";
+      for (let i = 0; i < 60; i++) dia = diaVizinho(dia, -1, fuso);
+      for (let i = 0; i < 60; i++) dia = diaVizinho(dia, 1, fuso);
+      expect(dia).toBe("2026-04-15");
     }
   });
 

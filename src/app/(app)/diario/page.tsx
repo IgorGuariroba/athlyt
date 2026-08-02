@@ -2,7 +2,7 @@ import Link from "next/link";
 import { Check, ChevronLeft, ChevronRight, Dumbbell, Pencil, Undo2, UtensilsCrossed } from "lucide-react";
 import { auth } from "@/auth";
 import { Button } from "@/components/ui/button";
-import { FUSO_PADRAO, intervaloUtcDoDia } from "@/domain/diario/dia-alimentar";
+import { FUSO_PADRAO, diaVizinho } from "@/domain/diario/dia-alimentar";
 import { hojeDoUsuario, montarDiarioDoDia } from "@/domain/diario/repositorio";
 import type { ItemLinhaDoTempo } from "@/domain/diario/tipos";
 import { confirmarRefeicaoAction, desfazerConfirmacaoAction } from "./actions";
@@ -16,12 +16,6 @@ import { PainelDeMacros } from "./painel-macros";
  * O dia navegável vem da URL para que a tela seja endereçável e o
  * fuso permaneça explícito em toda ação de escrita.
  */
-function diaVizinho(dia: string, passo: number, fuso: string): string {
-  const { inicio } = intervaloUtcDoDia(dia, fuso);
-  const alvo = new Date(inicio.getTime() + passo * 26 * 60 * 60 * 1000);
-  return hojeDoUsuario(fuso, alvo);
-}
-
 function rotuloDoDia(dia: string, hoje: string, fuso: string): string {
   if (dia === hoje) return "Hoje";
   if (dia === diaVizinho(hoje, -1, fuso)) return "Ontem";

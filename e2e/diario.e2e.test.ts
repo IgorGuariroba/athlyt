@@ -63,6 +63,16 @@ test("prescrição, confirmação em 1 toque e edição atualizam os macros rest
   await page.getByRole("link", { name: "Diário" }).click();
   await expect(macros.getByText("1140/2400")).toBeVisible();
 
+  // Navegar um dia para trás e voltar tem de aterrissar no mesmo dia:
+  // um passo que pula uma data esconde um dia inteiro do Diário.
+  const hoje = await page.getByRole("heading", { name: "Hoje" }).textContent();
+  await page.getByRole("link", { name: "Dia anterior" }).click();
+  await expect(page.getByRole("heading", { name: "Ontem" })).toBeVisible();
+  await expect(macros.getByText("0/2400")).toBeVisible();
+  await page.getByRole("link", { name: "Próximo dia" }).click();
+  await expect(page.getByRole("heading", { name: "Hoje" })).toHaveText(hoje!);
+  await expect(macros.getByText("1140/2400")).toBeVisible();
+
   // Desfazer devolve a refeição ao estado planejado.
   await page.getByRole("button", { name: "Desfazer" }).first().click();
   await expect(linha.getByText("Planejada")).toHaveCount(3);
