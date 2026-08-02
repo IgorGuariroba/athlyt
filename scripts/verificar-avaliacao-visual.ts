@@ -14,13 +14,8 @@ async function main() {
   try {
     const [frente, costas] = await Promise.all([silhueta("#527a9d"), silhueta("#5f819f")]);
     const entrada = { userId: usuario.id, nucleo: { perfilVersao: 0, modoConservador: true }, fotos: [{ id: randomUUID(), pose: "frente", condicoes: "imagem sintética uniforme", dados: frente, mediaType: "image/webp" }, { id: randomUUID(), pose: "costas", condicoes: "imagem sintética uniforme", dados: costas, mediaType: "image/webp" }], medicoesComparaveis: [] } as const;
-    let resultado: Awaited<ReturnType<typeof analisarFotosCorporais>> | undefined;
-    for (let tentativa = 1; tentativa <= 3; tentativa += 1) {
-      resultado = await analisarFotosCorporais(entrada);
-      if (resultado.status === "ok") break;
-      console.warn(`Tentativa ${tentativa} indisponível: ${resultado.motivo}`);
-    }
-    if (!resultado || resultado.status !== "ok") throw new Error("O modelo gratuito não produziu saída estruturada após 3 tentativas.");
+    const resultado = await analisarFotosCorporais(entrada);
+    if (resultado.status !== "ok") throw new Error("O modelo gratuito não produziu saída estruturada após 3 tentativas.");
     if (resultado.valor.gorduraVisual.maximoPercentual - resultado.valor.gorduraVisual.minimoPercentual < 2) throw new Error("O modelo devolveu percentual exato em vez de faixa.");
     console.log(`Avaliação visual real validada com ${resultado.modeloResolvido}; imagens sintéticas não foram persistidas.`);
   } finally { await db.delete(users).where(eq(users.id, usuario.id)); }
