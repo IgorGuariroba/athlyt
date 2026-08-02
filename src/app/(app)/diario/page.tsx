@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Check, ChevronLeft, ChevronRight, Dumbbell, Pencil, Undo2, UtensilsCrossed } from "lucide-react";
+import { Check, ChevronLeft, ChevronRight, Dumbbell, Pencil, Plus, Undo2, UtensilsCrossed } from "lucide-react";
 import { auth } from "@/auth";
 import { Button } from "@/components/ui/button";
 import { FUSO_PADRAO, diaVizinho } from "@/domain/diario/dia-alimentar";
@@ -83,6 +83,19 @@ export default async function DiarioPage({
             : "Entre para ver seu Diário."}
         </p>
       )}
+
+      {/* Botão + dos Atalhos de Registro (tela 050), no lugar que a
+          referência do MacroFactor reserva para ele: acessível com o
+          polegar, sem cobrir a linha do tempo. */}
+      <Button
+        asChild
+        size="lg"
+        className="sticky bottom-4 mt-2 h-14 w-full text-base font-bold"
+      >
+        <Link href={`/diario/registrar?dia=${dia}`}>
+          <Plus className="size-5" aria-hidden="true" /> Registrar alimento
+        </Link>
+      </Button>
     </section>
   );
 }

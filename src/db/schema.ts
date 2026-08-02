@@ -281,6 +281,33 @@ export const foodEntries = pgTable("food_entry", {
   uniqueIndex("food_entry_refeicao_do_dia_idx").on(tabela.userId, tabela.diaAlimentar, tabela.refeicaoRef),
 ]);
 
+/**
+ * Alimentos criados pelo atleta na entrada manual (tela 052) e
+ * favoritos marcados a partir da base (tela 053).
+ *
+ * Uma única tabela porque a pergunta que o Diário faz é sempre a
+ * mesma — "o que este atleta reusa?" — e separar em duas obrigaria a
+ * união em toda leitura. `alimentoId` nulo identifica alimento
+ * próprio; preenchido, é um favorito da base.
+ *
+ * Recorrentes não vivem aqui: eles são derivados de `food_entry`, e
+ * duplicar esse dado criaria duas verdades sobre a mesma história.
+ */
+export const foodLibrary = pgTable("food_library", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  /** Id do catálogo quando favoritado; nulo quando alimento próprio. */
+  alimentoId: text("alimento_id"),
+  nome: text("nome").notNull(),
+  favorito: boolean("favorito").notNull().default(false),
+  /** Macros por 100 g para alimento próprio; nulo para favorito da base. */
+  por100g: jsonb("por_100g"),
+  porcoes: jsonb("porcoes"),
+  createdAt: timestamp("created_at", { mode: "date", withTimezone: true }).notNull().defaultNow(),
+}, (tabela) => [
+  uniqueIndex("food_library_alimento_idx").on(tabela.userId, tabela.alimentoId),
+]);
+
 export const consents = pgTable("consent", {
   id: uuid("id").primaryKey().defaultRandom(),
   userId: uuid("userId")

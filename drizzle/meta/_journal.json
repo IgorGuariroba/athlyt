@@ -57,6 +57,13 @@
       "when": 1785675514243,
       "tag": "0007_strange_bill_hollister",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1785679061033,
+      "tag": "0008_thin_miracleman",
+      "breakpoints": true
     }
   ]
 }
