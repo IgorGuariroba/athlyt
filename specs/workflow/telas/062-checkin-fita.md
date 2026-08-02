@@ -8,11 +8,11 @@
 
 ## Propósito
 
-Registrar medidas com instruções padronizadas (máx. 1×/semana).
+Registrar cintura no máximo semanalmente e o conjunto completo de circunferências no máximo mensalmente, com protocolo reproduzível.
 
 ## Elementos e comportamento
 
-Sequência por região (cintura, braço, coxa...) com instrução ilustrada de posicionamento da fita; valores anteriores como referência.
+Sequência por cintura, pescoço, quadril, tórax, ombros, braços, coxas e panturrilhas; punho e tornozelo aparecem somente quando a referência estrutural estiver ausente ou for corrigida. Cada região tem instrução ilustrada, duas leituras e terceira quando a divergência excede tolerância versionada; salva a mediana das leituras válidas e condições da coleta. Valores anteriores não ficam visíveis durante a leitura para evitar ancoragem, apenas na confirmação. Diferenças bilaterais pequenas permanecem como incerteza; mudança súbita com dor, inchaço ou perda de força aciona Segurança.
 
 ## Sequência
 

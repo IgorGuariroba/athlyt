@@ -96,10 +96,10 @@ export async function submeterEtapaTriagem(
   revalidatePath("/triagem", "layout");
   revalidatePath("/inicio");
 
+  if (etapaAtual === "peso") redirect("/triagem/avaliacao-corporal");
+
   const destino: EtapaId | "resumo" = isEtapaId(proximaEtapa)
     ? proximaEtapa
     : "resumo";
-  redirect(
-    destino === "resumo" ? "/triagem/resumo" : `/triagem/${destino}`,
-  );
+  redirect(destino === "resumo" ? "/triagem/resumo" : `/triagem/${destino}`);
 }

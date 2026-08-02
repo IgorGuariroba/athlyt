@@ -10,6 +10,8 @@ import { montarResumoTriagem } from "@/domain/triagem/resumo";
 import { obterPlanoAtivo } from "@/domain/plano/repositorio";
 import { listarHistoricoSessoes } from "@/domain/sessao/repositorio";
 import { escolherTreinoDoDia } from "@/domain/sessao/treino-do-dia";
+import { avaliarConfiancaCorporal } from "@/domain/medicoes";
+import { obterPanoramaCorporal } from "@/domain/medicoes/repositorio";
 
 /**
  * Casco da aba Início (telas 029–031). Os cartões de treino do dia,
@@ -20,10 +22,20 @@ import { escolherTreinoDoDia } from "@/domain/sessao/treino-do-dia";
 export default async function InicioPage() {
   const session = await auth();
   const userId = session?.user?.id;
-  const [perfil, planoAtivo, historico] = userId
-    ? await Promise.all([obterPerfilVigente(userId), obterPlanoAtivo(userId), listarHistoricoSessoes(userId)])
-    : [null, null, []];
+  const [perfil, planoAtivo, historico, panorama] = userId
+    ? await Promise.all([obterPerfilVigente(userId), obterPlanoAtivo(userId), listarHistoricoSessoes(userId), obterPanoramaCorporal(userId)])
+    : [null, null, [], { medicoes: [], pesos: [], gorduras: [], fotos: [], metas: [] }];
   const resumo = montarResumoTriagem(perfil?.respostas ?? {});
+  const respostas = perfil?.respostas ?? {};
+  const regioes = new Set(panorama.medicoes.flatMap((m) => [m.regiao, `${m.regiao}:${m.lado}`]));
+  const confiancaCorporal = avaliarConfiancaCorporal({
+    regioes,
+    possuiGordura: panorama.gorduras.length > 0,
+    possuiFotos: panorama.fotos.length > 0,
+    triagemTreinoCompleta: Boolean(respostas.experienciaTreino && respostas.diasDisponiveis?.length && respostas.equipamentos),
+    triagemNutricaoCompleta: Boolean(respostas.pesoKg && respostas.alturaCm && respostas.objetivoComposicao),
+    saudeInformada: respostas.lesoes !== undefined && respostas.condicoes !== undefined,
+  });
   const treinoDoDia = planoAtivo
     ? escolherTreinoDoDia(planoAtivo.conteudo.bloco.dias, historico)
     : null;
@@ -50,6 +62,18 @@ export default async function InicioPage() {
         Olá, {session?.user?.name ?? session?.user?.email}. Seus cartões de
         prioridade do dia vão aparecer aqui.
       </Card>
+
+      {Object.values(confiancaCorporal).some((estado) => estado !== "confiavel") ? (
+        <Card className="flex flex-col gap-3 p-4">
+          <div><strong>Aprimore sua personalização</strong><p className="text-body-sm text-muted-foreground">Cada dado libera somente a capacidade relacionada.</p></div>
+          <ul className="grid gap-1 text-body-sm text-muted-foreground">
+            {confiancaCorporal.composicaoCorporal !== "confiavel" ? <li>• Cintura, pescoço, quadril ou gordura medida melhoram a estratégia corporal.</li> : null}
+            {confiancaCorporal.proporcoes !== "confiavel" ? <li>• O conjunto completo melhora prioridades de desenvolvimento muscular.</li> : null}
+            {confiancaCorporal.simetriaBilateral !== "confiavel" ? <li>• Medidas dos dois lados ajudam a confirmar assimetrias.</li> : null}
+          </ul>
+          <Button asChild size="sm" className="w-fit"><Link href="/triagem/avaliacao-corporal">Continuar avaliação</Link></Button>
+        </Card>
+      ) : null}
 
       {planoAtivo ? (
         <>

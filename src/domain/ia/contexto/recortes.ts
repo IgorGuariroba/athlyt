@@ -43,7 +43,7 @@ export const RECORTES: Record<OperacaoIA, RecorteDeclarado> = {
 
   "revisao-semanal": {
     operacao: "revisao-semanal",
-    versao: 1,
+    versao: 2,
     finalidade:
       "Avaliar a semana e propor manutenção, ajuste ou Experimento de Plano",
     campos: [
@@ -63,6 +63,16 @@ export const RECORTES: Record<OperacaoIA, RecorteDeclarado> = {
         sensivel: true,
       },
       {
+        id: "metas-proporcao",
+        descricao: "Metas do ciclo, confiança, preferências e metodologia versionada",
+        sensivel: true,
+      },
+      {
+        id: "conflitos-medicao",
+        descricao: "Divergências entre medições sem fundi-las em uma tendência",
+        sensivel: true,
+      },
+      {
         id: "recuperacao",
         descricao: "Prontidão agregada da semana",
         sensivel: true,
@@ -77,12 +87,22 @@ export const RECORTES: Record<OperacaoIA, RecorteDeclarado> = {
 
   "plano-inicial": {
     operacao: "plano-inicial",
-    versao: 1,
+    versao: 2,
     finalidade: "Gerar o Bloco de Treino e a estratégia nutricional iniciais",
     campos: [
       {
         id: "triagem-completa",
         descricao: "Todas as respostas da triagem, incluindo saúde e lesões",
+        sensivel: true,
+      },
+      {
+        id: "linha-base-corporal",
+        descricao: "Circunferências consolidadas, composição corporal, qualidade e recência",
+        sensivel: true,
+      },
+      {
+        id: "metas-proporcao",
+        descricao: "Metas de Proporção Corporal, preferências e confiança",
         sensivel: true,
       },
       {
@@ -136,6 +156,17 @@ export const RECORTES: Record<OperacaoIA, RecorteDeclarado> = {
         descricao: "Suas restrições e preferências alimentares",
         sensivel: false,
       },
+    ],
+  },
+
+  "avaliacao-visual": {
+    operacao: "avaliacao-visual",
+    versao: 1,
+    finalidade: "Avaliar proporções e simetria corporal com critérios separados e estimar gordura somente como faixa probabilística",
+    campos: [
+      { id: "fotos-corporais", descricao: "Fotos corporais privadas selecionadas para esta avaliação visual", sensivel: true },
+      { id: "medicoes-comparaveis", descricao: "Circunferências recentes, método, protocolo, qualidade e recência", sensivel: true },
+      { id: "condicoes-captura", descricao: "Pose, iluminação, distância e observações das fotos", sensivel: true },
     ],
   },
 

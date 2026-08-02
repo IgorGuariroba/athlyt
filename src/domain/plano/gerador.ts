@@ -1,3 +1,4 @@
+import type { ConfiancaCorporal, MetaProporcao } from "@/domain/medicoes";
 import type { RespostasTriagem } from "@/domain/triagem/etapas";
 import { avaliarSuficiencia } from "@/domain/triagem/suficiencia";
 import { idadeEmAnos } from "@/domain/ia/contexto/nucleo";
@@ -9,7 +10,7 @@ import {
 } from "./exercicios";
 import type { DiaTreino, ExercicioPlanejado, PlanoGerado } from "./tipos";
 
-export const REGRA_PLANO_VERSAO = "motor-plano-v1";
+export const REGRA_PLANO_VERSAO = "motor-plano-v2";
 
 const PADROES: Record<number, Array<{ nome: string; padroes: PadraoMovimento[] }>> = {
   1: [{ nome: "Corpo inteiro", padroes: ["agachar", "empurrar-horizontal", "puxar-horizontal", "dobradica", "elevacao-lateral", "core"] }],
@@ -37,13 +38,16 @@ const PADROES: Record<number, Array<{ nome: string; padroes: PadraoMovimento[] }
   ],
 };
 
-function prescricao(ex: DefinicaoExercicio, experiencia: string | undefined, conservador: boolean): ExercicioPlanejado {
+function prescricao(ex: DefinicaoExercicio, experiencia: string | undefined, conservador: boolean, prioridades: ReadonlySet<string> = new Set()): ExercicioPlanejado {
   const iniciante = conservador || experiencia === "nunca-treinou" || experiencia === "iniciante";
+  const priorizado = (prioridades.has("ombros") && ["elevacao-lateral", "empurrar-vertical"].includes(ex.padrao))
+    || (prioridades.has("braco") && ["flexao-cotovelo", "extensao-cotovelo"].includes(ex.padrao))
+    || (prioridades.has("panturrilha") && ex.padrao === "panturrilha");
   return {
     exercicioId: ex.id,
     nome: ex.nome,
     padrao: ex.padrao,
-    series: ex.composto ? (iniciante ? 2 : 3) : 2,
+    series: (ex.composto ? (iniciante ? 2 : 3) : 2) + (priorizado && !iniciante ? 1 : 0),
     repeticoes: ex.composto ? "6–10" : "10–15",
     rir: iniciante ? 3 : 2,
     descansoSeg: ex.composto ? 120 : 75,
@@ -51,7 +55,7 @@ function prescricao(ex: DefinicaoExercicio, experiencia: string | undefined, con
   };
 }
 
-function calcularNutricao(respostas: RespostasTriagem, conservador: boolean, agora: Date) {
+function calcularNutricao(respostas: RespostasTriagem, conservador: boolean, agora: Date, composicaoConfiavel?: boolean) {
   const peso = respostas.pesoKg ?? 70;
   const altura = respostas.alturaCm ?? 170;
   const idade = respostas.dataNascimento ? idadeEmAnos(respostas.dataNascimento, agora) : 30;
@@ -59,7 +63,8 @@ function calcularNutricao(respostas: RespostasTriagem, conservador: boolean, ago
   const tmb = 10 * peso + 6.25 * altura - 5 * idade + sexoAjuste;
   const fatores = { sedentario: 1.2, leve: 1.35, moderado: 1.5, ativo: 1.65, "muito-ativo": 1.8 } as const;
   const manutencao = tmb * (respostas.nivelAtividade ? fatores[respostas.nivelAtividade] : 1.35);
-  const ajuste = conservador ? 0 : respostas.objetivoComposicao === "perder-gordura" ? -0.1 : respostas.objetivoComposicao === "ganhar-massa" ? 0.08 : 0;
+  const amplitude = composicaoConfiavel === false ? 0.5 : 1;
+  const ajuste = conservador ? 0 : respostas.objetivoComposicao === "perder-gordura" ? -0.1 * amplitude : respostas.objetivoComposicao === "ganhar-massa" ? 0.08 * amplitude : 0;
   const calorias = Math.round((manutencao * (1 + ajuste)) / 50) * 50;
   const proteinaG = Math.round(peso * (conservador ? 1.6 : 1.8));
   const gordurasG = Math.round(peso * 0.8);
@@ -99,8 +104,9 @@ function calcularNutricao(respostas: RespostasTriagem, conservador: boolean, ago
   };
 }
 
-export function gerarPlano(entrada: { perfilVersao: number; respostas: RespostasTriagem; agora?: Date }): PlanoGerado {
+export function gerarPlano(entrada: { perfilVersao: number; respostas: RespostasTriagem; agora?: Date; confiancaCorporal?: ConfiancaCorporal; metasProporcao?: MetaProporcao[] }): PlanoGerado {
   const { respostas } = entrada;
+  const prioridades = new Set((entrada.metasProporcao ?? []).filter((meta) => meta.direcao === "aumentar" && meta.confianca !== "baixa").map((meta) => meta.regiao));
   const modoConservador = avaliarSuficiencia(respostas).modoConservador;
   const equipamentos = [...(respostas.equipamentos ?? [])];
   const elegiveis = exerciciosElegiveis({ equipamentos, regioesLesionadas: regioesLesionadas(respostas.lesoes), modoConservador });
@@ -118,7 +124,7 @@ export function gerarPlano(entrada: { perfilVersao: number; respostas: Respostas
       const escolha = opcoes.find((e) => !usados.has(e.id)) ?? opcoes[0];
       if (!escolha) return [];
       usados.add(escolha.id);
-      return [prescricao(escolha, respostas.experienciaTreino, modoConservador)];
+      return [prescricao(escolha, respostas.experienciaTreino, modoConservador, prioridades)];
     }).slice(0, limite);
     return { id: `dia-${i + 1}`, nome: modelo.nome, diaSemana: diasPerfil[i] ?? `dia-${i + 1}`, exercicios };
   });
@@ -128,10 +134,13 @@ export function gerarPlano(entrada: { perfilVersao: number; respostas: Respostas
   return {
     regraVersao: REGRA_PLANO_VERSAO,
     modoConservador,
+    confiancaCorporal: entrada.confiancaCorporal,
+    metasProporcao: entrada.metasProporcao,
+    prioridadesCorporais: [...prioridades],
     perfilVersao: entrada.perfilVersao,
     bloco: { duracaoSemanas, divisao: dias.map((d) => d.nome).join(" / "), dias },
-    nutricao: calcularNutricao(respostas, modoConservador, entrada.agora ?? new Date()),
-    dadosUsados: Object.keys(respostas).sort(),
+    nutricao: calcularNutricao(respostas, modoConservador, entrada.agora ?? new Date(), entrada.confiancaCorporal ? entrada.confiancaCorporal.composicaoCorporal === "confiavel" : undefined),
+    dadosUsados: [...Object.keys(respostas), ...(entrada.metasProporcao?.length ? ["medicoesCorporais", "metasProporcao"] : [])].sort(),
   };
 }
 

@@ -1,0 +1,44 @@
+import { randomUUID } from "node:crypto";
+import { describe, expect, it } from "vitest";
+import { db } from "@/db/client";
+import { users } from "@/db/schema";
+import { atualizarEstadoRevisaoCorporal, listarFotosExpiradas, obterPanoramaCorporal, recalcularMetasProporcao, registrarAvaliacaoVisual, registrarCircunferencia, registrarFotoProgresso, registrarGorduraCorporal, registrarPeso, registrarRevisaoCorporal, revogarAvaliacoesVisuais } from "../repositorio";
+import { produzirRevisaoCorporal } from "../revisao-corporal";
+
+async function usuario() { const [u] = await db.insert(users).values({ email: `medicoes-${randomUUID()}@example.com` }).returning(); return u.id; }
+describe("jornada persistida de medições", () => {
+  it("preserva leituras, método de gordura e metas versionadas", async () => {
+    const userId = await usuario();
+    await registrarPeso(userId, 82.4);
+    const medicao = await registrarCircunferencia(userId, { regiao: "ombros", leiturasCm: [116, 116.4] });
+    expect(medicao.ok).toBe(true);
+    await registrarGorduraCorporal(userId, { percentual: 18.2, metodo: "bioimpedancia", protocolo: "jejum" });
+    await recalcularMetasProporcao(userId, ["ombros"]);
+    const panorama = await obterPanoramaCorporal(userId);
+    expect(panorama.pesos[0].pesoGramas).toBe(82400);
+    expect(panorama.gorduras[0]).toMatchObject({ percentualBasisPoints: 1820, metodo: "bioimpedancia" });
+    expect(panorama.metas[0]).toMatchObject({ regiao: "ombros", direcao: "aumentar", metodologiaVersao: "trajetoria-v1" });
+  });
+
+  it("versiona projeção visual e o estado da Revisão Semanal", async () => {
+    const userId = await usuario();
+    const visual = await registrarAvaliacaoVisual(userId, { photoIds: [randomUUID()], criterios: { vTaper: 70, ombros: 68, cintura: 62, equilibrio: 66, simetria: 64 }, gorduraMinBasisPoints: 1200, gorduraMaxBasisPoints: 1600, observacoes: ["comparável"], limitacoes: [], confianca: "alta", metodologiaVersao: "visual-v1", modeloResolvido: "modelo-teste" });
+    expect(visual.ativa).toBe(true);
+    const revisao = produzirRevisaoCorporal({ dimensoes: { aderencia: 80, desempenho: 70, tendenciaCorporal: 60, recuperacao: 70, utilidade: 80 }, confiancas: { composicaoCorporal: "confiavel", proporcoes: "confiavel", simetriaBilateral: "confiavel", treinamento: "confiavel", nutricao: "confiavel", saudeRecuperacao: "confiavel" }, evidencias: [], semanasObservadas: 2 });
+    const linha = await registrarRevisaoCorporal(userId, { periodoInicio: new Date("2026-07-01T00:00:00Z"), periodoFim: new Date("2026-07-07T23:59:59Z"), revisao });
+    expect((await atualizarEstadoRevisaoCorporal(userId, linha.id, "aplicada"))?.estado).toBe("aplicada");
+    await revogarAvaliacoesVisuais(userId);
+    const panorama = await obterPanoramaCorporal(userId);
+    expect(panorama.avaliacoesVisuais[0].ativa).toBe(false);
+    expect(panorama.revisoes[0].estado).toBe("aplicada");
+  });
+
+  it("seleciona para retenção somente fotos cujo prazo venceu", async () => {
+    const userId = await usuario();
+    const vencida = await registrarFotoProgresso(userId, { pose: "frente", objectKey: `teste/${randomUUID()}.webp`, excluirEm: new Date("2020-01-01T00:00:00Z") });
+    await registrarFotoProgresso(userId, { pose: "costas", objectKey: `teste/${randomUUID()}.webp`, excluirEm: new Date("2090-01-01T00:00:00Z") });
+    const expiradas = await listarFotosExpiradas(new Date("2026-01-01T00:00:00Z"));
+    expect(expiradas.some((foto) => foto.id === vencida.id)).toBe(true);
+    expect(expiradas.filter((foto) => foto.userId === userId)).toHaveLength(1);
+  });
+});

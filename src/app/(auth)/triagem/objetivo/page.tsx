@@ -13,7 +13,7 @@ const OBJETIVOS = [
     value: "recomposicao",
     titulo: "Recomposição corporal",
     descricao:
-      "Reduzir a gordura de cerca de 30% para próximo de 10% enquanto maximiza a massa muscular",
+      "Reduzir gordura e desenvolver massa muscular a partir da sua linha de base, sem presumir percentuais",
     Icone: RefreshCw,
   },
   {

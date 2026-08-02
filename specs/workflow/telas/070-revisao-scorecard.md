@@ -12,7 +12,7 @@ Apresentar o Scorecard de Progresso nas 5 dimensões.
 
 ## Elementos e comportamento
 
-Aderência, desempenho, tendência corporal, recuperação, utilidade; pesos/limiares versionados; confiança da leitura; dados insuficientes reduzem agressividade.
+Aderência, desempenho, tendência corporal, recuperação e utilidade; pesos/limiares versionados. Confiança por composição corporal, proporções, simetria bilateral, treinamento, nutrição e saúde/recuperação. Dados ausentes, sem consentimento, inconsistentes ou obtidos por método incomparável restringem apenas a dimensão afetada, salvo risco sistêmico.
 
 ## Sequência
 

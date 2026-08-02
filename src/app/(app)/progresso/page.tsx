@@ -1,20 +1,23 @@
+import Link from "next/link";
+import { redirect } from "next/navigation";
+import { auth } from "@/auth";
+import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { obterPanoramaCorporal } from "@/domain/medicoes/repositorio";
+import { atualizarEnfasesCorporais } from "./actions";
+import { GraficoSerie } from "./grafico-serie";
 
-/**
- * Casco da aba Progresso (telas 064–074). O cartão de estratégia e os
- * gráficos configuráveis chegam no ticket "Aba Progresso: cartão de
- * estratégia e gráficos configuráveis".
- */
-export default function ProgressoPage() {
-  return (
-    <div className="flex flex-col gap-6 p-4">
-      <h1 className="text-headline-md font-bold text-on-surface-strong">
-        Progresso
-      </h1>
-      <Card className="p-4 text-body-md text-muted-foreground">
-        Seu plano ativo, contagem até a Revisão Semanal e gráficos vão
-        aparecer aqui.
-      </Card>
-    </div>
-  );
+const cm = (mm: number) => (mm / 10).toLocaleString("pt-BR", { maximumFractionDigits: 1 });
+export default async function ProgressoPage() {
+  const session = await auth(); if (!session?.user?.id) redirect("/");
+  const panorama = await obterPanoramaCorporal(session.user.id);
+  const metasUnicas = [...new Map(panorama.metas.map((m) => [m.regiao, m])).values()];
+  const gordurasPorMetodo = [...Map.groupBy(panorama.gorduras, (item) => `${item.metodo}${item.protocolo ? ` · ${item.protocolo}` : ""}`).entries()];
+  const cintura = panorama.medicoes.filter((item) => item.regiao === "cintura" && item.lado === "unico");
+  const visual = panorama.avaliacoesVisuais.find((item) => item.ativa);
+  return <div className="flex flex-col gap-6 p-4"><div className="flex items-center justify-between"><h1 className="text-headline-md font-bold">Progresso</h1><Button asChild size="sm"><Link href="/diario/medicoes">Registrar</Link></Button></div>
+    <section className="grid gap-3"><h2 className="text-title-lg font-bold">Metas de Proporção Corporal</h2>{metasUnicas.length ? metasUnicas.map((meta) => <Card key={meta.id} className="grid gap-2 p-4"><div className="flex justify-between"><strong className="capitalize">{meta.regiao}</strong><span className="text-body-sm capitalize text-muted-foreground">{meta.direcao} · confiança {meta.confianca}</span></div><div className="grid grid-cols-3 gap-2 text-body-sm"><span><b>{cm(meta.atualMm)} cm</b><br/>atual</span><span><b>{cm(meta.faixaMinMm)}–{cm(meta.faixaMaxMm)}</b><br/>referência</span><span><b>{cm(meta.metaCicloMm)} cm</b><br/>ciclo</span></div><p className="text-body-sm text-muted-foreground">{meta.justificativa}</p><small className="text-muted-foreground">Metodologia {meta.metodologiaVersao}</small></Card>) : <Card className="p-4 text-body-sm text-muted-foreground">Registre circunferências para criar metas de trajetória personalizadas.</Card>}</section>
+    <Card className="p-4"><form action={atualizarEnfasesCorporais} className="grid gap-3"><div><strong>Preferências de ênfase</strong><p className="text-body-sm text-muted-foreground">A preferência gera proposta conservadora; saúde e recuperação continuam prevalecendo.</p></div><div className="grid grid-cols-2 gap-2">{["ombros","braco","torax","coxa","panturrilha"].map((r) => <label key={r} className="flex gap-2 capitalize"><input type="checkbox" name="enfases" value={r}/>{r === "braco" ? "braços" : r}</label>)}</div><Button variant="secondary">Recalcular metas</Button></form></Card>
+    <section className="grid gap-3"><h2 className="text-title-lg font-bold">Tendência corporal</h2><Card className="grid gap-5 p-4 text-body-sm"><GraficoSerie titulo="Peso" unidade="kg" valores={panorama.pesos.map((item) => ({ data: item.observadoEm, valor: item.pesoGramas / 1000 }))}/><GraficoSerie titulo="Cintura" unidade="cm" valores={cintura.map((item) => ({ data: item.observadoEm, valor: item.valorMm / 10 }))}/>{gordurasPorMetodo.map(([metodo, itens]) => <GraficoSerie key={metodo} titulo={`Gordura · ${metodo}`} unidade="%" valores={itens.map((item) => ({ data: item.observadoEm, valor: item.percentualBasisPoints / 100 }))}/>)}{!panorama.gorduras.length ? <p className="text-muted-foreground">Nenhuma Medição de Gordura Corporal; ela permanece opcional.</p> : null}</Card><Card className="grid gap-2 p-4"><strong>Avaliação visual</strong>{visual ? <p className="text-body-sm">Faixa probabilística de gordura: {visual.gorduraMinBasisPoints / 100}–{visual.gorduraMaxBasisPoints / 100}% · confiança {visual.confianca}</p> : <p className="text-body-sm text-muted-foreground">Nenhuma projeção visual ativa.</p>}<div className="grid grid-cols-2 gap-2"><Button asChild variant="outline"><Link href="/progresso/fotos">Comparar fotos</Link></Button><Button asChild variant="outline"><Link href="/progresso/avaliacao-visual">Avaliação visual</Link></Button></div></Card><Card className="grid gap-2 p-4"><strong>Revisão Semanal</strong><p className="text-body-sm text-muted-foreground">Compare planejado, realizado, resposta corporal e incertezas antes de ajustar.</p><Button asChild><Link href="/progresso/revisao">Iniciar ou revisar</Link></Button></Card><Button asChild variant="ghost"><a href="/api/avaliacao-corporal/exportar" download>Exportar meus dados corporais</a></Button></section>
+  </div>;
 }

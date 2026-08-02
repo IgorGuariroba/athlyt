@@ -12,6 +12,12 @@ const completo: RespostasTriagem = {
 };
 
 describe("gerarPlano — tabela de cenários", () => {
+  it("usa meta corporal confiável para aumentar volume da região priorizada", () => {
+    const plano = gerarPlano({ perfilVersao: 1, respostas: completo, metasProporcao: [{ regiao: "ombros", atualMm: 1100, faixaMinMm: 1080, faixaMaxMm: 1160, metaCicloMm: 1120, direcao: "aumentar", confianca: "alta", justificativa: "ênfase", metodologiaVersao: "trajetoria-v1" }] });
+    expect(plano.prioridadesCorporais).toContain("ombros");
+    expect(plano.bloco.dias.flatMap((d) => d.exercicios).filter((e) => e.padrao === "elevacao-lateral").every((e) => e.series >= 3)).toBe(true);
+  });
+
   it.each([
     ["iniciante", 2, 4], ["intermediario", 4, 6], ["avancado", 5, 8],
   ] as const)("experiência %s e %i dias produz bloco de %i semanas", (experiencia, dias, semanas) => {

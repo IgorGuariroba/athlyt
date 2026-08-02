@@ -17,4 +17,4 @@ Teclado numérico grande; alternância kg/lb; nota de que tendência importa mai
 ## Sequência
 
 - **Anterior:** `007-dados-altura.md`
-- **Próxima:** `009-objetivo.md`
+- **Próxima:** `008a-avaliacao-corporal-oferta.md`

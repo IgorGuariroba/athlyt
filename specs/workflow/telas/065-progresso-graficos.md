@@ -8,11 +8,11 @@
 
 ## Propósito
 
-Gráficos configuráveis de força, corpo e volume.
+Exibir Metas de Proporção Corporal e gráficos configuráveis de força, corpo e volume.
 
 ## Elementos e comportamento
 
-Cartões: força por exercício-chave; tendência de peso (média móvel); circunferências; hexágono de volume semanal por músculo; seletor de período; adicionar/reordenar gráficos.
+Cartão de Metas de Proporção Corporal por região: medida atual, faixa de referência de longo prazo, meta do ciclo, direção aumentar/reduzir/manter, confiança e justificativa. Preferências de ênfase podem ser propostas pelo usuário; mudanças estruturais seguem evidência → proposta → aprovação. Gráficos: força por exercício-chave; tendência de peso; circunferências e séries de gordura separadas por método/protocolo; hexágono de volume semanal por músculo; seletor de período; adicionar/reordenar gráficos. Sem fórmula universal, nota corporal ou prazo prometido.
 
 ## Sequência
 

@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { eq } from "drizzle-orm";
 import { db } from "@/db/client";
 import { decisionTrails, plans, users } from "@/db/schema";
-import { obterOuGerarRascunho, ativarPlano, substituirNoRascunho } from "../repositorio";
+import { ativarExperimentoPlano, obterExperimentoAtivo, obterOuGerarRascunho, ativarPlano, reverterAoPlanoEstavel, substituirNoRascunho } from "../repositorio";
 import type { RespostasTriagem } from "@/domain/triagem/etapas";
 
 const respostas: RespostasTriagem = {
@@ -26,7 +26,7 @@ describe("ciclo do Plano Ativo", () => {
     expect(b.id).toBe(a.id);
     const trilhas = await db.select().from(decisionTrails).where(eq(decisionTrails.userId, userId));
     expect(trilhas).toHaveLength(1);
-    expect(trilhas[0].modeloResolvido).toBe("motor-plano-v1");
+    expect(trilhas[0].modeloResolvido).toBe("motor-plano-v2");
     expect(trilhas[0].camposEnviados).toContain("equipamentos");
   });
 
@@ -39,7 +39,7 @@ describe("ciclo do Plano Ativo", () => {
     expect(alterado.conteudo.bloco.dias[0].exercicios.map((e) => e.exercicioId)).toContain("flexao-de-braco");
     const trilhas = await db.select().from(decisionTrails).where(eq(decisionTrails.userId, userId));
     expect(trilhas).toHaveLength(2);
-    expect((trilhas[1].resultado as { tipo: string }).tipo).toBe("substituicao-pre-ativacao");
+    expect(trilhas.map((trilha) => (trilha.resultado as { tipo: string }).tipo)).toContain("substituicao-pre-ativacao");
   });
 
   it("ativação cria versão e torna o conteúdo imutável pela API", async () => {
@@ -51,6 +51,21 @@ describe("ciclo do Plano Ativo", () => {
     await expect(ativarPlano(userId, rascunho.id)).rejects.toThrow("já ativado");
     const dia = ativo.conteudo.bloco.dias[0];
     await expect(substituirNoRascunho(userId, { planoId: ativo.id, diaId: dia.id, exercicioId: dia.exercicios[0].exercicioId, novoExercicioId: "prancha" }, respostas)).rejects.toThrow("rascunho");
+  });
+
+  it("Experimento de Plano preserva baseline e rollback cria nova versão", async () => {
+    const userId = await usuario();
+    const estavel = await obterOuGerarRascunho(userId, { version: 1, respostas });
+    await ativarPlano(userId, estavel.id);
+    const candidato = await obterOuGerarRascunho(userId, { version: 2, respostas: { ...respostas, pesoKg: 82 } });
+    const experimento = await ativarExperimentoPlano(userId, { planoId: candidato.id, hipotese: "Ajustar uma variável melhora aderência", variaveis: ["volume de treino"], criterioSucesso: "Aderência acima de 80%", criterioInterrupcao: "Dor ou recuperação baixa", janelaMinimaSemanas: 2 });
+    expect((await obterExperimentoAtivo(userId))?.id).toBe(experimento.id);
+    const restaurado = await reverterAoPlanoEstavel(userId, experimento.id);
+    expect(restaurado.versao).toBe(3);
+    expect(restaurado.conteudo).toEqual(estavel.conteudo);
+    expect(await obterExperimentoAtivo(userId)).toBeNull();
+    const trilhas = await db.select().from(decisionTrails).where(eq(decisionTrails.userId, userId));
+    expect(trilhas.some((trilha) => trilha.modeloResolvido === "rollback-plano-v1")).toBe(true);
   });
 
   it("ativar novo plano arquiva o anterior e incrementa versão", async () => {

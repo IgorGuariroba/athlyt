@@ -25,7 +25,7 @@ _Avoid_: Menu, ajustes, perfil (como nome de aba)
 ### Ciclo e planejamento
 
 **Modo Conservador**:
-Estado explícito derivado da insuficiência ou baixa qualidade dos dados do perfil; limita estratégia energética agressiva e progressões avançadas.
+Estado explícito e granular derivado da insuficiência, falta de consentimento ou baixa qualidade dos dados do atleta. Restringe somente as dimensões afetadas — composição corporal, proporções, simetria bilateral, treinamento, nutrição ou saúde e recuperação — salvo quando um risco de saúde exigir limitação do plano inteiro.
 
 **Plano Ativo**:
 Versão imutável vigente do conjunto Bloco de Treino + estratégia nutricional + regras de cadência. Novas decisões criam versões, nunca sobrescrevem.
@@ -81,6 +81,17 @@ _Avoid_: Morning check-in, daily log
 
 **Cadência Adaptativa**:
 Política que decide quando solicitar cada medição (peso no máx. diário, circunferências no máx. semanal, fotos no máx. mensal), reduzindo frequência diante de ansiedade.
+
+**Avaliação Corporal Inicial**:
+Estabelecimento da linha de base do atleta por peso; circunferências padronizadas de cintura, pescoço, quadril, tórax, ombros, braços, coxas e panturrilhas; referências estruturais de punho e tornozelo; e fotos comparáveis de frente, costas e laterais. O percentual de gordura é complementar e sempre associado ao método, à data e às condições da medição. Sua ausência não impede um Plano Ativo, mas mantém recomendações dependentes desses dados em Modo Conservador até que a linha de base tenha qualidade suficiente.
+
+**Meta de Proporção Corporal**:
+Faixa-alvo personalizada e revisável que combina referências estéticas de Men's Physique com estrutura, preferências e trajetória real do atleta. Distingue a referência de longo prazo da meta do ciclo atual e orienta aumentar, reduzir ou manter medidas sem apresentar um corpo universal como ideal nem prometer que a faixa será atingida. Saúde e segurança são limites obrigatórios: o modelo pode propor caminhos, mas não reinterpretar nem ultrapassar esses limites.
+_Avoid_: Medida ideal, corpo perfeito
+
+**Medição de Gordura Corporal**:
+Registro de percentual de gordura associado ao método, data, protocolo, equipamento e, quando aplicável, profissional responsável. Sua tendência é comparável prioritariamente dentro do mesmo método e protocolo; uma troca de método não representa, por si só, mudança corporal real. Estimativas visuais são expressas somente como faixa probabilística.
+_Avoid_: Percentual exato por foto
 
 ### Nutrição
 

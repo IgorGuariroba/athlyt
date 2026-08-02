@@ -27,6 +27,7 @@ const MODELOS_PRODUCAO: Record<OperacaoIA, string> = {
   "plano-inicial": "anthropic/claude-sonnet-4.5",
   "refeicao-texto": "openai/gpt-5-mini",
   "refeicao-foto": "openai/gpt-5-mini",
+  "avaliacao-visual": "openai/gpt-5-mini",
   "importacao-historico": "anthropic/claude-sonnet-4.5",
 };
 
@@ -53,6 +54,7 @@ const MODELOS_DESENVOLVIMENTO: Record<OperacaoIA, string> = {
   "refeicao-texto": "nvidia/nemotron-nano-9b-v2:free",
   // Único `:free` com structured outputs e entrada de imagem.
   "refeicao-foto": "google/gemma-4-26b-a4b-it:free",
+  "avaliacao-visual": "google/gemma-4-26b-a4b-it:free",
   "importacao-historico": "nvidia/nemotron-3-super-120b-a12b:free",
 };
 
