@@ -1,20 +1,196 @@
-import { Card } from "@/components/ui/card";
+import Link from "next/link";
+import { Check, ChevronLeft, ChevronRight, Dumbbell, Pencil, Undo2, UtensilsCrossed } from "lucide-react";
+import { auth } from "@/auth";
+import { Button } from "@/components/ui/button";
+import { FUSO_PADRAO, diaVizinho } from "@/domain/diario/dia-alimentar";
+import { hojeDoUsuario, montarDiarioDoDia } from "@/domain/diario/repositorio";
+import type { ItemLinhaDoTempo } from "@/domain/diario/tipos";
+import { confirmarRefeicaoAction, desfazerConfirmacaoAction } from "./actions";
+import { PainelDeMacros } from "./painel-macros";
 
 /**
- * Casco da aba Diário (telas 045–058). A linha do tempo unificada do
- * dia chega no ticket "Diário: linha do tempo, Entradas Planejadas e
- * macros do dia".
+ * Aba Diário (telas 045–048): linha do tempo unificada do dia com
+ * Entradas Planejadas, Consumo Confirmado e sessões de treino, sob o
+ * painel de macros consumido vs restante.
+ *
+ * O dia navegável vem da URL para que a tela seja endereçável e o
+ * fuso permaneça explícito em toda ação de escrita.
  */
-export default function DiarioPage() {
+function rotuloDoDia(dia: string, hoje: string, fuso: string): string {
+  if (dia === hoje) return "Hoje";
+  if (dia === diaVizinho(hoje, -1, fuso)) return "Ontem";
+  const [ano, mes, diaMes] = dia.split("-").map(Number);
+  return new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "short", timeZone: "UTC" })
+    .format(new Date(Date.UTC(ano, mes - 1, diaMes)));
+}
+
+export default async function DiarioPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ dia?: string }>;
+}) {
+  const { dia: diaParam } = await searchParams;
+  const session = await auth();
+  const userId = session?.user?.id;
+  const fuso = FUSO_PADRAO;
+  const hoje = hojeDoUsuario(fuso);
+  const dia = diaParam ?? hoje;
+  const diario = userId
+    ? await montarDiarioDoDia(userId, { dia, fuso })
+    : null;
+
   return (
-    <div className="flex flex-col gap-6 p-4">
-      <h1 className="text-headline-md font-bold text-on-surface-strong">
-        Diário
-      </h1>
-      <Card className="p-4 text-body-md text-muted-foreground">
-        Sua linha do tempo de refeições, treinos e check-ins vai aparecer
-        aqui.
-      </Card>
+    <section aria-label="Diário" className="flex flex-col gap-4 p-4 pb-8">
+      <header className="flex items-center justify-between">
+        <Button asChild variant="ghost" size="icon">
+          <Link href={`/diario?dia=${diaVizinho(dia, -1, fuso)}`} aria-label="Dia anterior">
+            <ChevronLeft />
+          </Link>
+        </Button>
+        <div className="text-center">
+          <h1 className="text-title-lg font-bold text-on-surface-strong">
+            {rotuloDoDia(dia, hoje, fuso)}
+          </h1>
+          <p className="text-caption text-muted-foreground">{dia}</p>
+        </div>
+        <Button asChild variant="ghost" size="icon" disabled={dia >= hoje}>
+          <Link href={`/diario?dia=${diaVizinho(dia, 1, fuso)}`} aria-label="Próximo dia">
+            <ChevronRight />
+          </Link>
+        </Button>
+      </header>
+
+      {diario ? <PainelDeMacros painel={diario.painel} /> : null}
+
+      {diario && diario.linhaDoTempo.length > 0 ? (
+        <ol aria-label="Linha do tempo do dia" className="flex flex-col">
+          {diario.linhaDoTempo.map((item) => (
+            <li key={chave(item)} className="flex gap-3">
+              <div className="flex w-12 shrink-0 flex-col items-center pt-4">
+                <span className="text-caption tabular-nums text-muted-foreground">
+                  {item.horaLocal}
+                </span>
+                <span className="mt-1 w-px flex-1 bg-border" />
+              </div>
+              <div className="min-w-0 flex-1 py-2">{cartao(item, dia, fuso)}</div>
+            </li>
+          ))}
+        </ol>
+      ) : (
+        <p className="rounded-2xl border border-border bg-surface-container p-6 text-center text-body-md text-muted-foreground">
+          {diario
+            ? "Sem Plano Ativo, o dia começa vazio. Ative seu plano para receber o Cardápio Diário aqui."
+            : "Entre para ver seu Diário."}
+        </p>
+      )}
+    </section>
+  );
+}
+
+function chave(item: ItemLinhaDoTempo): string {
+  if (item.tipo === "planejada") return `planejada-${item.entrada.refeicaoRef}`;
+  if (item.tipo === "consumo") return `consumo-${item.consumo.id}`;
+  return `sessao-${item.sessaoId}`;
+}
+
+function cartao(item: ItemLinhaDoTempo, dia: string, fuso: string) {
+  if (item.tipo === "sessao") {
+    return (
+      <div className="flex items-center gap-3 rounded-xl border border-border bg-surface-container p-4">
+        <Dumbbell className="size-5 shrink-0 text-muted-foreground" aria-hidden="true" />
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-title font-bold text-on-surface-strong">{item.nome}</p>
+          <p className="text-body-sm text-muted-foreground">
+            {item.estado === "concluida"
+              ? "Sessão de Treino concluída"
+              : item.estado === "em_andamento"
+                ? "Sessão de Treino em andamento"
+                : "Sessão de Treino encerrada antes do fim"}
+          </p>
+        </div>
+        <Button asChild variant="ghost" size="sm">
+          <Link href={item.estado === "concluida" ? `/sessao/${item.sessaoId}/resumo` : `/sessao/${item.sessaoId}`}>
+            Ver
+          </Link>
+        </Button>
+      </div>
+    );
+  }
+
+  if (item.tipo === "consumo") {
+    const { consumo } = item;
+    const delta = consumo.planejado ? consumo.macros.calorias - consumo.planejado.calorias : 0;
+    return (
+      <div className="rounded-xl border border-success/40 bg-surface-container p-4">
+        <div className="flex items-start gap-3">
+          <Check className="mt-1 size-5 shrink-0 text-success" aria-hidden="true" />
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-title font-bold text-on-surface-strong">{consumo.nome}</p>
+            <p className="text-body-sm tabular-nums text-muted-foreground">
+              {consumo.macros.calorias} kcal · {consumo.macros.proteinaG}P ·{" "}
+              {consumo.macros.carboidratosG}C · {consumo.macros.gordurasG}G
+            </p>
+            {consumo.planejado && delta !== 0 ? (
+              // Desvio é informação, não repreensão (tela 048).
+              <p className="mt-1 text-caption text-muted-foreground">
+                {delta > 0 ? `${delta} kcal a mais que` : `${Math.abs(delta)} kcal a menos que`} o
+                planejado ({consumo.planejado.calorias} kcal)
+              </p>
+            ) : null}
+          </div>
+        </div>
+        {consumo.refeicaoRef ? (
+          <form action={desfazerConfirmacaoAction} className="mt-3 flex justify-end">
+            <input type="hidden" name="dia" value={dia} />
+            <input type="hidden" name="fuso" value={fuso} />
+            <input type="hidden" name="refeicaoRef" value={consumo.refeicaoRef} />
+            <Button type="submit" variant="ghost" size="sm">
+              <Undo2 className="size-4" aria-hidden="true" /> Desfazer
+            </Button>
+          </form>
+        ) : null}
+      </div>
+    );
+  }
+
+  const { entrada } = item;
+  return (
+    // Esmaecida enquanto planejada: prescrição não é consumo.
+    <div className="rounded-xl border border-dashed border-border bg-surface-container/50 p-4">
+      <div className="flex items-start gap-3">
+        <UtensilsCrossed className="mt-1 size-5 shrink-0 text-muted-foreground" aria-hidden="true" />
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-title font-bold text-on-surface">{entrada.nome}</p>
+          <p className="text-caption tracking-wide text-muted-foreground uppercase">Planejada</p>
+          <p className="mt-1 text-body-sm tabular-nums text-muted-foreground">
+            {entrada.macros.calorias} kcal · {entrada.macros.proteinaG}P ·{" "}
+            {entrada.macros.carboidratosG}C · {entrada.macros.gordurasG}G
+          </p>
+          <ul className="mt-2 flex flex-col gap-0.5 text-body-sm text-muted-foreground">
+            {entrada.itens.map((alimento) => (
+              <li key={alimento.descricao}>{alimento.descricao}</li>
+            ))}
+          </ul>
+        </div>
+      </div>
+      <div className="mt-3 flex items-center justify-end gap-2">
+        <Button asChild variant="ghost" size="sm">
+          <Link
+            href={`/diario/refeicao/${encodeURIComponent(entrada.refeicaoRef)}?dia=${dia}`}
+            aria-label={`Editar ${entrada.nome}`}
+          >
+            <Pencil className="size-4" aria-hidden="true" /> Editar
+          </Link>
+        </Button>
+        <form action={confirmarRefeicaoAction}>
+          <input type="hidden" name="dia" value={dia} />
+          <input type="hidden" name="fuso" value={fuso} />
+          <input type="hidden" name="refeicaoRef" value={entrada.refeicaoRef} />
+          <Button type="submit" size="sm" aria-label={`Comi como planejado: ${entrada.nome}`}>
+            <Check className="size-4" aria-hidden="true" /> Comi como planejado
+          </Button>
+        </form>
+      </div>
     </div>
   );
 }

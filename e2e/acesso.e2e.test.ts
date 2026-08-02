@@ -34,8 +34,11 @@ test.describe("Acesso e casco autenticado", () => {
       await expect(page.getByRole("link", { name: aba })).toBeVisible();
     }
 
+    // O Diário titula o dia navegado (padrão MacroFactor, tela 045); a
+    // identificação da aba vive na região, não no título.
     await page.getByRole("link", { name: "Diário" }).click();
-    await expect(page.getByRole("heading", { name: "Diário" })).toBeVisible();
+    await expect(page.getByRole("region", { name: "Diário" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Hoje" })).toBeVisible();
 
     await page.getByRole("link", { name: "Progresso" }).click();
     await expect(

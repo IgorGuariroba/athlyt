@@ -245,6 +245,42 @@ export const exerciseSubstitutions = pgTable("exercise_substitution", {
   createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
 });
 
+/**
+ * Consumo Confirmado (CONTEXT.md; user stories 46–52; telas 045–048).
+ *
+ * Entidade distinta da prescrição: a Entrada Planejada continua sendo
+ * derivada do Plano Ativo e nunca é gravada aqui. Só o que o atleta
+ * confirmou vira linha — é isso que impede um cardápio prescrito de
+ * se passar por consumo real.
+ *
+ * `consumidoEm` é UTC; o "dia" alimentar é derivado do fuso do atleta
+ * na leitura (src/domain/diario/dia-alimentar.ts), e não gravado como
+ * rótulo, para continuar correto se o fuso mudar.
+ *
+ * O índice único por (usuário, dia, refeição) é o que torna confirmar
+ * duas vezes inofensivo — inclusive sob duplo toque ou reenvio de
+ * fila offline. Entradas avulsas têm `refeicaoRef` nulo e não
+ * participam da restrição.
+ */
+export const foodEntries = pgTable("food_entry", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  planId: uuid("plan_id").references(() => plans.id),
+  /** Referência à refeição do Cardápio Diário; nulo quando avulso. */
+  refeicaoRef: text("refeicao_ref"),
+  diaAlimentar: text("dia_alimentar").notNull(),
+  nome: text("nome").notNull(),
+  origem: text("origem").$type<"planejado" | "editado" | "avulso">().notNull(),
+  itens: jsonb("itens").notNull(),
+  macros: jsonb("macros").notNull(),
+  /** Snapshot da prescrição no momento da confirmação; nulo se avulso. */
+  planejado: jsonb("planejado"),
+  consumidoEm: timestamp("consumido_em", { mode: "date", withTimezone: true }).notNull().defaultNow(),
+  createdAt: timestamp("created_at", { mode: "date", withTimezone: true }).notNull().defaultNow(),
+}, (tabela) => [
+  uniqueIndex("food_entry_refeicao_do_dia_idx").on(tabela.userId, tabela.diaAlimentar, tabela.refeicaoRef),
+]);
+
 export const consents = pgTable("consent", {
   id: uuid("id").primaryKey().defaultRandom(),
   userId: uuid("userId")
