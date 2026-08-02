@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { FUSO_PADRAO } from "@/domain/diario/dia-alimentar";
 import { hojeDoUsuario } from "@/domain/diario/repositorio";
 import { listarFavoritos, listarRecorrentes } from "@/domain/alimentos/repositorio";
-import { favoritarAction, registrarPratoAction } from "../actions";
+import { favoritarAction, registrarPratoAction, salvarAlimentoProprioAction } from "../actions";
 import { Atalhos } from "./atalhos";
 
 /**
@@ -48,6 +48,7 @@ export default async function RegistrarPage({
         recorrentes={recorrentes}
         registrar={registrarPratoAction}
         favoritar={favoritarAction}
+        salvarProprio={salvarAlimentoProprioAction}
       />
     </div>
   );

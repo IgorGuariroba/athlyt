@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Check, Heart, Plus, Rocket, Search, Trash2, X } from "lucide-react";
+import { Check, Heart, Plus, Rocket, Search, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -19,7 +19,7 @@ import {
   type ItemPrato,
 } from "@/domain/alimentos/prato";
 import { ROTULO_CONFIANCA } from "@/domain/alimentos/proveniencia";
-import type { Recorrente } from "@/domain/alimentos/repositorio";
+import type { ItemBiblioteca, Recorrente } from "@/domain/alimentos/repositorio";
 
 type Aba = "busca" | "manual" | "favoritos";
 
@@ -46,13 +46,15 @@ export function Atalhos({
   recorrentes,
   registrar,
   favoritar,
+  salvarProprio,
 }: {
   dia: string;
   fuso: string;
-  favoritos: ReadonlyArray<{ alimentoId: string | null; nome: string }>;
+  favoritos: readonly ItemBiblioteca[];
   recorrentes: readonly Recorrente[];
   registrar: (formData: FormData) => Promise<void>;
   favoritar: (formData: FormData) => Promise<void>;
+  salvarProprio: (formData: FormData) => Promise<void>;
 }) {
   const [aba, setAba] = useState<Aba>("busca");
   const [termo, setTermo] = useState("");
@@ -65,6 +67,10 @@ export function Atalhos({
     const alimento = f.alimentoId ? encontrarAlimento(f.alimentoId) : undefined;
     return alimento ? [alimento] : [];
   });
+  // Alimentos criados na entrada manual (tela 052) vivem na mesma
+  // biblioteca dos favoritos e precisam ser reutilizáveis com um
+  // toque — senão "salvar" não produziria efeito algum.
+  const proprios = favoritos.filter((f) => f.alimentoId === null && f.por100g);
 
   function adicionar(alimento: Alimento, quantidade: number, unidade: string) {
     setPrato((atual) => adicionarAoPrato(atual, itemDeAlimento(alimento.id, { quantidade, unidade })));
@@ -156,11 +162,14 @@ export function Atalhos({
         ) : null}
 
         {aba === "manual" && !selecionado ? (
-          <EntradaManual onAdicionar={(item) => setPrato((p) => adicionarAoPrato(p, item))} />
+          <EntradaManual
+            onAdicionar={(item) => setPrato((p) => adicionarAoPrato(p, item))}
+            salvarProprio={salvarProprio}
+          />
         ) : null}
 
         {aba === "favoritos" && !selecionado ? (
-          favoritosDaBase.length === 0 ? (
+          favoritosDaBase.length === 0 && proprios.length === 0 ? (
             <p className="rounded-xl bg-surface-container p-4 text-body-md text-muted-foreground">
               Nenhum favorito ainda. Busque um alimento e toque no coração para salvá-lo aqui.
             </p>
@@ -176,6 +185,38 @@ export function Atalhos({
                     <p className="text-title font-bold text-on-surface-strong">{alimento.nome}</p>
                     <p className="text-body-sm tabular-nums text-muted-foreground">
                       {alimento.por100g.calorias} kcal por 100 g
+                    </p>
+                  </button>
+                </li>
+              ))}
+              {proprios.map((proprio) => (
+                <li key={proprio.id}>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const porcao = proprio.porcoes?.[0];
+                      const gramas = porcao?.gramas ?? 100;
+                      setPrato((atual) =>
+                        adicionarAoPrato(
+                          atual,
+                          itemManual({
+                            nome: proprio.nome,
+                            quantidade: 1,
+                            unidade: porcao?.unidade ?? "porção",
+                            calorias: Math.round((proprio.por100g!.calorias * gramas) / 100),
+                            proteinaG: Math.round((proprio.por100g!.proteinaG * gramas) / 100),
+                            carboidratosG: Math.round((proprio.por100g!.carboidratosG * gramas) / 100),
+                            gordurasG: Math.round((proprio.por100g!.gordurasG * gramas) / 100),
+                            fibrasG: Math.round((proprio.por100g!.fibrasG * gramas) / 100),
+                          }),
+                        ),
+                      );
+                    }}
+                    className="w-full rounded-xl border border-border bg-surface-container p-4 text-left"
+                  >
+                    <p className="text-title font-bold text-on-surface-strong">{proprio.nome}</p>
+                    <p className="text-body-sm tabular-nums text-muted-foreground">
+                      {proprio.por100g!.calorias} kcal por 100 g · seu alimento
                     </p>
                   </button>
                 </li>
@@ -329,7 +370,13 @@ function SeletorDePorcao({
   );
 }
 
-function EntradaManual({ onAdicionar }: { onAdicionar: (item: ItemPrato) => void }) {
+function EntradaManual({
+  onAdicionar,
+  salvarProprio,
+}: {
+  onAdicionar: (item: ItemPrato) => void;
+  salvarProprio: (formData: FormData) => Promise<void>;
+}) {
   const [nome, setNome] = useState("");
   const [quantidade, setQuantidade] = useState("1");
   const [unidade, setUnidade] = useState("porção");
@@ -416,6 +463,23 @@ function EntradaManual({ onAdicionar }: { onAdicionar: (item: ItemPrato) => void
       >
         <Plus className="size-4" aria-hidden="true" /> Adicionar ao Prato
       </Button>
+
+      {/* Tela 052: "salvar como alimento reutilizável". Separado do
+          botão acima de propósito — registrar hoje e guardar para
+          sempre são decisões diferentes. */}
+      <form action={salvarProprio}>
+        <input type="hidden" name="nome" value={nome.trim()} />
+        <input type="hidden" name="unidade" value={unidade.trim() || "porção"} />
+        <input type="hidden" name="gramasPorcao" value={100} />
+        {(
+          ["calorias", "proteinaG", "carboidratosG", "gordurasG", "fibrasG"] as const
+        ).map((chave) => (
+          <input key={chave} type="hidden" name={chave} value={macros[chave] || 0} />
+        ))}
+        <Button type="submit" variant="ghost" disabled={nome.trim().length === 0} className="w-full">
+          <Heart className="size-4" aria-hidden="true" /> Salvar como meu alimento
+        </Button>
+      </form>
     </section>
   );
 }
@@ -495,5 +559,3 @@ function PratoRodape({
     </section>
   );
 }
-
-export { X };

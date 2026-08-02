@@ -119,3 +119,34 @@ test("favorito salvo reaparece na aba Favoritos e recorrente vira atalho", async
   await expect(page.getByRole("region", { name: "Recorrentes" })).toBeVisible();
   await expect(page.getByText(/1× nos últimos registros/)).toBeVisible();
 });
+
+test("alimento criado na entrada manual fica reutilizável nos Favoritos", async ({ page, context }) => {
+  const email = `e2e-proprio-${Date.now()}@example.com`;
+  await allowEmail(email);
+  const { cookie, user } = await seedAuthenticatedSession(email);
+  await db.insert(plans).values({
+    userId: user.id, perfilVersao: 1, versao: 1, estado: "ativo",
+    regraVersao: plano.regraVersao, modoConservador: false, conteudo: plano, activatedAt: new Date(),
+  });
+  await context.addCookies([cookie]);
+
+  await page.goto("/diario/registrar");
+  await page.getByRole("button", { name: "Manual" }).click();
+  await page.getByLabel("Nome do alimento").fill("Marmita da firma");
+  await page.getByLabel("Energia (kcal)").fill("700");
+  await page.getByLabel("Proteína (g)").fill("40");
+  await page.getByRole("button", { name: "Salvar como meu alimento" }).click();
+
+  // Salvo uma vez, reutilizável com um toque — sem redigitar macros.
+  await page.getByRole("button", { name: "Favoritos" }).click();
+  const salvo = page.getByRole("button", { name: /Marmita da firma/ });
+  await expect(salvo).toBeVisible();
+  await expect(page.getByText(/seu alimento/)).toBeVisible();
+
+  await salvo.click();
+  const prato = page.getByRole("region", { name: "Prato" });
+  await expect(prato.getByText("Prato (1)")).toBeVisible();
+  await expect(prato.getByLabel("Subtotal do Prato: 700 kcal")).toBeVisible();
+  // Entrada do usuário continua marcada como estimativa (user story 59).
+  await expect(prato.getByText(/Estimativa/)).toBeVisible();
+});

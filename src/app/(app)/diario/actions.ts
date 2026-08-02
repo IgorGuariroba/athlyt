@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { escalarMacros } from "@/domain/diario/cardapio";
-import { alternarFavorito, registrarPrato } from "@/domain/alimentos/repositorio";
+import { alternarFavorito, registrarPrato, salvarAlimentoProprio } from "@/domain/alimentos/repositorio";
 import { itemDeAlimento, itemManual, type ItemPrato } from "@/domain/alimentos/prato";
 import {
   confirmarRefeicao,
@@ -107,5 +107,32 @@ export async function registrarPratoAction(formData: FormData) {
 /** Tela 053 — marca/desmarca um alimento da base como favorito. */
 export async function favoritarAction(formData: FormData) {
   await alternarFavorito(await usuario(), String(formData.get("alimentoId")));
+  revalidatePath("/diario/registrar");
+}
+
+/**
+ * Tela 052 — "salvar como alimento reutilizável".
+ *
+ * O que o atleta digitou uma vez fica disponível na biblioteca; sem
+ * isso, a entrada manual obrigaria a redigitar os mesmos macros toda
+ * vez, que é exatamente o atrito que os Atalhos existem para remover.
+ */
+export async function salvarAlimentoProprioAction(formData: FormData) {
+  const gramasPorcao = Number(formData.get("gramasPorcao")) || 100;
+  const numero = (campo: string) => Number(formData.get(campo)) || 0;
+  // Os macros chegam para a porção informada; a biblioteca guarda por
+  // 100 g, que é a base comum de toda a base nutricional.
+  const fator = 100 / gramasPorcao;
+  await salvarAlimentoProprio(await usuario(), {
+    nome: String(formData.get("nome")).trim(),
+    por100g: {
+      calorias: Math.round(numero("calorias") * fator),
+      proteinaG: Math.round(numero("proteinaG") * fator),
+      carboidratosG: Math.round(numero("carboidratosG") * fator),
+      gordurasG: Math.round(numero("gordurasG") * fator),
+      fibrasG: Math.round(numero("fibrasG") * fator),
+    },
+    porcoes: [{ unidade: String(formData.get("unidade") || "porção"), gramas: gramasPorcao }],
+  });
   revalidatePath("/diario/registrar");
 }

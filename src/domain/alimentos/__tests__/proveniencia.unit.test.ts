@@ -120,3 +120,74 @@ describe("escolha entre fontes conflitantes", () => {
     expect(() => escolherValor([], { hoje })).toThrow(/ao menos uma fonte/i);
   });
 });
+
+/**
+ * Tabela de decisão exigida pelo critério de aceite da issue #23
+ * ("Fontes conflitantes: escolha ponderada testada com tabela de
+ * decisão"). Cada linha fixa uma combinação de fontes e o vencedor
+ * esperado, de modo que mudar um peso quebre o caso exato afetado em
+ * vez de um teste genérico.
+ */
+describe("tabela de decisão entre fontes", () => {
+  const hoje = new Date("2024-10-01");
+
+  const CASOS: ReadonlyArray<{
+    cenario: string;
+    fontes: ValorDeFonte[];
+    vencedora: string;
+    divergente: boolean;
+  }> = [
+    {
+      cenario: "oficial recente vs colaborativa recente",
+      fontes: [tabelaOficial, colaborativa],
+      vencedora: "TBCA",
+      divergente: true,
+    },
+    {
+      cenario: "oficial antiga vs rótulo atual, valores próximos",
+      fontes: [{ ...tabelaOficial, atualizadaEm: "2001-01-01" }, rotulo],
+      vencedora: "TBCA",
+      divergente: false,
+    },
+    {
+      cenario: "rótulo vs colaborativa, sem tabela oficial",
+      fontes: [rotulo, colaborativa],
+      vencedora: "Rótulo do fabricante",
+      divergente: true,
+    },
+    {
+      cenario: "três fontes, duas concordantes contra uma isolada",
+      fontes: [tabelaOficial, rotulo, colaborativa],
+      vencedora: "TBCA",
+      divergente: true,
+    },
+    {
+      cenario: "estimativa de IA nunca vence uma tabela analítica",
+      fontes: [
+        tabelaOficial,
+        { ...colaborativa, tipo: "estimativa-ia", fonte: "Estimativa da IA", valor: 168 },
+      ],
+      vencedora: "TBCA",
+      divergente: false,
+    },
+    {
+      cenario: "entrada do usuário perde para rótulo do fabricante",
+      fontes: [
+        rotulo,
+        { ...rotulo, tipo: "usuario", fonte: "Informado por você", metodoAnalitico: false, valor: 172 },
+      ],
+      vencedora: "Rótulo do fabricante",
+      divergente: false,
+    },
+  ];
+
+  for (const caso of CASOS) {
+    it(caso.cenario, () => {
+      const escolha = escolherValor(caso.fontes, { hoje });
+      expect(escolha.escolhida.fonte).toBe(caso.vencedora);
+      expect(escolha.divergenciaMaterial).toBe(caso.divergente);
+      // O valor exibido é sempre o de uma fonte real, nunca uma média.
+      expect(caso.fontes.map((f) => f.valor)).toContain(escolha.valor);
+    });
+  }
+});

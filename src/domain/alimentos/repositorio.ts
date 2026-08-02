@@ -1,7 +1,7 @@
 import { and, desc, eq, isNull } from "drizzle-orm";
 import { db } from "@/db/client";
 import { foodEntries, foodLibrary } from "@/db/schema";
-import { MACROS_ZERO, somarMacros } from "@/domain/diario/cardapio";
+import { somarMacros } from "@/domain/diario/cardapio";
 import { FUSO_PADRAO, diaAlimentar, horaLocal, instanteDeHoraLocal } from "@/domain/diario/dia-alimentar";
 import { obterPlanoAtivo } from "@/domain/plano/repositorio";
 import type { ConsumoConfirmado, Macros } from "@/domain/diario/tipos";
@@ -178,5 +178,3 @@ export async function listarRecorrentes(userId: string, limite = 8): Promise<Rec
   }
   return [...contagem.values()].sort((a, b) => b.vezes - a.vezes).slice(0, limite);
 }
-
-export { MACROS_ZERO };
