@@ -14,6 +14,9 @@ sources:
   - id: pr-35
     resource: https://github.com/IgorGuariroba/athlyt/pull/35
     title: "PR que introduziu a esteira de CI e corrigiu o lockfile"
+  - id: pr-61
+    resource: https://github.com/IgorGuariroba/athlyt/pull/61
+    title: "Reincidência do EUSAGE com duas armadilhas novas na validação"
 ---
 
 # Contexto
@@ -45,9 +48,22 @@ Duas consequências práticas:
 
 Diante de `npm ci` falhando com `EUSAGE ... from lock file` no CI mas não
 localmente, compare primeiro as versões de npm antes de mexer em dependências.
-Reproduza o erro com a versão do runner em um diretório limpo — apenas
-`package.json` + `package-lock.json` + `npx -y npm@<versão> ci --ignore-scripts`
-— para confirmar a correção antes de gastar uma rodada de CI.
+Reproduza o erro com a versão do runner em um diretório limpo, a partir dos
+arquivos **versionados** (`git show HEAD:package-lock.json`), não dos que estão
+no disco.
+
+Três armadilhas custaram três rodadas de CI na reincidência do PR #61:[^pr-61]
+
+1. **Não valide com `--ignore-scripts`.** A flag mascara o defeito: o `npm ci`
+   passa com ela e falha sem ela. O workflow roda `npm ci` puro — reproduza
+   exatamente assim.
+2. **`install --package-lock-only` não conserta lock existente.** Ele não cria
+   entradas ausentes. Quando faltam dependências de um pacote WASM/opcional
+   (`@tailwindcss/oxide-wasm32-wasi` declarando `@emnapi/core` e
+   `@emnapi/runtime`), é preciso `rm package-lock.json` e regenerar do zero.
+3. **Não rode `npm install` local depois de regenerar.** O npm da máquina
+   (versão diferente do runner) reescreve o lock de volta ao estado quebrado,
+   silenciosamente desfazendo a correção antes do commit.
 
 Mantenha `NODE_VERSION` fixado em um patch exato em `.github/workflows/ci.yml`.
 
@@ -64,5 +80,11 @@ npm error Missing: @emnapi/runtime@1.11.3 from lock file
 Após `npx -y npm@11.16.0 install --package-lock-only`, o mesmo comando passou
 com `added 826 packages`, e os cinco checks do PR ficaram verdes.[^pr-35]
 
+Na reincidência, o lock regenerado do zero ganhou 152 linhas e as entradas
+`node_modules/@emnapi/core` e `node_modules/@emnapi/runtime` que faltavam;
+`npx -y npm@11.16.0 ci` (sem flags) passou a responder `added 950 packages`, e
+`npm ci` na `main` mergeada confirmou a correção.[^pr-61]
+
 [^run-30579039314]: Run 30579039314 — falha persistente após regenerar o lock com npm local.
 [^pr-35]: PR #35 — esteira de CI aprovada com 5/5 checks.
+[^pr-61]: PR #61 — reincidência com validação mascarada por `--ignore-scripts`.
