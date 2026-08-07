@@ -3,6 +3,15 @@ import withSerwistInit from "@serwist/next";
 
 const nextConfig: NextConfig = {
   /**
+   * Saída autocontida para a imagem Docker de produção (Dokploy).
+   * Sem isso, o runtime precisaria do `node_modules` completo — várias
+   * centenas de MB, incluindo devDependencies. O `standalone` emite
+   * `.next/standalone/server.js` já com o subconjunto de dependências
+   * que o tracing do Next comprovou ser alcançável pelo app.
+   */
+  output: "standalone",
+
+  /**
    * @serwist/next injeta um `webpack()` no config mesmo com `disable`
    * ativo (ver node_modules/@serwist/next/src/index.ts). A partir do
    * Next.js 16, Turbopack (padrão em dev) recusa iniciar quando existe
