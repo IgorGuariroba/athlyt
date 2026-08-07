@@ -28,8 +28,10 @@ services:
     restart: unless-stopped
 
 volumes:
+  # Volume gerenciado pelo próprio compose. Já foi `external` apontando
+  # para o volume anônimo do container original desta máquina — o que
+  # tornava o arquivo impossível de usar em qualquer outro lugar:
+  # `external volume ... not found` derrubava o CI e derrubaria qualquer
+  # clone do repositório. Preservar dados de uma máquina específica é
+  # tarefa de migração pontual, não de arquivo versionado.
   athlyt-db-data:
-    # Volume anônimo do container original, adotado por nome para
-    # preservar os dados de desenvolvimento já existentes.
-    external: true
-    name: 7361bd5635f5decce1557b152e9fa4b9411e4e3babb92f4beb44712bab955885
