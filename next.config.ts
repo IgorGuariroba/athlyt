@@ -12,6 +12,16 @@ const nextConfig: NextConfig = {
   output: "standalone",
 
   /**
+   * O Next infere a raiz do workspace procurando lockfiles nos
+   * diretórios acima. Um `package-lock.json` solto no home do
+   * usuário faz a inferência subir demais e o standalone sair
+   * aninhado em `.next/standalone/<caminho>/server.js`, quebrando
+   * tanto o start local quanto os COPY do Dockerfile. Fixar a raiz
+   * no próprio projeto torna a saída estável em qualquer máquina.
+   */
+  outputFileTracingRoot: __dirname,
+
+  /**
    * @serwist/next injeta um `webpack()` no config mesmo com `disable`
    * ativo (ver node_modules/@serwist/next/src/index.ts). A partir do
    * Next.js 16, Turbopack (padrão em dev) recusa iniciar quando existe
