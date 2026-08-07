@@ -12,7 +12,7 @@ Registrar opcionalmente percentual de gordura sem apagar método ou incerteza.
 
 ## Elementos e comportamento
 
-Valor e seleção de método: adipômetro, bioimpedância, DEXA/DXA, pesagem hidrostática, estimativa por fita ou outro. Registra data, protocolo/condições, equipamento e profissional quando aplicável. Mostra confiabilidade e informa que séries de métodos diferentes não são diretamente intercambiáveis. Não exige repetição em calendário nem trata fotografia como valor exato. Ação 'Não tenho uma medição'.
+Etapa móvel no sistema visual MacroFactor: percentual em destaque com unidade menor, seguido por uma grade de cartões para selecionar o método — adipômetro, bioimpedância, DEXA/DXA, pesagem hidrostática, estimativa por fita ou outro. Protocolo/condições, equipamento e profissional ficam em uma seção opcional recolhível para não competir com a decisão principal. Ao retornar, a tela repõe a medição inicial já registrada; erro de validação preserva todos os valores digitados. Mostra confiabilidade e informa que séries de métodos diferentes não são diretamente intercambiáveis. Não exige repetição em calendário nem trata fotografia como valor exato. CTA principal 'Salvar e continuar' e ação secundária 'Não tenho uma medição'.
 
 ## Sequência
 

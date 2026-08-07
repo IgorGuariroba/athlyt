@@ -11,47 +11,13 @@ import {
 import { auth } from "@/auth";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import {
+  BarraAcaoFixa,
+  BarraMacro,
+  CabecalhoTela,
+  TelaConteudo,
+} from "@/components/tela";
 import { obterRascunho } from "@/domain/plano/repositorio";
-
-const CORES_MACROS = {
-  proteina: "bg-[#f18562]",
-  carboidratos: "bg-[#78b990]",
-  gorduras: "bg-[#f3cf6b]",
-} as const;
-
-function LinhaMacro({
-  rotulo,
-  gramas,
-  calorias,
-  total,
-  cor,
-}: {
-  rotulo: string;
-  gramas: number;
-  calorias: number;
-  total: number;
-  cor: string;
-}) {
-  const percentual = Math.max(4, Math.round((calorias / total) * 100));
-  return (
-    <div className="flex flex-col gap-2">
-      <div className="flex items-baseline justify-between">
-        <span className="text-body-md font-semibold text-on-surface">
-          {rotulo}
-        </span>
-        <span className="text-body-md tabular-nums text-muted-foreground">
-          {gramas} g
-        </span>
-      </div>
-      <div className="h-3 overflow-hidden rounded-full bg-surface-container-high">
-        <div
-          className={`h-full rounded-full ${cor}`}
-          style={{ width: `${percentual}%` }}
-        />
-      </div>
-    </div>
-  );
-}
 
 export default async function RevisaoPlanoPage() {
   const session = await auth();
@@ -60,9 +26,6 @@ export default async function RevisaoPlanoPage() {
   if (!plano) redirect("/plano/gerando");
 
   const { bloco, nutricao } = plano.conteudo;
-  const caloriasProteina = nutricao.proteinaG * 4;
-  const caloriasCarboidratos = nutricao.carboidratosG * 4;
-  const caloriasGorduras = nutricao.gordurasG * 9;
 
   const etapasCalculo = [
     {
@@ -81,29 +44,22 @@ export default async function RevisaoPlanoPage() {
   ];
 
   return (
-    <main className="mx-auto flex w-full max-w-lg flex-1 flex-col bg-background pb-28">
-      <header className="flex flex-col gap-3 px-6 pt-8 pb-7">
-        <div className="flex items-center justify-between">
-          <p className="text-label-md font-semibold tracking-wide text-muted-foreground uppercase">
-            Seu programa
-          </p>
-          {plano.conteudo.modoConservador ? (
+    <TelaConteudo comAcaoFixa>
+      <CabecalhoTela
+        contexto="Seu programa"
+        titulo="Seu Plano Ativo está pronto"
+        descricao="Confira como treino e nutrição foram organizados antes de ativar seu programa."
+        acao={
+          plano.conteudo.modoConservador ? (
             <Badge variant="secondary">Modo Conservador</Badge>
           ) : (
             <Badge className="gap-1">
               <Check className="size-3.5" aria-hidden="true" />
               Perfil completo
             </Badge>
-          )}
-        </div>
-        <h1 className="max-w-sm text-[2rem] leading-tight font-bold text-on-surface-strong">
-          Seu Plano Ativo está pronto
-        </h1>
-        <p className="text-body-md leading-relaxed text-muted-foreground">
-          Confira como treino e nutrição foram organizados antes de ativar seu
-          programa.
-        </p>
-      </header>
+          )
+        }
+      />
 
       <section
         aria-labelledby="resumo-treino"
@@ -188,26 +144,20 @@ export default async function RevisaoPlanoPage() {
         </div>
 
         <div className="flex flex-col gap-5">
-          <LinhaMacro
-            rotulo="Proteína"
+          <BarraMacro
+            macro="proteina"
             gramas={nutricao.proteinaG}
-            calorias={caloriasProteina}
-            total={nutricao.calorias}
-            cor={CORES_MACROS.proteina}
+            caloriasTotais={nutricao.calorias}
           />
-          <LinhaMacro
-            rotulo="Carboidratos"
+          <BarraMacro
+            macro="carboidratos"
             gramas={nutricao.carboidratosG}
-            calorias={caloriasCarboidratos}
-            total={nutricao.calorias}
-            cor={CORES_MACROS.carboidratos}
+            caloriasTotais={nutricao.calorias}
           />
-          <LinhaMacro
-            rotulo="Gorduras"
+          <BarraMacro
+            macro="gorduras"
             gramas={nutricao.gordurasG}
-            calorias={caloriasGorduras}
-            total={nutricao.calorias}
-            cor={CORES_MACROS.gorduras}
+            caloriasTotais={nutricao.calorias}
           />
         </div>
       </section>
@@ -248,14 +198,14 @@ export default async function RevisaoPlanoPage() {
         </p>
       </section>
 
-      <div className="fixed inset-x-0 bottom-0 z-20 border-t border-border bg-background/95 px-6 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur">
-        <Button asChild size="lg" className="mx-auto h-14 w-full max-w-md text-base font-bold">
+      <BarraAcaoFixa>
+        <Button asChild size="lg" className="h-14 w-full text-base font-bold">
           <Link href="/plano/revisao/treino">
             Revisar treinos
             <ChevronRight className="size-5" aria-hidden="true" />
           </Link>
         </Button>
-      </div>
-    </main>
+      </BarraAcaoFixa>
+    </TelaConteudo>
   );
 }

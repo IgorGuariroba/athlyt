@@ -1,11 +1,12 @@
+import { CORES_MACRO } from "@/components/tela";
 import type { PainelMacros } from "@/domain/diario/tipos";
 
 const MACROS = [
   { chave: "calorias", sigla: "E", rotulo: "Energia", unidade: "kcal", cor: "bg-on-surface-strong" },
-  { chave: "proteinaG", sigla: "P", rotulo: "Proteína", unidade: "g", cor: "bg-[#f18562]" },
-  { chave: "carboidratosG", sigla: "C", rotulo: "Carboidratos", unidade: "g", cor: "bg-[#78b990]" },
-  { chave: "gordurasG", sigla: "G", rotulo: "Gorduras", unidade: "g", cor: "bg-[#f3cf6b]" },
-  { chave: "fibrasG", sigla: "F", rotulo: "Fibras", unidade: "g", cor: "bg-[#8ea9d8]" },
+  { chave: "proteinaG", sigla: "P", rotulo: "Proteína", unidade: "g", cor: CORES_MACRO.proteina },
+  { chave: "carboidratosG", sigla: "C", rotulo: "Carboidratos", unidade: "g", cor: CORES_MACRO.carboidratos },
+  { chave: "gordurasG", sigla: "G", rotulo: "Gorduras", unidade: "g", cor: CORES_MACRO.gorduras },
+  { chave: "fibrasG", sigla: "F", rotulo: "Fibras", unidade: "g", cor: CORES_MACRO.fibras },
 ] as const;
 
 /**

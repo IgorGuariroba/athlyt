@@ -11,6 +11,9 @@ sources:
   - id: user-instruction-2026-07-30
     resource: "sessão de desenvolvimento 019fb541-9d09-7567-8fa9-51b8052bdb21"
     title: "Instrução sobre o ambiente servido pelo Tailscale"
+  - id: revisao-treino-2026-08-07
+    resource: "src/app/(auth)/plano/revisao/treino/page.tsx, /tmp/athlyt-start.log"
+    title: "Rebuild servindo página antiga ao redesenhar a revisão de treino"
 ---
 
 # Contexto
@@ -30,8 +33,19 @@ Antes de concluir qualquer tarefa com mudança de código:
 3. iniciar novamente com `npm start`, mantendo a porta 3000 atendida pelo Tailscale Funnel;
 4. confirmar que o processo está ativo.
 
+Duas armadilhas observadas ao validar visualmente uma tela reescrita:[^revisao-treino-2026-08-07]
+
+- O build incremental pode reaproveitar o chunk antigo de uma rota e servir a
+  versão anterior mesmo após `npm run build`. Se a página renderizada não
+  contém o texto novo, apague `.next` e reconstrua; confirme com
+  `grep -rl "<texto novo>" .next/server`.
+- `nohup npm start &` a partir do agente morre junto com a sessão do comando.
+  Suba com `setsid nohup npm start > log 2>&1 < /dev/null &` e valide com
+  `curl -o /dev/null -w "%{http_code}" http://localhost:3000`.
+
 # Evidência
 
 O responsável pelo ambiente informou que a aplicação é utilizada em modo produção por meio do Tailscale e pediu que build e reinício sejam feitos após toda mudança.[^user-instruction-2026-07-30]
 
 [^user-instruction-2026-07-30]: Consulte `sources` com id `user-instruction-2026-07-30`.
+[^revisao-treino-2026-08-07]: Consulte `sources` com id `revisao-treino-2026-08-07`.

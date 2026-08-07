@@ -1,0 +1,160 @@
+/**
+ * Leitura do catálogo de componentes de interface do projeto.
+ *
+ * O catálogo é derivado do código (`src/components/**`), nunca de uma
+ * lista mantida à mão: uma lista paralela envelhece e volta a permitir
+ * que o agente reinvente um componente que já existe.
+ */
+
+import { readdirSync, readFileSync, statSync } from "node:fs";
+import { join, relative, sep } from "node:path";
+
+export type ComponenteCatalogo = {
+  /** Caminho relativo à raiz do projeto. */
+  arquivo: string;
+  /** Alias de import (`@/components/...`). */
+  importPath: string;
+  /** Camada: `ui` (primitivos shadcn) ou `tela`/`navigation` (composição). */
+  camada: string;
+  /** Nomes exportados (componentes, tipos e helpers). */
+  exports: string[];
+  /** Variantes declaradas via cva: grupo -> opções. */
+  variantes: Record<string, string[]>;
+  /** Primeiro bloco de documentação do arquivo, quando existe. */
+  doc?: string;
+};
+
+const RAIZ_COMPONENTES = join("src", "components");
+
+function listarArquivos(dir: string): string[] {
+  let entradas: string[] = [];
+  try {
+    entradas = readdirSync(dir);
+  } catch {
+    return [];
+  }
+  const resultado: string[] = [];
+  for (const entrada of entradas) {
+    if (entrada === "__tests__" || entrada === "node_modules") continue;
+    const caminho = join(dir, entrada);
+    const info = statSync(caminho);
+    if (info.isDirectory()) {
+      resultado.push(...listarArquivos(caminho));
+      continue;
+    }
+    if (!entrada.endsWith(".tsx") && !entrada.endsWith(".ts")) continue;
+    if (entrada.endsWith(".test.ts") || entrada.endsWith(".test.tsx")) continue;
+    if (entrada === "index.ts") continue;
+    resultado.push(caminho);
+  }
+  return resultado;
+}
+
+function extrairExports(fonte: string): string[] {
+  const nomes = new Set<string>();
+  const declarado = /export\s+(?:async\s+)?(?:function|const|type|interface)\s+([A-Za-z0-9_]+)/g;
+  for (const m of fonte.matchAll(declarado)) nomes.add(m[1]);
+  const reexport = /export\s*\{([^}]*)\}/g;
+  for (const m of fonte.matchAll(reexport)) {
+    for (const parte of m[1].split(",")) {
+      const nome = parte.replace(/\btype\b/, "").split(/\s+as\s+/).pop()?.trim();
+      if (nome) nomes.add(nome);
+    }
+  }
+  return [...nomes];
+}
+
+/** Extrai `variants: { grupo: { opcao: ... } }` de blocos cva. */
+function extrairVariantes(fonte: string): Record<string, string[]> {
+  const resultado: Record<string, string[]> = {};
+  const inicio = fonte.indexOf("variants: {");
+  if (inicio === -1) return resultado;
+
+  let i = inicio + "variants: {".length;
+  let profundidade = 1;
+  const corpo: string[] = [];
+  while (i < fonte.length && profundidade > 0) {
+    const c = fonte[i];
+    if (c === "{") profundidade++;
+    else if (c === "}") profundidade--;
+    if (profundidade > 0) corpo.push(c);
+    i++;
+  }
+  const texto = corpo.join("");
+
+  // Grupos de primeiro nível dentro de `variants`.
+  let j = 0;
+  while (j < texto.length) {
+    const abre = texto.indexOf("{", j);
+    if (abre === -1) break;
+    const rotulo = texto.slice(j, abre).match(/([A-Za-z0-9_]+)\s*:\s*$/);
+    let prof = 1;
+    let k = abre + 1;
+    const inner: string[] = [];
+    while (k < texto.length && prof > 0) {
+      const c = texto[k];
+      if (c === "{") prof++;
+      else if (c === "}") prof--;
+      if (prof > 0) inner.push(c);
+      k++;
+    }
+    if (rotulo) {
+      const opcoes = new Set<string>();
+      for (const m of inner.join("").matchAll(/(?:^|\n)\s*"?([A-Za-z0-9_-]+)"?\s*:/g)) {
+        opcoes.add(m[1]);
+      }
+      if (opcoes.size > 0) resultado[rotulo[1]] = [...opcoes];
+    }
+    j = k;
+  }
+  return resultado;
+}
+
+function extrairDoc(fonte: string): string | undefined {
+  const m = fonte.match(/\/\*\*([\s\S]*?)\*\//);
+  if (!m) return undefined;
+  return m[1]
+    .split("\n")
+    .map((linha) => linha.replace(/^\s*\*\s?/, "").trim())
+    .filter(Boolean)
+    .join(" ")
+    .slice(0, 400);
+}
+
+export function lerCatalogo(cwd: string): ComponenteCatalogo[] {
+  const base = join(cwd, RAIZ_COMPONENTES);
+  return listarArquivos(base)
+    .map((caminho) => {
+      const fonte = readFileSync(caminho, "utf8");
+      const rel = relative(cwd, caminho);
+      const semExt = rel.replace(/\.tsx?$/, "").replace(/^src[\\/]/, "");
+      return {
+        arquivo: rel.split(sep).join("/"),
+        importPath: `@/${semExt.split(sep).join("/")}`,
+        camada: rel.split(sep)[2] ?? "componentes",
+        exports: extrairExports(fonte),
+        variantes: extrairVariantes(fonte),
+        doc: extrairDoc(fonte),
+      } satisfies ComponenteCatalogo;
+    })
+    .sort((a, b) => a.arquivo.localeCompare(b.arquivo));
+}
+
+/** Resumo compacto para injeção no system prompt. */
+export function resumirCatalogo(componentes: ComponenteCatalogo[]): string {
+  const porCamada = new Map<string, string[]>();
+  for (const componente of componentes) {
+    const nomes = componente.exports.filter((nome) => /^[A-Z]/.test(nome));
+    if (nomes.length === 0) continue;
+    const variantes = Object.entries(componente.variantes)
+      .map(([grupo, opcoes]) => `${grupo}=${opcoes.join("|")}`)
+      .join(" ");
+    const linha = `- ${nomes.join(", ")} — \`${componente.importPath}\`${variantes ? ` (${variantes})` : ""}`;
+    const lista = porCamada.get(componente.camada) ?? [];
+    lista.push(linha);
+    porCamada.set(componente.camada, lista);
+  }
+  return [...porCamada.entries()]
+    .map(([camada, linhas]) => `**${camada}**\n${linhas.join("\n")}`)
+    .join("\n\n");
+}

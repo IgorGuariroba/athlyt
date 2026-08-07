@@ -41,7 +41,7 @@ Linha do tempo do dia com Entradas Planejadas do Cardápio Diário (✓ Confirma
 
 ### E — Check-in e Medições (telas 059–063)
 
-Check-in Diário agrupado: prontidão (1 toque por dimensão) + peso quando solicitado + cintura no máximo semanalmente + conjunto completo de circunferências e fotos em cadência mensal, salvo redução por ansiedade. Circunferências usam duas leituras e uma terceira quando divergirem além da tolerância; a mediana válida alimenta a tendência. Medições de gordura externas são avulsas, registram método/protocolo e não têm repetição obrigatória. Registro avulso sempre possível pelo +.
+Check-in Diário agrupado: prontidão (1 toque por dimensão) + peso quando solicitado + cintura no máximo semanalmente + conjunto completo de circunferências e fotos em cadência mensal, salvo redução por ansiedade. Circunferências usam uma leitura por região, apoiada em instrução anatômica que é o que se repete entre medições; leituras adicionais são opcionais e valem pela mediana (ADR 0007). Medições de gordura externas são avulsas, registram método/protocolo e não têm repetição obrigatória. Registro avulso sempre possível pelo +.
 
 ### F — Progresso e Revisão Semanal (telas 064–074)
 

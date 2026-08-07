@@ -2,16 +2,33 @@ import { describe, expect, it } from "vitest";
 import { avaliarConfiancaCorporal, calcularPendenciasCadencia, consolidarCircunferencia, detectarAssimetriaSuspeita, gerarMetasProporcao } from "../index";
 
 describe("protocolo de circunferências", () => {
-  it("consolida duas leituras concordantes pela mediana", () => {
+  // `fita-v2`: uma leitura basta (ADR 0007). Leituras extras continuam
+  // aceitas para quem quiser conferir.
+  it("aceita uma única leitura", () => {
+    expect(consolidarCircunferencia([82.3])).toMatchObject({ ok: true, valorMm: 823 });
+  });
+
+  it("marca leitura única como moderada, nunca alta", () => {
+    // Sem repetição não há evidência de reprodutibilidade; declarar
+    // "alta" seria confiança fabricada.
+    expect(consolidarCircunferencia([82.3])).toMatchObject({ qualidade: "moderada" });
+  });
+
+  it("consolida leituras concordantes pela mediana e eleva a qualidade", () => {
     expect(consolidarCircunferencia([82.1, 82.4])).toMatchObject({ ok: true, valorMm: 823, qualidade: "alta" });
   });
 
-  it("exige terceira leitura diante de divergência maior que 1 cm", () => {
-    expect(consolidarCircunferencia([82, 83.2])).toMatchObject({ ok: false, exigeTerceira: true });
+  it("aceita divergência moderada entre leituras sem pedir outra", () => {
+    expect(consolidarCircunferencia([82, 83.2])).toMatchObject({ ok: true, qualidade: "baixa" });
   });
 
-  it("rejeita três leituras ainda inconsistentes", () => {
+  it("recusa leituras muito diferentes entre si", () => {
     expect(consolidarCircunferencia([82, 84.5, 88])).toMatchObject({ ok: false });
+  });
+
+  it("recusa medida fora da faixa plausível", () => {
+    expect(consolidarCircunferencia([5])).toMatchObject({ ok: false });
+    expect(consolidarCircunferencia([])).toMatchObject({ ok: false });
   });
 });
 

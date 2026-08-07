@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto";
 import { describe, expect, it } from "vitest";
 import { db } from "@/db/client";
 import { users } from "@/db/schema";
-import { atualizarEstadoRevisaoCorporal, listarFotosExpiradas, obterPanoramaCorporal, recalcularMetasProporcao, registrarAvaliacaoVisual, registrarCircunferencia, registrarFotoProgresso, registrarGorduraCorporal, registrarPeso, registrarRevisaoCorporal, revogarAvaliacoesVisuais } from "../repositorio";
+import { atualizarEstadoRevisaoCorporal, listarFotosExpiradas, obterOuCriarAvaliacaoInicial, obterPanoramaCorporal, recalcularMetasProporcao, registrarAvaliacaoVisual, registrarCircunferencia, registrarFotoProgresso, registrarGorduraCorporal, registrarPeso, registrarRevisaoCorporal, revogarAvaliacoesVisuais, salvarCircunferenciaDaAvaliacaoInicial } from "../repositorio";
 import { produzirRevisaoCorporal } from "../revisao-corporal";
 
 async function usuario() { const [u] = await db.insert(users).values({ email: `medicoes-${randomUUID()}@example.com` }).returning(); return u.id; }
@@ -10,7 +10,8 @@ describe("jornada persistida de medições", () => {
   it("preserva leituras, método de gordura e metas versionadas", async () => {
     const userId = await usuario();
     await registrarPeso(userId, 82.4);
-    const medicao = await registrarCircunferencia(userId, { regiao: "ombros", leiturasCm: [116, 116.4] });
+    // Caminho real do produto: uma leitura por região (`fita-v2`, ADR 0007).
+    const medicao = await registrarCircunferencia(userId, { regiao: "ombros", leiturasCm: [116.2] });
     expect(medicao.ok).toBe(true);
     await registrarGorduraCorporal(userId, { percentual: 18.2, metodo: "bioimpedancia", protocolo: "jejum" });
     await recalcularMetasProporcao(userId, ["ombros"]);
@@ -18,6 +19,31 @@ describe("jornada persistida de medições", () => {
     expect(panorama.pesos[0].pesoGramas).toBe(82400);
     expect(panorama.gorduras[0]).toMatchObject({ percentualBasisPoints: 1820, metodo: "bioimpedancia" });
     expect(panorama.metas[0]).toMatchObject({ regiao: "ombros", direcao: "aumentar", metodologiaVersao: "trajetoria-v1" });
+    // A medida guarda o protocolo sob o qual foi coletada, para que
+    // registros de `fita-v1` não sejam reinterpretados depois.
+    expect(panorama.medicoes[0]).toMatchObject({ valorMm: 1162, qualidade: "moderada" });
+  });
+
+  it("atualiza a mesma região da avaliação inicial sem criar falsa evolução", async () => {
+    const userId = await usuario();
+    const avaliacao = await obterOuCriarAvaliacaoInicial(userId);
+
+    const primeira = await salvarCircunferenciaDaAvaliacaoInicial(userId, {
+      assessmentId: avaliacao.id,
+      regiao: "cintura",
+      leiturasCm: [84],
+    });
+    const corrigida = await salvarCircunferenciaDaAvaliacaoInicial(userId, {
+      assessmentId: avaliacao.id,
+      regiao: "cintura",
+      leiturasCm: [85.5],
+    });
+
+    expect(primeira.ok).toBe(true);
+    expect(corrigida.ok).toBe(true);
+    if (!primeira.ok || !corrigida.ok) return;
+    expect(corrigida.medicao.id).toBe(primeira.medicao.id);
+    expect(corrigida.medicao.valorMm).toBe(855);
   });
 
   it("versiona projeção visual e o estado da Revisão Semanal", async () => {

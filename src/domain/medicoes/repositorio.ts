@@ -29,10 +29,93 @@ export async function registrarCircunferencia(userId: string, entrada: { regiao:
   return { ok: true as const, medicao: linha };
 }
 
+/**
+ * Salva a versão corrente de uma região dentro da Avaliação Inicial.
+ *
+ * Diferente de `registrarCircunferencia`, que acrescenta um ponto ao
+ * histórico, esta operação atualiza a linha já existente. Autosave,
+ * correções e o submit final pertencem à mesma coleta e não podem virar
+ * falsas evoluções corporais.
+ */
+export async function salvarCircunferenciaDaAvaliacaoInicial(
+  userId: string,
+  entrada: {
+    assessmentId: string;
+    regiao: RegiaoCorporal;
+    lado?: LadoCorporal;
+    leiturasCm: number[];
+    condicoes?: string;
+  },
+) {
+  const consolidada = consolidarCircunferencia(entrada.leiturasCm);
+  if (!consolidada.ok) return consolidada;
+
+  const lado = entrada.lado ?? "unico";
+  const [existente] = await db
+    .select({ id: bodyMeasurements.id })
+    .from(bodyMeasurements)
+    .where(
+      and(
+        eq(bodyMeasurements.userId, userId),
+        eq(bodyMeasurements.assessmentId, entrada.assessmentId),
+        eq(bodyMeasurements.regiao, entrada.regiao),
+        eq(bodyMeasurements.lado, lado),
+      ),
+    )
+    .orderBy(desc(bodyMeasurements.observadoEm))
+    .limit(1);
+
+  const valores = {
+    leiturasMm: consolidada.leiturasMm,
+    valorMm: consolidada.valorMm,
+    qualidade: consolidada.qualidade,
+    protocoloVersao: PROTOCOLO_CIRCUNFERENCIAS_VERSAO,
+    condicoes: entrada.condicoes,
+    observadoEm: new Date(),
+  };
+
+  if (existente) {
+    const [linha] = await db
+      .update(bodyMeasurements)
+      .set(valores)
+      .where(eq(bodyMeasurements.id, existente.id))
+      .returning();
+    return { ok: true as const, medicao: linha };
+  }
+
+  const [linha] = await db
+    .insert(bodyMeasurements)
+    .values({
+      ...valores,
+      userId,
+      assessmentId: entrada.assessmentId,
+      regiao: entrada.regiao,
+      lado,
+    })
+    .returning();
+  return { ok: true as const, medicao: linha };
+}
+
 export async function registrarPeso(userId: string, pesoKg: number) {
   if (!Number.isFinite(pesoKg) || pesoKg < 30 || pesoKg > 300) throw new Error("Peso inválido.");
   const [linha] = await db.insert(weightMeasurements).values({ userId, pesoGramas: Math.round(pesoKg * 1000) }).returning();
   return linha;
+}
+
+export async function obterGorduraDaAvaliacaoInicial(userId: string) {
+  const avaliacao = await obterOuCriarAvaliacaoInicial(userId);
+  const [medicao] = await db
+    .select()
+    .from(bodyFatMeasurements)
+    .where(
+      and(
+        eq(bodyFatMeasurements.userId, userId),
+        eq(bodyFatMeasurements.assessmentId, avaliacao.id),
+      ),
+    )
+    .orderBy(desc(bodyFatMeasurements.observadoEm))
+    .limit(1);
+  return medicao;
 }
 
 export async function registrarGorduraCorporal(userId: string, entrada: { percentual: number; metodo: string; protocolo?: string; equipamento?: string; profissional?: string; assessmentId?: string }) {
@@ -48,6 +131,32 @@ export async function registrarGorduraCorporal(userId: string, entrada: { percen
     confianca: entrada.protocolo ? "alta" : "moderada",
   }).returning();
   return linha;
+}
+
+/**
+ * Último valor medido por região+lado da Avaliação Corporal Inicial,
+ * em centímetros, para repor os campos quando o usuário volta à etapa.
+ *
+ * A chave usa `regiao:lado` porque braço, coxa e panturrilha têm
+ * registros distintos por lado; regiões únicas ficam como `regiao:unico`.
+ * Cada nova medição é uma linha nova (o histórico é preservado), então
+ * a leitura pega a mais recente e ignora as anteriores.
+ */
+export async function obterMedidasDaAvaliacaoInicial(userId: string) {
+  const avaliacao = await obterOuCriarAvaliacaoInicial(userId);
+  const linhas = await db
+    .select()
+    .from(bodyMeasurements)
+    .where(and(eq(bodyMeasurements.userId, userId), eq(bodyMeasurements.assessmentId, avaliacao.id)))
+    .orderBy(desc(bodyMeasurements.observadoEm));
+
+  const porRegiao = new Map<string, string>();
+  for (const linha of linhas) {
+    const chave = `${linha.regiao}:${linha.lado}`;
+    if (porRegiao.has(chave)) continue;
+    porRegiao.set(chave, (linha.valorMm / 10).toString());
+  }
+  return porRegiao;
 }
 
 export async function listarMedicoesCorporais(userId: string): Promise<MedicaoCorporal[]> {

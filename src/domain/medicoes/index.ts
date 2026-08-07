@@ -1,4 +1,10 @@
-export const PROTOCOLO_CIRCUNFERENCIAS_VERSAO = "fita-v1";
+/**
+ * `fita-v2` registra uma leitura por região. A v1 exigia duas leituras
+ * e uma terceira por divergência; medições gravadas sob ela continuam
+ * com esse protocolo no banco e não devem ser reinterpretadas
+ * (docs/adr/0007-uma-leitura-por-circunferencia.md).
+ */
+export const PROTOCOLO_CIRCUNFERENCIAS_VERSAO = "fita-v2";
 export const METODOLOGIA_METAS_VERSAO = "trajetoria-v1";
 
 export type QualidadeMedicao = "alta" | "moderada" | "baixa";
@@ -44,26 +50,38 @@ const mediana = (valores: number[]) => {
   return ordenados.length % 2 ? ordenados[meio] : Math.round((ordenados[meio - 1] + ordenados[meio]) / 2);
 };
 
-/** Consolida o protocolo doméstico sem deixar tolerâncias vazarem para a UI. */
+/**
+ * Consolida o protocolo doméstico sem deixar tolerâncias vazarem para a UI.
+ *
+ * Uma leitura basta (`fita-v2`): repetir a mesma região na mesma sessão
+ * pesa no uso real e a evolução vem de remedir ao longo do tempo, não de
+ * medir três vezes hoje. Leituras extras continuam aceitas para quem
+ * quiser conferir — nesse caso a mediana vale e a amplitude vira sinal
+ * de `qualidade`, que a Revisão Semanal usa ao ponderar evidências.
+ *
+ * Sem repetição não há como distinguir erro de fita de mudança real, por
+ * isso a leitura única entra como `moderada`: honesta sobre a incerteza
+ * sem impedir o registro.
+ */
 export function consolidarCircunferencia(leiturasCm: number[]):
   | { ok: true; leiturasMm: number[]; valorMm: number; qualidade: QualidadeMedicao }
-  | { ok: false; exigeTerceira: boolean; erro: string } {
-  const leiturasMm = leiturasCm.map((v) => Math.round(v * 10));
-  if (leiturasMm.length < 2 || leiturasMm.length > 3 || leiturasMm.some((v) => !Number.isFinite(v) || v < 100 || v > 2500)) {
-    return { ok: false, exigeTerceira: false, erro: "Informe duas leituras válidas em centímetros." };
+  | { ok: false; erro: string } {
+  const leiturasMm = leiturasCm
+    .filter((v) => Number.isFinite(v))
+    .map((v) => Math.round(v * 10));
+  if (leiturasMm.length === 0 || leiturasMm.length > 3 || leiturasMm.some((v) => v < 100 || v > 2500)) {
+    return { ok: false, erro: "Informe a medida em centímetros, entre 10 e 250." };
   }
   const amplitude = Math.max(...leiturasMm) - Math.min(...leiturasMm);
-  if (leiturasMm.length === 2 && amplitude > 10) {
-    return { ok: false, exigeTerceira: true, erro: "As leituras divergiram mais de 1 cm; faça uma terceira leitura." };
-  }
-  if (leiturasMm.length === 3 && amplitude > 20) {
-    return { ok: false, exigeTerceira: false, erro: "As leituras continuam muito diferentes; confira o posicionamento da fita." };
+  if (leiturasMm.length > 1 && amplitude > 20) {
+    return { ok: false, erro: "As leituras estão muito diferentes; confira o posicionamento da fita." };
   }
   return {
     ok: true,
     leiturasMm,
     valorMm: mediana(leiturasMm),
-    qualidade: amplitude <= 5 ? "alta" : amplitude <= 10 ? "moderada" : "baixa",
+    qualidade:
+      leiturasMm.length === 1 ? "moderada" : amplitude <= 5 ? "alta" : amplitude <= 10 ? "moderada" : "baixa",
   };
 }
 

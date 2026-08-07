@@ -1,31 +1,169 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { AlertCircle, ChevronLeft, CheckCircle2, Lock } from "lucide-react";
 import { auth } from "@/auth";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { obterPanoramaCorporal } from "@/domain/medicoes/repositorio";
 import { configuracaoR2, criarStorageR2 } from "@/infra/storage";
-import { enviarFotosCorporais, excluirFotoCorporal, excluirTodasFotosCorporais } from "./actions";
+import {
+  enviarFotosCorporais,
+  excluirFotoCorporal,
+  excluirTodasFotosCorporais,
+} from "./actions";
+import { EnvioFotos } from "./_components/envio-fotos";
 
-export default async function FotosAvaliacaoPage({ searchParams }: { searchParams: Promise<{ erro?: string; sucesso?: string }> }) {
-  const session = await auth(); if (!session?.user?.id) redirect("/");
+/**
+ * Tela 008f — fotos da Avaliação Corporal Inicial
+ * (specs/workflow/telas/008f-avaliacao-fotos.md).
+ *
+ * Mesma moldura das demais etapas da avaliação: fundo `background`,
+ * margens de 24px, voltar circular no topo, cabeçalho rótulo/título/
+ * apoio e CTA principal ao pé da tela. As quatro poses são um único
+ * cartão com divisores de 1px — pertencem à mesma unidade de
+ * informação e a comparação depende de serem tratadas como conjunto,
+ * e não como quatro campos soltos.
+ *
+ * O formulário de envio é cliente (`_components/envio-fotos.tsx`)
+ * porque as fotos precisam ser reduzidas no aparelho antes de virarem
+ * corpo da Server Action.
+ */
+
+export default async function FotosAvaliacaoPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ erro?: string; sucesso?: string }>;
+}) {
+  const session = await auth();
+  if (!session?.user?.id) redirect("/");
+
   const mensagens = await searchParams;
   const config = configuracaoR2();
   const panorama = await obterPanoramaCorporal(session.user.id);
-  const urls = config ? await Promise.all(panorama.fotos.slice(0, 4).map(async (foto) => ({ foto, url: await criarStorageR2(config).urlLeitura(foto.objectKey) }))) : [];
-  return <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col gap-5 p-5">
-    <div><p className="text-label-md uppercase text-muted-foreground">Fotos opcionais</p><h1 className="text-headline-md font-bold">Comparação visual padronizada</h1><p className="text-body-sm text-muted-foreground">Frente, costas e laterais precisam de pose, distância e iluminação semelhantes. Metadados são removidos e os arquivos são convertidos para WebP antes do armazenamento.</p></div>
-    {mensagens.erro ? <p role="alert" className="text-body-sm text-error">{mensagens.erro}</p> : null}{mensagens.sucesso ? <p role="status" className="text-body-sm text-success">{mensagens.sucesso}</p> : null}
-    {!config ? <Card className="p-4 text-body-sm text-muted-foreground"><strong className="text-on-surface">Cloudflare R2 ainda não configurado</strong><p>Preencha as quatro variáveis `R2_*` do `.env`. O bucket deve permanecer privado.</p></Card> : <form action={enviarFotosCorporais} className="grid gap-4">
-      {[["frente","Frente"],["costas","Costas"],["lateralDireita","Lateral direita"],["lateralEsquerda","Lateral esquerda"]].map(([nome, rotulo]) => <div key={nome}><Label htmlFor={nome}>{rotulo}</Label><Input id={nome} name={nome} type="file" accept="image/jpeg,image/png,image/webp" /></div>)}
-      <div><Label htmlFor="condicoes">Condições</Label><Input id="condicoes" name="condicoes" placeholder="Iluminação, distância ou observações" /></div>
-      <div><Label htmlFor="retencaoDias">Retenção</Label><select id="retencaoDias" name="retencaoDias" className="w-full rounded-md border bg-background p-3"><option value="0">Até eu excluir</option><option value="365">Excluir após 1 ano</option><option value="730">Excluir após 2 anos</option></select></div>
-      <label className="flex items-start gap-2 text-body-sm"><input type="checkbox" name="consentimentoArmazenamento" value="sim" required className="mt-1"/><span>Autorizo armazenar estas fotos corporais no bucket privado Cloudflare R2 para comparação longitudinal. Este consentimento não autoriza análise por IA.</span></label>
-      <Button size="lg" type="submit">Enviar para storage privado</Button>
-    </form>}
-    {urls.length ? <Card className="grid gap-3 p-4"><div className="flex items-center justify-between"><strong>Fotos privadas recentes</strong><form action={excluirTodasFotosCorporais}><Button type="submit" size="sm" variant="destructive">Excluir todas</Button></form></div>{urls.map(({ foto, url }) => <div key={foto.id} className="flex items-center justify-between gap-3"><a href={url} target="_blank" rel="noreferrer" className="text-body-sm underline capitalize">Abrir {foto.pose.replaceAll("_", " ")} — link temporário</a><form action={excluirFotoCorporal}><input type="hidden" name="fotoId" value={foto.id}/><Button type="submit" size="sm" variant="ghost">Excluir</Button></form></div>)}</Card> : null}
-    <div className="mt-auto grid gap-3"><Button asChild variant="secondary"><Link href="/triagem/objetivo">Continuar</Link></Button><Button asChild variant="ghost"><Link href="/triagem/avaliacao-corporal/essenciais">Revisar medidas</Link></Button></div>
-  </main>;
+  const urls = config
+    ? await Promise.all(
+        panorama.fotos.slice(0, 4).map(async (foto) => ({
+          foto,
+          url: await criarStorageR2(config).urlLeitura(foto.objectKey),
+        })),
+      )
+    : [];
+
+  return (
+    <main className="flex flex-1 flex-col gap-6 bg-background px-6 py-8">
+      <Link
+        href="/triagem/avaliacao-corporal/gordura"
+        aria-label="Voltar"
+        className="-ml-3 flex size-11 items-center justify-center rounded-full text-on-surface-strong transition-colors hover:bg-surface-container focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      >
+        <ChevronLeft className="size-8" aria-hidden="true" />
+      </Link>
+
+      <header className="flex flex-col gap-2">
+        <p className="text-label-md font-semibold tracking-wide text-muted-foreground uppercase">
+          Fotos opcionais
+        </p>
+        <h1 className="text-headline-md font-bold text-on-surface-strong">
+          Comparação visual padronizada
+        </h1>
+        <p className="text-body-md leading-relaxed text-muted-foreground">
+          O que torna duas fotos comparáveis é repetir pose, distância e
+          iluminação. Envie as que conseguir agora — as demais podem vir depois.
+        </p>
+      </header>
+
+      {mensagens.erro ? (
+        <p
+          role="alert"
+          className="flex items-start gap-3 rounded-xl border border-error/40 bg-surface-container px-4 py-3 text-body-sm text-error"
+        >
+          <AlertCircle className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
+          {mensagens.erro}
+        </p>
+      ) : null}
+
+      {mensagens.sucesso ? (
+        <p
+          role="status"
+          className="flex items-start gap-3 rounded-xl border border-success/40 bg-surface-container px-4 py-3 text-body-sm text-success"
+        >
+          <CheckCircle2 className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
+          {mensagens.sucesso}
+        </p>
+      ) : null}
+
+      {!config ? (
+        <section className="flex gap-3 rounded-2xl border border-border bg-surface-container px-5 py-4">
+          <Lock className="mt-0.5 size-4 shrink-0 text-warning" aria-hidden="true" />
+          <div className="flex flex-col gap-1">
+            <strong className="text-title text-on-surface-strong">
+              Cloudflare R2 ainda não configurado
+            </strong>
+            <p className="text-body-sm leading-relaxed text-muted-foreground">
+              Preencha as quatro variáveis <code>R2_*</code> do <code>.env</code>.
+              O bucket deve permanecer privado.
+            </p>
+          </div>
+        </section>
+      ) : (
+        <EnvioFotos action={enviarFotosCorporais} />
+      )}
+
+      {urls.length ? (
+        <section className="overflow-hidden rounded-2xl border border-border bg-surface-container">
+          <div className="flex items-center justify-between gap-3 px-5 pt-4 pb-3">
+            <strong className="text-title text-on-surface-strong">
+              Fotos privadas recentes
+            </strong>
+            <form action={excluirTodasFotosCorporais}>
+              <Button type="submit" size="sm" variant="ghost" className="text-error">
+                Excluir todas
+              </Button>
+            </form>
+          </div>
+          <ul className="grid gap-px border-t border-border bg-border">
+            {urls.map(({ foto, url }) => (
+              <li
+                key={foto.id}
+                className="flex items-center justify-between gap-3 bg-background px-5 py-3"
+              >
+                <a
+                  href={url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-body-sm text-on-surface underline decoration-border-strong underline-offset-4"
+                >
+                  Abrir {foto.pose.replaceAll("_", " ")} — link temporário
+                </a>
+                <form action={excluirFotoCorporal}>
+                  <input type="hidden" name="fotoId" value={foto.id} />
+                  {/* O nome acessível cita a pose: com quatro fotos na
+                      lista, quatro botões "Excluir" idênticos não dizem
+                      a quem lê por leitor de tela o que será apagado. */}
+                  <Button
+                    type="submit"
+                    size="sm"
+                    variant="ghost"
+                    aria-label={`Excluir foto ${foto.pose.replaceAll("_", " ")}`}
+                  >
+                    Excluir
+                  </Button>
+                </form>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
+
+      <div className="mt-auto flex flex-col gap-3">
+        <Button asChild size="lg" variant="secondary" className="h-12 w-full">
+          <Link href="/triagem/objetivo">Continuar</Link>
+        </Button>
+        <Button asChild variant="ghost" className="h-12 w-full">
+          <Link href="/triagem/avaliacao-corporal/essenciais">
+            Revisar medidas
+          </Link>
+        </Button>
+      </div>
+    </main>
+  );
 }

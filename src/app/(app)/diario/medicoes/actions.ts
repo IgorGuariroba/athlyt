@@ -14,11 +14,11 @@ export async function registrarCheckinCorporal(fd: FormData) {
   const userId = session.user.id;
   const peso = n(fd, "peso");
   if (Number.isFinite(peso)) await registrarPeso(userId, peso);
-  const cintura = [n(fd, "cintura1"), n(fd, "cintura2")];
-  const terceira = n(fd, "cintura3");
-  if (Number.isFinite(terceira)) cintura.push(terceira);
-  if (cintura.every(Number.isFinite)) {
-    const resultado = await registrarCircunferencia(userId, { regiao: "cintura", leiturasCm: cintura });
+  // Uma medida por região (`fita-v2`,
+  // docs/adr/0007-uma-leitura-por-circunferencia.md).
+  const cintura = n(fd, "cintura");
+  if (Number.isFinite(cintura)) {
+    const resultado = await registrarCircunferencia(userId, { regiao: "cintura", leiturasCm: [cintura] });
     if (!resultado.ok) redirect(`/diario/medicoes?erro=${encodeURIComponent(resultado.erro)}`);
     await recalcularMetasProporcao(userId);
   }
