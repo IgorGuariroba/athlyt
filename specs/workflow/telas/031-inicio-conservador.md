@@ -8,11 +8,11 @@
 
 ## Propósito
 
-Estado do Início quando o perfil é insuficiente.
+Estado do Início quando uma ou mais dimensões têm dados insuficientes, sem consentimento ou de baixa qualidade.
 
 ## Elementos e comportamento
 
-Badge Conservador; cartão 'Completar perfil' com o que falta e o que destrava; recomendações de baixo risco apenas.
+Estado por dimensão (composição corporal, proporções, simetria bilateral, treinamento, nutrição e saúde/recuperação); cartão de próxima coleta com benefício concreto, progresso e opção de adiar. Recomendações confiáveis continuam disponíveis; somente dimensões afetadas degradam, salvo risco de saúde sistêmico. Sem culpa, nota estética, comparação social ou promessa de resultado.
 
 ## Sequência
 

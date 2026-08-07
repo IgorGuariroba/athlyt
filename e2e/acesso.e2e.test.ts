@@ -40,9 +40,11 @@ test.describe("Acesso e casco autenticado", () => {
     await expect(page.getByRole("region", { name: "Diário" })).toBeVisible();
     await expect(page.getByRole("heading", { name: "Hoje" })).toBeVisible();
 
+    // Progresso titula a leitura, não a aba (padrão MacroFactor, tela
+    // 064); a identificação da aba vive no eyebrow e na navegação.
     await page.getByRole("link", { name: "Progresso" }).click();
     await expect(
-      page.getByRole("heading", { name: "Progresso" }),
+      page.getByRole("heading", { level: 1, name: "Sua resposta corporal" }),
     ).toBeVisible();
 
     await page.getByRole("link", { name: "Mais" }).click();

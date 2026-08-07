@@ -6,9 +6,8 @@ import { Card } from "@/components/ui/card";
 
 /**
  * Casco da aba Mais (telas 075–085). Perfil, Trilhas de Decisão,
- * consentimentos, exportação e configurações chegam em tickets
- * posteriores (Importação de Histórico, privacidade e afins). Este
- * ticket entrega os controles de conta (user stories 1–4).
+ * consentimentos, exportação e configurações são acessados daqui,
+ * mantendo controles de conta e privacidade no mesmo casco.
  */
 export default async function MaisPage() {
   const session = await auth();
@@ -35,6 +34,11 @@ export default async function MaisPage() {
         <Button asChild variant="outline" className="w-fit">
           <Link href="/mais/trilhas">Ver Trilhas de Decisão</Link>
         </Button>
+      </Card>
+
+      <Card className="flex flex-col gap-3 p-4">
+        <p className="text-body-md text-muted-foreground">Gerencie separadamente armazenamento privado e operações de IA.</p>
+        <Button asChild variant="outline" className="w-fit"><Link href="/mais/consentimentos">Gerenciar consentimentos</Link></Button>
       </Card>
 
       <Card className="flex flex-col gap-3 p-4">

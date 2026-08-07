@@ -1,0 +1,37 @@
+# Nome fixo do projeto compose. Sem ele, o Docker usa o nome da pasta
+# ("docker") e passa a enxergar containers de outros projetos da
+# máquina como órfãos deste — um `down --remove-orphans` removeria
+# serviços alheios ao Athlyt.
+name: athlyt
+
+services:
+  db:
+    image: postgres:16
+    container_name: athlyt-db
+    environment:
+      POSTGRES_USER: athlyt
+      POSTGRES_PASSWORD: devpassword
+      POSTGRES_DB: athlyt
+    ports:
+      # 5433 no host: a 5432 costuma estar ocupada por outros projetos.
+      - "5433:5432"
+    volumes:
+      - athlyt-db-data:/var/lib/postgresql/data
+    # Sem o healthcheck, `compose up -d` devolve o controle assim que o
+    # container inicia — mas o Postgres ainda não aceita conexões, e a
+    # aplicação sobe e falha na primeira query.
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U athlyt -d athlyt"]
+      interval: 2s
+      timeout: 3s
+      retries: 15
+    restart: unless-stopped
+
+volumes:
+  # Volume gerenciado pelo próprio compose. Já foi `external` apontando
+  # para o volume anônimo do container original desta máquina — o que
+  # tornava o arquivo impossível de usar em qualquer outro lugar:
+  # `external volume ... not found` derrubava o CI e derrubaria qualquer
+  # clone do repositório. Preservar dados de uma máquina específica é
+  # tarefa de migração pontual, não de arquivo versionado.
+  athlyt-db-data:

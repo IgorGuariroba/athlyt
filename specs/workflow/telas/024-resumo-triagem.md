@@ -12,7 +12,7 @@ Mostrar o que foi preenchido, o que falta e o que cada dado destrava; declarar o
 
 ## Elementos e comportamento
 
-Checklist por seção; badge Modo Conservador ativo/inativo com explicação das capacidades limitadas; 'Gerar meu plano'.
+Checklist por seção; confiança separada para composição corporal, proporções, simetria bilateral, treinamento, nutrição e saúde/recuperação; explica qual dado ou consentimento melhora cada capacidade. A Avaliação Corporal Inicial pendente não bloqueia 'Gerar meu plano', mas declara quais partes serão provisórias.
 
 ## Sequência
 

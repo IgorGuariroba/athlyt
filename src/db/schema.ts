@@ -8,6 +8,7 @@ import {
   jsonb,
   boolean,
   uniqueIndex,
+  index,
 } from "drizzle-orm/pg-core";
 import type { AdapterAccountType } from "next-auth/adapters";
 
@@ -97,6 +98,114 @@ export const profileVersions = pgTable("profile_version", {
   createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
 });
 
+export const bodyAssessments = pgTable("body_assessment", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  tipo: text("tipo").$type<"inicial" | "acompanhamento">().notNull(),
+  estado: text("estado").$type<"em_andamento" | "concluida">().notNull().default("em_andamento"),
+  observadoEm: timestamp("observado_em", { mode: "date", withTimezone: true }).notNull().defaultNow(),
+  createdAt: timestamp("created_at", { mode: "date", withTimezone: true }).notNull().defaultNow(),
+}, (t) => [index("body_assessment_user_date_idx").on(t.userId, t.observadoEm)]);
+
+export const weightMeasurements = pgTable("weight_measurement", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  pesoGramas: integer("peso_gramas").notNull(),
+  observadoEm: timestamp("observado_em", { mode: "date", withTimezone: true }).notNull().defaultNow(),
+  createdAt: timestamp("created_at", { mode: "date", withTimezone: true }).notNull().defaultNow(),
+}, (t) => [index("weight_measurement_user_date_idx").on(t.userId, t.observadoEm)]);
+
+export const bodyMeasurements = pgTable("body_measurement", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  assessmentId: uuid("assessment_id").references(() => bodyAssessments.id, { onDelete: "set null" }),
+  userId: uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  regiao: text("regiao").notNull(),
+  lado: text("lado").$type<"unico" | "direito" | "esquerdo">().notNull().default("unico"),
+  leiturasMm: jsonb("leituras_mm").$type<number[]>().notNull(),
+  valorMm: integer("valor_mm").notNull(),
+  protocoloVersao: text("protocolo_versao").notNull(),
+  qualidade: text("qualidade").$type<"alta" | "moderada" | "baixa">().notNull(),
+  condicoes: text("condicoes"),
+  observadoEm: timestamp("observado_em", { mode: "date", withTimezone: true }).notNull().defaultNow(),
+  createdAt: timestamp("created_at", { mode: "date", withTimezone: true }).notNull().defaultNow(),
+}, (t) => [index("body_measurement_user_region_date_idx").on(t.userId, t.regiao, t.observadoEm)]);
+
+export const bodyFatMeasurements = pgTable("body_fat_measurement", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  assessmentId: uuid("assessment_id").references(() => bodyAssessments.id, { onDelete: "set null" }),
+  userId: uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  percentualBasisPoints: integer("percentual_basis_points").notNull(),
+  metodo: text("metodo").notNull(),
+  protocolo: text("protocolo"),
+  equipamento: text("equipamento"),
+  profissional: text("profissional"),
+  confianca: text("confianca").$type<"alta" | "moderada" | "baixa">().notNull(),
+  observadoEm: timestamp("observado_em", { mode: "date", withTimezone: true }).notNull().defaultNow(),
+  createdAt: timestamp("created_at", { mode: "date", withTimezone: true }).notNull().defaultNow(),
+}, (t) => [index("body_fat_user_method_date_idx").on(t.userId, t.metodo, t.observadoEm)]);
+
+export const progressPhotos = pgTable("progress_photo", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  assessmentId: uuid("assessment_id").references(() => bodyAssessments.id, { onDelete: "set null" }),
+  userId: uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  pose: text("pose").$type<"frente" | "costas" | "lateral_direita" | "lateral_esquerda">().notNull(),
+  objectKey: text("object_key").notNull(),
+  condicoes: text("condicoes"),
+  protocoloVersao: text("protocolo_versao").notNull().default("foto-v1"),
+  excluirEm: timestamp("excluir_em", { mode: "date", withTimezone: true }),
+  observadoEm: timestamp("observado_em", { mode: "date", withTimezone: true }).notNull().defaultNow(),
+  createdAt: timestamp("created_at", { mode: "date", withTimezone: true }).notNull().defaultNow(),
+}, (t) => [index("progress_photo_user_date_idx").on(t.userId, t.observadoEm)]);
+
+export const bodyProportionGoals = pgTable("body_proportion_goal", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  regiao: text("regiao").notNull(),
+  atualMm: integer("atual_mm").notNull(),
+  faixaMinMm: integer("faixa_min_mm").notNull(),
+  faixaMaxMm: integer("faixa_max_mm").notNull(),
+  metaCicloMm: integer("meta_ciclo_mm").notNull(),
+  direcao: text("direcao").$type<"aumentar" | "reduzir" | "manter">().notNull(),
+  confianca: text("confianca").$type<"alta" | "moderada" | "baixa">().notNull(),
+  justificativa: text("justificativa").notNull(),
+  metodologiaVersao: text("metodologia_versao").notNull(),
+  ativa: boolean("ativa").notNull().default(true),
+  createdAt: timestamp("created_at", { mode: "date", withTimezone: true }).notNull().defaultNow(),
+}, (t) => [index("body_goal_user_active_idx").on(t.userId, t.ativa)]);
+
+export const bodyVisualAnalyses = pgTable("body_visual_analysis", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  photoIds: jsonb("photo_ids").$type<string[]>().notNull(),
+  criterios: jsonb("criterios").$type<{ vTaper: number; ombros: number; cintura: number; equilibrio: number; simetria: number }>().notNull(),
+  gorduraMinBasisPoints: integer("gordura_min_basis_points").notNull(),
+  gorduraMaxBasisPoints: integer("gordura_max_basis_points").notNull(),
+  observacoes: jsonb("observacoes").$type<string[]>().notNull(),
+  limitacoes: jsonb("limitacoes").$type<string[]>().notNull(),
+  confianca: text("confianca").$type<"alta" | "moderada" | "baixa">().notNull(),
+  metodologiaVersao: text("metodologia_versao").notNull(),
+  modeloResolvido: text("modelo_resolvido").notNull(),
+  ativa: boolean("ativa").notNull().default(true),
+  createdAt: timestamp("created_at", { mode: "date", withTimezone: true }).notNull().defaultNow(),
+}, (t) => [index("body_visual_user_date_idx").on(t.userId, t.createdAt)]);
+
+export const weeklyBodyReviews = pgTable("weekly_body_review", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  periodoInicio: timestamp("periodo_inicio", { mode: "date", withTimezone: true }).notNull(),
+  periodoFim: timestamp("periodo_fim", { mode: "date", withTimezone: true }).notNull(),
+  scorecard: jsonb("scorecard").notNull(),
+  confiancas: jsonb("confiancas").notNull(),
+  evidencias: jsonb("evidencias").notNull(),
+  proposta: jsonb("proposta").notNull(),
+  estado: text("estado").$type<"pendente" | "aplicada" | "rejeitada" | "desfeita">().notNull().default("pendente"),
+  baselinePlanId: uuid("baseline_plan_id"),
+  appliedPlanId: uuid("applied_plan_id"),
+  rollbackPlanId: uuid("rollback_plan_id"),
+  metodologiaVersao: text("metodologia_versao").notNull(),
+  createdAt: timestamp("created_at", { mode: "date", withTimezone: true }).notNull().defaultNow(),
+}, (t) => [index("weekly_body_review_user_date_idx").on(t.userId, t.periodoFim)]);
+
 /**
  * Trilha de Decisão (specs/mvp-vertical.md, user stories 91–92, 116;
  * ADR 0006). Registra, por decisão de IA, o Recorte de Contexto
@@ -161,6 +270,22 @@ export const plans = pgTable("plan", {
  * momento do início; eventos append-only preservam a execução factual e já
  * formam a base do futuro outbox offline.
  */
+export const planExperiments = pgTable("plan_experiment", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  baselinePlanId: uuid("baseline_plan_id").notNull().references(() => plans.id),
+  experimentPlanId: uuid("experiment_plan_id").notNull().references(() => plans.id),
+  rollbackPlanId: uuid("rollback_plan_id").references(() => plans.id),
+  hipotese: text("hipotese").notNull(),
+  variaveis: jsonb("variaveis").$type<string[]>().notNull(),
+  criterioSucesso: text("criterio_sucesso").notNull(),
+  criterioInterrupcao: text("criterio_interrupcao").notNull(),
+  janelaMinimaSemanas: integer("janela_minima_semanas").notNull(),
+  estado: text("estado").$type<"ativo" | "sucesso" | "interrompido" | "revertido">().notNull().default("ativo"),
+  startedAt: timestamp("started_at", { mode: "date", withTimezone: true }).notNull().defaultNow(),
+  endedAt: timestamp("ended_at", { mode: "date", withTimezone: true }),
+}, (t) => [index("plan_experiment_user_state_idx").on(t.userId, t.estado)]);
+
 export const workoutSessions = pgTable("workout_session", {
   id: uuid("id").primaryKey().defaultRandom(),
   userId: uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),

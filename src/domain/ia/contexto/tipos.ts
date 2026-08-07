@@ -47,6 +47,7 @@ export type OperacaoIA =
   | "plano-inicial"
   | "refeicao-texto"
   | "refeicao-foto"
+  | "avaliacao-visual"
   | "importacao-historico";
 
 /**

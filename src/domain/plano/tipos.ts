@@ -1,3 +1,4 @@
+import type { ConfiancaCorporal, MetaProporcao } from "@/domain/medicoes";
 import type { PadraoMovimento } from "./exercicios";
 
 export interface ExercicioPlanejado {
@@ -43,6 +44,9 @@ export interface MetaNutricional {
 export interface PlanoGerado {
   regraVersao: string;
   modoConservador: boolean;
+  confiancaCorporal?: ConfiancaCorporal;
+  metasProporcao?: MetaProporcao[];
+  prioridadesCorporais?: string[];
   perfilVersao: number;
   bloco: BlocoTreino;
   nutricao: MetaNutricional;

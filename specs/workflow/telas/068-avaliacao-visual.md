@@ -12,7 +12,7 @@ Avaliar simetria e proporções por critérios separados, sem nota única.
 
 ## Elementos e comportamento
 
-Critérios do padrão Men's Physique separados (V-taper, ombros, cintura...); observações qualitativas; gordura visual como faixa probabilística; aviso de que nenhuma mudança se baseia só em foto (triangulação).
+Critérios separados para uma base natural, saudável e sustentável inspirada em Men's Physique (V-taper, ombros, cintura e equilíbrio do conjunto); observações qualitativas; gordura visual como faixa probabilística. Fotos brutas exigem consentimento específico e não são retransmitidas para operações em que a projeção derivada baste. Nenhuma mudança se baseia só em foto; condição temporária de palco não é referência permanente.
 
 ## Sequência
 

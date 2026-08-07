@@ -498,6 +498,40 @@ Breakpoints exatos são **não observáveis**. Escolha por quebra de conteúdo, 
 - Não reproduza títulos promocionais gigantes dentro do dashboard.
 - Não alegue precisão científica sem explicar cálculo ou fonte.
 
+## Implementação no Athlyt
+
+As regras deste documento não devem ser reconstruídas com classes Tailwind em
+cada página. A implementação tem duas camadas:
+
+1. `src/components/ui/`: primitivos de controle (Button, Card, Input, Badge),
+   sem conhecimento da anatomia de uma tela.
+2. `src/components/tela/`: padrões compostos do produto, já alinhados a este
+   documento e com contrato acessível coberto por testes unitários.
+
+Ao criar uma tela operacional, comece pelos componentes abaixo. Se o caso não
+couber, ajuste ou estenda o componente compartilhado em vez de copiar suas
+classes para a página; assim a correção beneficia todas as telas que usam o
+padrão.
+
+| Necessidade | Componente canônico |
+|---|---|
+| Coluna móvel centralizada | `TelaConteudo` |
+| Contexto + h1 + descrição | `CabecalhoTela` |
+| Ritmo e margem entre seções | `SecoesTela` |
+| CTA principal fixo com safe area | `BarraAcaoFixa` |
+| Lista densa em uma superfície | `CartaoLista` + `LinhasCartaoLista` + `LinhaCartaoLista` |
+| Cabeçalho de grupo/lista | `CabecalhoCartaoLista` |
+| Faixa compacta de dados/prescrição | `FaixaDados` |
+| Conteúdo secundário expansível | `Revelar` |
+| Participação energética por macro | `BarraMacro` |
+| Cores canônicas de nutrientes | `CORES_MACRO` |
+| Nota, ressalva ou origem do cálculo | `NotaTela` |
+
+`src/components/tela/__tests__/tela.unit.test.tsx` protege os contratos que não
+podem depender de inspeção visual: hierarquia de cabeçalhos, semântica de
+lista, rótulos de dados cromáticos e espaço reservado para CTA fixo. Validação
+visual em navegador continua necessária para densidade, truncamento e dobra.
+
 ## Unknowns and Assumptions
 
 1. **Fonte do app — Provável:** DM Sans ou família geométrica equivalente. `Macro Sans` e `DM Sans` foram confirmadas apenas no site por estilos computados. Inspecionar bundle/Figma para decisão definitiva.

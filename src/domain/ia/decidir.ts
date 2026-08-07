@@ -44,6 +44,8 @@ export interface EntradaDecisao<T> {
   instrucao: string;
   schema: z.ZodType<T>;
   ferramentas?: ToolSet;
+  /** Imagens pertinentes à operação; só são aceitas quando o Recorte e o consentimento as declaram. */
+  imagens?: readonly { dados: Uint8Array; mediaType: string }[];
   /** Teto de passos quando há Ferramentas de Leitura em jogo. */
   maxPassos?: number;
 }
@@ -103,11 +105,18 @@ async function decidirInternamente<T>(
   };
 
   try {
+    if (entrada.imagens?.length && !("fotos-corporais" in contexto.recorte || "foto-refeicao" in contexto.recorte)) {
+      throw new Error("Imagens omitidas por falta de consentimento para esta operação.");
+    }
+    const conteudo = renderizarContexto(contexto);
+    const mensagem = entrada.imagens?.length
+      ? { messages: [{ role: "user" as const, content: [{ type: "text" as const, text: conteudo }, ...entrada.imagens.map((imagem) => ({ type: "file" as const, data: imagem.dados, mediaType: imagem.mediaType }))] }] }
+      : { prompt: conteudo };
     const resposta = await generateText({
       model: openrouter().chatModel(modeloSolicitado),
       output: Output.object({ schema: entrada.schema }),
       system: entrada.instrucao,
-      prompt: renderizarContexto(contexto),
+      ...mensagem,
       tools: entrada.ferramentas,
       stopWhen: stepCountIs(entrada.maxPassos ?? 5),
       providerOptions: OPCOES_PROVEDOR,

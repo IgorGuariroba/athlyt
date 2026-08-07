@@ -12,7 +12,7 @@ Mostrar o que sustenta e o que enfraquece a conclusão da semana.
 
 ## Elementos e comportamento
 
-Lista de evidências a favor/contra com dados de origem; incerteza explícita; link para Trilha de Decisão.
+Lista de evidências a favor/contra com proveniência, método, protocolo, recência e qualidade; divergências permanecem visíveis em vez de serem fundidas. Mostra quais medidas, fotos, desempenho, recuperação e preferências sustentam cada Meta de Proporção Corporal; incerteza explícita e link para Trilha de Decisão.
 
 ## Sequência
 

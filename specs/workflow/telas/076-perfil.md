@@ -12,7 +12,7 @@ Consultar e corrigir dados do perfil sem apagar histórico.
 
 ## Elementos e comportamento
 
-Seções da triagem editáveis; alterações criam versão com data; badge do que está incompleto e o que destrava.
+Seções da triagem e Avaliação Corporal Inicial editáveis; alterações criam versão com data. Confiança e pendências por dimensão explicam o que cada dado destrava. Permite corrigir leitura improvável sem apagar o registro original, registrar nova Medição de Gordura Corporal com método/protocolo e alterar preferências de ênfase que alimentarão uma proposta de novas Metas de Proporção Corporal.
 
 ## Sequência
 

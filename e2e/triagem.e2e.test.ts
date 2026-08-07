@@ -76,6 +76,8 @@ test.describe("Triagem em cascata", () => {
     await expect(seletorPeso).toHaveAttribute("aria-valuenow", "82");
     await page.getByRole("button", { name: "Continuar" }).click();
 
+    await expect(page).toHaveURL("/triagem/avaliacao-corporal");
+    await page.getByRole("link", { name: "Fazer depois" }).click();
     await expect(page).toHaveURL("/triagem/objetivo");
 
     // O retorno restaura também controles customizados, como a régua de peso.
@@ -85,6 +87,8 @@ test.describe("Triagem em cascata", () => {
       page.getByRole("slider", { name: "Peso em quilogramas" }),
     ).toHaveAttribute("aria-valuenow", "82");
     await page.getByRole("button", { name: "Continuar" }).click();
+    await expect(page).toHaveURL("/triagem/avaliacao-corporal");
+    await page.getByRole("link", { name: "Fazer depois" }).click();
 
     await page.getByText("Recomposição corporal").click();
     await page.getByRole("button", { name: "Continuar" }).click();

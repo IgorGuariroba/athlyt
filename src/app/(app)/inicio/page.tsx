@@ -1,15 +1,18 @@
 import Link from "next/link";
-import { ArrowRight, CalendarDays, CheckCircle2, Dumbbell, Flame } from "lucide-react";
+import { ArrowRight, CalendarDays, CheckCircle2, Dumbbell, Flame, Ruler } from "lucide-react";
 import { auth } from "@/auth";
 import { sair } from "../../(auth)/actions";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
+import { CORES_MACRO } from "@/components/tela";
 import { obterPerfilVigente } from "@/domain/triagem/perfil";
 import { montarResumoTriagem } from "@/domain/triagem/resumo";
 import { obterPlanoAtivo } from "@/domain/plano/repositorio";
 import { listarHistoricoSessoes } from "@/domain/sessao/repositorio";
 import { escolherTreinoDoDia } from "@/domain/sessao/treino-do-dia";
+import { avaliarConfiancaCorporal } from "@/domain/medicoes";
+import { obterPanoramaCorporal } from "@/domain/medicoes/repositorio";
 
 /**
  * Casco da aba Início (telas 029–031). Os cartões de treino do dia,
@@ -20,10 +23,20 @@ import { escolherTreinoDoDia } from "@/domain/sessao/treino-do-dia";
 export default async function InicioPage() {
   const session = await auth();
   const userId = session?.user?.id;
-  const [perfil, planoAtivo, historico] = userId
-    ? await Promise.all([obterPerfilVigente(userId), obterPlanoAtivo(userId), listarHistoricoSessoes(userId)])
-    : [null, null, []];
+  const [perfil, planoAtivo, historico, panorama] = userId
+    ? await Promise.all([obterPerfilVigente(userId), obterPlanoAtivo(userId), listarHistoricoSessoes(userId), obterPanoramaCorporal(userId)])
+    : [null, null, [], { medicoes: [], pesos: [], gorduras: [], fotos: [], metas: [] }];
   const resumo = montarResumoTriagem(perfil?.respostas ?? {});
+  const respostas = perfil?.respostas ?? {};
+  const regioes = new Set(panorama.medicoes.flatMap((m) => [m.regiao, `${m.regiao}:${m.lado}`]));
+  const confiancaCorporal = avaliarConfiancaCorporal({
+    regioes,
+    possuiGordura: panorama.gorduras.length > 0,
+    possuiFotos: panorama.fotos.length > 0,
+    triagemTreinoCompleta: Boolean(respostas.experienciaTreino && respostas.diasDisponiveis?.length && respostas.equipamentos),
+    triagemNutricaoCompleta: Boolean(respostas.pesoKg && respostas.alturaCm && respostas.objetivoComposicao),
+    saudeInformada: respostas.lesoes !== undefined && respostas.condicoes !== undefined,
+  });
   const treinoDoDia = planoAtivo
     ? escolherTreinoDoDia(planoAtivo.conteudo.bloco.dias, historico)
     : null;
@@ -50,6 +63,78 @@ export default async function InicioPage() {
         Olá, {session?.user?.name ?? session?.user?.email}. Seus cartões de
         prioridade do dia vão aparecer aqui.
       </Card>
+
+      {Object.values(confiancaCorporal).some((estado) => estado !== "confiavel") ? (
+        <section
+          aria-labelledby="personalizacao-titulo"
+          className="overflow-hidden rounded-2xl border border-border bg-surface-container"
+        >
+          <div className="flex gap-3 p-5 pb-4">
+            <div className="flex size-11 shrink-0 items-center justify-center rounded-full bg-surface-container-high text-on-surface-strong">
+              <Ruler className="size-5" aria-hidden="true" />
+            </div>
+            <div>
+              <p className="mb-1 text-label-md font-semibold tracking-wide text-muted-foreground uppercase">
+                Personalização
+              </p>
+              <h2
+                id="personalizacao-titulo"
+                className="text-title-lg font-bold text-on-surface-strong"
+              >
+                Aprimore sua personalização
+              </h2>
+              <p className="mt-1 text-body-sm text-muted-foreground">
+                Cada dado libera somente a capacidade relacionada.
+              </p>
+            </div>
+          </div>
+
+          <ul className="grid gap-px bg-border">
+            {confiancaCorporal.composicaoCorporal !== "confiavel" ? (
+              <li className="bg-background px-5 py-4">
+                <strong className="block text-label-lg text-on-surface-strong">
+                  Estratégia corporal
+                </strong>
+                <span className="text-body-sm text-muted-foreground">
+                  Cintura, pescoço, quadril ou gordura medida.
+                </span>
+              </li>
+            ) : null}
+            {confiancaCorporal.proporcoes !== "confiavel" ? (
+              <li className="bg-background px-5 py-4">
+                <strong className="block text-label-lg text-on-surface-strong">
+                  Prioridades musculares
+                </strong>
+                <span className="text-body-sm text-muted-foreground">
+                  O conjunto completo de medidas.
+                </span>
+              </li>
+            ) : null}
+            {confiancaCorporal.simetriaBilateral !== "confiavel" ? (
+              <li className="bg-background px-5 py-4">
+                <strong className="block text-label-lg text-on-surface-strong">
+                  Simetria bilateral
+                </strong>
+                <span className="text-body-sm text-muted-foreground">
+                  Medidas dos dois lados confirmam assimetrias.
+                </span>
+              </li>
+            ) : null}
+          </ul>
+
+          <Button
+            asChild
+            size="lg"
+            variant="secondary"
+            className="h-14 w-full rounded-none text-base font-bold"
+          >
+            <Link href="/triagem/avaliacao-corporal">
+              Continuar avaliação
+              <ArrowRight className="size-5" aria-hidden="true" />
+            </Link>
+          </Button>
+        </section>
+      ) : null}
 
       {planoAtivo ? (
         <>
@@ -96,7 +181,7 @@ export default async function InicioPage() {
               </div>
               <div>
                 <div className="mb-1 flex items-center gap-2">
-                  <span className="size-2 rounded-full bg-[#78b990]" />
+                  <span className={`size-2 rounded-full ${CORES_MACRO.carboidratos}`} />
                   <p className="text-label-md font-semibold tracking-wide text-muted-foreground uppercase">
                     Plano Ativo
                   </p>
@@ -162,19 +247,19 @@ export default async function InicioPage() {
               aria-label={`${planoAtivo.conteudo.nutricao.proteinaG} gramas de proteína, ${planoAtivo.conteudo.nutricao.carboidratosG} gramas de carboidratos e ${planoAtivo.conteudo.nutricao.gordurasG} gramas de gorduras`}
             >
               <span
-                className="h-full bg-[#f18562]"
+                className={`h-full ${CORES_MACRO.proteina}`}
                 style={{
                   flex: planoAtivo.conteudo.nutricao.proteinaG * 4,
                 }}
               />
               <span
-                className="h-full bg-[#78b990]"
+                className={`h-full ${CORES_MACRO.carboidratos}`}
                 style={{
                   flex: planoAtivo.conteudo.nutricao.carboidratosG * 4,
                 }}
               />
               <span
-                className="h-full bg-[#f3cf6b]"
+                className={`h-full ${CORES_MACRO.gorduras}`}
                 style={{
                   flex: planoAtivo.conteudo.nutricao.gordurasG * 9,
                 }}
@@ -183,21 +268,21 @@ export default async function InicioPage() {
 
             <div className="grid grid-cols-3 gap-2 text-body-sm">
               <div>
-                <span className="mb-1 block size-2 rounded-full bg-[#f18562]" />
+                <span className={`mb-1 block size-2 rounded-full ${CORES_MACRO.proteina}`} />
                 <strong className="tabular-nums">
                   {planoAtivo.conteudo.nutricao.proteinaG} g
                 </strong>
                 <span className="block text-muted-foreground">Proteína</span>
               </div>
               <div>
-                <span className="mb-1 block size-2 rounded-full bg-[#78b990]" />
+                <span className={`mb-1 block size-2 rounded-full ${CORES_MACRO.carboidratos}`} />
                 <strong className="tabular-nums">
                   {planoAtivo.conteudo.nutricao.carboidratosG} g
                 </strong>
                 <span className="block text-muted-foreground">Carboidratos</span>
               </div>
               <div>
-                <span className="mb-1 block size-2 rounded-full bg-[#f3cf6b]" />
+                <span className={`mb-1 block size-2 rounded-full ${CORES_MACRO.gorduras}`} />
                 <strong className="tabular-nums">
                   {planoAtivo.conteudo.nutricao.gordurasG} g
                 </strong>
