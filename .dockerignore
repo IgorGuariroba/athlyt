@@ -1,0 +1,39 @@
+# Contexto de build da imagem de produção. Tudo que não é necessário
+# para `npm ci` + `npm run build` fica de fora: encurta o upload do
+# contexto e evita invalidar o cache de camadas por arquivos que não
+# influenciam o build.
+
+# dependências e artefatos reconstruídos dentro da imagem
+node_modules
+.next
+out
+build
+*.tsbuildinfo
+
+# controle de versão e ferramentas de agente
+.git
+.github
+.githooks
+.pi
+
+# segredos: as variáveis de produção vêm do painel do Dokploy, nunca
+# de um arquivo copiado para dentro da imagem
+.env
+.env.*
+!.env.example
+!.env.prod.example
+
+# testes e evidências
+e2e
+coverage
+playwright-report
+test-results
+blob-report
+evidencias-e2e
+.playwright-cli
+
+# documentação e material de apoio
+docs
+specs
+observability
+workflow-imagens-references
