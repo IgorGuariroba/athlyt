@@ -56,7 +56,12 @@ services:
     networks:
       - interna
 
-  app:
+  # Nome `web`, não `app`: na dokploy-network — compartilhada por
+  # todos os serviços do host — o Compose registra o nome do serviço
+  # como alias DNS. Dois projetos com um serviço `app` produzem duas
+  # entradas `app` na mesma rede, e o DNS do Docker passa a alternar
+  # entre containers de aplicações distintas.
+  web:
     build:
       context: ..
       dockerfile: Dockerfile

@@ -16,6 +16,6 @@
 # máquina e não à internet. Só troque APP_BIND se o proxy estiver
 # noutro host — e, nesse caso, feche a porta no firewall.
 services:
-  app:
+  web:
     ports:
       - "${APP_BIND:-127.0.0.1}:${APP_PORT:-3000}:3000"
