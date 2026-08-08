@@ -120,6 +120,13 @@ services:
       retries: 5
       start_period: 20s
     restart: unless-stopped
+    # O app fica em duas redes, e o provider Docker do Traefik escolhe
+    # um IP do container ao acaso entre elas. Quando cai na `interna`,
+    # que o Traefik não alcança, a resposta é 502 — intermitente e com
+    # o app saudável, o que joga a suspeita no lugar errado. O label
+    # diz qual rede usar e elimina o sorteio.
+    labels:
+      - traefik.docker.network=dokploy-network
     networks:
       - interna
       # Rede do Dokploy/Traefik. Declarada como externa: numa VPS sem
