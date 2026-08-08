@@ -9,7 +9,7 @@ O projeto está na fase de especificação. Consulte `specs/mvp-vertical.md`.
 ```bash
 npm run dev          # aplicação apenas — use com um Postgres já disponível
 npm run dev:banco    # sobe o Postgres em Docker e então a aplicação
-npm run stop         # encerra o Postgres local
+npm run stop         # derruba tudo (app + Postgres) — alias de app:down
 ```
 
 `dev` não sobe o banco de propósito: o CI e o Playwright fornecem o próprio
@@ -23,7 +23,8 @@ servidor de desenvolvimento. Um comando cobre o ciclo inteiro:
 
 ```bash
 npm run app:up       # Postgres + build limpo + sobe + espera responder
-npm run app:down     # derruba
+npm run app:down     # derruba tudo: app + Postgres
+npm run app:down:app # derruba só o app, deixando o Postgres no ar
 npm run app:status   # estado atual e URL pública
 npm run app:logs     # acompanha o log
 ```
