@@ -40,3 +40,38 @@ executa.
 
 O banco de desenvolvimento escuta a porta **5433** no host, para não colidir com
 um Postgres já instalado na 5432.
+
+## Deploy em servidor
+
+`docker/compose.prod.yml` descreve a topologia inteira — Postgres, migração,
+app e backup — e roda igual em qualquer host com Docker. Copie
+`.env.prod.example`, preencha e suba:
+
+```bash
+docker compose -f docker/compose.prod.yml --env-file .env.prod up -d
+```
+
+A ordem é garantida pelo próprio compose: o banco fica saudável, o serviço
+`migracao` aplica as migrações e sai, e só então o app sobe. Não existe janela
+em que código novo consulte schema antigo.
+
+### Quem alcança o app
+
+O compose **não publica porta no host**. Quem termina o TLS fala com o
+container pela rede do Docker:
+
+| Host | Proxy | Porta publicada |
+| --- | --- | --- |
+| Dokploy | Traefik, via `dokploy-network` | nenhuma |
+| VPS avulsa | Caddy/nginx no próprio host | overlay abaixo |
+
+No segundo caso o proxy é um processo do host e precisa de uma porta:
+
+```bash
+docker compose -f docker/compose.prod.yml \
+               -f docker/compose.prod.porta.yml --env-file .env.prod up -d
+```
+
+O overlay publica em `127.0.0.1:3000` (ajustável por `APP_BIND`/`APP_PORT`).
+Usá-lo no Dokploy só disputaria a 3000 com o painel, e o deploy falha com
+`port is already allocated`.
