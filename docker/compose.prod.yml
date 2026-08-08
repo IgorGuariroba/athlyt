@@ -100,11 +100,14 @@ services:
     depends_on:
       migracao:
         condition: service_completed_successfully
-    # Publicado apenas no loopback: quem termina o TLS (Traefik do
-    # Dokploy, ou um Caddy/nginx próprio) alcança a porta; a internet
-    # não. Sobrescreva APP_BIND se o proxy estiver noutro host.
-    ports:
-      - "${APP_BIND:-127.0.0.1}:${APP_PORT:-3000}:3000"
+    # Sem `ports`: no Dokploy quem alcança o container é o Traefik,
+    # pela dokploy-network, e publicar a porta no host só cria
+    # conflito — o próprio painel do Dokploy ocupa a 3000, e o deploy
+    # falhava com "port is already allocated".
+    #
+    # Numa VPS sem Dokploy, o proxy local precisa da porta: suba com
+    # `-f docker/compose.prod.yml -f docker/compose.prod.porta.yml`,
+    # que a publica no loopback.
     # A imagem não tem curl; o node embutido já traz fetch.
     healthcheck:
       test:
@@ -119,9 +122,9 @@ services:
     restart: unless-stopped
     networks:
       - interna
-      # Rede do Dokploy/Traefik. Declarada como externa e opcional:
-      # numa VPS sem Dokploy, remova esta linha e o bloco
-      # correspondente em `networks`.
+      # Rede do Dokploy/Traefik. Declarada como externa: numa VPS sem
+      # Dokploy, remova esta linha e o bloco correspondente em
+      # `networks`.
       - dokploy-network
 
   # Dump diário do Postgres para o bucket S3/R2, com expurgo por

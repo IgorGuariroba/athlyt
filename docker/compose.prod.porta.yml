@@ -1,0 +1,21 @@
+# Publica a porta do app no host — overlay opcional do compose de
+# produção.
+#
+#   docker compose -f docker/compose.prod.yml \
+#                  -f docker/compose.prod.porta.yml up -d
+#
+# Serve à VPS sem Dokploy, em que quem termina o TLS é um Caddy/nginx
+# rodando no próprio host e portanto precisa alcançar o app por uma
+# porta publicada.
+#
+# No Dokploy este arquivo NÃO deve ser usado: lá o Traefik fala com o
+# container pela dokploy-network, e publicar a porta só disputa a 3000
+# com o painel.
+#
+# O bind padrão é o loopback: o app fica acessível ao proxy da mesma
+# máquina e não à internet. Só troque APP_BIND se o proxy estiver
+# noutro host — e, nesse caso, feche a porta no firewall.
+services:
+  app:
+    ports:
+      - "${APP_BIND:-127.0.0.1}:${APP_PORT:-3000}:3000"
