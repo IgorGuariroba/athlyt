@@ -3,8 +3,8 @@
 # Ciclo de vida do app em modo produção na máquina local — a mesma
 # instância servida pelo Tailscale Funnel na porta 3000.
 #
-#   npm run app:up      build limpo + sobe + espera responder
-#   npm run app:down    derruba
+#   npm run app:up      banco + build limpo + sobe + espera responder
+#   npm run app:down    derruba app e banco (simétrico ao up)
 #   npm run app:status   estado atual
 #   npm run app:logs     acompanha o log
 #
@@ -115,6 +115,13 @@ subir() {
   exit 1
 }
 
+derrubar_banco() {
+  # Simetria com o `up`, que sobe o banco antes do build: sem isto o
+  # Postgres fica pendurado sem app depois de um `down`.
+  echo "[app] derrubando o banco"
+  docker compose -f docker/compose.yml down
+}
+
 estado_publico() {
   # A URL do Funnel é o que se usa no celular; mostrá-la evita ter de
   # consultar `tailscale serve status` à parte.
@@ -140,11 +147,12 @@ estado() {
 
 case "${1:-}" in
   up) subir ;;
-  down) derrubar ;;
+  down) derrubar; derrubar_banco ;;
+  down-app) derrubar ;;
   status) estado ;;
   logs) tail -f "$LOG" ;;
   *)
-    echo "uso: $0 {up|down|status|logs}" >&2
+    echo "uso: $0 {up|down|down-app|status|logs}" >&2
     exit 1
     ;;
 esac
