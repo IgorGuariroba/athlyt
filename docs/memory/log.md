@@ -31,3 +31,7 @@
 ## 2026-08-08
 
 - Criada [porta-publicada-colide-com-o-proxy.md](porta-publicada-colide-com-o-proxy.md): o primeiro deploy no Dokploy falhou em `port is already allocated` depois de o banco subir e as migrações rodarem — o `ports` do compose de produção disputava a 3000 com o painel, que é quem ocupa a porta no host. Registrada porque a falha chega tarde, com o estado meio construído, e porque o `ports` é sempre indevido sob um proxy que fala com o container pela rede interna. Fonte: PR #67.
+
+## 2026-08-10
+
+- Criada [alias-de-servico-colide-em-rede-compartilhada.md](alias-de-servico-colide-em-rede-compartilhada.md): logo após o primeiro deploy do Athlyt, o login de outro serviço da VPS passou a falhar de forma intermitente com `28P01`. A causa não era conflito de porta (hipótese inicial), e sim o serviço `db` do Athlyt colidindo com o `db` do outro projeto na `dokploy-network`: o DNS do Docker resolvia o alias para dois IPs em round-robin e o app vizinho autenticava contra o Postgres errado. Serviço renomeado para `athlyt-db`. Registrada porque o dano recai sobre um serviço que não mudou, e porque a classe do erro do banco (`28P01` vs `ECONNREFUSED`) é o que separa "banco errado" de "problema de topologia". Fonte: incidente de 2026-08-10.

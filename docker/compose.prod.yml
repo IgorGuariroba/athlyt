@@ -11,7 +11,13 @@
 name: athlyt-prod
 
 services:
-  db:
+  # Nome deliberadamente qualificado, não `db`: os serviços do compose
+  # ganham alias de DNS na rede a que pertencem, e a `dokploy-network` é
+  # compartilhada com os outros projetos do painel. Dois containers com o
+  # alias `db` fazem o Docker responder em round-robin, e o app vizinho
+  # cai num Postgres que não conhece as credenciais dele — falha
+  # intermitente com SQLSTATE 28P01. Alias único elimina a ambiguidade.
+  athlyt-db:
     image: postgres:16
     environment:
       POSTGRES_USER: ${POSTGRES_USER:?defina POSTGRES_USER}
@@ -21,7 +27,7 @@ services:
       - athlyt-prod-db:/var/lib/postgresql/data
     # Sem porta publicada: o banco só é alcançável pela rede interna
     # do compose. Acesso administrativo se faz por `docker compose
-    # exec db psql`, não expondo a 5432 à internet.
+    # exec athlyt-db psql`, não expondo a 5432 à internet.
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
       interval: 5s
@@ -44,13 +50,13 @@ services:
       context: ..
       dockerfile: Dockerfile
       args:
-        DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+        DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@athlyt-db:5432/${POSTGRES_DB}
     image: athlyt-app:${APP_TAG:-latest}
     command: ["node", "scripts/migrar.mjs"]
     environment:
-      DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+      DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@athlyt-db:5432/${POSTGRES_DB}
     depends_on:
-      db:
+      athlyt-db:
         condition: service_healthy
     restart: "no"
     networks:
@@ -64,11 +70,11 @@ services:
         # O build importa `src/db/client.ts`, que exige a variável.
         # O valor não precisa ser alcançável em build time — o cliente
         # do postgres.js só abre conexão na primeira query.
-        DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+        DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@athlyt-db:5432/${POSTGRES_DB}
     image: athlyt-app:${APP_TAG:-latest}
     environment:
       NODE_ENV: production
-      DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+      DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@athlyt-db:5432/${POSTGRES_DB}
 
       # Auth.js. AUTH_URL precisa ser o domínio público real: sem ele
       # o callback do Google é montado com o host interno e a resposta
@@ -139,7 +145,7 @@ services:
       context: ./backup
       dockerfile: Dockerfile
     environment:
-      POSTGRES_HOST: db
+      POSTGRES_HOST: athlyt-db
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
@@ -158,7 +164,7 @@ services:
       BACKUP_S3_BUCKET: ${BACKUP_S3_BUCKET:?defina BACKUP_S3_BUCKET}
       BACKUP_S3_PREFIXO: ${BACKUP_S3_PREFIXO:-athlyt/postgres}
     depends_on:
-      db:
+      athlyt-db:
         condition: service_healthy
     restart: unless-stopped
     networks:
