@@ -57,6 +57,10 @@ em que código novo consulte schema antigo.
 
 ### Quem alcança o app
 
+O serviço do app chama-se **`web`** — é esse o nome a informar ao proxy da
+plataforma. `app` seria colisão: a rede do Dokploy é compartilhada por todos os
+serviços do host e o Compose registra o nome do serviço como alias DNS nela.
+
 O compose **não publica porta no host**. Quem termina o TLS fala com o
 container pela rede do Docker:
 
