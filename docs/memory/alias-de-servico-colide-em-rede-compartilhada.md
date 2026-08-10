@@ -88,6 +88,26 @@ do banco antes de suspeitar da rede.** `ECONNREFUSED`/timeout apontam para
 topologia (porta, rota, serviço morto); `28P01` prova o contrário — chegou-se a
 um Postgres de verdade, e a pergunta certa passa a ser *qual*.
 
+## Renomear serviço quebra o vínculo de domínio no painel
+
+O Dokploy guarda o domínio **atrelado ao nome do serviço**, fora do
+repositório. Renomear no compose invalida esse vínculo e o deploy aborta antes
+de construir:
+
+```
+Domain athlyt.bfincont.com.br is attached to service db which does not exist in the compose
+```
+
+Duas consequências. A primeira: ao renomear um serviço, **atualize o domínio no
+painel no mesmo movimento** — a fonte da verdade está em dois lugares, e só um
+deles é versionado. A segunda é o que a mensagem denuncia de graça: o domínio
+público apontava para `db`, o Postgres, e não para o serviço web. Um erro de
+roteamento que não dava sintoma enquanto o nome existia, porque o painel só
+valida a *existência* do serviço, nunca se ele é o que atende HTTP.
+
+Ao apontar um domínio, confira o serviço alvo explicitamente: expor um banco
+pelo proxy é falha de segurança, não só rota errada.
+
 # Evidência
 
 O painel do Dokploy listava `athlyt-athlyt-t9oeii-db-1` e
