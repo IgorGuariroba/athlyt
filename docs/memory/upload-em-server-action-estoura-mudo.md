@@ -11,6 +11,9 @@ sources:
   - id: sessao-fotos-2026-08-03
     resource: "src/app/(auth)/triagem/avaliacao-corporal/fotos/, next.config.ts, log de produção da porta 3000"
     title: "Relato de que Enviar para storage privado e Continuar não faziam nada"
+  - id: sessao-fotos-fatiado-2026-08-12
+    resource: "src/app/(auth)/triagem/avaliacao-corporal/fotos/, e2e/fotos-r2.e2e.test.ts, evidencias-e2e/fotos-quatro-poses-envio-fatiado.webm"
+    title: "Aviso 'envie em duas etapas' ao tentar mandar as quatro poses de uma vez"
 ---
 
 # Contexto
@@ -33,7 +36,26 @@ Uma tela que promete "até 10 MB por foto" e aceita quatro arquivos contradiz o 
 
 Aumentar `experimental.serverActions.bodySizeLimit` sozinho apenas move o teto: fotos de celular passaram de 3 a 8 MB e continuarão crescendo. O que estabiliza o transporte é **reduzir a imagem no navegador antes do envio** (`createImageBitmap` com `imageOrientation: "from-image"` → canvas → `toBlob("image/webp")`), com o limite do servidor como rede de segurança para navegadores sem esse suporte. A conversão no cliente é de transporte apenas; o recorte canônico — remoção de metadados e regravação — permanece no servidor, que não pode confiar no que o cliente enviou.
 
+## Desdobramento: o teto agregado não pertence ao fluxo
+
+Mesmo com redução no cliente e `bodySizeLimit` de 12 MB, quatro fotos em um único corpo voltaram a bater no teto. A tela então exibia "As fotos somam mais do que o envio suporta. Envie em duas etapas" — um limite de transporte transformado em tarefa do usuário: escolher, enviar, escolher de novo, enviar de novo.[^sessao-fotos-fatiado-2026-08-12]
+
+Quando o corpo cresce com a quantidade de itens, o teto é acidental: some se cada item virar uma requisição. Fatiar o envio (uma Server Action por pose, disparada em sequência pelo cliente) mantém cada corpo pequeno **por construção**, independentemente de quantas fotos o usuário escolher. Consequências de projeto:
+
+- a action passa a **retornar** erro em vez de `redirect`, porque quem coordena a sequência é o cliente e só ele sabe quando navegar;
+- efeitos que valem para o conjunto e não para o item — aqui, o registro de consentimento — precisam de marcação explícita na primeira chamada, senão viram N registros de um único ato;
+- falha no meio deixa as anteriores gravadas: a mensagem deve dizer a partir de qual item reenviar, em vez de mandar refazer tudo;
+- o botão ganha progresso real ("Enviando 3 de 4…"), que só existe porque o envio é divisível.
+
+## Desdobramento: o aviso precisa nascer onde a ação acontece
+
+O mesmo relato trouxe um segundo sintoma idêntico ao de "botão inerte": a mensagem de erro existia, mas no **topo do formulário**, e o botão de envio ficava a várias dobras de distância numa tela com quatro seletores de arquivo, guia, retenção e consentimento. O usuário tocou em enviar várias vezes sem ver retorno algum e só encontrou o aviso ao rolar de volta ao topo por conta própria.[^sessao-fotos-fatiado-2026-08-12]
+
+Um aviso fora do campo de visão é indistinguível de aviso inexistente. Duas garantias precisam vir juntas, e por isso moram no componente `@/components/tela/aviso-acao` em vez de em cada tela: o aviso é renderizado **adjacente ao controle que o originou**, e ao surgir ele se traz ao campo de visão (`scrollIntoView`) com foco programático — o que também faz o leitor de tela parar nele quando o usuário já navegou para outro ponto.
+
 # Aplicação futura
+
+Antes de pedir ao usuário que divida um envio, pergunte se o cliente pode dividi-lo sozinho. Mensagem de limite agregado é quase sempre sinal de que a granularidade da requisição está errada.
 
 Ao construir qualquer envio de arquivo por Server Action:
 
@@ -48,4 +70,7 @@ Diante de "cliquei e não aconteceu nada" em tela com upload, leia o log do serv
 
 Com a foto reduzida no cliente, um JPEG de 4,2 MB completou o ciclo na URL de produção: redirecionamento para `?sucesso=Fotos%20armazenadas%20de%20forma%20privada.` e navegação normal para `/triagem/objetivo`, sem nenhuma nova ocorrência de "Body exceeded" no log.[^sessao-fotos-2026-08-03]
 
+O E2E `envia as quatro poses em uma única interação` (`e2e/fotos-r2.e2e.test.ts`) sobe quatro JPEGs de 1400×2400 contra o R2 real, conclui com "Fotos armazenadas de forma privada", sem alerta de erro, e lista os quatro links assinados — cenário que antes exigia dois envios manuais.[^sessao-fotos-fatiado-2026-08-12]
+
 [^sessao-fotos-2026-08-03]: Consulte `sources` com id `sessao-fotos-2026-08-03`.
+[^sessao-fotos-fatiado-2026-08-12]: Consulte `sources` com id `sessao-fotos-fatiado-2026-08-12`.

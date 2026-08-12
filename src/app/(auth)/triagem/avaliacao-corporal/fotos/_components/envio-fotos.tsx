@@ -1,8 +1,10 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { ChevronDown, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { AvisoAcao } from "@/components/tela/aviso-acao";
 
 /**
  * Fotos de celular chegam com 3 a 8 MB cada, e quatro poses somam
@@ -16,19 +18,23 @@ import { Button } from "@/components/ui/button";
  * A conversão aqui é só de transporte. O recorte canônico continua no
  * servidor (`prepararFotoCorporal`), que remove metadados e regrava em
  * WebP: o cliente não é fonte de confiança.
+ *
+ * O envio é fatiado: uma chamada de Server Action por pose, em
+ * sequência. Quatro fotos em um único corpo estouravam o
+ * `bodySizeLimit` e a tela pedia ao usuário que "enviasse em duas
+ * etapas" — um detalhe de transporte vazando para o fluxo. Com uma
+ * foto por requisição o corpo é pequeno por construção e o usuário
+ * escolhe as quatro de uma vez.
  */
 
 const LADO_MAXIMO = 1600;
 const QUALIDADE = 0.85;
 
-/** Acima disso o corpo estoura mesmo depois da redução — avisa em vez de falhar mudo. */
-const LIMITE_ENVIO_BYTES = 8 * 1024 * 1024;
-
 const POSES = [
-  { nome: "frente", rotulo: "Frente", dica: "Braços levemente afastados do tronco, palmas para frente." },
-  { nome: "costas", rotulo: "Costas", dica: "De costas para a câmera, mesma distância e mesmo enquadramento." },
-  { nome: "lateralDireita", rotulo: "Lateral direita", dica: "Perfil direito, braços soltos ao lado do corpo." },
-  { nome: "lateralEsquerda", rotulo: "Lateral esquerda", dica: "Perfil esquerdo, na mesma postura do lado direito." },
+  { nome: "frente", pose: "frente", rotulo: "Frente", dica: "Braços levemente afastados do tronco, palmas para frente." },
+  { nome: "costas", pose: "costas", rotulo: "Costas", dica: "De costas para a câmera, mesma distância e mesmo enquadramento." },
+  { nome: "lateralDireita", pose: "lateral_direita", rotulo: "Lateral direita", dica: "Perfil direito, braços soltos ao lado do corpo." },
+  { nome: "lateralEsquerda", pose: "lateral_esquerda", rotulo: "Lateral esquerda", dica: "Perfil esquerdo, na mesma postura do lado direito." },
 ] as const;
 
 const GUIA = [
@@ -78,64 +84,83 @@ async function reduzirParaEnvio(arquivo: File): Promise<File> {
 export function EnvioFotos({
   action,
 }: {
-  action: (fd: FormData) => Promise<void>;
+  action: (fd: FormData) => Promise<{ ok: true } | { ok: false; erro: string }>;
 }) {
+  const router = useRouter();
   const [erro, setErro] = useState<string | null>(null);
-  const [preparando, setPreparando] = useState(false);
-  const [enviando, iniciarEnvio] = useTransition();
-  const ocupado = preparando || enviando;
+  const [progresso, setProgresso] = useState<{ feitas: number; total: number } | null>(null);
+  const [enviando, setEnviando] = useState(false);
+  const [atualizando, iniciarAtualizacao] = useTransition();
+  const ocupado = enviando || atualizando;
 
   async function aoEnviar(evento: React.FormEvent<HTMLFormElement>) {
     evento.preventDefault();
     const formulario = evento.currentTarget;
     const dados = new FormData(formulario);
     setErro(null);
-    setPreparando(true);
+
+    const escolhidas = POSES.flatMap(({ nome, pose, rotulo }) => {
+      const arquivo = dados.get(nome);
+      return arquivo instanceof File && arquivo.size > 0
+        ? [{ pose, rotulo, arquivo }]
+        : [];
+    });
+
+    if (escolhidas.length === 0) {
+      setErro("Selecione ao menos uma foto.");
+      return;
+    }
+
+    const condicoes = String(dados.get("condicoes") ?? "");
+    const retencaoDias = String(dados.get("retencaoDias") ?? "0");
+    const consentimento = String(dados.get("consentimentoArmazenamento") ?? "");
+
+    setEnviando(true);
+    setProgresso({ feitas: 0, total: escolhidas.length });
 
     try {
-      let total = 0;
-      let escolhidas = 0;
-
-      for (const { nome } of POSES) {
-        const arquivo = dados.get(nome);
-        if (!(arquivo instanceof File) || arquivo.size === 0) {
-          dados.delete(nome);
-          continue;
-        }
-        escolhidas += 1;
+      for (const [indice, { pose, rotulo, arquivo }] of escolhidas.entries()) {
         const reduzido = await reduzirParaEnvio(arquivo);
-        total += reduzido.size;
-        dados.set(nome, reduzido, reduzido.name);
+        const corpo = new FormData();
+        corpo.set("pose", pose);
+        corpo.set("foto", reduzido, reduzido.name);
+        corpo.set("condicoes", condicoes);
+        corpo.set("retencaoDias", retencaoDias);
+        corpo.set("consentimentoArmazenamento", consentimento);
+        // Um único ato de consentir para a sequência inteira.
+        if (indice === 0) corpo.set("registrarConsentimento", "sim");
+
+        const resultado = await action(corpo);
+        if (!resultado.ok) {
+          // As anteriores já estão salvas: dizer qual falhou evita que
+          // o usuário reenvie tudo do zero.
+          setErro(
+            indice === 0
+              ? resultado.erro
+              : `${resultado.erro} As ${indice} primeiras fotos já foram salvas; reenvie a partir de "${rotulo}".`,
+          );
+          return;
+        }
+        setProgresso({ feitas: indice + 1, total: escolhidas.length });
       }
 
-      if (escolhidas === 0) {
-        setErro("Selecione ao menos uma foto.");
-        return;
-      }
-      if (total > LIMITE_ENVIO_BYTES) {
-        setErro("As fotos somam mais do que o envio suporta. Envie em duas etapas.");
-        return;
-      }
-
-      iniciarEnvio(async () => {
-        await action(dados);
+      formulario.reset();
+      iniciarAtualizacao(() => {
+        router.replace(
+          "/triagem/avaliacao-corporal/fotos?sucesso=Fotos armazenadas de forma privada.",
+        );
+        router.refresh();
       });
+    } catch {
+      setErro("Falha de conexão durante o envio. Tente novamente.");
     } finally {
-      setPreparando(false);
+      setEnviando(false);
+      setProgresso(null);
     }
   }
 
   return (
     <form onSubmit={aoEnviar} className="flex flex-1 flex-col gap-6">
-      {erro ? (
-        <p
-          role="alert"
-          className="rounded-xl border border-error/40 bg-surface-container px-4 py-3 text-body-sm text-error"
-        >
-          {erro}
-        </p>
-      ) : null}
-
       <section className="overflow-hidden rounded-2xl border border-border bg-surface-container">
         <div className="flex flex-col gap-1.5 px-5 pt-4 pb-3">
           <strong className="text-title text-on-surface-strong">
@@ -253,10 +278,15 @@ export function EnvioFotos({
         </p>
       </div>
 
+      {/* O aviso fica colado ao botão: é aqui que o usuário está
+          olhando quando envia, e no topo do formulário ele passaria
+          despercebido nesta tela longa. */}
+      {erro ? <AvisoAcao tipo="erro">{erro}</AvisoAcao> : null}
+
       <Button size="lg" type="submit" disabled={ocupado} className="h-12 w-full">
-        {preparando
-          ? "Preparando fotos…"
-          : enviando
+        {progresso
+          ? `Enviando ${progresso.feitas + 1} de ${progresso.total}…`
+          : ocupado
             ? "Enviando…"
             : "Enviar para storage privado"}
       </Button>

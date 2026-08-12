@@ -1,12 +1,13 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { AlertCircle, ChevronLeft, CheckCircle2, Lock } from "lucide-react";
+import { ChevronLeft, Lock } from "lucide-react";
+import { AvisoAcao } from "@/components/tela/aviso-acao";
 import { auth } from "@/auth";
 import { Button } from "@/components/ui/button";
 import { obterPanoramaCorporal } from "@/domain/medicoes/repositorio";
 import { configuracaoR2, criarStorageR2 } from "@/infra/storage";
 import {
-  enviarFotosCorporais,
+  enviarFotoCorporal,
   excluirFotoCorporal,
   excluirTodasFotosCorporais,
 } from "./actions";
@@ -71,24 +72,12 @@ export default async function FotosAvaliacaoPage({
         </p>
       </header>
 
-      {mensagens.erro ? (
-        <p
-          role="alert"
-          className="flex items-start gap-3 rounded-xl border border-error/40 bg-surface-container px-4 py-3 text-body-sm text-error"
-        >
-          <AlertCircle className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
-          {mensagens.erro}
-        </p>
-      ) : null}
-
+      {/* Estes avisos vêm de ações da lista de fotos, que fica abaixo
+          do formulário; `AvisoAcao` traz a mensagem ao campo de visão
+          em vez de esperar que o usuário role até o topo. */}
+      {mensagens.erro ? <AvisoAcao tipo="erro">{mensagens.erro}</AvisoAcao> : null}
       {mensagens.sucesso ? (
-        <p
-          role="status"
-          className="flex items-start gap-3 rounded-xl border border-success/40 bg-surface-container px-4 py-3 text-body-sm text-success"
-        >
-          <CheckCircle2 className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
-          {mensagens.sucesso}
-        </p>
+        <AvisoAcao tipo="sucesso">{mensagens.sucesso}</AvisoAcao>
       ) : null}
 
       {!config ? (
@@ -105,7 +94,7 @@ export default async function FotosAvaliacaoPage({
           </div>
         </section>
       ) : (
-        <EnvioFotos action={enviarFotosCorporais} />
+        <EnvioFotos action={enviarFotoCorporal} />
       )}
 
       {urls.length ? (
