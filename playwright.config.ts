@@ -17,10 +17,39 @@ loadEnv({ path: ".env" });
  */
 const baseURL = process.env.PLAYWRIGHT_BASE_URL ?? "http://localhost:3000";
 
+/**
+ * O servidor precisa subir na porta que a suíte de fato acessa. Com a
+ * porta fixa no comando, apontar `PLAYWRIGHT_BASE_URL` para outra
+ * porta fazia o Playwright esperar 30 s por uma URL onde nada subiria.
+ */
+const porta = new URL(baseURL).port || "3000";
+
+/**
+ * `E2E_COMANDO` troca o servidor sob teste sem editar este arquivo.
+ *
+ * O padrão é `next dev` porque localmente o ciclo de escrever teste e
+ * rodar de novo não deve exigir build a cada alteração. O CI passa
+ * `npx next start`, servindo o build que o job `build` já produziu: em
+ * dev cada rota compila na primeira visita com o cronômetro do teste
+ * correndo, e a suíte inteira caiu de 2,0 min para 52 s ao trocar
+ * apenas isto (scripts/medir-e2e.sh).
+ */
+const comandoServidor =
+  process.env.E2E_COMANDO ?? `npx next dev -p ${porta}`;
+
 export default defineConfig({
   testDir: "./e2e",
-  fullyParallel: false,
-  workers: 1,
+  /**
+   * Sequencial por padrão. Medi 4 workers: a suíte cai para ~40 s, mas
+   * de 1 a 4 testes falham de forma variável a cada rodada — os seeds
+   * criam usuários distintos, porém os fluxos disputam o mesmo
+   * Postgres e o mesmo servidor. Trocar 12 s por falha intermitente
+   * corrói o sinal do CI, que é o único motivo de o job existir.
+   * `E2E_WORKERS` mantém o experimento reproduzível sem torná-lo o
+   * padrão.
+   */
+  fullyParallel: Boolean(process.env.E2E_WORKERS),
+  workers: Number(process.env.E2E_WORKERS ?? 1),
   reporter: [["list"], ["html", { open: "never" }]],
   use: {
     baseURL,
@@ -34,7 +63,7 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: "npm run dev",
+    command: comandoServidor,
     url: baseURL,
     reuseExistingServer: true,
     timeout: 30_000,
