@@ -34,6 +34,32 @@ test("envia, lê por URL assinada e exclui foto corporal privada", async ({ page
 });
 
 /**
+ * O comportamento do aviso está fixado em unidade
+ * (`src/components/tela/__tests__/aviso-acao.unit.test.tsx`). Aqui
+ * interessa a integração com a tela real: com o formulário rolado até
+ * o botão — como o usuário o encontra — a mensagem precisa chegar ao
+ * campo de visão sem rolagem manual.
+ */
+test("mostra o erro de envio sem exigir rolagem até o topo", async ({ page, context }) => {
+  const email = `e2e-foto-aviso-${Date.now()}@example.com`;
+  await allowEmail(email);
+  const { cookie } = await seedAuthenticatedSession(email);
+  await context.addCookies([cookie]);
+
+  await page.goto("/triagem/avaliacao-corporal/fotos");
+  const botao = page.getByRole("button", { name: "Enviar para storage privado" });
+  await botao.scrollIntoViewIfNeeded();
+  await page.getByLabel(/Autorizo armazenar/).check();
+  // Sem nenhuma foto escolhida o envio falha na validação do cliente:
+  // basta para observar onde o aviso aparece.
+  await botao.click();
+
+  const aviso = page.getByRole("alert").filter({ hasText: "Selecione ao menos uma foto." });
+  await expect(aviso).toBeVisible();
+  await expect(aviso).toBeInViewport();
+});
+
+/**
  * As quatro poses juntas estouravam o corpo da Server Action e a tela
  * pedia "envie em duas etapas". Hoje o cliente fatia o envio em uma
  * chamada por pose; este teste guarda esse comportamento.
