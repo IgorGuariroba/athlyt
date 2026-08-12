@@ -89,13 +89,25 @@ jobs:
         env:
           AUTH_SECRET: ci-build-secret
           DATABASE_URL: postgres://athlyt:athlyt@localhost:5432/athlyt
+      # O E2E roda contra este mesmo build em vez de recompilar sob
+      # demanda em `next dev`. `.next/cache` fica de fora: são ~350 MB
+      # de cache de compilação que o servidor não lê em produção.
+      - name: Publicar o build para o E2E
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-producao
+          path: |
+            .next
+            !.next/cache
+          retention-days: 1
+          include-hidden-files: true
 
   # E2E real em navegador (viewport mobile) contra Postgres efêmero,
   # conforme specs/mvp-vertical.md > Testing Decisions.
   e2e:
     name: E2E mobile
     runs-on: ubuntu-latest
-    needs: [estatica, unidade, integracao]
+    needs: [estatica, unidade, integracao, build]
     services:
       postgres:
         image: postgres:16
@@ -114,6 +126,11 @@ jobs:
       AUTH_SECRET: ci-e2e-secret
       AUTH_URL: http://localhost:3000
       IA_AMBIENTE: desenvolvimento
+      # Serve o build de produção baixado do job `build`. Em `next dev`
+      # cada rota compila na primeira visita, com o cronômetro do teste
+      # correndo: a suíte media 2,0 min, contra 52 s aqui — e os picos
+      # eram compilação, não fluxo (a Triagem caía de 32 s para 15 s).
+      E2E_COMANDO: npx next start -p 3000
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -121,6 +138,10 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: npm
       - run: npm ci
+      - uses: actions/download-artifact@v4
+        with:
+          name: build-producao
+          path: .next
       - run: npx playwright install --with-deps chromium
       - run: npm run db:migrate
       - run: npm run test:e2e

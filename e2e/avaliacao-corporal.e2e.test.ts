@@ -161,7 +161,12 @@ test.describe("Avaliação Corporal Inicial", () => {
     await page.goto(
       "/triagem/avaliacao-corporal/essenciais?erro=Informe+a+medida+em+cent%C3%ADmetros%2C+entre+10+e+250.&falhas=cintura&cintura=4&pescoco=38&quadril=98",
     );
-    await expect(page.getByRole("alert")).toContainText("Informe a medida");
+    // O route announcer do Next também é um `alert` (vazio): filtrar
+    // por texto isola o aviso da tela e mantém o seletor válido tanto
+    // em dev quanto no build de produção.
+    await expect(
+      page.getByRole("alert").filter({ hasText: /\S/ }),
+    ).toContainText("Informe a medida");
     await expect(page.getByLabel("Pescoço")).toHaveValue("38");
     await expect(page.getByLabel("Quadril")).toHaveValue("98");
 
