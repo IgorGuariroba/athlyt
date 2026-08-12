@@ -32,12 +32,12 @@ const nextConfig: NextConfig = {
   turbopack: {},
 
   /**
-   * O envio de fotos corporais é uma Server Action com quatro arquivos
-   * (`/triagem/avaliacao-corporal/fotos`). O padrão de 1 MB rejeitava o
-   * corpo com 413 antes de a action rodar: nenhum erro chegava à tela e
-   * o botão parecia inerte. O cliente já reduz cada foto antes do envio
-   * (`_components/envio-fotos.tsx`); este limite é a rede de segurança
-   * para quem não tiver `createImageBitmap`/WebP no canvas.
+   * O envio de fotos corporais (`/triagem/avaliacao-corporal/fotos`) faz
+   * uma Server Action por pose, e não uma com os quatro arquivos: o
+   * corpo é pequeno por construção. O padrão de 1 MB ainda assim
+   * rejeitaria com 413 — antes de a action rodar, sem erro na tela —
+   * uma foto de celular sem redução no cliente. Este limite é a rede de
+   * segurança para quem não tiver `createImageBitmap`/WebP no canvas.
    */
   experimental: {
     serverActions: { bodySizeLimit: "12mb" },

@@ -11,6 +11,11 @@ import { LIMITE_FOTO_CORPORAL_BYTES, prepararFotoCorporal, TIPOS_FOTO_CORPORAL }
 import { excluirFotoProgresso, excluirFotosProgresso, obterOuCriarAvaliacaoInicial, obterPanoramaCorporal, registrarFotoProgresso } from "@/domain/medicoes/repositorio";
 import { criarStorageR2 } from "@/infra/storage";
 
+const POSES_VALIDAS = ["frente", "costas", "lateral_direita", "lateral_esquerda"] as const;
+type PoseCorporal = (typeof POSES_VALIDAS)[number];
+const ehPose = (valor: string): valor is PoseCorporal =>
+  (POSES_VALIDAS as readonly string[]).includes(valor);
+
 export async function excluirFotoCorporal(fd: FormData) {
   const session = await auth();
   if (!session?.user?.id) redirect("/");
@@ -35,44 +40,88 @@ export async function excluirTodasFotosCorporais() {
   redirect("/triagem/avaliacao-corporal/fotos?sucesso=Todas as fotos foram excluídas do storage privado.");
 }
 
-export async function enviarFotosCorporais(fd: FormData) {
+/**
+ * Envio de UMA pose por requisição.
+ *
+ * O corpo de uma Server Action é limitado (`bodySizeLimit`) e quatro
+ * fotos de celular estouravam o teto mesmo depois da redução no
+ * cliente — a tela então pedia ao usuário que enviasse "em duas
+ * etapas", empurrando o problema de transporte para dentro do fluxo.
+ * Fatiar o envio por pose mantém cada corpo pequeno por construção: o
+ * cliente dispara uma chamada por foto, em sequência, e o usuário
+ * continua escolhendo as quatro de uma vez.
+ *
+ * Não redireciona: quem coordena a sequência é o cliente, que só
+ * navega ao final. Erros voltam como valor para a pose específica.
+ */
+export async function enviarFotoCorporal(
+  fd: FormData,
+): Promise<{ ok: true } | { ok: false; erro: string }> {
   const session = await auth();
-  if (!session?.user?.id) redirect("/");
-  if (fd.get("consentimentoArmazenamento") !== "sim") redirect("/triagem/avaliacao-corporal/fotos?erro=Confirme o armazenamento privado para enviar as fotos.");
+  if (!session?.user?.id) return { ok: false, erro: "Sessão expirada. Entre novamente." };
+  if (fd.get("consentimentoArmazenamento") !== "sim")
+    return { ok: false, erro: "Confirme o armazenamento privado para enviar as fotos." };
+
+  const pose = String(fd.get("pose") ?? "");
+  if (!ehPose(pose)) return { ok: false, erro: "Pose inválida." };
+
+  const arquivo = fd.get("foto");
+  if (!(arquivo instanceof File) || arquivo.size === 0)
+    return { ok: false, erro: "Selecione ao menos uma foto." };
+  if (!TIPOS_FOTO_CORPORAL.has(arquivo.type) || arquivo.size > LIMITE_FOTO_CORPORAL_BYTES)
+    return { ok: false, erro: "Use JPG, PNG ou WebP com até 10 MB por foto." };
 
   const userId = session.user.id;
   const avaliacao = await obterOuCriarAvaliacaoInicial(userId);
   const storage = criarStorageR2();
-  const entradas = [
-    ["frente", fd.get("frente")], ["costas", fd.get("costas")],
-    ["lateral_direita", fd.get("lateralDireita")], ["lateral_esquerda", fd.get("lateralEsquerda")],
-  ] as const;
-  const arquivos = entradas.filter((entrada): entrada is readonly [typeof entrada[0], File] => entrada[1] instanceof File && entrada[1].size > 0);
-  if (!arquivos.length) redirect("/triagem/avaliacao-corporal/fotos?erro=Selecione ao menos uma foto.");
 
-  for (const [, arquivo] of arquivos) {
-    if (!TIPOS_FOTO_CORPORAL.has(arquivo.type) || arquivo.size > LIMITE_FOTO_CORPORAL_BYTES) redirect("/triagem/avaliacao-corporal/fotos?erro=Use JPG, PNG ou WebP com até 10 MB por foto.");
+  // O consentimento é do conjunto, não de cada arquivo: só a primeira
+  // pose da sequência o registra, senão haveria quatro registros
+  // idênticos para um único ato de consentir.
+  if (fd.get("registrarConsentimento") === "sim") {
+    await db.insert(consents).values({
+      userId,
+      operacao: "foto-corporal-armazenamento",
+      campo: "foto-corporal",
+      recorteVersao: 1,
+      provedor: "Cloudflare R2",
+    });
   }
 
-  await db.insert(consents).values({ userId, operacao: "foto-corporal-armazenamento", campo: "foto-corporal", recorteVersao: 1, provedor: "Cloudflare R2" });
   const retencaoDias = Number(fd.get("retencaoDias") ?? 0);
-  const excluirEm = Number.isFinite(retencaoDias) && retencaoDias > 0 ? new Date(Date.now() + Math.min(retencaoDias, 3650) * 86_400_000) : undefined;
-  const gravadas: string[] = [];
-  const registros: string[] = [];
+  const excluirEm =
+    Number.isFinite(retencaoDias) && retencaoDias > 0
+      ? new Date(Date.now() + Math.min(retencaoDias, 3650) * 86_400_000)
+      : undefined;
+
+  const chave = `usuarios/${userId}/progresso/${randomUUID()}.webp`;
   try {
-    for (const [pose, arquivo] of arquivos) {
-      const preparada = await prepararFotoCorporal({ bytes: new Uint8Array(await arquivo.arrayBuffer()), contentType: arquivo.type });
-      const chave = `usuarios/${userId}/progresso/${randomUUID()}.webp`;
-      await storage.gravar({ chave, ...preparada });
-      gravadas.push(chave);
-      const registro = await registrarFotoProgresso(userId, { assessmentId: avaliacao.id, pose, objectKey: chave, condicoes: String(fd.get("condicoes") ?? "") || undefined, excluirEm });
-      registros.push(registro.id);
-    }
-  } catch (erro) {
-    await Promise.allSettled(gravadas.map((chave) => storage.excluir(chave)));
-    await excluirFotosProgresso(userId, registros);
-    throw erro;
+    const preparada = await prepararFotoCorporal({
+      bytes: new Uint8Array(await arquivo.arrayBuffer()),
+      contentType: arquivo.type,
+    });
+    await storage.gravar({ chave, ...preparada });
+  } catch {
+    await Promise.allSettled([storage.excluir(chave)]);
+    return { ok: false, erro: "Não foi possível armazenar esta foto. Tente novamente." };
   }
-  revalidatePath("/progresso"); revalidatePath("/inicio");
-  redirect("/triagem/avaliacao-corporal/fotos?sucesso=Fotos armazenadas de forma privada.");
+
+  try {
+    await registrarFotoProgresso(userId, {
+      assessmentId: avaliacao.id,
+      pose,
+      objectKey: chave,
+      condicoes: String(fd.get("condicoes") ?? "") || undefined,
+      excluirEm,
+    });
+  } catch {
+    // Sem registro no banco o objeto viraria lixo inacessível no bucket.
+    await Promise.allSettled([storage.excluir(chave)]);
+    return { ok: false, erro: "Não foi possível registrar esta foto. Tente novamente." };
+  }
+
+  revalidatePath("/triagem/avaliacao-corporal/fotos");
+  revalidatePath("/progresso");
+  revalidatePath("/inicio");
+  return { ok: true };
 }
