@@ -33,7 +33,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="pt-BR" className={`${dmSans.variable} h-full`}>
-      <body className="min-h-full flex flex-col">
+      <body className="min-h-dvh flex flex-col">
         <SerwistProvider swUrl="/sw.js" disable={process.env.NODE_ENV !== "production"}>
           {children}
         </SerwistProvider>
