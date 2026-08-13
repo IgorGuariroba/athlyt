@@ -4,7 +4,17 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { ChevronDown, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { AvisoAcao } from "@/components/tela/aviso-acao";
+import { CampoSelecao } from "@/components/tela/campo-selecao";
+
+/** Janelas de retenção oferecidas para as fotos corporais. */
+const RETENCAO = [
+  { valor: "0", rotulo: "Até eu excluir" },
+  { valor: "365", rotulo: "Excluir após 1 ano" },
+  { valor: "730", rotulo: "Excluir após 2 anos" },
+] as const;
 
 /**
  * Fotos de celular chegam com 3 a 8 MB cada, e quatro poses somam
@@ -226,27 +236,21 @@ export function EnvioFotos({
           </span>
         </summary>
         <div className="flex flex-col gap-4 border-t border-border bg-background px-5 py-4">
-          <label className="flex flex-col gap-1.5 text-label-md text-on-surface">
-            Condições
-            <input
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="condicoes">Condições</Label>
+            <Input
               id="condicoes"
               name="condicoes"
               placeholder="Iluminação, distância ou observações"
-              className="h-12 w-full rounded-lg border border-border bg-surface-container px-3 text-body-md text-on-surface placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              className="h-12 bg-surface-container text-body-md"
             />
-          </label>
-          <label className="flex flex-col gap-1.5 text-label-md text-on-surface">
-            Retenção
-            <select
-              id="retencaoDias"
-              name="retencaoDias"
-              className="h-12 w-full rounded-lg border border-border bg-surface-container px-3 text-body-md text-on-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-            >
-              <option value="0">Até eu excluir</option>
-              <option value="365">Excluir após 1 ano</option>
-              <option value="730">Excluir após 2 anos</option>
-            </select>
-          </label>
+          </div>
+          <CampoSelecao
+            id="retencaoDias"
+            name="retencaoDias"
+            rotulo="Retenção"
+            opcoes={RETENCAO}
+          />
         </div>
       </details>
 

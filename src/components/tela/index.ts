@@ -20,6 +20,7 @@ export {
 } from "./barra-macro";
 export { CabecalhoSecao } from "./cabecalho-secao";
 export { CabecalhoTela } from "./cabecalho-tela";
+export { CampoSelecao } from "./campo-selecao";
 export {
   CabecalhoCartaoLista,
   CartaoLista,
@@ -29,10 +30,18 @@ export {
 } from "./cartao-lista";
 export { ChipSelecao } from "./chip-selecao";
 export { ControleSegmentado } from "./controle-segmentado";
+export { EstadoVazio } from "./estado-vazio";
 export {
   GraficoTendencia,
   type PontoSerie,
   type Serie,
 } from "./grafico-tendencia";
+export {
+  GradeSelecaoFoto,
+  ItemSelecaoFoto,
+} from "./grade-selecao-foto";
+export { ItemNavegacao, ListaNavegacao } from "./lista-navegacao";
+export { MedidorScore } from "./medidor-score";
+export { Metrica, PainelMetricas } from "./painel-metricas";
 export { Revelar } from "./revelar";
 export { NotaTela, SecoesTela, TelaConteudo } from "./tela-conteudo";

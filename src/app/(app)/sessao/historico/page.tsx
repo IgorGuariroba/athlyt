@@ -1,20 +1,93 @@
 import Link from "next/link";
-import { ChevronLeft, CheckCircle2, CircleSlash2 } from "lucide-react";
+import { CheckCircle2, CircleSlash2, Dumbbell } from "lucide-react";
 import { auth } from "@/auth";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import {
+  CabecalhoTela,
+  CartaoLista,
+  EstadoVazio,
+  LinhaCartaoLista,
+  LinhasCartaoLista,
+  SecoesTela,
+  TelaConteudo,
+} from "@/components/tela";
 import { listarHistoricoSessoes, resumirSessao } from "@/domain/sessao/repositorio";
+
+/**
+ * Histórico de sessões: uma lista de itens homogêneos, portanto um
+ * cartão com divisores em vez de um cartão por sessão (DESIGN.md >
+ * Components > Card).
+ */
+const APRESENTACAO = {
+  concluida: { rotulo: "Concluída", Icone: CheckCircle2, cor: "text-success" },
+  abandonada: { rotulo: "Abandonada", Icone: CircleSlash2, cor: "text-warning" },
+  em_andamento: { rotulo: "Continuar", Icone: Dumbbell, cor: "text-info" },
+} as const;
 
 export default async function HistoricoPage() {
   const session = await auth();
-  const historico = session?.user?.id ? await listarHistoricoSessoes(session.user.id) : [];
-  return <div className="flex flex-col gap-5 p-4 pb-28">
-    <header className="flex items-center gap-3"><Button asChild variant="ghost" size="icon"><Link href="/inicio" aria-label="Voltar"><ChevronLeft /></Link></Button><div><p className="text-label-md text-muted-foreground">SESSÃO DE TREINO</p><h1 className="text-headline-md font-bold">Histórico</h1></div></header>
-    {historico.length === 0 ? <p className="rounded-xl bg-surface-container p-5 text-body-md text-muted-foreground">Suas sessões concluídas ou abandonadas aparecerão aqui.</p> : historico.map((item) => {
-      const resumo = resumirSessao(item);
-      return <Link key={item.id} href={item.estado === "em_andamento" ? `/sessao/${item.id}` : `/sessao/${item.id}/resumo`} className="flex items-center gap-4 rounded-2xl border border-border bg-surface-container p-4">
-        {item.estado === "concluida" ? <CheckCircle2 className="size-7 text-success" /> : item.estado === "abandonada" ? <CircleSlash2 className="size-7 text-warning" /> : <span className="size-3 rounded-full bg-info" />}
-        <div className="flex-1"><strong className="text-title">{item.nome}</strong><p className="text-body-sm text-muted-foreground">{item.startedAt.toLocaleDateString("pt-BR")} · {resumo.totalSeries} séries · {resumo.volumeKg} kg</p></div><span className="text-label-md text-muted-foreground">{item.estado === "em_andamento" ? "Continuar" : item.estado === "concluida" ? "Concluída" : "Abandonada"}</span>
-      </Link>;
-    })}
-  </div>;
+  const historico = session?.user?.id
+    ? await listarHistoricoSessoes(session.user.id)
+    : [];
+
+  return (
+    <TelaConteudo>
+      <CabecalhoTela
+        contexto="Sessão de treino"
+        titulo="Histórico"
+        voltar={{ href: "/inicio", rotulo: "Voltar ao Início" }}
+      />
+
+      <SecoesTela>
+        {historico.length === 0 ? (
+          <EstadoVazio
+            Icone={Dumbbell}
+            titulo="Nenhuma sessão ainda"
+            descricao="Sessões concluídas ou abandonadas aparecem aqui, com séries e volume."
+            acao={
+              <Button asChild variant="outline" size="sm">
+                <Link href="/inicio">Ver treino de hoje</Link>
+              </Button>
+            }
+          />
+        ) : (
+          <CartaoLista>
+            <LinhasCartaoLista>
+              {historico.map((item) => {
+                const resumo = resumirSessao(item);
+                const { rotulo, Icone, cor } = APRESENTACAO[item.estado];
+                const href =
+                  item.estado === "em_andamento"
+                    ? `/sessao/${item.id}`
+                    : `/sessao/${item.id}/resumo`;
+
+                return (
+                  <LinhaCartaoLista
+                    key={item.id}
+                    titulo={item.nome}
+                    meta={`${item.startedAt.toLocaleDateString("pt-BR")} · ${resumo.totalSeries} séries · ${resumo.volumeKg} kg`}
+                    valor={
+                      <span className="flex items-center gap-1.5">
+                        <Icone aria-hidden="true" className={`size-4 ${cor}`} />
+                        <Badge variant="outline">{rotulo}</Badge>
+                      </span>
+                    }
+                  >
+                    <Button asChild variant="outline" size="sm" className="w-fit">
+                      <Link href={href}>
+                        {item.estado === "em_andamento"
+                          ? "Continuar sessão"
+                          : "Ver resumo"}
+                      </Link>
+                    </Button>
+                  </LinhaCartaoLista>
+                );
+              })}
+            </LinhasCartaoLista>
+          </CartaoLista>
+        )}
+      </SecoesTela>
+    </TelaConteudo>
+  );
 }

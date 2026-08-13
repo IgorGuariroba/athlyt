@@ -1,67 +1,79 @@
-import Link from "next/link";
+import { GitBranch, RefreshCw, ShieldCheck } from "lucide-react";
 import { auth } from "@/auth";
 import { sair, sairDeTodosDispositivos } from "../../(auth)/actions";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
+import {
+  CabecalhoTela,
+  CartaoLista,
+  ItemNavegacao,
+  LinhaCartaoLista,
+  LinhasCartaoLista,
+  ListaNavegacao,
+  SecoesTela,
+  TelaConteudo,
+} from "@/components/tela";
 
 /**
  * Casco da aba Mais (telas 075–085). Perfil, Trilhas de Decisão,
  * consentimentos, exportação e configurações são acessados daqui,
  * mantendo controles de conta e privacidade no mesmo casco.
+ *
+ * Os destinos formam uma `ListaNavegacao` única, e não um cartão por
+ * item: é o padrão de "More" do MacroFactor
+ * (`147-mais-configuracoes.JPG`) e evita repetir superfície elevada
+ * para relações idênticas.
  */
 export default async function MaisPage() {
   const session = await auth();
 
   return (
-    <div className="flex flex-col gap-6 p-4">
-      <h1 className="text-headline-md font-bold text-on-surface-strong">
-        Mais
-      </h1>
+    <TelaConteudo>
+      <CabecalhoTela titulo="Mais" />
 
-      <Card className="p-4">
-        <p className="text-body-md text-on-surface">
-          {session?.user?.name ?? session?.user?.email}
-        </p>
-        <p className="text-body-sm text-muted-foreground">
-          {session?.user?.email}
-        </p>
-      </Card>
+      <SecoesTela>
+        <CartaoLista>
+          <LinhasCartaoLista>
+            <LinhaCartaoLista
+              titulo={session?.user?.name ?? session?.user?.email ?? "Conta"}
+              meta={session?.user?.email}
+            />
+          </LinhasCartaoLista>
+        </CartaoLista>
 
-      <Card className="flex flex-col gap-3 p-4">
-        <p className="text-body-md text-muted-foreground">
-          Consulte os dados, regras e resultados que sustentaram as recomendações do Athlyt.
-        </p>
-        <Button asChild variant="outline" className="w-fit">
-          <Link href="/mais/trilhas">Ver Trilhas de Decisão</Link>
-        </Button>
-      </Card>
+        <ListaNavegacao>
+          <ItemNavegacao
+            href="/mais/trilhas"
+            Icone={GitBranch}
+            rotulo="Trilhas de Decisão"
+            descricao="Dados e regras por trás de cada recomendação"
+          />
+          <ItemNavegacao
+            href="/mais/consentimentos"
+            Icone={ShieldCheck}
+            rotulo="Consentimentos"
+            descricao="Armazenamento privado e operações de IA"
+          />
+          <ItemNavegacao
+            href="/mais/sincronizacao"
+            Icone={RefreshCw}
+            rotulo="Sincronização"
+            descricao="Pendências de envio e conflitos"
+          />
+        </ListaNavegacao>
 
-      <Card className="flex flex-col gap-3 p-4">
-        <p className="text-body-md text-muted-foreground">Gerencie separadamente armazenamento privado e operações de IA.</p>
-        <Button asChild variant="outline" className="w-fit"><Link href="/mais/consentimentos">Gerenciar consentimentos</Link></Button>
-      </Card>
-
-      <Card className="flex flex-col gap-3 p-4">
-        <p className="text-body-md text-muted-foreground">
-          Veja o que ainda não foi enviado ao servidor e resolva conflitos entre o que ficou gravado aqui e lá.
-        </p>
-        <Button asChild variant="outline" className="w-fit">
-          <Link href="/mais/sincronizacao">Estado da sincronização</Link>
-        </Button>
-      </Card>
-
-      <div className="flex flex-col gap-2">
-        <form action={sair}>
-          <Button type="submit" variant="secondary" className="w-full">
-            Sair
-          </Button>
-        </form>
-        <form action={sairDeTodosDispositivos}>
-          <Button type="submit" variant="ghost" className="w-full">
-            Sair de todos os dispositivos
-          </Button>
-        </form>
-      </div>
-    </div>
+        <div className="flex flex-col gap-2">
+          <form action={sair}>
+            <Button type="submit" variant="secondary" className="w-full">
+              Sair
+            </Button>
+          </form>
+          <form action={sairDeTodosDispositivos}>
+            <Button type="submit" variant="ghost" className="w-full">
+              Sair de todos os dispositivos
+            </Button>
+          </form>
+        </div>
+      </SecoesTela>
+    </TelaConteudo>
   );
 }

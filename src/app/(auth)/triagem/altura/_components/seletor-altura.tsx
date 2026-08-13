@@ -53,7 +53,7 @@ export function SeletorAltura({ alturaInicialCm }: { alturaInicialCm?: number })
       <div className="flex flex-1 flex-col items-center justify-center gap-6 py-8">
         <p
           aria-hidden="true"
-          className="text-[2.75rem] leading-none font-bold tabular-nums text-on-surface-strong"
+          className="font-brand text-[2.75rem] leading-none font-bold tracking-tight tabular-nums text-on-surface-strong"
         >
           {unidade === "cm" ? `${alturaCm} cm` : formatarImperial(alturaCm)}
         </p>

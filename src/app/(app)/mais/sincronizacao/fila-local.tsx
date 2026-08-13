@@ -2,9 +2,16 @@
 
 import { useEffect, useState, useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
-import { CloudOff, RefreshCw } from "lucide-react";
+import { CloudCheck, CloudOff, RefreshCw } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
+import {
+  CabecalhoSecao,
+  CartaoLista,
+  EstadoVazio,
+  LinhaCartaoLista,
+  LinhasCartaoLista,
+} from "@/components/tela";
 import { assinarOutbox, drenarFila, lerOutbox, lerOutboxServidor, recarregarFila } from "@/lib/store-outbox";
 import { useOnline } from "@/lib/use-online";
 
@@ -69,31 +76,36 @@ export function FilaLocal() {
 
   return (
     <section className="flex flex-col gap-3">
-      <div className="flex items-center justify-between">
-        <h2 className="text-title font-bold">Pendências ({fila.length})</h2>
-        <span className="flex items-center gap-1.5 text-body-sm text-muted-foreground">
-          {online ? <RefreshCw className="size-3.5" aria-hidden /> : <CloudOff className="size-3.5 text-warning" aria-hidden />}
-          {online ? "Online" : "Offline"}
-        </span>
-      </div>
+      <CabecalhoSecao
+        titulo={`Pendências (${fila.length})`}
+        acao={
+          <span className="flex items-center gap-1.5 text-body-sm text-muted-foreground">
+            {online ? <RefreshCw className="size-3.5" aria-hidden /> : <CloudOff className="size-3.5 text-warning" aria-hidden />}
+            {online ? "Online" : "Offline"}
+          </span>
+        }
+      />
 
       {fila.length === 0 ? (
-        <Card className="p-4"><p className="text-body-sm text-muted-foreground">Tudo sincronizado. Nenhum evento aguardando envio.</p></Card>
+        <EstadoVazio
+          Icone={CloudCheck}
+          titulo="Tudo sincronizado"
+          descricao="Nenhum evento aguardando envio ao servidor."
+        />
       ) : (
         <>
-          <Card className="divide-y divide-border p-0">
-            {fila.map((evento) => (
-              <div key={evento.id} className="flex items-center justify-between gap-2 px-4 py-3">
-                <div className="min-w-0">
-                  <p className="truncate text-body-md">{ROTULO_TIPO[evento.tipo] ?? evento.tipo}</p>
-                  <p className="text-caption text-muted-foreground">
-                    {new Date(evento.ocorridoEm).toLocaleString("pt-BR")} · ordem {evento.ordem}
-                  </p>
-                </div>
-                <span className="shrink-0 rounded-full border border-border px-2 py-0.5 text-caption text-muted-foreground">Aguardando</span>
-              </div>
-            ))}
-          </Card>
+          <CartaoLista>
+            <LinhasCartaoLista>
+              {fila.map((evento) => (
+                <LinhaCartaoLista
+                  key={evento.id}
+                  titulo={ROTULO_TIPO[evento.tipo] ?? evento.tipo}
+                  meta={`${new Date(evento.ocorridoEm).toLocaleString("pt-BR")} · ordem ${evento.ordem}`}
+                  valor={<Badge variant="outline">Aguardando</Badge>}
+                />
+              ))}
+            </LinhasCartaoLista>
+          </CartaoLista>
           <Button onClick={sincronizarTudo} disabled={ocupado || !online} className="w-full">
             {ocupado ? "Sincronizando…" : online ? "Sincronizar agora" : "Sem conexão"}
           </Button>

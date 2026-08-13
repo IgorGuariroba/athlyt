@@ -1,6 +1,110 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  AvisoAcao,
+  CabecalhoTela,
+  CampoSelecao,
+  SecoesTela,
+  TelaConteudo,
+} from "@/components/tela";
 import { registrarCheckinCorporal } from "./actions";
 
-export default async function MedicoesPage({ searchParams }: { searchParams: Promise<{ erro?: string }> }) { const { erro } = await searchParams; return <div className="flex flex-col gap-5 p-4"><div><h1 className="text-headline-md font-bold">Medições</h1><p className="text-body-sm text-muted-foreground">Registro avulso. Preencha somente o que mediu hoje.</p></div>{erro ? <p role="alert" className="text-error">{erro}</p> : null}<form action={registrarCheckinCorporal} className="grid gap-5"><div><Label htmlFor="peso">Peso (kg)</Label><Input id="peso" name="peso" type="number" min="30" max="300" step="0.1" /></div><div className="grid gap-2"><Label htmlFor="cintura">Cintura (cm)</Label><Input id="cintura" name="cintura" type="number" min="10" max="250" step="0.1" /></div><div className="grid gap-2"><Label htmlFor="gordura">Gordura corporal opcional (%)</Label><Input id="gordura" name="gordura" type="number" min="2" max="70" step="0.1" /><select name="metodo" className="h-10 rounded-md border bg-background px-3"><option value="bioimpedancia">Bioimpedância</option><option value="adipometro">Adipômetro</option><option value="dexa">DEXA/DXA</option><option value="hidrostatica">Pesagem hidrostática</option><option value="fita">Estimativa por fita</option><option value="outro">Outro</option></select><Input name="protocolo" placeholder="Protocolo/condições" /></div><Button size="lg">Registrar medições</Button></form></div>; }
+/**
+ * Registro avulso de medições. Cada campo é opcional por construção:
+ * o produto não força completar o que não foi medido (DESIGN.md >
+ * Principles — "neutralidade comportamental").
+ */
+const METODOS = [
+  { valor: "bioimpedancia", rotulo: "Bioimpedância" },
+  { valor: "adipometro", rotulo: "Adipômetro" },
+  { valor: "dexa", rotulo: "DEXA/DXA" },
+  { valor: "hidrostatica", rotulo: "Pesagem hidrostática" },
+  { valor: "fita", rotulo: "Estimativa por fita" },
+  { valor: "outro", rotulo: "Outro" },
+] as const;
+
+export default async function MedicoesPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ erro?: string }>;
+}) {
+  const { erro } = await searchParams;
+
+  return (
+    <TelaConteudo>
+      <CabecalhoTela
+        titulo="Medições"
+        descricao="Registro avulso. Preencha somente o que mediu hoje."
+        voltar={{ href: "/diario", rotulo: "Voltar ao Diário" }}
+      />
+
+      <SecoesTela>
+        <form action={registrarCheckinCorporal} className="flex flex-col gap-5">
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="peso">Peso (kg)</Label>
+            <Input
+              id="peso"
+              name="peso"
+              type="number"
+              inputMode="decimal"
+              min="30"
+              max="300"
+              step="0.1"
+            />
+          </div>
+
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="cintura">Cintura (cm)</Label>
+            <Input
+              id="cintura"
+              name="cintura"
+              type="number"
+              inputMode="decimal"
+              min="10"
+              max="250"
+              step="0.1"
+            />
+          </div>
+
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="gordura">Gordura corporal (%)</Label>
+            <Input
+              id="gordura"
+              name="gordura"
+              type="number"
+              inputMode="decimal"
+              min="2"
+              max="70"
+              step="0.1"
+            />
+            <p className="text-body-sm text-muted-foreground">
+              Opcional. O método importa: trocar de aparelho muda o número sem
+              que o corpo tenha mudado.
+            </p>
+          </div>
+
+          <CampoSelecao
+            id="metodo"
+            name="metodo"
+            rotulo="Método da medição de gordura"
+            opcoes={METODOS}
+          />
+
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="protocolo">Protocolo ou condições</Label>
+            <Input
+              id="protocolo"
+              name="protocolo"
+              placeholder="Em jejum, mesma balança…"
+            />
+          </div>
+
+          {erro ? <AvisoAcao tipo="erro">{erro}</AvisoAcao> : null}
+
+          <Button size="cta">Registrar medições</Button>
+        </form>
+      </SecoesTela>
+    </TelaConteudo>
+  );
+}

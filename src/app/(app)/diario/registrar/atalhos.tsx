@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { Check, Heart, Plus, Rocket, Search, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { CampoSelecao } from "@/components/tela";
 import {
   buscarAlimentos,
   encontrarAlimento,
@@ -327,24 +328,25 @@ function SeletorDePorcao({
             className="mt-1 h-12 w-24 text-center text-lg font-bold tabular-nums"
           />
         </label>
-        <label className="flex-1 text-caption text-muted-foreground">
-          Unidade
-          <select
-            value={unidade}
-            onChange={(evento) => {
-              setUnidade(evento.target.value);
-              setQuantidade(evento.target.value === "g" ? "100" : "1");
-            }}
-            aria-label={`Unidade de ${alimento.nome}`}
-            className="mt-1 h-12 w-full rounded-md border border-border bg-background px-3 text-body-md"
-          >
-            {porcoes.map((porcao) => (
-              <option key={porcao.unidade} value={porcao.unidade}>
-                {porcao.unidade === "g" ? "gramas" : `${porcao.unidade} (${porcao.gramas} g)`}
-              </option>
-            ))}
-          </select>
-        </label>
+        <CampoSelecao
+          compacto
+          id={`unidade-${alimento.id}`}
+          rotulo="Unidade"
+          className="flex-1"
+          value={unidade}
+          onChange={(evento) => {
+            setUnidade(evento.target.value);
+            setQuantidade(evento.target.value === "g" ? "100" : "1");
+          }}
+          aria-label={`Unidade de ${alimento.nome}`}
+          opcoes={porcoes.map((porcao) => ({
+            valor: porcao.unidade,
+            rotulo:
+              porcao.unidade === "g"
+                ? "gramas"
+                : `${porcao.unidade} (${porcao.gramas} g)`,
+          }))}
+        />
       </div>
 
       {previa ? (

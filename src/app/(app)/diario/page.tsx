@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Check, ChevronLeft, ChevronRight, Dumbbell, Pencil, Plus, Undo2, UtensilsCrossed } from "lucide-react";
 import { auth } from "@/auth";
 import { Button } from "@/components/ui/button";
+import { EstadoVazio } from "@/components/tela";
 import { FUSO_PADRAO, diaVizinho } from "@/domain/diario/dia-alimentar";
 import { hojeDoUsuario, montarDiarioDoDia } from "@/domain/diario/repositorio";
 import type { ItemLinhaDoTempo } from "@/domain/diario/tipos";
@@ -77,11 +78,15 @@ export default async function DiarioPage({
           ))}
         </ol>
       ) : (
-        <p className="rounded-2xl border border-border bg-surface-container p-6 text-center text-body-md text-muted-foreground">
-          {diario
-            ? "Sem Plano Ativo, o dia começa vazio. Ative seu plano para receber o Cardápio Diário aqui."
-            : "Entre para ver seu Diário."}
-        </p>
+        <EstadoVazio
+          Icone={UtensilsCrossed}
+          titulo={diario ? "O dia começa vazio" : "Diário indisponível"}
+          descricao={
+            diario
+              ? "Sem Plano Ativo não há Cardápio Diário. Você ainda pode registrar o que comeu."
+              : "Entre na sua conta para ver e registrar seu Diário."
+          }
+        />
       )}
 
       {/* Botão + dos Atalhos de Registro (tela 050), no lugar que a

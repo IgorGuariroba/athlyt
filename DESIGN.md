@@ -47,8 +47,10 @@ colors:
     data-violet: "#8B5CF6"
 typography:
   font-family:
-    brand: "Macro Sans, DM Sans, system-ui, sans-serif"
+    brand: "Archivo, DM Sans, system-ui, sans-serif"
     interface: "DM Sans, system-ui, -apple-system, BlinkMacSystemFont, sans-serif"
+    brand-original: "Macro Sans"
+    brand-width-axis: 112
   display: { size: "40px", line-height: "44px", weight: 700, letter-spacing: "-0.02em" }
   headline-lg: { size: "28px", line-height: "32px", weight: 700, letter-spacing: "-0.015em" }
   headline-md: { size: "22px", line-height: "28px", weight: 700, letter-spacing: "-0.01em" }
@@ -164,7 +166,22 @@ Gráficos devem funcionar com legenda, rótulo ou padrão além da cor. Em super
 
 ## Typography
 
-**Confirmado no site:** famílias computadas `Macro Sans` e `DM Sans`. **Não observável no app:** arquivo e versão exatos da fonte. **Provável:** a interface usa uma sans geométrica próxima de DM Sans; `Macro Sans` é mais apropriada à marca e a headlines promocionais. Alternativas compatíveis, no máximo duas: DM Sans e uma sans do sistema.
+### Famílias
+
+**Confirmado por inspeção de `macrofactor.com`** (estilos computados e arquivos de fonte efetivamente baixados): o produto usa **duas** famílias com papéis separados.
+
+| Papel | MacroFactor | Arquivo servido | Onde aparece |
+|---|---|---|---|
+| Marca | `Macro Sans` | `MacroSans-VF.ttf` (variável) | `h2`, `h3`, links de destaque |
+| Interface | `DM Sans` | `dm-sans-normal-latin.woff2` (400/500/600) | `p`, `a`, `li`, `button` |
+
+A mesma divisão aparece no app: em `084-dashboard-nutricao-semanal.JPG`, o eyebrow e o título "DASHBOARD" usam a grotesca larga de caixa alta, enquanto "Weekly Nutrition", "2548 kcal" e os controles usam a geométrica de `a` de andar duplo.
+
+**Decisão para o Athlyt.** A interface adota **DM Sans** — é literalmente a mesma fonte do produto original, não uma aproximação. A marca adota **Archivo**, porque `Macro Sans` é proprietária do MacroFactor: não está no Google Fonts, não é licenciável, e servi-la a partir do site alheio seria uso indevido. Archivo é a substituta mais próxima sob OFL — grotesca com eixo de largura variável, que reproduz a caixa larga e os terminais retos dos títulos. O eixo `wdth` fica em **112**; no padrão (100) ela sai mais estreita que a referência.
+
+Alternativas consideradas: Anton (compressão certa, peso único — inflexível), Chivo e Familjen Grotesk (ambas mais estreitas que o alvo).
+
+**Regra de aplicação.** A família acompanha a escala, não a tag: os tokens `display`, `headline-lg` e `headline-md` já trocam para a fonte de marca em `globals.css`. Títulos com tamanho fora da escala — o número de uma roleta, por exemplo — usam a utilitária `font-brand`. Todo o resto permanece em DM Sans.
 
 ### Hierarquia
 
@@ -534,10 +551,10 @@ visual em navegador continua necessária para densidade, truncamento e dobra.
 
 ## Unknowns and Assumptions
 
-1. **Fonte do app — Provável:** DM Sans ou família geométrica equivalente. `Macro Sans` e `DM Sans` foram confirmadas apenas no site por estilos computados. Inspecionar bundle/Figma para decisão definitiva.
+1. **Fonte do app — Resolvido.** `DM Sans` está confirmada por arquivo servido (`dm-sans-normal-latin.woff2`), não por inferência visual, e `Macro Sans` por `MacroSans-VF.ttf`; a divisão marca/interface está documentada em Typography > Famílias. Permanece não observável apenas se o app móvel embarca a mesma versão de arquivo que o site.
 2. **Cores do app — Estimado:** hexadecimais foram aproximados visualmente. Capturas JPG, brilho e perfil de cor podem alterar valores. Extrair tema do código/Figma para substituir estimativas.
 3. **Medidas — Estimado:** normalizadas em escala de 4/8px. Capturas não permitem distinguir pt iOS de px CSS.
-4. **Site versus app:** o site atual usa preto/branco e Macro Sans, mas alguns estilos computados pertencem a infraestrutura/consentimento e não ao app. O app prevalece para componentes.
+4. **Site versus app:** o site atual usa preto/branco e Macro Sans, mas alguns estilos computados pertencem a infraestrutura/consentimento e não ao app. O app prevalece para componentes. A divisão tipográfica marca/interface, no entanto, se confirma nos dois.
 5. **Tema claro:** aparece em páginas web incorporadas e em uma configuração de tema, mas não há conjunto completo de telas claras. Tokens claros completos são não observáveis.
 6. **Estados não vistos:** hover, keyboard focus, erro de rede, offline, skeleton, badge e indeterminate precisam de especificação de produto/código.
 7. **Motion:** durações e curvas são recomendações, não medições.

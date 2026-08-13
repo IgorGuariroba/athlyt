@@ -1,9 +1,15 @@
-import { ChevronLeft } from "lucide-react";
-import Link from "next/link";
+import { CheckCircle2 } from "lucide-react";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import {
+  CabecalhoSecao,
+  CabecalhoTela,
+  EstadoVazio,
+  SecoesTela,
+  TelaConteudo,
+} from "@/components/tela";
 import { listarConflitosPendentes } from "@/domain/sessao/sincronizacao";
 import { resolverConflitoAction } from "./actions";
 import { FilaLocal } from "./fila-local";
@@ -42,20 +48,23 @@ export default async function SincronizacaoPage() {
   const conflitos = await listarConflitosPendentes(session.user.id);
 
   return (
-    <div className="flex flex-col gap-6 p-4">
-      <header className="flex items-center gap-2">
-        <Button asChild variant="ghost" size="icon"><Link href="/mais" aria-label="Voltar para Mais"><ChevronLeft /></Link></Button>
-        <h1 className="text-headline-md font-bold text-on-surface-strong">Sincronização</h1>
-      </header>
+    <TelaConteudo>
+      <CabecalhoTela
+        titulo="Sincronização"
+        voltar={{ href: "/mais", rotulo: "Voltar para Mais" }}
+      />
 
-      <FilaLocal />
+      <SecoesTela>
+        <FilaLocal />
 
       <section className="flex flex-col gap-3">
-        <h2 className="text-title font-bold">Conflitos ({conflitos.length})</h2>
+        <CabecalhoSecao titulo={`Conflitos (${conflitos.length})`} />
         {conflitos.length === 0 ? (
-          <Card className="p-4">
-            <p className="text-body-sm text-muted-foreground">Nenhum conflito aguardando decisão.</p>
-          </Card>
+          <EstadoVazio
+            Icone={CheckCircle2}
+            titulo="Nenhum conflito"
+            descricao="Quando o mesmo registro divergir entre servidor e aparelho, a decisão aparece aqui."
+          />
         ) : conflitos.map((conflito) => (
           <Card key={conflito.id} className="flex flex-col gap-3 p-4">
             <div>
@@ -87,6 +96,7 @@ export default async function SincronizacaoPage() {
           </Card>
         ))}
       </section>
-    </div>
+      </SecoesTela>
+    </TelaConteudo>
   );
 }

@@ -1,12 +1,91 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
+import {
+  BarraAcaoFixa,
+  CabecalhoSecao,
+  CabecalhoTela,
+  CartaoLista,
+  LinhaCartaoLista,
+  LinhasCartaoLista,
+  MedidorScore,
+  NotaTela,
+  SecoesTela,
+  TelaConteudo,
+} from "@/components/tela";
 import type { DimensoesScorecard } from "@/domain/medicoes/revisao-corporal";
 import { obterRevisaoAtual } from "../dados";
 
-const ROTULOS: Array<[keyof DimensoesScorecard, string]> = [["aderencia", "Aderência"], ["desempenho", "Desempenho"], ["tendenciaCorporal", "Tendência corporal"], ["recuperacao", "Recuperação"], ["utilidade", "Utilidade"]];
+const ROTULOS: Array<[keyof DimensoesScorecard, string]> = [
+  ["aderencia", "Aderência"],
+  ["desempenho", "Desempenho"],
+  ["tendenciaCorporal", "Tendência corporal"],
+  ["recuperacao", "Recuperação"],
+  ["utilidade", "Utilidade"],
+];
+
+/** Rótulo legível para as chaves camelCase de `confiancas`. */
+const legivel = (nome: string) =>
+  nome.replace(/([A-Z])/g, " $1").replace(/^./, (c) => c.toUpperCase());
+
 export default async function ScorecardPage() {
-  const revisao = await obterRevisaoAtual(); if (!revisao) redirect("/progresso/revisao");
-  return <div className="flex flex-col gap-5 p-4"><div><p className="text-label-md uppercase text-muted-foreground">Revisão Semanal · 2/4</p><h1 className="text-headline-md font-bold">Scorecard de Progresso</h1><p className="text-body-sm text-muted-foreground">As dimensões permanecem separadas; o geral não apaga incertezas.</p></div><Card className="grid gap-3 p-4">{ROTULOS.map(([id, rotulo]) => <div key={id}><div className="flex justify-between text-body-sm"><b>{rotulo}</b><span>{revisao.scorecard[id]}/100</span></div><progress className="w-full" max="100" value={revisao.scorecard[id]}/></div>)}<strong>Geral: {revisao.scorecard.geral}/100</strong><small>Metodologia {revisao.scorecard.metodologiaVersao}</small></Card><Card className="grid grid-cols-2 gap-2 p-4">{Object.entries(revisao.confiancas).map(([nome, estado]) => <p key={nome} className="text-body-sm"><b className="capitalize">{nome.replace(/([A-Z])/g, " $1")}</b><br/>{estado}</p>)}</Card><Button asChild><Link href="/progresso/revisao/evidencias">Ver evidências</Link></Button></div>;
+  const revisao = await obterRevisaoAtual();
+  if (!revisao) redirect("/progresso/revisao");
+
+  return (
+    <TelaConteudo comAcaoFixa>
+      <CabecalhoTela
+        contexto="Revisão semanal · 2/4"
+        titulo="Scorecard de progresso"
+        descricao="As dimensões permanecem separadas; o geral não apaga incertezas."
+        voltar={{ href: "/progresso/revisao", rotulo: "Voltar à revisão" }}
+      />
+
+      <SecoesTela>
+        <CartaoLista>
+          <LinhasCartaoLista>
+            <LinhaCartaoLista titulo="Dimensões" valor={`${revisao.scorecard.geral}/100`}>
+              <div className="flex flex-col gap-4 pt-1">
+                {ROTULOS.map(([id, rotulo]) => (
+                  <MedidorScore
+                    key={id}
+                    rotulo={rotulo}
+                    valor={revisao.scorecard[id]}
+                  />
+                ))}
+              </div>
+            </LinhaCartaoLista>
+          </LinhasCartaoLista>
+        </CartaoLista>
+
+        <section className="flex flex-col gap-3">
+          <CabecalhoSecao
+            titulo="Confiança por dimensão"
+            descricao="Quanto de evidência sustenta cada leitura."
+          />
+          <CartaoLista>
+            <LinhasCartaoLista>
+              {Object.entries(revisao.confiancas).map(([nome, estado]) => (
+                <LinhaCartaoLista
+                  key={nome}
+                  titulo={legivel(nome)}
+                  valor={estado}
+                />
+              ))}
+            </LinhasCartaoLista>
+          </CartaoLista>
+        </section>
+      </SecoesTela>
+
+      <NotaTela>
+        Metodologia {revisao.scorecard.metodologiaVersao}.
+      </NotaTela>
+
+      <BarraAcaoFixa>
+        <Button asChild size="cta">
+          <Link href="/progresso/revisao/evidencias">Ver evidências</Link>
+        </Button>
+      </BarraAcaoFixa>
+    </TelaConteudo>
+  );
 }
