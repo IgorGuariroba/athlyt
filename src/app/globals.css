@@ -99,16 +99,27 @@
   --font-sans: var(--font-dm-sans), system-ui, -apple-system, BlinkMacSystemFont,
     sans-serif;
 
+  /*
+   * Fonte de marca (DESIGN.md > Typography > Famílias). Archivo ocupa o
+   * papel que `Macro Sans` — proprietária, não licenciável — tem no
+   * MacroFactor: display e headlines. Todo o resto permanece em DM Sans,
+   * que é a própria fonte de interface do app original.
+   */
+  --font-brand: var(--font-archivo), var(--font-dm-sans), system-ui, sans-serif;
+
   /* Escala tipográfica de DESIGN.md > Typography > Hierarquia */
   --text-display: 40px;
   --text-display--line-height: 44px;
   --text-display--font-weight: 700;
+  --text-display--letter-spacing: -0.02em;
   --text-headline-lg: 28px;
   --text-headline-lg--line-height: 32px;
   --text-headline-lg--font-weight: 700;
+  --text-headline-lg--letter-spacing: -0.015em;
   --text-headline-md: 22px;
   --text-headline-md--line-height: 28px;
   --text-headline-md--font-weight: 700;
+  --text-headline-md--letter-spacing: -0.01em;
   --text-title: 18px;
   --text-title--line-height: 24px;
   --text-title--font-weight: 700;
@@ -137,6 +148,34 @@
   body {
     @apply bg-background text-foreground font-sans antialiased;
   }
+
+  /*
+   * A troca de família acompanha a escala, e não a tag: quem usa um
+   * token de display/headline recebe a fonte de marca sem precisar
+   * lembrar de somar `font-brand`. É o que mantém a divisão
+   * marca/interface do MacroFactor válida em toda tela, inclusive nas
+   * que ainda não passaram pelo kit de composição.
+   *
+   * `wdth: 112` aproxima a caixa larga dos títulos do app; Archivo no
+   * padrão (100) sai mais estreita que a referência.
+   */
+  .text-display,
+  .text-headline-lg,
+  .text-headline-md {
+    font-family: var(--font-brand);
+    font-variation-settings: "wdth" 112;
+  }
+}
+
+@utility font-brand {
+  /*
+   * Escape para os poucos títulos com tamanho fora da escala — o
+   * número gigante de uma roleta, por exemplo. Preferir sempre um
+   * token de escala; esta utilitária existe para que esses casos não
+   * fiquem em DM Sans por omissão.
+   */
+  font-family: var(--font-brand);
+  font-variation-settings: "wdth" 112;
 }
 
 /**

@@ -43,7 +43,7 @@ export default async function RevisaoNutricaoPage() {
               <p className="text-body-sm text-muted-foreground">Meta diária</p>
               <h2
                 id="meta-diaria"
-                className="text-[2rem] leading-tight font-bold tabular-nums text-on-surface-strong"
+                className="font-brand text-[2rem] leading-tight font-bold tracking-tight tabular-nums text-on-surface-strong"
               >
                 {meta.calorias} kcal
               </h2>

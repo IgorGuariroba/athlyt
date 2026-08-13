@@ -3,12 +3,20 @@ import { ChevronLeft, Check, Dumbbell, MoreHorizontal, Repeat2 } from "lucide-re
 import Link from "next/link";
 import { auth } from "@/auth";
 import { Button } from "@/components/ui/button";
+import { CampoSelecao, Revelar } from "@/components/tela";
 import { obterSessao } from "@/domain/sessao/repositorio";
 import { abandonarSessaoAction, concluirSessaoAction } from "../actions";
 import { BadgeConexao, ProvedorConexao } from "./estado-conexao";
 import { PainelCoach } from "./painel-coach";
 import { RegistroSerie } from "./registro-serie";
 import { ConclusaoSessao } from "./conclusao-sessao";
+
+const MOTIVOS_ABANDONO = [
+  { valor: "tempo", rotulo: "Falta de tempo" },
+  { valor: "equipamento", rotulo: "Equipamento indisponível" },
+  { valor: "dor", rotulo: "Dor ou desconforto" },
+  { valor: "outro", rotulo: "Outro motivo" },
+] as const;
 
 export default async function SessaoPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ exercicio?: string }> }) {
   const { id } = await params;
@@ -77,14 +85,20 @@ export default async function SessaoPage({ params, searchParams }: { params: Pro
 
       {feito && indiceAtual < sessao.exercicios.length - 1 ? <Button asChild size="lg" className="h-14 w-full text-base font-bold"><Link href={`/sessao/${sessao.id}?exercicio=${proximoIndice}`}>Próximo exercício</Link></Button> : null}
       <ConclusaoSessao concluirAction={concluirSessaoAction.bind(null, sessao.id)} seriesPendentes={total - concluidas} />
-      <details className="rounded-xl border border-border p-4">
-        <summary className="cursor-pointer text-center text-label-lg text-muted-foreground">Abandonar sessão</summary>
-        <form action={abandonarSessaoAction.bind(null, sessao.id)} className="mt-4 flex flex-col gap-3">
-          <label className="text-body-sm text-muted-foreground" htmlFor="motivo">Por que você precisa parar?</label>
-          <select id="motivo" name="motivo" className="h-12 rounded-lg border border-input bg-surface-container-high px-3" required><option value="tempo">Falta de tempo</option><option value="equipamento">Equipamento indisponível</option><option value="dor">Dor ou desconforto</option><option value="outro">Outro motivo</option></select>
-          <Button variant="destructive" size="lg">Confirmar abandono</Button>
-        </form>
-      </details>
+      <div className="rounded-xl border border-border p-4">
+        <Revelar rotulo="Abandonar sessão">
+          <form action={abandonarSessaoAction.bind(null, sessao.id)} className="mt-1 flex flex-col gap-3">
+            <CampoSelecao
+              id="motivo"
+              name="motivo"
+              rotulo="Por que você precisa parar?"
+              required
+              opcoes={MOTIVOS_ABANDONO}
+            />
+            <Button variant="destructive" size="lg">Confirmar abandono</Button>
+          </form>
+        </Revelar>
+      </div>
     </div>
     </ProvedorConexao>
   );

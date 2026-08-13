@@ -2,41 +2,161 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Award, Clock3, Dumbbell, Layers3 } from "lucide-react";
 import { auth } from "@/auth";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import {
+  BarraAcaoFixa,
+  CabecalhoSecao,
+  CartaoLista,
+  LinhaCartaoLista,
+  LinhasCartaoLista,
+  Metrica,
+  PainelMetricas,
+  SecoesTela,
+  TelaConteudo,
+} from "@/components/tela";
 import { obterResumoSessao, obterSessao } from "@/domain/sessao/repositorio";
 
-export default async function ResumoPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function ResumoPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
   const { id } = await params;
   const session = await auth();
-  const encontrada = session?.user?.id ? await obterSessao(session.user.id, id) : null;
+  const encontrada = session?.user?.id
+    ? await obterSessao(session.user.id, id)
+    : null;
   if (!encontrada || encontrada.estado === "em_andamento") notFound();
+
   const resumo = await obterResumoSessao(session!.user!.id!, encontrada);
-  const duracaoMin = Math.max(1, Math.round(((resumo.endedAt?.getTime() ?? resumo.startedAt.getTime()) - resumo.startedAt.getTime()) / 60000));
+  const duracaoMin = Math.max(
+    1,
+    Math.round(
+      ((resumo.endedAt?.getTime() ?? resumo.startedAt.getTime()) -
+        resumo.startedAt.getTime()) /
+        60000,
+    ),
+  );
+  const concluida = resumo.estado === "concluida";
 
-  return <div className="flex min-h-full flex-col gap-7 p-5 pb-28">
-    <header className="pt-6 text-center">
-      <div className={`mx-auto mb-5 flex size-20 items-center justify-center rounded-full ${resumo.estado === "concluida" ? "bg-success/15 text-success" : "bg-warning/15 text-warning"}`}><Award className="size-10" /></div>
-      <p className="text-label-md font-semibold tracking-widest text-muted-foreground uppercase">{resumo.estado === "concluida" ? "Treino concluído" : "Sessão encerrada"}</p>
-      <h1 className="mt-2 text-headline-lg font-bold">{resumo.nome}</h1>
-      {resumo.motivoAbandono ? <p className="mt-2 text-body-md text-muted-foreground">Motivo: {resumo.motivoAbandono}</p> : null}
-    </header>
+  return (
+    <TelaConteudo comAcaoFixa>
+      {/* O selo circular é a única marca celebratória do produto e
+          existe só aqui: o fim de uma sessão é o momento em que
+          DESIGN.md > Typography autoriza `display`/destaque
+          ("resultados excepcionais"). */}
+      <header className="flex flex-col items-center gap-2 px-6 pt-10 pb-6 text-center">
+        <div
+          className={`mb-3 flex size-20 items-center justify-center rounded-full ${
+            concluida ? "bg-success/15 text-success" : "bg-warning/15 text-warning"
+          }`}
+        >
+          <Award aria-hidden="true" className="size-10" />
+        </div>
+        <p className="text-label-md font-semibold tracking-wide text-muted-foreground uppercase">
+          {concluida ? "Treino concluído" : "Sessão encerrada"}
+        </p>
+        <h1 className="font-brand text-headline-lg font-bold text-on-surface-strong">
+          {resumo.nome}
+        </h1>
+        {resumo.motivoAbandono ? (
+          <p className="text-body-md text-muted-foreground">
+            Motivo: {resumo.motivoAbandono}
+          </p>
+        ) : null}
+      </header>
 
-    <section className="grid grid-cols-3 overflow-hidden rounded-2xl border border-border bg-border">
-      <div className="bg-surface-container p-4 text-center"><Clock3 className="mx-auto mb-2 size-5 text-muted-foreground"/><strong className="block text-headline-md tabular-nums">{duracaoMin}m</strong><span className="text-caption text-muted-foreground">Duração</span></div>
-      <div className="bg-surface-container p-4 text-center"><Layers3 className="mx-auto mb-2 size-5 text-muted-foreground"/><strong className="block text-headline-md tabular-nums">{resumo.totalSeries}</strong><span className="text-caption text-muted-foreground">Séries</span></div>
-      <div className="bg-surface-container p-4 text-center"><Dumbbell className="mx-auto mb-2 size-5 text-muted-foreground"/><strong className="block text-headline-md tabular-nums">{resumo.volumeKg}</strong><span className="text-caption text-muted-foreground">Volume kg</span></div>
-    </section>
+      <SecoesTela>
+        <PainelMetricas>
+          <Metrica
+            Icone={Clock3}
+            valor={duracaoMin}
+            unidade="m"
+            rotulo="Duração"
+          />
+          <Metrica Icone={Layers3} valor={resumo.totalSeries} rotulo="Séries" />
+          <Metrica
+            Icone={Dumbbell}
+            valor={resumo.volumeKg}
+            unidade=" kg"
+            rotulo="Volume"
+          />
+        </PainelMetricas>
 
-    {resumo.recordes.length ? <section><h2 className="mb-3 text-title font-bold">Recordes da sessão</h2><div className="flex flex-col gap-2">{resumo.recordes.map((recorde) => <div key={recorde.exercicioId} className="flex items-center justify-between rounded-xl border border-warning/30 bg-warning/10 p-4"><div><p className="text-label-md font-semibold text-warning">MAIOR CARGA</p><p className="text-body-md font-bold">{recorde.nome}</p></div><strong className="text-headline-md tabular-nums">{recorde.valor} kg</strong></div>)}</div></section> : null}
+        {resumo.recordes.length ? (
+          <section className="flex flex-col gap-3">
+            <CabecalhoSecao titulo="Recordes da sessão" />
+            <CartaoLista>
+              <LinhasCartaoLista>
+                {resumo.recordes.map((recorde) => (
+                  <LinhaCartaoLista
+                    key={recorde.exercicioId}
+                    titulo={recorde.nome}
+                    meta="Maior carga registrada"
+                    valor={
+                      <span className="flex items-center gap-2">
+                        <Badge
+                          variant="outline"
+                          className="border-warning/40 text-warning"
+                        >
+                          Recorde
+                        </Badge>
+                        {recorde.valor} kg
+                      </span>
+                    }
+                  />
+                ))}
+              </LinhasCartaoLista>
+            </CartaoLista>
+          </section>
+        ) : null}
 
-    <section><h2 className="mb-3 text-title font-bold">Exercícios</h2>{resumo.exercicios.map((exercicio, indice) => <div key={`${exercicio.exercicioId}-${indice}`} className="mb-2 rounded-xl bg-surface-container p-4">
-      <strong>{exercicio.nome}</strong>
-      <p className="text-body-sm text-muted-foreground">{exercicio.series.filter((s) => s.concluida).map((s) => `${s.repeticoes} reps × ${s.cargaKg} kg`).join(" · ") || "Sem séries registradas"}</p>
-      {exercicio.interrompido ? <p className="mt-1 text-caption text-muted-foreground">Interrompido após {exercicio.series.length} de {exercicio.seriesPlanejadas ?? exercicio.series.length} séries · substituído por {exercicio.motivoSubstituicao}</p>
-        : exercicio.substituiuNome ? <p className="mt-1 text-caption text-muted-foreground">Entrou no lugar de {exercicio.substituiuNome} · motivo: {exercicio.motivoSubstituicao}</p> : null}
-    </div>)}</section>
+        <section className="flex flex-col gap-3">
+          <CabecalhoSecao titulo="Exercícios" />
+          <CartaoLista>
+            <LinhasCartaoLista>
+              {resumo.exercicios.map((exercicio, indice) => (
+                <LinhaCartaoLista
+                  key={`${exercicio.exercicioId}-${indice}`}
+                  titulo={exercicio.nome}
+                  meta={
+                    exercicio.series
+                      .filter((serie) => serie.concluida)
+                      .map(
+                        (serie) => `${serie.repeticoes}×${serie.cargaKg} kg`,
+                      )
+                      .join(" · ") || "Sem séries registradas"
+                  }
+                >
+                  {exercicio.interrompido ? (
+                    <p className="text-caption text-muted-foreground">
+                      Interrompido após {exercicio.series.length} de{" "}
+                      {exercicio.seriesPlanejadas ?? exercicio.series.length}{" "}
+                      séries · substituído por {exercicio.motivoSubstituicao}
+                    </p>
+                  ) : exercicio.substituiuNome ? (
+                    <p className="text-caption text-muted-foreground">
+                      Entrou no lugar de {exercicio.substituiuNome} · motivo:{" "}
+                      {exercicio.motivoSubstituicao}
+                    </p>
+                  ) : null}
+                </LinhaCartaoLista>
+              ))}
+            </LinhasCartaoLista>
+          </CartaoLista>
+        </section>
 
-    <Button asChild size="lg" className="h-14 w-full text-base font-bold"><Link href="/sessao/historico">Ver histórico de sessões</Link></Button>
-    <Button asChild variant="ghost"><Link href="/inicio">Concluído</Link></Button>
-  </div>;
+        <Button asChild variant="outline">
+          <Link href="/sessao/historico">Ver histórico de sessões</Link>
+        </Button>
+      </SecoesTela>
+
+      <BarraAcaoFixa>
+        <Button asChild size="cta">
+          <Link href="/inicio">Concluído</Link>
+        </Button>
+      </BarraAcaoFixa>
+    </TelaConteudo>
+  );
 }

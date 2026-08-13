@@ -8,6 +8,7 @@ import {
   BarraAcaoFixa,
   CabecalhoCartaoLista,
   CabecalhoTela,
+  CampoSelecao,
   CartaoLista,
   FaixaDados,
   LinhaCartaoLista,
@@ -123,17 +124,16 @@ export default async function RevisaoTreinoPage() {
                               name="exercicioId"
                               value={exercicio.exercicioId}
                             />
-                            <select
+                            <CampoSelecao
+                              compacto
+                              id={`substituto-${exercicio.exercicioId}`}
                               name="novoExercicioId"
-                              aria-label={`Substituto para ${exercicio.nome}`}
-                              className="h-11 w-full rounded-md border border-input bg-background px-3 text-body-md text-on-surface"
-                            >
-                              {alternativas.map((candidato) => (
-                                <option key={candidato.id} value={candidato.id}>
-                                  {candidato.nome}
-                                </option>
-                              ))}
-                            </select>
+                              rotulo={`Substituto para ${exercicio.nome}`}
+                              opcoes={alternativas.map((candidato) => ({
+                                valor: candidato.id,
+                                rotulo: candidato.nome,
+                              }))}
+                            />
                             <Button
                               type="submit"
                               variant="secondary"

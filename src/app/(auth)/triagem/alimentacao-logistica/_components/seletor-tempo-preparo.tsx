@@ -27,7 +27,7 @@ export function SeletorTempoPreparo({
 
       <p
         aria-hidden="true"
-        className="text-[2rem] leading-none font-bold tabular-nums text-on-surface-strong"
+        className="font-brand text-[2rem] leading-none font-bold tracking-tight tabular-nums text-on-surface-strong"
       >
         {formatarMinutos(minutos)}
       </p>
