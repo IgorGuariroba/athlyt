@@ -81,6 +81,13 @@ subir() {
   migrar
   criar_sessao_dev
   echo "[dev] iniciando next dev na porta ${PORTA}"
+  # Sem teto explícito, o V8 dimensiona o old space pela RAM total da
+  # máquina e o servidor de dev cresce monotonicamente (HMR retém
+  # módulos server-side; 50+ rotas compiladas sob demanda). Já chegou a
+  # 5,5 GB e derrubou a sessão de trabalho inteira por swap. Com teto,
+  # o GC atua antes disso e um estouro vira OOM claro do Node em vez de
+  # travar o sistema. Sobrescrevível via NODE_OPTIONS do ambiente.
+  NODE_OPTIONS="${NODE_OPTIONS:---max-old-space-size=2048}" \
   AUTH_URL="http://localhost:${PORTA}" exec npx next dev --port "$PORTA"
 }
 
