@@ -49,9 +49,9 @@ test("mantém a sessão viva sem rede e sincroniza a fila ao reconectar", async 
 
   // Registro de série continua funcionando, e o timer também.
   await page.getByLabel("Registrar série 2").click();
-  await expect(page.getByRole("dialog", { name: "Timer de descanso" })).toBeVisible();
-  await expect(page.getByText("0:00")).toBeVisible({ timeout: 5_000 });
-  await page.getByRole("button", { name: "Pular descanso" }).click();
+  const timerOffline = page.getByRole("dialog", { name: "Timer de descanso" });
+  await expect(timerOffline).toBeVisible();
+  await expect(timerOffline).toBeHidden({ timeout: 5_000 });
 
   await page.getByLabel("Registrar série 3").click();
   await page.getByRole("button", { name: "Pular descanso" }).click();
