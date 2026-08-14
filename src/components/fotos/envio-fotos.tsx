@@ -93,8 +93,10 @@ async function reduzirParaEnvio(arquivo: File): Promise<File> {
 
 export function EnvioFotos({
   action,
+  destinoSucesso = "/triagem/avaliacao-corporal/fotos?sucesso=Fotos armazenadas de forma privada.",
 }: {
   action: (fd: FormData) => Promise<{ ok: true } | { ok: false; erro: string }>;
+  destinoSucesso?: string;
 }) {
   const router = useRouter();
   const [erro, setErro] = useState<string | null>(null);
@@ -156,9 +158,7 @@ export function EnvioFotos({
 
       formulario.reset();
       iniciarAtualizacao(() => {
-        router.replace(
-          "/triagem/avaliacao-corporal/fotos?sucesso=Fotos armazenadas de forma privada.",
-        );
+        router.replace(destinoSucesso);
         router.refresh();
       });
     } catch {
