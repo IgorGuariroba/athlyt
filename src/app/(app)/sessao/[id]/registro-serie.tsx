@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useConexao } from "./estado-conexao";
 
+const FECHAR_TIMERS_DE_DESCANSO = "athlyt:fechar-timers-de-descanso";
+
 export function RegistroSerie({ exercicioId, numero, repeticoesSugeridas, rirSugerido, descansoSeg, concluida, cargaInicial, cargaSugerida, melhorCargaAnterior, repeticoesIniciais }: {
   exercicioId: string; numero: number; repeticoesSugeridas: string; rirSugerido: number;
   descansoSeg: number; concluida: boolean; cargaInicial: number | null; cargaSugerida: number; melhorCargaAnterior: number; repeticoesIniciais: number | null;
@@ -18,6 +20,12 @@ export function RegistroSerie({ exercicioId, numero, repeticoesSugeridas, rirSug
   const registrada = concluida || local !== undefined;
   const carga = local?.cargaKg ?? cargaInicial;
   const reps = local?.repeticoes ?? repeticoesIniciais;
+
+  useEffect(() => {
+    const fechar = () => setRestante(null);
+    window.addEventListener(FECHAR_TIMERS_DE_DESCANSO, fechar);
+    return () => window.removeEventListener(FECHAR_TIMERS_DE_DESCANSO, fechar);
+  }, []);
 
   useEffect(() => {
     if (restante === null) return;
@@ -39,8 +47,12 @@ export function RegistroSerie({ exercicioId, numero, repeticoesSugeridas, rirSug
    */
   async function registrar(formData: FormData) {
     setEnviando(true);
+    // Há um RegistroSerie montado para cada série. Antes de abrir este
+    // timer, fecha qualquer timer iniciado por outra série para garantir
+    // uma única camada modal e uma única contagem de descanso na sessão.
+    window.dispatchEvent(new Event(FECHAR_TIMERS_DE_DESCANSO));
     // O timer começa antes de qualquer ida à rede: o descanso é tempo
-    // real do atleta e não pode depender de latenc̃ia.
+    // real do atleta e não pode depender de latência.
     setRestante(descansoSeg);
     setTimerMinimizado(false);
     const promessa = enfileirarEvento("serie_registrada", {
