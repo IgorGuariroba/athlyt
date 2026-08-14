@@ -83,7 +83,9 @@ test("a barra de navegação permanece visível nas telas com conteúdo longo", 
     for (let tentativa = 0; tentativa < 10; tentativa += 1) {
       const primeiro = dialogos.first();
       if (!(await primeiro.isVisible().catch(() => false))) return;
-      await primeiro.getByRole("button", { name: "Fechar timer" }).click();
+      await primeiro
+        .getByRole("button", { name: "Fechar timer" })
+        .click({ force: true });
     }
     await expect(dialogos).toHaveCount(0);
   };
