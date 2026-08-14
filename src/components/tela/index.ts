@@ -42,8 +42,13 @@ export {
   GradeSelecaoFoto,
   ItemSelecaoFoto,
 } from "./grade-selecao-foto";
-export { ItemNavegacao, ListaNavegacao } from "./lista-navegacao";
+export {
+  ItemAcaoNavegacao,
+  ItemNavegacao,
+  ListaNavegacao,
+} from "./lista-navegacao";
 export { MedidorScore } from "./medidor-score";
+export { PerfilUsuario } from "./perfil-usuario";
 export { CartaoCheckbox, CartaoRadio } from "./opcao-cartao";
 export { Metrica, PainelMetricas } from "./painel-metricas";
 export { PainelPendencias, type ItemPendencia } from "./painel-pendencias";

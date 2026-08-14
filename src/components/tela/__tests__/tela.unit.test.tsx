@@ -11,6 +11,7 @@ import {
   ChipSelecao,
   ControleSegmentado,
   GraficoTendencia,
+  ItemAcaoNavegacao,
   LinhaCartaoLista,
   LinhasCartaoLista,
   PainelPendencias,
@@ -84,6 +85,19 @@ describe("CartaoLista", () => {
     );
 
     expect(within(screen.getByRole("list")).getAllByRole("listitem")).toHaveLength(2);
+  });
+});
+
+describe("ItemAcaoNavegacao", () => {
+  it("mantém a ação como uma linha inteira da lista", () => {
+    render(
+      <ul>
+        <ItemAcaoNavegacao acao={() => undefined} rotulo="Sair" />
+      </ul>,
+    );
+
+    expect(screen.getByRole("button", { name: "Sair" })).toBeDefined();
+    expect(screen.getByRole("listitem")).toBeDefined();
   });
 });
 
