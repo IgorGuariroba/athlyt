@@ -32,10 +32,10 @@ describe("escolherTreinoDoDia", () => {
     expect(resultado?.dia).toEqual(dias[0]);
   });
 
-  it("treino concluído hoje aparece como concluído, com a sessão para revisar", () => {
+  it("libera o próximo treino do bloco mesmo quando o anterior foi concluído hoje", () => {
     const hoje = new Date("2026-08-01T09:00:00Z");
     const resultado = escolherTreinoDoDia(dias, [sessao({ id: "s9", diaId: "dia-2", startedAt: hoje, endedAt: hoje })], agora);
-    expect(resultado).toEqual(expect.objectContaining({ dia: dias[1], estado: "concluido_hoje", sessaoId: "s9" }));
+    expect(resultado).toEqual(expect.objectContaining({ dia: dias[2], estado: "pronto", sessaoId: null }));
   });
 
   it("sessão em andamento vence a rotação e devolve o caminho de volta", () => {

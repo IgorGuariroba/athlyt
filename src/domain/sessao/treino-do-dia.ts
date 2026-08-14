@@ -23,7 +23,7 @@ export interface SessaoParaCartao {
   endedAt: Date | null;
 }
 
-export type EstadoCartaoTreino = "pronto" | "em_andamento" | "concluido_hoje";
+export type EstadoCartaoTreino = "pronto" | "em_andamento";
 
 export interface TreinoDoDia {
   dia: DiaTreino;
@@ -32,10 +32,6 @@ export interface TreinoDoDia {
   sessaoId: string | null;
   /** Sessões concluídas nos últimos 7 dias, para o resumo do cartão. */
   concluidasNaSemana: number;
-}
-
-function mesmoDia(a: Date, b: Date): boolean {
-  return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
 }
 
 export function escolherTreinoDoDia(
@@ -63,10 +59,8 @@ export function escolherTreinoDoDia(
   const indiceUltimo = ultima ? dias.findIndex((item) => item.id === ultima.diaId) : -1;
   const proximo = dias[(indiceUltimo + 1) % dias.length];
 
-  if (ultima && mesmoDia(ultima.endedAt ?? ultima.startedAt, agora)) {
-    const dia = dias[indiceUltimo === -1 ? 0 : indiceUltimo];
-    return { dia, estado: "concluido_hoje", sessaoId: ultima.id, concluidasNaSemana };
-  }
-
+  // Concluir uma sessão avança imediatamente a sequência. A data não
+  // bloqueia o próximo treino: o atleta pode antecipar, repor ou fazer
+  // mais de uma sessão no mesmo dia, sem perder a ordem A → B → C.
   return { dia: proximo, estado: "pronto", sessaoId: null, concluidasNaSemana };
 }

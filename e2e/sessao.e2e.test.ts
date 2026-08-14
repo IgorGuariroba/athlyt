@@ -22,6 +22,8 @@ test("executa o treino do dia, usa o timer e consulta o resumo no histórico", a
 
   await page.goto("/inicio");
   await expect(page.getByRole("heading", { name: "Superior A" })).toBeVisible();
+  await expect(page.getByRole("link", { name: /Superior A/ })).toBeVisible();
+  await expect(page.getByRole("link", { name: /Inferior A/ })).toBeVisible();
   await page.getByRole("link", { name: /Ver treino/ }).click();
   await expect(page.getByText("1 exercícios · 1 séries")).toBeVisible();
   await page.getByRole("button", { name: /Iniciar treino/ }).click();
@@ -39,11 +41,12 @@ test("executa o treino do dia, usa o timer e consulta o resumo no histórico", a
   await page.getByRole("link", { name: "Ver histórico de sessões" }).click();
   await expect(page.getByText("Concluída", { exact: true })).toBeVisible();
 
-  // O Início precisa refletir o treino concluído em vez de reoferecer
-  // o mesmo card como se nada tivesse acontecido.
+  // Concluir hoje não bloqueia a sequência até amanhã: o próximo dia
+  // do bloco fica disponível imediatamente, e os demais seguem livres.
   await page.goto("/inicio");
-  await expect(page.getByText("Treino de hoje")).toBeVisible();
-  await expect(page.getByText("Concluído", { exact: true })).toBeVisible();
+  await expect(page.getByText("Próximo treino")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Inferior A" })).toBeVisible();
   await expect(page.getByText("1 de 2 treinos concluídos nos últimos 7 dias")).toBeVisible();
-  await expect(page.getByRole("link", { name: /Ver resumo do treino/ })).toBeVisible();
+  await expect(page.getByRole("link", { name: /Superior A/ })).toBeVisible();
+  await expect(page.getByRole("link", { name: /Inferior A/ })).toBeVisible();
 });
