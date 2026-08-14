@@ -33,6 +33,10 @@ Versão imutável vigente do conjunto Bloco de Treino + estratégia nutricional 
 **Plano Estável**:
 Última versão do plano considerada segura e conhecida, alvo de rollback quando um Experimento de Plano falha.
 
+**Reavaliação Pendente**:
+Estado aberto quando uma mudança relevante no Contexto do Atleta — como objetivo, disponibilidade, equipamentos ou restrições — pode exigir mudança estrutural. O Plano Ativo permanece vigente até que a Reavaliação Pendente seja incorporada à Revisão Semanal e resulte em manutenção ou em um Experimento de Plano aprovado.
+_Avoid_: Plano desatualizado, troca automática de plano
+
 **Bloco de Treino**:
 Estrutura de treino estável por quatro a oito semanas: frequência, divisão, exercícios, séries, faixas de repetição, RIR e descansos.
 

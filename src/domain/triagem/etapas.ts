@@ -46,6 +46,34 @@ export type ObjetivoComposicao =
   | "perder-gordura"
   | "ganhar-massa";
 
+export const OBJETIVOS_COMPOSICAO: readonly {
+  value: ObjetivoComposicao;
+  titulo: string;
+  descricao: string;
+}[] = [
+  {
+    value: "recomposicao",
+    titulo: "Recomposição corporal",
+    descricao:
+      "Reduzir gordura e desenvolver massa muscular a partir da sua linha de base, sem presumir percentuais",
+  },
+  {
+    value: "perder-gordura",
+    titulo: "Priorizar perda de gordura",
+    descricao: "Reduzir gordura corporal preservando o máximo de massa muscular",
+  },
+  {
+    value: "ganhar-massa",
+    titulo: "Priorizar ganho de massa muscular",
+    descricao: "Maximizar hipertrofia com ganho de gordura controlado",
+  },
+];
+
+export function rotuloObjetivoComposicao(objetivo: string): string {
+  return OBJETIVOS_COMPOSICAO.find((item) => item.value === objetivo)?.titulo
+    ?? objetivo;
+}
+
 /**
  * Snapshot completo do perfil de triagem. Cada campo é opcional
  * porque a cascata é progressiva — o snapshot mais recente é sempre

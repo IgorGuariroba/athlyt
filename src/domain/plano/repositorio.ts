@@ -1,6 +1,6 @@
 import { and, desc, eq } from "drizzle-orm";
 import { db } from "@/db/client";
-import { decisionTrails, planExperiments, plans } from "@/db/schema";
+import { decisionTrails, planExperiments, planReassessments, plans, weeklyBodyReviews } from "@/db/schema";
 import { avaliarConfiancaCorporal, gerarMetasProporcao } from "@/domain/medicoes";
 import { obterPanoramaCorporal } from "@/domain/medicoes/repositorio";
 import type { RespostasTriagem } from "@/domain/triagem/etapas";
@@ -198,7 +198,7 @@ export async function desfazerAjusteAutomatico(userId: string, entrada: { review
   });
 }
 
-export async function ativarExperimentoPlano(userId: string, entrada: { planoId: string; hipotese: string; variaveis: string[]; criterioSucesso: string; criterioInterrupcao: string; janelaMinimaSemanas: number }) {
+export async function ativarExperimentoPlano(userId: string, entrada: { planoId: string; reavaliacaoId?: string; hipotese: string; variaveis: string[]; criterioSucesso: string; criterioInterrupcao: string; janelaMinimaSemanas: number }) {
   if (!entrada.hipotese.trim() || !entrada.criterioSucesso.trim() || !entrada.criterioInterrupcao.trim() || entrada.variaveis.length === 0) throw new Error("Experimento incompleto.");
   return db.transaction(async (tx) => {
     const [baseline] = await tx.select().from(plans).where(and(eq(plans.userId, userId), eq(plans.estado, "ativo"))).limit(1).for("update");
@@ -209,6 +209,20 @@ export async function ativarExperimentoPlano(userId: string, entrada: { planoId:
     await tx.update(plans).set({ estado: "arquivado" }).where(eq(plans.id, baseline.id));
     const [ativo] = await tx.update(plans).set({ estado: "ativo", versao: (baseline.versao ?? 0) + 1, activatedAt: new Date() }).where(eq(plans.id, rascunho.id)).returning();
     const [linha] = await tx.insert(planExperiments).values({ userId, baselinePlanId: baseline.id, experimentPlanId: ativo.id, hipotese: entrada.hipotese, variaveis: entrada.variaveis, criterioSucesso: entrada.criterioSucesso, criterioInterrupcao: entrada.criterioInterrupcao, janelaMinimaSemanas: Math.max(1, Math.min(8, entrada.janelaMinimaSemanas)) }).returning();
+    if (entrada.reavaliacaoId) {
+      const [reavaliacao] = await tx.update(planReassessments).set({ estado: "aplicada", candidatePlanId: ativo.id, resolvedAt: new Date() }).where(and(
+        eq(planReassessments.id, entrada.reavaliacaoId),
+        eq(planReassessments.userId, userId),
+        eq(planReassessments.estado, "incorporada"),
+      )).returning();
+      if (!reavaliacao) throw new Error("Reavaliação incorporada não encontrada.");
+      if (reavaliacao.reviewId) {
+        await tx.update(weeklyBodyReviews).set({ estado: "aplicada", appliedPlanId: ativo.id }).where(and(
+          eq(weeklyBodyReviews.id, reavaliacao.reviewId),
+          eq(weeklyBodyReviews.userId, userId),
+        ));
+      }
+    }
     await tx.insert(decisionTrails).values({ userId, operacao: "revisao-semanal", recorteVersao: 2, perfilVersao: ativo.perfilVersao, modeloSolicitado: "motor-adaptativo", modeloResolvido: "experimento-plano-v1", auditavel: true, degradado: false, camposEnviados: ["hipotese", "variaveis", "criterios", "plano-estavel"], camposOmitidos: [], ferramentasConsultadas: [], resultado: { tipo: "experimento-ativado", experimentId: linha.id, baselinePlanId: baseline.id, experimentPlanId: ativo.id, hipotese: entrada.hipotese, variaveis: entrada.variaveis } });
     return linha;
   });
