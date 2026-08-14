@@ -237,7 +237,7 @@ test.describe("Triagem em cascata", () => {
     await expect(page.getByText("Modo Conservador")).not.toBeVisible();
   });
 
-  test("abandonar no meio da cascata mantém o Início em Modo Conservador e permite retomar", async ({
+  test("abandonar no meio da cascata retoma a próxima etapa antes do Início", async ({
     page,
     context,
   }) => {
@@ -251,13 +251,12 @@ test.describe("Triagem em cascata", () => {
     await page.getByText("Masculino").click();
     await page.getByRole("button", { name: "Continuar" }).click();
 
-    // Abandona a cascata aqui (etapa "altura" pendente) e vai direto ao Início.
+    // Abandona a cascata aqui. O Início retoma automaticamente a etapa
+    // pendente, sem criar um segundo fluxo de "completar perfil".
     await page.goto("/inicio");
-    await expect(page.getByText("Modo Conservador", { exact: true })).toBeVisible();
-    await expect(page.getByText("Altura")).toBeVisible();
-
-    // Retomar a triagem volta exatamente para a próxima etapa pendente.
-    await page.getByRole("link", { name: "Completar perfil" }).click();
     await expect(page).toHaveURL("/triagem/altura");
+    await expect(
+      page.getByRole("heading", { name: "Qual é a sua altura?" }),
+    ).toBeVisible();
   });
 });

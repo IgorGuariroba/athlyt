@@ -77,16 +77,15 @@ test("a barra de navegação permanece visível nas telas com conteúdo longo", 
   // diálogo montado ao mesmo tempo; fecha todos antes do próximo clique.
   const dialogos = page.getByRole("dialog", { name: "Timer de descanso" });
   const fecharTimer = async () => {
-    for (let tentativa = 0; tentativa < 6; tentativa += 1) {
-      const abertos = await dialogos.all();
-      let fechouAlgum = false;
-      for (const dialogo of abertos) {
-        if (!(await dialogo.isVisible().catch(() => false))) continue;
-        await dialogo.getByRole("button", { name: "Fechar timer" }).click({ timeout: 5_000 }).catch(() => {});
-        fechouAlgum = true;
-      }
-      if (!fechouAlgum) return;
-      await page.waitForTimeout(200);
+    // Fechar um diálogo desmonta e recria a lista de cartões. Trabalhar com
+    // uma captura de `all()` deixa as referências seguintes obsoletas; por
+    // isso buscamos novamente o primeiro diálogo a cada iteração.
+    for (let tentativa = 0; tentativa < 10; tentativa += 1) {
+      const primeiro = dialogos.first();
+      if (!(await primeiro.isVisible().catch(() => false))) return;
+      await primeiro
+        .getByRole("button", { name: "Fechar timer" })
+        .click({ force: true });
     }
     await expect(dialogos).toHaveCount(0);
   };

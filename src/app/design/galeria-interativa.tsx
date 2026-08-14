@@ -77,32 +77,54 @@ export function MenuSuspenso() {
 
 export function RoletaDemonstracao() {
   const [peso, setPeso] = useState(78.5);
+  const [altura, setAltura] = useState(175);
 
   return (
-    <div className="flex flex-col gap-3">
-      <p className="text-display font-bold tabular-nums text-on-surface-strong">
-        {peso.toLocaleString("pt-BR", { minimumFractionDigits: 1 })}{" "}
-        <span className="text-title text-muted-foreground">kg</span>
-      </p>
-      <RoletaValor
-        eixo="x"
-        minimo={40}
-        maximo={160}
-        passo={0.1}
-        valorInicial={78.5}
-        aoMudar={setPeso}
-        passoPx={14}
-        rotulo="Peso corporal"
-        // A roleta é posicionada em absoluto internamente: sem altura
-        // declarada pelo contexto, o trilho colapsa para zero.
-        className="h-32 w-full rounded-xl bg-surface-container"
-        formatarRotulo={(valor) =>
-          Math.abs(valor - Math.round(valor)) < 0.05 ? `${Math.round(valor)}` : null
-        }
-        descreverValor={(valor) =>
-          `${valor.toLocaleString("pt-BR", { minimumFractionDigits: 1 })} quilos`
-        }
-      />
+    <div className="grid gap-6 md:grid-cols-2">
+      <div className="flex flex-col gap-3">
+        <p className="text-label-md text-muted-foreground">Peso corporal</p>
+        <p className="text-display font-bold tabular-nums text-on-surface-strong">
+          {peso.toLocaleString("pt-BR", { minimumFractionDigits: 1 })}{" "}
+          <span className="text-title text-muted-foreground">kg</span>
+        </p>
+        <RoletaValor
+          eixo="x"
+          minimo={40}
+          maximo={160}
+          passo={0.1}
+          valorInicial={78.5}
+          aoMudar={setPeso}
+          passoPx={14}
+          rotulo="Peso corporal"
+          className="h-32 w-full rounded-xl bg-surface-container"
+          formatarRotulo={(valor) =>
+            Math.abs(valor - Math.round(valor)) < 0.05 ? `${Math.round(valor)}` : null
+          }
+          descreverValor={(valor) =>
+            `${valor.toLocaleString("pt-BR", { minimumFractionDigits: 1 })} quilos`
+          }
+        />
+      </div>
+
+      <div className="flex flex-col gap-3">
+        <p className="text-label-md text-muted-foreground">Altura</p>
+        <p className="text-display font-bold tabular-nums text-on-surface-strong">
+          {altura} <span className="text-title text-muted-foreground">cm</span>
+        </p>
+        <RoletaValor
+          eixo="y"
+          minimo={100}
+          maximo={250}
+          passo={1}
+          valorInicial={175}
+          aoMudar={setAltura}
+          passoPx={22}
+          rotulo="Altura"
+          className="h-64 w-full rounded-xl bg-surface-container"
+          formatarRotulo={(valor) => (valor % 5 === 0 ? `${valor}` : null)}
+          descreverValor={(valor) => `${valor} centímetros`}
+        />
+      </div>
     </div>
   );
 }

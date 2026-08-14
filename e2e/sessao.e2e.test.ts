@@ -29,9 +29,9 @@ test("executa o treino do dia, usa o timer e consulta o resumo no histórico", a
   await expect(page.getByRole("button", { name: /Complete 1 séries/ })).toBeDisabled();
 
   await page.getByLabel("Registrar série 1").click();
-  await expect(page.getByRole("dialog", { name: "Timer de descanso" })).toBeVisible();
-  await expect(page.getByText("0:00")).toBeVisible({ timeout: 5_000 });
-  await page.getByRole("button", { name: "Pular descanso" }).click();
+  const timer = page.getByRole("dialog", { name: "Timer de descanso" });
+  await expect(timer).toBeVisible();
+  await expect(timer).toBeHidden({ timeout: 5_000 });
   await page.getByRole("button", { name: "Concluir treino" }).click();
 
   await expect(page.getByText("Treino concluído")).toBeVisible();

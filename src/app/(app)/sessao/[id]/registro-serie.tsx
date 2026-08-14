@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useConexao } from "./estado-conexao";
 
+const FECHAR_TIMERS_DE_DESCANSO = "athlyt:fechar-timers-de-descanso";
+
 export function RegistroSerie({ exercicioId, numero, repeticoesSugeridas, rirSugerido, descansoSeg, concluida, cargaInicial, cargaSugerida, melhorCargaAnterior, repeticoesIniciais }: {
   exercicioId: string; numero: number; repeticoesSugeridas: string; rirSugerido: number;
   descansoSeg: number; concluida: boolean; cargaInicial: number | null; cargaSugerida: number; melhorCargaAnterior: number; repeticoesIniciais: number | null;
@@ -20,13 +22,24 @@ export function RegistroSerie({ exercicioId, numero, repeticoesSugeridas, rirSug
   const reps = local?.repeticoes ?? repeticoesIniciais;
 
   useEffect(() => {
+    const fechar = () => setRestante(null);
+    window.addEventListener(FECHAR_TIMERS_DE_DESCANSO, fechar);
+    return () => window.removeEventListener(FECHAR_TIMERS_DE_DESCANSO, fechar);
+  }, []);
+
+  useEffect(() => {
     if (restante === null) return;
-    if (restante <= 0) {
-      navigator.vibrate?.([180, 80, 180]);
-      if (Notification.permission === "granted") new Notification("Descanso concluído", { body: "Sua próxima série está pronta." });
-      return;
-    }
-    const id = window.setTimeout(() => setRestante((valor) => valor === null ? null : valor - 1), 1000);
+    const id = window.setTimeout(() => setRestante((valor) => {
+      if (valor === null) return null;
+      if (valor <= 1) {
+        navigator.vibrate?.([180, 80, 180]);
+        if (Notification.permission === "granted") new Notification("Descanso concluído", { body: "Sua próxima série está pronta." });
+        // O descanso concluído não mantém uma camada modal em 0:00
+        // bloqueando o registro da próxima série.
+        return null;
+      }
+      return valor - 1;
+    }), 1000);
     return () => window.clearTimeout(id);
   }, [restante]);
 
@@ -39,8 +52,12 @@ export function RegistroSerie({ exercicioId, numero, repeticoesSugeridas, rirSug
    */
   async function registrar(formData: FormData) {
     setEnviando(true);
+    // Há um RegistroSerie montado para cada série. Antes de abrir este
+    // timer, fecha qualquer timer iniciado por outra série para garantir
+    // uma única camada modal e uma única contagem de descanso na sessão.
+    window.dispatchEvent(new Event(FECHAR_TIMERS_DE_DESCANSO));
     // O timer começa antes de qualquer ida à rede: o descanso é tempo
-    // real do atleta e não pode depender de latenc̃ia.
+    // real do atleta e não pode depender de latência.
     setRestante(descansoSeg);
     setTimerMinimizado(false);
     const promessa = enfileirarEvento("serie_registrada", {

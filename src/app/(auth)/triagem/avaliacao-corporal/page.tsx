@@ -55,10 +55,20 @@ export default function AvaliacaoCorporalPage() {
         </p>
       </header>
 
-      <section
-        aria-label="O que cada medida libera"
-        className="overflow-hidden rounded-2xl border border-border bg-surface-container"
-      >
+      <section aria-labelledby="beneficios-avaliacao">
+        <div className="mb-3 flex flex-col gap-1">
+          <h2
+            id="beneficios-avaliacao"
+            className="text-title font-bold text-on-surface-strong"
+          >
+            O que suas medidas melhoram
+          </h2>
+          <p className="text-body-sm text-muted-foreground">
+            Você não precisa selecionar uma opção nesta tela. Estes itens
+            explicam os benefícios da avaliação.
+          </p>
+        </div>
+        <div className="overflow-hidden rounded-2xl border border-border bg-surface-container">
         <ul className="grid gap-px bg-border">
           {BENEFICIOS.map(({ Icone, titulo, descricao }) => (
             <li key={titulo} className="flex gap-4 bg-background px-5 py-4">
@@ -76,6 +86,7 @@ export default function AvaliacaoCorporalPage() {
             </li>
           ))}
         </ul>
+        </div>
       </section>
 
       <div className="mt-auto flex flex-col gap-3">

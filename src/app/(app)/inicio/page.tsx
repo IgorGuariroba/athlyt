@@ -1,10 +1,11 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { ArrowRight, CalendarDays, CheckCircle2, Dumbbell, Flame, Ruler } from "lucide-react";
 import { auth } from "@/auth";
 import { sair } from "../../(auth)/actions";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { CORES_MACRO, CartaoLista, PainelPendencias } from "@/components/tela";
+import { CORES_MACRO, CartaoLista } from "@/components/tela";
 import { obterPerfilVigente } from "@/domain/triagem/perfil";
 import { montarResumoTriagem } from "@/domain/triagem/resumo";
 import { obterPlanoAtivo } from "@/domain/plano/repositorio";
@@ -26,6 +27,11 @@ export default async function InicioPage() {
     ? await Promise.all([obterPerfilVigente(userId), obterPlanoAtivo(userId), listarHistoricoSessoes(userId), obterPanoramaCorporal(userId)])
     : [null, null, [], { medicoes: [], pesos: [], gorduras: [], fotos: [], metas: [] }];
   const resumo = montarResumoTriagem(perfil?.respostas ?? {});
+
+  // Dados essenciais pertencem ao onboarding: a tela inicial só é
+  // liberada depois que essa parte da cascata estiver concluída.
+  if (resumo.modoConservador && !planoAtivo) redirect("/triagem?retomar=1");
+
   const respostas = perfil?.respostas ?? {};
   const regioes = new Set(panorama.medicoes.flatMap((m) => [m.regiao, `${m.regiao}:${m.lado}`]));
   const confiancaCorporal = avaliarConfiancaCorporal({
@@ -47,9 +53,6 @@ export default async function InicioPage() {
           <h1 className="text-headline-md font-bold text-on-surface-strong">
             Início
           </h1>
-          {resumo.modoConservador ? (
-            <Badge variant="secondary">Modo Conservador</Badge>
-          ) : null}
         </div>
         <form action={sair}>
           <Button type="submit" variant="ghost" size="sm">
@@ -331,24 +334,6 @@ export default async function InicioPage() {
         </section>
       ) : null}
 
-      {resumo.modoConservador ? (
-        <PainelPendencias
-          titulo="Complete seu perfil"
-          descricao="Saia do Modo Conservador e receba orientações ajustadas aos seus dados."
-          itens={resumo.itens
-            .filter((item) => item.obrigatoria && !item.respondida)
-            .map((item) => ({
-              id: item.id,
-              titulo: item.titulo,
-              descricao: item.destrava,
-            }))}
-          acao={
-            <Button asChild size="lg">
-              <Link href="/triagem?retomar=1">Completar perfil</Link>
-            </Button>
-          }
-        />
-      ) : null}
     </div>
   );
 }
