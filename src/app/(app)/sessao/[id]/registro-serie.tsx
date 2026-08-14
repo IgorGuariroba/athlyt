@@ -29,12 +29,17 @@ export function RegistroSerie({ exercicioId, numero, repeticoesSugeridas, rirSug
 
   useEffect(() => {
     if (restante === null) return;
-    if (restante <= 0) {
-      navigator.vibrate?.([180, 80, 180]);
-      if (Notification.permission === "granted") new Notification("Descanso concluído", { body: "Sua próxima série está pronta." });
-      return;
-    }
-    const id = window.setTimeout(() => setRestante((valor) => valor === null ? null : valor - 1), 1000);
+    const id = window.setTimeout(() => setRestante((valor) => {
+      if (valor === null) return null;
+      if (valor <= 1) {
+        navigator.vibrate?.([180, 80, 180]);
+        if (Notification.permission === "granted") new Notification("Descanso concluído", { body: "Sua próxima série está pronta." });
+        // O descanso concluído não mantém uma camada modal em 0:00
+        // bloqueando o registro da próxima série.
+        return null;
+      }
+      return valor - 1;
+    }), 1000);
     return () => window.clearTimeout(id);
   }, [restante]);
 
