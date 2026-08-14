@@ -1,4 +1,5 @@
 import { desc, eq } from "drizzle-orm";
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { Badge } from "@/components/ui/badge";
@@ -93,7 +94,13 @@ export default async function ConsentimentosPage({
                     Revogar e excluir fotos
                   </Button>
                 </form>
-              ) : null}
+              ) : (
+                <Button asChild size="sm">
+                  <Link href="/progresso/fotos/enviar">
+                    Permitir ao enviar fotos
+                  </Link>
+                </Button>
+              )}
             </LinhaCartaoLista>
 
             <LinhaCartaoLista
@@ -111,7 +118,13 @@ export default async function ConsentimentosPage({
                     Revogar análise futura
                   </Button>
                 </form>
-              ) : null}
+              ) : (
+                <Button asChild size="sm">
+                  <Link href="/progresso/avaliacao-visual">
+                    Selecionar fotos e permitir
+                  </Link>
+                </Button>
+              )}
             </LinhaCartaoLista>
           </LinhasCartaoLista>
         </CartaoLista>

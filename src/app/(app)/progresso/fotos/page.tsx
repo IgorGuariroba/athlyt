@@ -63,9 +63,14 @@ export default async function FotosProgressoPage() {
           </CartaoLista>
         )}
 
-        <Button asChild variant="outline">
-          <Link href="/progresso/avaliacao-visual">Avaliação visual</Link>
-        </Button>
+        <div className="flex flex-wrap gap-3">
+          <Button asChild>
+            <Link href="/progresso/fotos/enviar">Enviar fotos</Link>
+          </Button>
+          <Button asChild variant="outline">
+            <Link href="/progresso/avaliacao-visual">Avaliação visual</Link>
+          </Button>
+        </div>
       </SecoesTela>
 
       <NotaTela>

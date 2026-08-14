@@ -11,7 +11,7 @@ import {
   excluirFotoCorporal,
   excluirTodasFotosCorporais,
 } from "./actions";
-import { EnvioFotos } from "./_components/envio-fotos";
+import { EnvioFotos } from "@/components/fotos/envio-fotos";
 
 /**
  * Tela 008f — fotos da Avaliação Corporal Inicial
@@ -24,7 +24,7 @@ import { EnvioFotos } from "./_components/envio-fotos";
  * informação e a comparação depende de serem tratadas como conjunto,
  * e não como quatro campos soltos.
  *
- * O formulário de envio é cliente (`_components/envio-fotos.tsx`)
+ * O formulário de envio é cliente (`@/components/fotos/envio-fotos`)
  * porque as fotos precisam ser reduzidas no aparelho antes de virarem
  * corpo da Server Action.
  */
