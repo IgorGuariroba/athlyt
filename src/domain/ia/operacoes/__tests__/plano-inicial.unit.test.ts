@@ -28,8 +28,90 @@ const plano = {
     fibrasG: 30,
     estrategia: "Manutenção com proteína distribuída",
     refeicoes: [],
+    explicacoes: {
+      calorias: {
+        porque: "Estimativa de manutenção para 80 kg, 180 cm e 35 anos, com atividade moderada.",
+        dadosUsados: [
+          { campo: "pesoKg", valor: "80" },
+          { campo: "alturaCm", valor: "180" },
+          { campo: "idadeAnos", valor: "35" },
+          { campo: "sexoBiologico", valor: "masculino" },
+          { campo: "nivelAtividade", valor: "moderado" },
+        ],
+      },
+      proteinaG: {
+        porque: "Dois gramas por quilo dos seus 80 kg sustentam o ganho de massa que você escolheu.",
+        dadosUsados: [{ campo: "pesoKg", valor: "80" }, { campo: "objetivoComposicao", valor: "ganhar-massa" }],
+      },
+      carboidratosG: {
+        porque: "Carboidrato preenche a energia restante para sustentar quatro sessões semanais.",
+        dadosUsados: [{ campo: "diasDisponiveis", valor: "4 dias" }],
+      },
+      gordurasG: {
+        porque: "Gordura no piso saudável de 0,8 g por quilo, preservando função hormonal.",
+        dadosUsados: [{ campo: "pesoKg", valor: "80" }],
+      },
+      estrategia: {
+        porque: "Seu objetivo de ganhar massa pede superávit leve, e sem modo conservador dá para progredir.",
+        dadosUsados: [
+          { campo: "objetivoComposicao", valor: "ganhar-massa" },
+          { campo: "modoConservador", valor: "desativado" },
+        ],
+      },
+    },
   },
   dadosUsados: ["triagem-completa", "linha-base-corporal", "metas-proporcao"],
+};
+
+const exercicioValido = {
+  exercicioId: "supino-barra",
+  nome: "Supino reto com barra",
+  padrao: "empurrar-horizontal",
+  series: 3,
+  repeticoes: "6-10",
+  rir: 2,
+  descansoSeg: 120,
+  justificativa: "Composto principal de empurrar horizontal",
+  explicacao: {
+    porque: "Você tem barra e banco na academia e 60 minutos por sessão, o que comporta um composto pesado.",
+    dadosUsados: [{ campo: "equipamentos", valor: "barra olímpica, banco reto" }],
+  },
+};
+
+/** Plano mínimo que satisfaz o schema inteiro, base das variações inválidas. */
+const planoValido = {
+  ...plano,
+  bloco: {
+    ...plano.bloco,
+    dias: [{
+      id: "dia-1",
+      nome: "Superior",
+      diaSemana: "segunda",
+      exercicios: [exercicioValido],
+      explicacao: {
+        porque: "Você marcou segunda como dia disponível e a divisão superior abre a semana com mais energia.",
+        dadosUsados: [{ campo: "diasDisponiveis", valor: "segunda, quinta" }],
+      },
+    }],
+    explicacao: {
+      porque: "Seis semanas correspondem à sua experiência intermediária, com margem para progressão.",
+      dadosUsados: [{ campo: "experienciaTreino", valor: "intermediario" }],
+    },
+  },
+  nutricao: {
+    ...plano.nutricao,
+    refeicoes: [{
+      nome: "Café da manhã",
+      percentual: 25,
+      calorias: 600,
+      proteinaG: 40,
+      itens: ["Aveia 60 g", "Ovos 2 un"],
+      explicacao: {
+        porque: "Trinta minutos de preparo comportam uma refeição simples e barata pela manhã.",
+        dadosUsados: [{ campo: "tempoPreparoMin", valor: "30" }],
+      },
+    }],
+  },
 };
 
 describe("gerarPlanoInicialComIA", () => {
@@ -97,6 +179,112 @@ describe("gerarPlanoInicialComIA", () => {
       },
       imagens: [{ dados: new Uint8Array([1, 2, 3]), mediaType: "image/jpeg" }],
     }));
+  });
+
+  it("rejeita exercício sem explicação ancorada em dados do atleta", () => {
+    const semExplicacao = {
+      ...plano,
+      bloco: {
+        ...plano.bloco,
+        dias: [{
+          id: "dia-1",
+          nome: "Superior",
+          diaSemana: "segunda",
+          exercicios: [{
+            exercicioId: "supino-barra",
+            nome: "Supino reto com barra",
+            padrao: "empurrar-horizontal",
+            series: 3,
+            repeticoes: "6-10",
+            rir: 2,
+            descansoSeg: 120,
+            justificativa: "Ótimo para peito",
+          }],
+        }],
+      },
+    };
+
+    expect(planoInicialSchema.safeParse(semExplicacao).success).toBe(false);
+  });
+
+  it("aceita plano completo com explicação em toda decisão", () => {
+    const analise = planoInicialSchema.safeParse(planoValido);
+    expect(analise.error?.issues ?? []).toEqual([]);
+    expect(analise.success).toBe(true);
+  });
+
+  it("rejeita nutrição sem explicação para cada meta", () => {
+    const nutricaoSemExplicacoes = { ...planoValido.nutricao, explicacoes: undefined };
+    expect(planoInicialSchema.safeParse({ ...planoValido, nutricao: nutricaoSemExplicacoes }).success).toBe(false);
+  });
+
+  it("rejeita calorias explicadas sem ancorar em idade, peso, altura, sexo ou atividade", () => {
+    const semAncora = {
+      ...planoValido,
+      nutricao: {
+        ...planoValido.nutricao,
+        explicacoes: {
+          ...planoValido.nutricao.explicacoes,
+          calorias: {
+            porque: "Escolhemos essa energia porque você quer ganhar massa neste ciclo de treino.",
+            dadosUsados: [{ campo: "objetivoComposicao", valor: "ganhar-massa" }],
+          },
+        },
+      },
+    };
+
+    expect(planoInicialSchema.safeParse(semAncora).success).toBe(false);
+  });
+
+  it("rejeita escolha de exercício ancorada apenas em peso corporal", () => {
+    const ancoraErrada = {
+      ...planoValido,
+      bloco: {
+        ...planoValido.bloco,
+        dias: [{
+          ...planoValido.bloco.dias[0],
+          exercicios: [{
+            ...exercicioValido,
+            explicacao: {
+              porque: "Seus 80 kg de peso corporal indicam boa base de força para este movimento.",
+              dadosUsados: [{ campo: "pesoKg", valor: "80" }],
+            },
+          }],
+        }],
+      },
+    };
+
+    expect(planoInicialSchema.safeParse(ancoraErrada).success).toBe(false);
+  });
+
+  it("rejeita explicação que cita dado nunca enviado ao agent", () => {
+    const campoInventado = {
+      ...plano,
+      bloco: {
+        ...plano.bloco,
+        dias: [{
+          id: "dia-1",
+          nome: "Superior",
+          diaSemana: "segunda",
+          exercicios: [{
+            exercicioId: "supino-barra",
+            nome: "Supino reto com barra",
+            padrao: "empurrar-horizontal",
+            series: 3,
+            repeticoes: "6-10",
+            rir: 2,
+            descansoSeg: 120,
+            justificativa: "Composto principal de empurrar horizontal",
+            explicacao: {
+              porque: "Seu exame de sangue recente indica disposição para carga alta neste padrão.",
+              dadosUsados: [{ campo: "exameDeSangue", valor: "normal" }],
+            },
+          }],
+        }],
+      },
+    };
+
+    expect(planoInicialSchema.safeParse(campoInventado).success).toBe(false);
   });
 
   it("rejeita exercício inventado pelo modelo", () => {
