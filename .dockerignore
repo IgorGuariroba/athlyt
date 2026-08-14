@@ -24,7 +24,12 @@ build
 !.env.prod.example
 
 # testes e evidências
-e2e
+# O script `scripts/auditoria-visual.ts` participa do typecheck do Next e
+# compartilha este helper com os testes; mantenha apenas ele no contexto.
+e2e/*
+!e2e/helpers/
+e2e/helpers/*
+!e2e/helpers/seed-session.ts
 coverage
 playwright-report
 test-results
