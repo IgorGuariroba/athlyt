@@ -47,5 +47,6 @@ export { MedidorScore } from "./medidor-score";
 export { CartaoCheckbox, CartaoRadio } from "./opcao-cartao";
 export { Metrica, PainelMetricas } from "./painel-metricas";
 export { PainelPendencias, type ItemPendencia } from "./painel-pendencias";
+export { PorQueIsso } from "./por-que-isso";
 export { Revelar } from "./revelar";
 export { NotaTela, SecoesTela, TelaConteudo } from "./tela-conteudo";

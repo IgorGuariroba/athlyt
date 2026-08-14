@@ -14,6 +14,7 @@ import {
   LinhaCartaoLista,
   LinhasCartaoLista,
   NotaTela,
+  PorQueIsso,
   Revelar,
   SecoesTela,
   TelaConteudo,
@@ -63,6 +64,10 @@ export default async function RevisaoTreinoPage() {
       />
 
       <SecoesTela>
+        <Revelar rotulo="Por que esta divisão?" tom="forte">
+          <PorQueIsso explicacao={plano.conteudo.bloco.explicacao} />
+        </Revelar>
+
         {dias.map((dia, indiceDia) => {
           const totalSeries = dia.exercicios.reduce(
             (soma, exercicio) => soma + exercicio.series,
@@ -85,6 +90,14 @@ export default async function RevisaoTreinoPage() {
                 }
               />
 
+              {dia.explicacao ? (
+                <div className="border-t border-border px-4 py-3">
+                  <Revelar rotulo="Por que este dia?">
+                    <PorQueIsso explicacao={dia.explicacao} />
+                  </Revelar>
+                </div>
+              ) : null}
+
               <LinhasCartaoLista>
                 {dia.exercicios.map((exercicio) => {
                   const alternativas = elegiveis.filter(
@@ -104,7 +117,7 @@ export default async function RevisaoTreinoPage() {
                       </FaixaDados>
 
                       <Revelar rotulo="Por que este exercício?">
-                        {exercicio.justificativa}
+                        <PorQueIsso explicacao={exercicio.explicacao} />
                       </Revelar>
 
                       {alternativas.length ? (

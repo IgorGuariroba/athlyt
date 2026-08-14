@@ -62,6 +62,7 @@ import {
   NotaTela,
   PainelMetricas,
   PainelPendencias,
+  PorQueIsso,
   Revelar,
   SecoesTela,
   TelaConteudo,
@@ -880,6 +881,19 @@ export default function GaleriaDesignPage() {
               A tendência usa média móvel exponencial sobre os registros dos
               últimos 14 dias, o que reduz o efeito de variação de água e
               conteúdo intestinal.
+            </Revelar>
+            <Revelar rotulo="Por que estas calorias?">
+              <PorQueIsso
+                explicacao={{
+                  porque:
+                    "Estimei sua manutenção a partir de 80 kg, 180 cm e 35 anos, com atividade moderada.",
+                  dadosUsados: [
+                    { campo: "pesoKg", valor: "80 kg" },
+                    { campo: "alturaCm", valor: "180 cm" },
+                    { campo: "idadeAnos", valor: "35 anos" },
+                  ],
+                }}
+              />
             </Revelar>
             <Revelar rotulo="Trocar exercício" Icone={Ruler}>
               Substituições mantêm o padrão de movimento e a faixa de repetições

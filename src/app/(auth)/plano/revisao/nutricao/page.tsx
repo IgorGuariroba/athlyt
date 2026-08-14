@@ -12,6 +12,8 @@ import {
   LinhaCartaoLista,
   LinhasCartaoLista,
   NotaTela,
+  PorQueIsso,
+  Revelar,
   SecoesTela,
   TelaConteudo,
 } from "@/components/tela";
@@ -75,6 +77,24 @@ export default async function RevisaoNutricaoPage() {
           <p className="border-t border-border pt-4 text-body-sm tabular-nums text-muted-foreground">
             Fibras: {meta.fibrasG} g por dia
           </p>
+
+          <div className="flex flex-col gap-3 border-t border-border pt-4">
+            <Revelar rotulo="Por que estas calorias?">
+              <PorQueIsso explicacao={meta.explicacoes?.calorias} />
+            </Revelar>
+            <Revelar rotulo="Por que esta proteína?">
+              <PorQueIsso explicacao={meta.explicacoes?.proteinaG} />
+            </Revelar>
+            <Revelar rotulo="Por que estes carboidratos?">
+              <PorQueIsso explicacao={meta.explicacoes?.carboidratosG} />
+            </Revelar>
+            <Revelar rotulo="Por que estas gorduras?">
+              <PorQueIsso explicacao={meta.explicacoes?.gordurasG} />
+            </Revelar>
+            <Revelar rotulo="Por que esta estratégia?">
+              <PorQueIsso explicacao={meta.explicacoes?.estrategia} />
+            </Revelar>
+          </div>
         </section>
 
         <CartaoLista aria-labelledby="distribuicao">
@@ -107,6 +127,9 @@ export default async function RevisaoNutricaoPage() {
                     </li>
                   ))}
                 </ul>
+                <Revelar rotulo="Por que esta refeição?">
+                  <PorQueIsso explicacao={refeicao.explicacao} />
+                </Revelar>
               </LinhaCartaoLista>
             ))}
           </LinhasCartaoLista>
@@ -114,9 +137,9 @@ export default async function RevisaoNutricaoPage() {
       </SecoesTela>
 
       <NotaTela>
-        As metas são estimativas iniciais determinísticas, não aconselhamento
-        médico ou nutricional. Serão avaliadas com sua resposta real na Revisão
-        Semanal.
+        As metas são estimativas iniciais personalizadas pelo agent, não
+        aconselhamento médico ou nutricional. Serão avaliadas com sua resposta
+        real na Revisão Semanal.
       </NotaTela>
 
       <BarraAcaoFixa>

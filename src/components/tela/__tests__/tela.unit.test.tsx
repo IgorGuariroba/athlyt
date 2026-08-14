@@ -14,6 +14,7 @@ import {
   LinhaCartaoLista,
   LinhasCartaoLista,
   PainelPendencias,
+  PorQueIsso,
   Revelar,
   TelaConteudo,
 } from "..";
@@ -295,6 +296,37 @@ describe("GraficoTendencia", () => {
       "Direito",
     );
     expect(within(screen.getByRole("list")).getAllByRole("listitem")).toHaveLength(2);
+  });
+});
+
+describe("PorQueIsso", () => {
+  it("mostra o motivo e cada dado de origem que sustenta a decisão", () => {
+    render(
+      <PorQueIsso
+        explicacao={{
+          porque: "Estimei sua manutenção a partir de 80 kg, 180 cm e 35 anos.",
+          dadosUsados: [
+            { campo: "pesoKg", valor: "80 kg" },
+            { campo: "alturaCm", valor: "180 cm" },
+          ],
+        }}
+      />,
+    );
+
+    expect(screen.getByText(/Estimei sua manutenção/)).toBeDefined();
+    const dados = within(screen.getByRole("list")).getAllByRole("listitem");
+    expect(dados).toHaveLength(2);
+    expect(dados[0].textContent).toContain("Peso");
+    expect(dados[0].textContent).toContain("80 kg");
+  });
+
+  it("diz que a decisão veio de um plano anterior quando não há explicação", () => {
+    // Plano Ativo é imutável: planos gravados antes desta fatia não têm
+    // explicação, e inventar um texto seria pior do que admitir a lacuna.
+    render(<PorQueIsso explicacao={undefined} />);
+
+    expect(screen.queryByRole("list")).toBeNull();
+    expect(screen.getByText(/gerado antes/i)).toBeDefined();
   });
 });
 
