@@ -25,7 +25,8 @@ test("executa o treino do dia, usa o timer e consulta o resumo no histórico", a
   await expect(page.getByRole("link", { name: /Superior A/ })).toBeVisible();
   await expect(page.getByRole("link", { name: /Inferior A/ })).toBeVisible();
   await page.getByRole("link", { name: /Ver treino/ }).click();
-  await expect(page.getByText("1 exercícios · 1 séries")).toBeVisible();
+  await expect(page).toHaveURL(/\/sessao\/previa\/superior-a$/);
+  await expect(page.getByText("1 exercícios · 1 séries").first()).toBeVisible();
   await page.getByRole("button", { name: /Iniciar treino/ }).click();
   await expect(page.getByText("SESSÃO EM ANDAMENTO")).toBeVisible();
   await expect(page.getByRole("button", { name: /Complete 1 séries/ })).toBeDisabled();
