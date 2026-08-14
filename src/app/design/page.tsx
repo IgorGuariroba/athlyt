@@ -34,6 +34,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
+import { RadioGroup } from "@/components/ui/radio-group";
 import { Textarea } from "@/components/ui/textarea";
 import {
   BarraFaixa,
@@ -42,7 +43,10 @@ import {
   CabecalhoSecao,
   CabecalhoTela,
   CampoSelecao,
+  CartaoCheckbox,
   CartaoLista,
+  CartaoRadio,
+  CascataShell,
   ChipSelecao,
   ControleSegmentado,
   EstadoVazio,
@@ -61,6 +65,7 @@ import {
   SecoesTela,
   TelaConteudo,
 } from "@/components/tela";
+import { TransicaoEtapa } from "@/components/tela/transicao-etapa";
 
 import {
   AvisosDemonstracao,
@@ -486,6 +491,57 @@ export default function GaleriaDesignPage() {
 
         <Amostra titulo="Seleção">
           <ControlesSelecao />
+        </Amostra>
+
+        <Amostra
+          titulo="Cartões de opção"
+          nota="Opção destacada da cascata, com ícone, descrição e controle circular."
+        >
+          <RadioGroup defaultValue="recomposicao" className="flex flex-col gap-3">
+            <CartaoRadio
+              id="galeria-objetivo-recomposicao"
+              value="recomposicao"
+              titulo="Recomposição corporal"
+              descricao="Reduzir gordura e desenvolver massa muscular a partir da sua linha de base."
+              Icone={RefreshCw}
+            />
+            <CartaoRadio
+              id="galeria-objetivo-gordura"
+              value="perder-gordura"
+              titulo="Priorizar perda de gordura"
+              descricao="Preservar o máximo de massa muscular."
+              Icone={Flame}
+            />
+          </RadioGroup>
+          <div className="mt-3">
+            <CartaoCheckbox
+              id="galeria-disponibilidade-segunda"
+              name="dias"
+              value="segunda"
+              titulo="Segunda-feira"
+              descricao="Disponível para treino"
+              defaultChecked
+            />
+          </div>
+        </Amostra>
+
+        <Amostra
+          titulo="Moldura de cascata"
+          nota="Progresso, retorno, título e transição usados nas perguntas da triagem."
+        >
+          <CascataShell
+            titulo="Qual é o seu objetivo atual?"
+            indice={5}
+            total={14}
+            elemento="section"
+          >
+            <p className="text-body-sm text-muted-foreground">
+              Conteúdo variável da etapa.
+            </p>
+          </CascataShell>
+          <TransicaoEtapa indice={5}>
+            <span className="sr-only">Demonstração da transição entre etapas</span>
+          </TransicaoEtapa>
         </Amostra>
 
         <Amostra

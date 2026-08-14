@@ -3,10 +3,10 @@ import {
   posicaoNaCascata,
   proximoDestinoCascata,
 } from "@/domain/triagem/etapas";
-import { CascataShell } from "../_components/cascata-shell";
+import { CascataShell } from "@/components/tela/cascata-shell";
 import { carregarRespostasTriagem } from "../_lib/carregar-respostas";
 import { EtapaForm } from "../_components/etapa-form";
-import { CartaoCheckbox } from "../_components/opcao-cartao";
+import { CartaoCheckbox } from "@/components/tela/opcao-cartao";
 
 /**
  * Tela 021 — Preferências e restrições alimentares

@@ -4,9 +4,9 @@ import { auth } from "@/auth";
 import { RadioGroup } from "@/components/ui/radio-group";
 import { posicaoNaCascata, proximoDestinoCascata } from "@/domain/triagem/etapas";
 import { obterPerfilVigente } from "@/domain/triagem/perfil";
-import { CascataShell } from "../_components/cascata-shell";
+import { CascataShell } from "@/components/tela/cascata-shell";
 import { EtapaForm } from "../_components/etapa-form";
-import { CartaoRadio } from "../_components/opcao-cartao";
+import { CartaoRadio } from "@/components/tela/opcao-cartao";
 
 const OBJETIVOS = [
   {

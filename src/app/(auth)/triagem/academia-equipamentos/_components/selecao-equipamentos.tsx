@@ -22,7 +22,7 @@ import {
   imagemEquipamento,
   type LocalTreinoId,
 } from "@/domain/triagem/equipamentos";
-import { CartaoRadio } from "../../_components/opcao-cartao";
+import { CartaoRadio } from "@/components/tela/opcao-cartao";
 import { salvarEquipamentosPersonalizados } from "../../actions";
 
 const LOCAIS = [

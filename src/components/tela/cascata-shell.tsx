@@ -14,19 +14,23 @@ export function CascataShell({
   indice,
   total,
   children,
+  elemento = "main",
 }: {
   titulo: string;
   indice: number;
   total: number;
   children: React.ReactNode;
+  elemento?: "main" | "section";
 }) {
   const etapaAnterior = indice > 1 ? ETAPAS_TRIAGEM[indice - 2] : null;
   const destinoAnterior = etapaAnterior
     ? `/triagem/${etapaAnterior.id}`
     : "/triagem";
 
+  const Container = elemento;
+
   return (
-    <main className="flex flex-1 flex-col gap-6 bg-background px-6 py-8">
+    <Container className="flex flex-1 flex-col gap-6 bg-background px-6 py-8">
       <Link
         href={destinoAnterior}
         aria-label="Voltar"
@@ -49,6 +53,6 @@ export function CascataShell({
 
         {children}
       </TransicaoEtapa>
-    </main>
+    </Container>
   );
 }
