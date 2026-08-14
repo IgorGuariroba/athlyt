@@ -32,10 +32,13 @@ export type AmbienteIA = "producao" | "desenvolvimento";
  */
 const MODELO_BASE = "google/gemini-2.5-flash-lite";
 
+/** O Gemini rejeita o schema completo do plano; o GPT-5 Mini o aceita. */
+const MODELO_PLANO_INICIAL = "openai/gpt-5-mini";
+
 const MODELOS_PRODUCAO: Record<OperacaoIA, string> = {
   "copiloto-sessao": MODELO_BASE,
   "revisao-semanal": MODELO_BASE,
-  "plano-inicial": MODELO_BASE,
+  "plano-inicial": MODELO_PLANO_INICIAL,
   "refeicao-texto": MODELO_BASE,
   "refeicao-foto": MODELO_BASE,
   "avaliacao-visual": MODELO_BASE,

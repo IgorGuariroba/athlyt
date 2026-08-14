@@ -1,4 +1,11 @@
-import { generateText, Output, stepCountIs, type ToolSet } from "ai";
+import {
+  generateText,
+  NoObjectGeneratedError,
+  Output,
+  stepCountIs,
+  TypeValidationError,
+  type ToolSet,
+} from "ai";
 import type { z } from "zod";
 import {
   montarContexto,
@@ -129,11 +136,11 @@ async function decidirInternamente<T>(
     const mensagem = entrada.imagens?.length
       ? { messages: [{ role: "user" as const, content: [{ type: "text" as const, text: conteudo }, ...entrada.imagens.map((imagem) => ({ type: "file" as const, data: imagem.dados, mediaType: imagem.mediaType }))] }] }
       : { prompt: conteudo };
-    const gerar = () => generateText({
+    const gerar = (promptCorrecao?: string) => generateText({
       model: openrouter().chatModel(modeloSolicitado),
       output: Output.object({ schema: entrada.schema }),
       system: entrada.instrucao,
-      ...mensagem,
+      ...(promptCorrecao === undefined ? mensagem : { prompt: promptCorrecao }),
       tools: entrada.ferramentas,
       stopWhen: stepCountIs(entrada.maxPassos ?? 5),
       providerOptions: OPCOES_PROVEDOR,
@@ -154,8 +161,30 @@ async function decidirInternamente<T>(
       resposta = await gerar();
     } catch (erro) {
       const motivo = erro instanceof Error ? erro.message : String(erro);
-      if (!/invalid json response/i.test(motivo)) throw erro;
-      resposta = await gerar();
+      if (
+        NoObjectGeneratedError.isInstance(erro)
+        && /response did not match schema/i.test(motivo)
+        && erro.text
+      ) {
+        const causaValidacao = TypeValidationError.isInstance(erro.cause)
+          ? erro.cause.cause
+          : erro.cause;
+        const violacoes = causaValidacao instanceof Error
+          ? causaValidacao.message
+          : motivo;
+        resposta = await gerar(`${conteudo}
+
+A saída abaixo está quase correta, mas violou invariantes obrigatórias. Corrija somente as violações descritas e preserve todos os demais valores. Devolva novamente o objeto completo no schema solicitado.
+
+VIOLAÇÕES:
+${violacoes}
+
+SAÍDA ANTERIOR:
+${erro.text}`);
+      } else {
+        if (!/invalid json response/i.test(motivo)) throw erro;
+        resposta = await gerar();
+      }
     }
 
     // A auditoria exige o modelo efetivamente resolvido pelo

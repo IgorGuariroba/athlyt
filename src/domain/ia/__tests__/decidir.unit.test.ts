@@ -33,6 +33,7 @@ vi.mock("../provedor", () => ({
 
 const { decidir } = await import("../decidir");
 const { montarNucleo } = await import("../contexto/nucleo");
+const { NoObjectGeneratedError, TypeValidationError } = await import("ai");
 
 const schema = z.object({ carga: z.number() });
 
@@ -147,6 +148,53 @@ describe("decidir", () => {
 
     expect(resultado.status).toBe("ok");
     expect(gerar).toHaveBeenCalledTimes(2);
+    expect(decisoesGravadas).toHaveLength(1);
+  });
+
+  it("corrige uma vez a saída JSON que viola o schema", async () => {
+    const textoInvalido = JSON.stringify({ carga: "60" });
+    const erroValidacao = new NoObjectGeneratedError({
+      message: "No object generated: response did not match schema.",
+      cause: new TypeValidationError({
+        value: { carga: "60" },
+        cause: new Error("Explicação precisa citar equipamentos"),
+      }),
+      text: textoInvalido,
+      response: {
+        id: "resposta-invalida",
+        timestamp: new Date("2026-07-30T00:00:00Z"),
+        modelId: "openai/gpt-5-mini-2026-01",
+      },
+      usage: {
+        inputTokens: 10,
+        inputTokenDetails: {
+          noCacheTokens: 10,
+          cacheReadTokens: 0,
+          cacheWriteTokens: 0,
+        },
+        outputTokens: 5,
+        outputTokenDetails: { textTokens: 5, reasoningTokens: 0 },
+        totalTokens: 15,
+      },
+      finishReason: "stop",
+    });
+    gerar
+      .mockRejectedValueOnce(erroValidacao)
+      .mockResolvedValueOnce({
+        output: { carga: 60 },
+        response: { modelId: "openai/gpt-5-mini-2026-01" },
+        steps: [],
+      });
+
+    const resultado = await chamar();
+
+    expect(resultado.status).toBe("ok");
+    if (resultado.status !== "ok") return;
+    expect(resultado.valor).toEqual({ carga: 60 });
+    expect(gerar).toHaveBeenCalledTimes(2);
+    const promptCorrecao = gerar.mock.calls[1]?.[0]?.prompt as string;
+    expect(promptCorrecao).toContain("Explicação precisa citar equipamentos");
+    expect(promptCorrecao.split(textoInvalido)).toHaveLength(2);
     expect(decisoesGravadas).toHaveLength(1);
   });
 
