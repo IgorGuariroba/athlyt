@@ -12,19 +12,27 @@ import { auth } from "@/auth";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
+  AvisoAcao,
   BarraAcaoFixa,
   BarraMacro,
   CabecalhoTela,
   TelaConteudo,
 } from "@/components/tela";
 import { obterRascunho } from "@/domain/plano/repositorio";
+import { regenerarPlanoInicialAction } from "../actions";
+import { BotaoRegenerarPlano } from "./botao-regenerar-plano";
 
-export default async function RevisaoPlanoPage() {
+export default async function RevisaoPlanoPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ erro?: string }>;
+}) {
   const session = await auth();
   if (!session?.user?.id) redirect("/");
   const plano = await obterRascunho(session.user.id);
   if (!plano) redirect("/plano/gerando");
 
+  const { erro } = await searchParams;
   const { bloco, nutricao } = plano.conteudo;
 
   const etapasCalculo = [
@@ -196,6 +204,20 @@ export default async function RevisaoPlanoPage() {
           Gerado pela regra auditável {plano.conteudo.regraVersao}. Você poderá
           revisar cada exercício antes da ativação.
         </p>
+
+        <div className="mt-6 border-t border-border pt-6">
+          <h3 className="text-body-md font-bold text-on-surface-strong">
+            Este plano não ficou bom para você?
+          </h3>
+          <p className="mt-1 text-body-sm text-muted-foreground">
+            Peça uma nova sugestão ao agent usando os mesmos dados. O plano atual
+            só será substituído se a nova geração for concluída.
+          </p>
+          <form action={regenerarPlanoInicialAction} className="mt-4 flex flex-col gap-3">
+            {erro ? <AvisoAcao tipo="erro">{erro}</AvisoAcao> : null}
+            <BotaoRegenerarPlano />
+          </form>
+        </div>
       </section>
 
       <BarraAcaoFixa>
