@@ -3,7 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "bash scripts/dev-local.sh up",
+    "down": "bash scripts/dev-local.sh down",
     "dev:banco": "npm run db:up && next dev",
     "dev:observability": "OBSERVABILITY_ENABLED=true OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4318 next dev",
     "db:up": "docker compose -f docker/compose.yml up -d --wait",
