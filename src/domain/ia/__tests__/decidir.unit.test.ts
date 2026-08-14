@@ -19,6 +19,11 @@ vi.mock("ai", async () => {
   return { ...real, generateText: (...args: unknown[]) => gerar(...args) };
 });
 
+const registrarErro = vi.fn();
+vi.mock("@/observabilidade/logger", () => ({
+  logger: { error: registrarErro },
+}));
+
 vi.mock("../provedor", () => ({
   modeloDe: () => "openai/gpt-5-mini",
   NOME_PROVEDOR: "OpenRouter",
@@ -56,6 +61,7 @@ function chamar() {
 beforeEach(() => {
   decisoesGravadas.length = 0;
   gerar.mockReset();
+  registrarErro.mockReset();
 });
 
 describe("decidir", () => {
@@ -118,6 +124,14 @@ describe("decidir", () => {
 
     expect(resultado.status).toBe("indisponivel");
     expect(decisoesGravadas[0]).toMatchObject({ auditavel: false });
+    expect(registrarErro).toHaveBeenCalledWith(
+      expect.objectContaining({
+        operacao: "copiloto-sessao",
+        modeloSolicitado: "openai/gpt-5-mini",
+        err: expect.any(Error),
+      }),
+      "decisão de IA indisponível",
+    );
   });
 
   it("repete uma vez quando o modelo devolve JSON inválido", async () => {
@@ -148,6 +162,15 @@ describe("decidir", () => {
       auditavel: false,
       erro: "provedor fora do ar",
     });
+    expect(registrarErro).toHaveBeenCalledWith(
+      expect.objectContaining({
+        operacao: "copiloto-sessao",
+        modeloSolicitado: "openai/gpt-5-mini",
+        err: expect.any(Error),
+      }),
+      "decisão de IA indisponível",
+    );
+    expect(registrarErro.mock.calls[0]?.[0]).not.toHaveProperty("userId");
   });
 
   it("registra na trilha os campos omitidos por falta de consentimento", async () => {
