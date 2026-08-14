@@ -18,7 +18,7 @@ test.describe("Acesso e casco autenticado", () => {
     ).toBeVisible();
   });
 
-  test("sessão autenticada e autorizada acessa o casco de 4 abas", async ({
+  test("sessão autenticada inicia o onboarding antes de liberar o casco", async ({
     page,
     context,
   }) => {
@@ -28,27 +28,10 @@ test.describe("Acesso e casco autenticado", () => {
     await context.addCookies([cookie]);
 
     await page.goto("/inicio");
-    await expect(page.getByRole("heading", { name: "Início" })).toBeVisible();
-
-    for (const aba of ["Início", "Diário", "Progresso", "Mais"]) {
-      await expect(page.getByRole("link", { name: aba })).toBeVisible();
-    }
-
-    // O Diário titula o dia navegado (padrão MacroFactor, tela 045); a
-    // identificação da aba vive na região, não no título.
-    await page.getByRole("link", { name: "Diário" }).click();
-    await expect(page.getByRole("region", { name: "Diário" })).toBeVisible();
-    await expect(page.getByRole("heading", { name: "Hoje" })).toBeVisible();
-
-    // Progresso titula a leitura, não a aba (padrão MacroFactor, tela
-    // 064); a identificação da aba vive no eyebrow e na navegação.
-    await page.getByRole("link", { name: "Progresso" }).click();
+    await expect(page).toHaveURL(/\/triagem\/idade$/);
     await expect(
-      page.getByRole("heading", { level: 1, name: "Sua resposta corporal" }),
+      page.getByRole("heading", { name: "Qual é a sua data de nascimento?" }),
     ).toBeVisible();
-
-    await page.getByRole("link", { name: "Mais" }).click();
-    await expect(page.getByRole("heading", { name: "Mais" })).toBeVisible();
   });
 
   test("sem sessão, rota protegida redireciona para boas-vindas", async ({
@@ -68,7 +51,7 @@ test.describe("Acesso e casco autenticado", () => {
     const { cookie } = await seedAuthenticatedSession(email);
     await context.addCookies([cookie]);
 
-    await page.goto("/inicio");
+    await page.goto("/mais");
     await page.getByRole("button", { name: "Sair" }).click();
 
     await expect(page).toHaveURL("/");
@@ -93,9 +76,9 @@ test.describe("Acesso e casco autenticado", () => {
     const outroContexto = await browser.newContext();
     await outroContexto.addCookies([cookie]);
     const outraPagina = await outroContexto.newPage();
-    await outraPagina.goto("/inicio");
+    await outraPagina.goto("/mais");
     await expect(
-      outraPagina.getByRole("heading", { name: "Início" }),
+      outraPagina.getByRole("heading", { name: "Mais" }),
     ).toBeVisible();
 
     await page

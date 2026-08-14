@@ -30,7 +30,7 @@ export default async function InicioPage() {
 
   // Dados essenciais pertencem ao onboarding: a tela inicial só é
   // liberada depois que essa parte da cascata estiver concluída.
-  if (resumo.modoConservador) redirect("/triagem?retomar=1");
+  if (resumo.modoConservador && !planoAtivo) redirect("/triagem?retomar=1");
 
   const respostas = perfil?.respostas ?? {};
   const regioes = new Set(panorama.medicoes.flatMap((m) => [m.regiao, `${m.regiao}:${m.lado}`]));
