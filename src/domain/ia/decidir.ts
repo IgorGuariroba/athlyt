@@ -8,6 +8,7 @@ import {
 } from "./contexto/montagem";
 import type { NucleoContexto } from "./contexto/nucleo";
 import type { OperacaoIA } from "./contexto/tipos";
+import { logger } from "@/observabilidade/logger";
 import { observarOperacao } from "@/observabilidade/operacao";
 import {
   modeloDe,
@@ -171,11 +172,16 @@ async function decidirInternamente<T>(
     // Sem modelo identificado não há como reproduzir a decisão; a ADR
     // 0005 manda degradar com segurança em vez de usar o resultado.
     if (modeloResolvido === null) {
-      return {
-        status: "indisponivel",
-        contexto,
-        motivo: "Resposta não auditável: provedor não identificou o modelo.",
-      };
+      const motivo = "Resposta não auditável: provedor não identificou o modelo.";
+      logger.error(
+        {
+          operacao: entrada.operacao,
+          modeloSolicitado,
+          err: new Error(motivo),
+        },
+        "decisão de IA indisponível",
+      );
+      return { status: "indisponivel", contexto, motivo };
     }
 
     return {
@@ -187,6 +193,15 @@ async function decidirInternamente<T>(
     };
   } catch (erro) {
     const motivo = erro instanceof Error ? erro.message : String(erro);
+
+    logger.error(
+      {
+        operacao: entrada.operacao,
+        modeloSolicitado,
+        err: erro instanceof Error ? erro : new Error(motivo),
+      },
+      "decisão de IA indisponível",
+    );
 
     await registrarDecisao({
       ...base,
