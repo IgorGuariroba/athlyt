@@ -120,6 +120,22 @@ describe("decidir", () => {
     expect(decisoesGravadas[0]).toMatchObject({ auditavel: false });
   });
 
+  it("repete uma vez quando o modelo devolve JSON inválido", async () => {
+    gerar
+      .mockRejectedValueOnce(new Error("Invalid JSON response"))
+      .mockResolvedValueOnce({
+        output: { carga: 60 },
+        response: { modelId: "openai/gpt-5-mini-2026-01" },
+        steps: [],
+      });
+
+    const resultado = await chamar();
+
+    expect(resultado.status).toBe("ok");
+    expect(gerar).toHaveBeenCalledTimes(2);
+    expect(decisoesGravadas).toHaveLength(1);
+  });
+
   it("grava a trilha mesmo quando a chamada falha", async () => {
     gerar.mockRejectedValue(new Error("provedor fora do ar"));
 
