@@ -1,11 +1,10 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { ArrowRight, CalendarDays, CheckCircle2, Dumbbell, Flame, Ruler } from "lucide-react";
+import { ArrowRight, CalendarDays, Dumbbell, Flame, History, Ruler } from "lucide-react";
 import { auth } from "@/auth";
 import { sair } from "../../(auth)/actions";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { CORES_MACRO, CartaoLista } from "@/components/tela";
+import { CORES_MACRO, CartaoLista, ItemNavegacao, ListaNavegacao } from "@/components/tela";
 import { obterPerfilVigente } from "@/domain/triagem/perfil";
 import { montarResumoTriagem } from "@/domain/triagem/resumo";
 import { obterPlanoAtivo } from "@/domain/plano/repositorio";
@@ -141,31 +140,22 @@ export default async function InicioPage() {
       {planoAtivo ? (
         <>
         {treinoDoDia ? (
-        <section className={`overflow-hidden rounded-2xl border-2 bg-surface-container ${treinoDoDia.estado === "concluido_hoje" ? "border-success" : "border-on-surface-strong"}`}>
+        <section className="overflow-hidden rounded-2xl border-2 border-on-surface-strong bg-surface-container">
           <div className="p-5">
-            <div className="mb-2 flex items-center gap-2">
-              <p className="text-label-md font-semibold tracking-wide text-muted-foreground uppercase">
-                {treinoDoDia.estado === "concluido_hoje" ? "Treino de hoje" : treinoDoDia.estado === "em_andamento" ? "Sessão em andamento" : "Treino do dia"}
-              </p>
-              {treinoDoDia.estado === "concluido_hoje" ? (
-                <Badge variant="secondary" className="gap-1"><CheckCircle2 className="size-3 text-success" /> Concluído</Badge>
-              ) : null}
-            </div>
+            <p className="mb-2 text-label-md font-semibold tracking-wide text-muted-foreground uppercase">
+              {treinoDoDia.estado === "em_andamento" ? "Sessão em andamento" : "Próximo treino"}
+            </p>
             <h2 className="text-headline-md font-bold text-on-surface-strong">{treinoDoDia.dia.nome}</h2>
             <p className="mt-1 text-body-md text-muted-foreground">
-              {treinoDoDia.estado === "concluido_hoje"
-                ? "Você já treinou hoje. O próximo treino do bloco libera amanhã."
-                : `${treinoDoDia.dia.exercicios.length} exercícios · ${treinoDoDia.dia.exercicios.reduce((total, exercicio) => total + exercicio.series, 0)} séries`}
+              {treinoDoDia.dia.exercicios.length} exercícios · {treinoDoDia.dia.exercicios.reduce((total, exercicio) => total + exercicio.series, 0)} séries
             </p>
             <p className="mt-2 text-body-sm text-muted-foreground">
               {treinoDoDia.concluidasNaSemana} de {planoAtivo.conteudo.bloco.dias.length} treinos concluídos nos últimos 7 dias
             </p>
           </div>
-          <Button asChild size="lg" variant={treinoDoDia.estado === "concluido_hoje" ? "secondary" : "default"} className="h-14 w-full rounded-none text-base font-bold">
+          <Button asChild size="lg" className="h-14 w-full rounded-none text-base font-bold">
             {treinoDoDia.estado === "em_andamento" ? (
               <Link href={`/sessao/${treinoDoDia.sessaoId}`}>Retomar treino <ArrowRight className="size-5" /></Link>
-            ) : treinoDoDia.estado === "concluido_hoje" ? (
-              <Link href={`/sessao/${treinoDoDia.sessaoId}/resumo`}>Ver resumo do treino <ArrowRight className="size-5" /></Link>
             ) : (
               <Link href={`/sessao/previa/${treinoDoDia.dia.id}`}>Ver treino <ArrowRight className="size-5" /></Link>
             )}
@@ -228,7 +218,33 @@ export default async function InicioPage() {
             </div>
           </div>
 
-          <div className="flex flex-col gap-4 p-5">
+          {treinoDoDia?.estado !== "em_andamento" ? (
+            <div className="border-t border-border p-5">
+              <p className="mb-3 text-label-md font-semibold tracking-wide text-muted-foreground uppercase">
+                Escolher treino do bloco
+              </p>
+              <ListaNavegacao>
+                {planoAtivo.conteudo.bloco.dias.map((dia) => (
+                  <ItemNavegacao
+                    key={dia.id}
+                    href={`/sessao/previa/${dia.id}`}
+                    Icone={Dumbbell}
+                    rotulo={dia.nome}
+                    descricao={`${dia.exercicios.length} exercícios · ${dia.exercicios.reduce((total, exercicio) => total + exercicio.series, 0)} séries`}
+                    valor={dia.id === treinoDoDia?.dia.id ? "Próximo" : dia.diaSemana}
+                  />
+                ))}
+                <ItemNavegacao
+                  href="/sessao/historico"
+                  Icone={History}
+                  rotulo="Histórico de sessões"
+                  descricao="Revise treinos concluídos ou abandonados"
+                />
+              </ListaNavegacao>
+            </div>
+          ) : null}
+
+          <div className="flex flex-col gap-4 border-t border-border p-5">
             <div className="flex items-end justify-between">
               <div>
                 <p className="text-body-sm text-muted-foreground">

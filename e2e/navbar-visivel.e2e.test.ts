@@ -65,7 +65,7 @@ test("a barra de navegação permanece visível nas telas com conteúdo longo", 
 
   // 2) Prévia do treino do dia (1ª imagem do relato)
   await page.getByRole("link", { name: /Ver treino/ }).click();
-  await expect(page.getByText("4 exercícios · 8 séries")).toBeVisible();
+  await expect(page.getByText("4 exercícios · 8 séries").first()).toBeVisible();
   await navDentroDaViewport(page, "prévia do treino (topo)");
   await page.mouse.wheel(0, 2000);
   await navDentroDaViewport(page, "prévia do treino (rolado)");
