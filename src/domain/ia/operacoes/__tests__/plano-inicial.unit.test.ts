@@ -39,8 +39,25 @@ describe("gerarPlanoInicialComIA", () => {
     const resultado = await gerarPlanoInicialComIA({
       userId: "u1",
       nucleo,
-      consentimentos: ["triagem-completa", "linha-base-corporal", "metas-proporcao", "historico-importado"],
-      triagemCompleta: { objetivoComposicao: "ganhar-massa", horasSono: 8 },
+      consentimentos: ["triagem-completa", "fotos-corporais", "linha-base-corporal", "metas-proporcao", "historico-importado"],
+      triagemCompleta: {
+        objetivoComposicao: "ganhar-massa",
+        horasSono: 8,
+        nivelAtividade: "moderado",
+        orcamentoAlimentar: "medio",
+        tempoPreparoMin: 30,
+        pesoKg: 80,
+        dataNascimento: "1990-01-01",
+        lesoes: ["joelho"],
+        equipamentos: ["halteres"],
+      },
+      fotosCorporais: [{
+        id: "f1",
+        pose: "frente",
+        observadoEm: "2026-08-13",
+        dados: new Uint8Array([1, 2, 3]),
+        mediaType: "image/jpeg",
+      }],
       linhaBaseCorporal: {
         medicoes: [{ id: "m1", userId: "u1", regiao: "cintura", lado: "unico", valorMm: 820, qualidade: "alta", observadoEm: "2026-08-14", createdAt: "2026-08-14" }],
         pesos: [{ id: "p1", userId: "u1", pesoGramas: 80000, observadoEm: "2026-08-14", createdAt: "2026-08-14" }],
@@ -58,20 +75,27 @@ describe("gerarPlanoInicialComIA", () => {
       userId: "u1",
       operacao: "plano-inicial",
       nucleo,
-      consentimentos: ["triagem-completa", "linha-base-corporal", "metas-proporcao", "historico-importado"],
+      consentimentos: ["triagem-completa", "fotos-corporais", "linha-base-corporal", "metas-proporcao", "historico-importado"],
       origem: { tela: "resumo-triagem", rota: "/triagem/resumo", gatilho: "clique-gerar-meu-plano" },
       dados: {
-        "triagem-completa": { objetivoComposicao: "ganhar-massa", horasSono: 8 },
+        "triagem-completa": {
+          horasSono: 8,
+          nivelAtividade: "moderado",
+          objetivoComposicao: "ganhar-massa",
+          orcamentoAlimentar: "medio",
+          tempoPreparoMin: 30,
+        },
+        "fotos-corporais": [{ id: "f1", pose: "frente", observadoEm: "2026-08-13" }],
         "linha-base-corporal": {
           medicoes: [{ regiao: "cintura", lado: "unico", valorMm: 820, qualidade: "alta", observadoEm: "2026-08-14" }],
           pesos: [{ observadoEm: "2026-08-14", pesoKg: 80 }],
           gorduras: [],
           avaliacoesVisuais: [],
-          fotos: { quantidade: 1, observadasEm: ["2026-08-13"] },
         },
         "metas-proporcao": [{ regiao: "ombros", atualMm: 1100, faixaMinMm: 1120, faixaMaxMm: 1160, metaCicloMm: 1130, direcao: "aumentar", confianca: "moderada", justificativa: "Prioridade do ciclo" }],
         "historico-importado": { disponivel: false },
       },
+      imagens: [{ dados: new Uint8Array([1, 2, 3]), mediaType: "image/jpeg" }],
     }));
   });
 

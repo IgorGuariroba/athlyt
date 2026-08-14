@@ -8,6 +8,7 @@ import { gerarPlano, substituirExercicio } from "./gerador";
 import type { PlanoGerado } from "./tipos";
 import { montarNucleo } from "@/domain/ia/contexto/nucleo";
 import { gerarPlanoInicialComIA } from "@/domain/ia/operacoes/plano-inicial";
+import { criarStorageR2 } from "@/infra/storage";
 
 export interface PlanoPersistido {
   id: string;
@@ -56,17 +57,35 @@ export async function obterOuGerarRascunhoComIA(
     respondidoEm: perfil.createdAt,
     agora: new Date(),
   });
+  const fotosAutorizadas = consentimentos.includes("fotos-corporais")
+    ? [...panorama.fotos]
+        .sort((a, b) => b.observadoEm.getTime() - a.observadoEm.getTime())
+        .slice(0, 4)
+    : [];
+  const storage = fotosAutorizadas.length > 0 ? criarStorageR2() : null;
+  const fotosCorporais = await Promise.all(
+    fotosAutorizadas.map(async (foto) => {
+      const arquivo = await storage!.ler(foto.objectKey);
+      return {
+        id: foto.id,
+        pose: foto.pose,
+        observadoEm: foto.observadoEm,
+        dados: arquivo.corpo,
+        mediaType: arquivo.contentType,
+      };
+    }),
+  );
   const resultado = await gerarPlanoInicialComIA({
     userId,
     nucleo,
     consentimentos,
     triagemCompleta: perfil.respostas,
+    fotosCorporais,
     linhaBaseCorporal: {
       medicoes: panorama.medicoes,
       pesos: panorama.pesos,
       gorduras: panorama.gorduras,
       avaliacoesVisuais: panorama.avaliacoesVisuais,
-      fotosDisponiveis: panorama.fotos.map(({ id, observadoEm }) => ({ id, observadoEm })),
     },
     metasProporcao: panorama.metas,
     historicoImportado: { disponivel: false },
