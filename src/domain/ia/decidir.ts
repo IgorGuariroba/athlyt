@@ -48,6 +48,11 @@ export interface EntradaDecisao<T> {
   imagens?: readonly { dados: Uint8Array; mediaType: string }[];
   /** Teto de passos quando há Ferramentas de Leitura em jogo. */
   maxPassos?: number;
+  origem?: {
+    tela: string;
+    rota: string;
+    gatilho: string;
+  };
 }
 
 export type ResultadoDecisao<T> =
@@ -73,6 +78,11 @@ export async function decidir<T>(
     {
       "ia.operacao": entrada.operacao,
       "ia.modelo": modeloDe(entrada.operacao),
+      ...(entrada.origem ? {
+        "ui.tela_origem": entrada.origem.tela,
+        "ui.rota_origem": entrada.origem.rota,
+        "ui.gatilho": entrada.origem.gatilho,
+      } : {}),
     },
     () => decidirInternamente(entrada),
   );
@@ -102,6 +112,11 @@ async function decidirInternamente<T>(
     camposOmitidos,
     degradado: contexto.degradado,
     ferramentasConsultadas,
+    origemTela: entrada.origem?.tela,
+    origemRota: entrada.origem?.rota,
+    gatilho: entrada.origem?.gatilho,
+    contextoEnviado: contexto,
+    instrucaoSistema: entrada.instrucao,
   };
 
   try {
@@ -109,6 +124,7 @@ async function decidirInternamente<T>(
       throw new Error("Imagens omitidas por falta de consentimento para esta operação.");
     }
     const conteudo = renderizarContexto(contexto);
+    const registroBase = { ...base, promptEnviado: conteudo };
     const mensagem = entrada.imagens?.length
       ? { messages: [{ role: "user" as const, content: [{ type: "text" as const, text: conteudo }, ...entrada.imagens.map((imagem) => ({ type: "file" as const, data: imagem.dados, mediaType: imagem.mediaType }))] }] }
       : { prompt: conteudo };
@@ -120,11 +136,13 @@ async function decidirInternamente<T>(
       tools: entrada.ferramentas,
       stopWhen: stepCountIs(entrada.maxPassos ?? 5),
       providerOptions: OPCOES_PROVEDOR,
-      onStepFinish: ({ toolCalls }) => {
-        for (const chamada of toolCalls) {
+      onStepFinish: ({ toolCalls, toolResults }) => {
+        for (const [indice, chamada] of toolCalls.entries()) {
+          const retorno = toolResults[indice];
           ferramentasConsultadas.push({
             nome: chamada.toolName,
             argumentos: chamada.input,
+            resultado: retorno?.output,
           });
         }
       },
@@ -135,7 +153,7 @@ async function decidirInternamente<T>(
     const modeloResolvido = resposta.response.modelId || null;
 
     await registrarDecisao({
-      ...base,
+      ...registroBase,
       modeloResolvido,
       auditavel: modeloResolvido !== null,
       resultado: resposta.output,
@@ -163,6 +181,7 @@ async function decidirInternamente<T>(
 
     await registrarDecisao({
       ...base,
+      promptEnviado: renderizarContexto(contexto),
       modeloResolvido: null,
       auditavel: false,
       resultado: null,

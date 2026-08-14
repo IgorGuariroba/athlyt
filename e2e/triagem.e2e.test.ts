@@ -1,5 +1,7 @@
 import { test, expect } from "@playwright/test";
 import { seedAuthenticatedSession, allowEmail } from "./helpers/seed-session";
+import { obterPerfilVigente } from "@/domain/triagem/perfil";
+import { obterOuGerarRascunho } from "@/domain/plano/repositorio";
 
 /**
  * Jornada da Triagem em cascata (specs/mvp-vertical.md, user stories
@@ -12,8 +14,9 @@ test.describe("Triagem em cascata", () => {
   async function autenticar(page: import("@playwright/test").Page, context: import("@playwright/test").BrowserContext) {
     const email = `e2e-triagem-${Date.now()}@example.com`;
     await allowEmail(email);
-    const { cookie } = await seedAuthenticatedSession(email);
+    const { cookie, user } = await seedAuthenticatedSession(email);
     await context.addCookies([cookie]);
+    return user;
   }
 
   test("completa a cascata obrigatória e sai do Modo Conservador", async ({
@@ -26,7 +29,7 @@ test.describe("Triagem em cascata", () => {
     // apenas deste fluxo e mantém os testes curtos estritos.
     test.slow();
 
-    await autenticar(page, context);
+    const user = await autenticar(page, context);
 
     await page.goto("/triagem");
     await expect(page.getByRole("heading", { name: "Vamos começar" })).toBeVisible();
@@ -214,7 +217,12 @@ test.describe("Triagem em cascata", () => {
     await expect(page.getByText("Perfil completo")).toBeVisible();
     await expect(page.getByText("Modo Conservador")).not.toBeVisible();
 
-    await page.getByRole("link", { name: "Gerar meu plano" }).click();
+    // Evita depender do provedor externo: a action reutiliza o rascunho idempotente.
+    const perfil = await obterPerfilVigente(user.id);
+    expect(perfil).not.toBeNull();
+    await obterOuGerarRascunho(user.id, perfil!);
+    await page.getByRole("checkbox").check();
+    await page.getByRole("button", { name: "Gerar meu plano com IA" }).click();
     await expect(page).toHaveURL("/plano/revisao");
     await expect(
       page.getByRole("heading", { name: "Seu Plano Ativo está pronto" }),

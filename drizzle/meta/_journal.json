@@ -92,6 +92,20 @@
       "when": 1785698575526,
       "tag": "0012_narrow_giant_man",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1786708627531,
+      "tag": "0013_daily_storm",
+      "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1786709000492,
+      "tag": "0014_ambiguous_black_cat",
+      "breakpoints": true
     }
   ]
 }

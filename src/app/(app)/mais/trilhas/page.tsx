@@ -15,6 +15,18 @@ import {
 } from "@/components/tela";
 import { listarTrilhas } from "@/domain/ia/trilha";
 
+function ConteudoAuditavel({ titulo, valor }: { titulo: string; valor: unknown }) {
+  const conteudo = typeof valor === "string" ? valor : JSON.stringify(valor, null, 2);
+  return (
+    <section className="flex flex-col gap-2">
+      <strong className="text-label-lg text-on-surface-strong">{titulo}</strong>
+      <pre className="max-h-96 overflow-auto whitespace-pre-wrap break-words rounded-lg bg-muted p-3 text-body-sm text-muted-foreground">
+        {conteudo || "Nenhum"}
+      </pre>
+    </section>
+  );
+}
+
 /**
  * Trilhas de Decisão: o que cada recomendação usou como entrada e qual
  * regra ou modelo a produziu. É a superfície de auditoria do produto,
@@ -51,6 +63,11 @@ export default async function TrilhasPage() {
                 > | null;
                 const campos =
                   (trilha.camposEnviados as string[]).join(", ") || "nenhum";
+                const ferramentas = trilha.ferramentasConsultadas as Array<{
+                  nome: string;
+                  argumentos: unknown;
+                  resultado?: unknown;
+                }>;
 
                 return (
                   <LinhaCartaoLista
@@ -67,24 +84,22 @@ export default async function TrilhasPage() {
                       </Badge>
                     }
                   >
-                    <FaixaDados>
-                      {trilha.modeloResolvido ?? trilha.modeloSolicitado} ·
-                      perfil v{trilha.perfilVersao}
-                    </FaixaDados>
-                    <p className="text-body-sm text-muted-foreground">
-                      Dados usados: {campos}
-                    </p>
-                    {resultado ? (
+                    <div className="flex flex-col gap-5">
+                      <FaixaDados>
+                        Modelo solicitado: {trilha.modeloSolicitado} · Modelo resolvido: {trilha.modeloResolvido ?? "não informado"} · perfil v{trilha.perfilVersao}
+                      </FaixaDados>
                       <p className="text-body-sm text-muted-foreground">
-                        Resultado:{" "}
-                        {resultado.tipo
-                          ? String(resultado.tipo)
-                          : "decisão registrada"}
-                        {resultado.de
-                          ? ` · ${resultado.de} → ${resultado.para}`
-                          : ""}
+                        Origem: {trilha.origemTela ?? "não registrada"} · {trilha.origemRota ?? "rota não registrada"} · {trilha.gatilho ?? "gatilho não registrado"}
                       </p>
-                    ) : null}
+                      <p className="text-body-sm text-muted-foreground">
+                        Campos enviados: {campos}
+                      </p>
+                      <ConteudoAuditavel titulo="Contexto estruturado enviado" valor={trilha.contextoEnviado} />
+                      <ConteudoAuditavel titulo="Instrução de sistema" valor={trilha.instrucaoSistema} />
+                      <ConteudoAuditavel titulo="Prompt enviado ao agent" valor={trilha.promptEnviado} />
+                      <ConteudoAuditavel titulo={`Ferramentas chamadas (${ferramentas.length})`} valor={ferramentas} />
+                      <ConteudoAuditavel titulo="Retorno do agent" valor={resultado ?? trilha.erro ?? "Nenhum retorno registrado"} />
+                    </div>
                   </LinhaCartaoLista>
                 );
               })}

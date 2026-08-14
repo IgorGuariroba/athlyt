@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import { useMemo, useState } from "react";
 import {
   Building2,
@@ -11,9 +10,7 @@ import {
   Search,
   Trash2,
 } from "lucide-react";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { RadioGroup } from "@/components/ui/radio-group";
 import {
   CATEGORIAS_EQUIPAMENTO,
@@ -23,6 +20,7 @@ import {
   type LocalTreinoId,
 } from "@/domain/triagem/equipamentos";
 import { CartaoRadio } from "@/components/tela/opcao-cartao";
+import { CartaoSelecaoImagem } from "@/components/tela/cartao-selecao-imagem";
 import { salvarEquipamentosPersonalizados } from "../../actions";
 
 const LOCAIS = [
@@ -56,54 +54,6 @@ const LOCAIS = [
   descricao: string;
   Icone: typeof Dumbbell;
 }[];
-
-function CartaoEquipamento({
-  id,
-  rotulo,
-  checked,
-  onCheckedChange,
-}: {
-  id: string;
-  rotulo: string;
-  checked: boolean;
-  onCheckedChange: () => void;
-}) {
-  const inputId = `equipamento-${id}`;
-
-  return (
-    <Label
-      htmlFor={inputId}
-      className="flex min-h-24 cursor-pointer items-center gap-4 rounded-xl border-2 border-border-strong bg-surface px-3 py-3 transition-colors hover:bg-surface-container has-data-checked:border-on-surface-strong"
-    >
-      {/*
-        A referência do Fitbod orienta somente a ilustração. O cartão
-        continua no padrão horizontal do MacroFactor usado no restante
-        da cascata: conteúdo à esquerda e controle circular à direita.
-      */}
-      <span className="flex size-20 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-white p-1">
-        <Image
-          src={imagemEquipamento(id)}
-          alt=""
-          width={160}
-          height={112}
-          className="h-full w-full object-contain"
-        />
-      </span>
-      <span className="flex-1 text-title text-on-surface-strong">
-        {rotulo}
-      </span>
-      <Checkbox
-        id={inputId}
-        name="equipamentos"
-        value={id}
-        checked={checked}
-        onCheckedChange={onCheckedChange}
-        aria-label={rotulo}
-        className="size-7 shrink-0 rounded-full border-4 border-border-strong data-checked:border-on-surface-strong data-checked:bg-on-surface-strong [&>*>svg]:size-4"
-      />
-    </Label>
-  );
-}
 
 function normalizar(texto: string) {
   return texto
@@ -345,80 +295,55 @@ export function SelecaoEquipamentos({
             ) : null}
 
             {personalizadosCadastrados.map((nome) => (
-              <div
-                key={normalizar(nome)}
-                className="flex min-h-24 items-center gap-4 rounded-xl border-2 border-on-surface-strong bg-surface px-3 py-3"
-              >
-                {/*
-                  Mesma anatomia e dimensões de `CartaoEquipamento`.
-                  A miniatura genérica não tenta adivinhar a aparência
-                  de um nome livre, mas mantém o conjunto visualmente
-                  estável até ele entrar no catálogo canônico.
-                */}
-                <span className="flex size-20 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-white p-1">
-                  <Image
-                    src="/equipamentos/personalizado.svg"
-                    alt=""
-                    width={160}
-                    height={112}
-                    className="h-full w-full object-contain"
-                  />
-                </span>
-                <span className="flex-1 text-title text-on-surface-strong">
-                  {nome}
-                </span>
-                <span className="flex shrink-0 items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={async () => {
-                      const proximosCadastrados =
-                        personalizadosCadastrados.filter(
+              <div key={normalizar(nome)}>
+                <CartaoSelecaoImagem
+                  id={`equipamento-personalizado-${normalizar(nome)}`}
+                  name="equipamentosPersonalizados"
+                  value={nome}
+                  rotulo={nome}
+                  src="/equipamentos/personalizado.svg"
+                  checked={personalizadosSelecionados.has(nome)}
+                  onCheckedChange={async (marcado) => {
+                    const proximos = new Set(personalizadosSelecionados);
+                    if (marcado) proximos.add(nome);
+                    else proximos.delete(nome);
+                    if (
+                      await persistirPersonalizados(
+                        personalizadosCadastrados,
+                        proximos,
+                      )
+                    ) {
+                      setPersonalizadosSelecionados(proximos);
+                    }
+                  }}
+                  acao={
+                    <button
+                      type="button"
+                      onClick={async (evento) => {
+                        evento.preventDefault();
+                        const proximosCadastrados = personalizadosCadastrados.filter(
                           (item) => item !== nome,
                         );
-                      const proximosSelecionados = new Set(
-                        personalizadosSelecionados,
-                      );
-                      proximosSelecionados.delete(nome);
-                      if (
-                        !(await persistirPersonalizados(
-                          proximosCadastrados,
-                          proximosSelecionados,
-                        ))
-                      ) {
-                        return;
-                      }
-                      setPersonalizadosCadastrados(proximosCadastrados);
-                      setPersonalizadosSelecionados(proximosSelecionados);
-                    }}
-                    disabled={salvandoPersonalizados}
-                    aria-label={`Excluir ${nome}`}
-                    title={`Excluir ${nome}`}
-                    className="flex size-7 items-center justify-center rounded-full border-2 border-border-strong text-muted-foreground transition-colors hover:border-on-surface-strong hover:text-on-surface-strong"
-                  >
-                    <Trash2 className="size-4" aria-hidden="true" />
-                  </button>
-                  <Checkbox
-                    name="equipamentosPersonalizados"
-                    value={nome}
-                    checked={personalizadosSelecionados.has(nome)}
-                    onCheckedChange={async (estado) => {
-                      const proximos = new Set(personalizadosSelecionados);
-                      if (estado === true) proximos.add(nome);
-                      else proximos.delete(nome);
-                      if (
-                        await persistirPersonalizados(
-                          personalizadosCadastrados,
-                          proximos,
-                        )
-                      ) {
-                        setPersonalizadosSelecionados(proximos);
-                      }
-                    }}
-                    disabled={salvandoPersonalizados}
-                    aria-label={nome}
-                    className="size-7 shrink-0 rounded-full border-4 border-border-strong data-checked:border-on-surface-strong data-checked:bg-on-surface-strong [&>*>svg]:size-4"
-                  />
-                </span>
+                        const proximosSelecionados = new Set(personalizadosSelecionados);
+                        proximosSelecionados.delete(nome);
+                        if (
+                          !(await persistirPersonalizados(
+                            proximosCadastrados,
+                            proximosSelecionados,
+                          ))
+                        ) return;
+                        setPersonalizadosCadastrados(proximosCadastrados);
+                        setPersonalizadosSelecionados(proximosSelecionados);
+                      }}
+                      disabled={salvandoPersonalizados}
+                      aria-label={`Excluir ${nome}`}
+                      title={`Excluir ${nome}`}
+                      className="flex size-7 shrink-0 items-center justify-center rounded-full border-2 border-border-strong text-muted-foreground transition-colors hover:border-on-surface-strong hover:text-on-surface-strong"
+                    >
+                      <Trash2 className="size-4" aria-hidden="true" />
+                    </button>
+                  }
+                />
                 <input
                   type="hidden"
                   name="equipamentosPersonalizadosCadastrados"
@@ -440,10 +365,13 @@ export function SelecaoEquipamentos({
                 </h2>
                 <div className="grid grid-cols-1 gap-2">
                   {categoria.itens.map((equipamento) => (
-                    <CartaoEquipamento
+                    <CartaoSelecaoImagem
                       key={equipamento.id}
-                      id={equipamento.id}
+                      id={`equipamento-${equipamento.id}`}
+                      name="equipamentos"
+                      value={equipamento.id}
                       rotulo={equipamento.rotulo}
+                      src={imagemEquipamento(equipamento.id)}
                       checked={selecionados.has(equipamento.id)}
                       onCheckedChange={() => alternar(equipamento.id)}
                     />
