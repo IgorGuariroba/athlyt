@@ -10,6 +10,7 @@ import {
   LinhaCartaoLista,
   LinhasCartaoLista,
   NotaTela,
+  Revelar,
   SecoesTela,
   TelaConteudo,
 } from "@/components/tela";
@@ -22,7 +23,29 @@ function formatarRotulo(chave: string) {
   return texto.charAt(0).toUpperCase() + texto.slice(1);
 }
 
-function ValorAuditavel({ valor }: { valor: unknown }) {
+/**
+ * Resumo de uma linha para o cabeçalho colapsado: sem ele o usuário
+ * precisaria abrir cada nó para descobrir se vale a pena olhar.
+ */
+function resumir(valor: unknown): string {
+  if (Array.isArray(valor)) {
+    return `${valor.length} ${valor.length === 1 ? "item" : "itens"}`;
+  }
+  if (valor && typeof valor === "object") {
+    const chaves = Object.keys(valor as Record<string, unknown>);
+    return `${chaves.length} ${chaves.length === 1 ? "campo" : "campos"}`;
+  }
+  const texto = String(valor ?? "");
+  return texto.length > 40 ? `${texto.slice(0, 40)}…` : texto;
+}
+
+function ValorAuditavel({
+  valor,
+  profundidade = 0,
+}: {
+  valor: unknown;
+  profundidade?: number;
+}) {
   if (valor === null || valor === undefined || valor === "") {
     return <span className="text-muted-foreground">Não informado</span>;
   }
@@ -37,23 +60,44 @@ function ValorAuditavel({ valor }: { valor: unknown }) {
     return (
       <ol className="flex flex-col gap-2">
         {valor.map((item, indice) => (
-          <li key={indice} className="rounded-md border border-border bg-surface-container px-3 py-2">
-            <span className="mb-1 block text-label-md text-muted-foreground">Item {indice + 1}</span>
-            <ValorAuditavel valor={item} />
+          <li key={indice} className="min-w-0 rounded-md border border-border bg-surface-container px-3 py-2">
+            <Revelar rotulo={`Item ${indice + 1}`} meta={resumir(item)}>
+              <ValorAuditavel valor={item} profundidade={profundidade + 1} />
+            </Revelar>
           </li>
         ))}
       </ol>
     );
   }
 
+  const entradas = Object.entries(valor as Record<string, unknown>);
+  if (entradas.length === 0) {
+    return <span className="text-muted-foreground">Nenhum campo</span>;
+  }
+
   return (
     <dl className="flex flex-col divide-y divide-border">
-      {Object.entries(valor as Record<string, unknown>).map(([chave, item]) => (
-        <div key={chave} className="flex min-w-0 flex-col gap-1 py-2 first:pt-0 last:pb-0">
-          <dt className="text-label-md font-semibold text-muted-foreground">{formatarRotulo(chave)}</dt>
-          <dd className="min-w-0 border-l border-border pl-3 text-body-sm text-on-surface"><ValorAuditavel valor={item} /></dd>
-        </div>
-      ))}
+      {entradas.map(([chave, item]) => {
+        const composto = item !== null && typeof item === "object";
+        return (
+          <div key={chave} className="flex min-w-0 flex-col gap-1 py-2 first:pt-0 last:pb-0">
+            {composto ? (
+              <Revelar rotulo={formatarRotulo(chave)} meta={resumir(item)}>
+                <div className="min-w-0 border-l border-border pl-3 text-body-sm text-on-surface">
+                  <ValorAuditavel valor={item} profundidade={profundidade + 1} />
+                </div>
+              </Revelar>
+            ) : (
+              <>
+                <dt className="text-label-md font-semibold text-muted-foreground">{formatarRotulo(chave)}</dt>
+                <dd className="min-w-0 border-l border-border pl-3 text-body-sm text-on-surface">
+                  <ValorAuditavel valor={item} profundidade={profundidade + 1} />
+                </dd>
+              </>
+            )}
+          </div>
+        );
+      })}
     </dl>
   );
 }
@@ -62,18 +106,20 @@ function ConteudoAuditavel({ titulo, valor }: { titulo: string; valor: unknown }
   const conteudoBruto = typeof valor === "string" ? valor : JSON.stringify(valor, null, 2);
   return (
     <section className="flex flex-col gap-2">
-      <strong className="text-label-lg text-on-surface-strong">{titulo}</strong>
-      <div className="rounded-lg bg-muted p-3">
-        <ValorAuditavel valor={valor} />
-      </div>
-      {typeof valor === "object" && valor !== null ? (
-        <details className="text-body-sm text-muted-foreground">
-          <summary className="cursor-pointer font-semibold">Ver dados brutos (JSON)</summary>
-          <pre className="mt-2 max-h-96 overflow-auto whitespace-pre-wrap break-words rounded-lg bg-muted p-3">
-            {conteudoBruto}
-          </pre>
-        </details>
-      ) : null}
+      <Revelar rotulo={titulo} tom="forte" meta={resumir(valor)}>
+        <div className="flex flex-col gap-2">
+          <div className="min-w-0 rounded-lg bg-muted p-3">
+            <ValorAuditavel valor={valor} />
+          </div>
+          {typeof valor === "object" && valor !== null ? (
+            <Revelar rotulo="Ver dados brutos (JSON)">
+              <pre className="max-h-96 overflow-auto whitespace-pre-wrap break-words rounded-lg bg-muted p-3">
+                {conteudoBruto}
+              </pre>
+            </Revelar>
+          ) : null}
+        </div>
+      </Revelar>
     </section>
   );
 }
@@ -135,6 +181,7 @@ export default async function TrilhasPage() {
                         </Badge>
                       }
                     >
+                      <Revelar rotulo="Detalhes da trilha" tom="forte">
                       <div className="flex flex-col gap-5">
                       <FaixaDados>
                         Modelo solicitado: {trilha.modeloSolicitado} · Modelo resolvido: {trilha.modeloResolvido ?? "não informado"} · perfil v{trilha.perfilVersao}
@@ -151,6 +198,7 @@ export default async function TrilhasPage() {
                       <ConteudoAuditavel titulo={`Ferramentas chamadas (${ferramentas.length})`} valor={ferramentas} />
                       <ConteudoAuditavel titulo="Retorno do agent" valor={resultado ?? trilha.erro ?? "Nenhum retorno registrado"} />
                       </div>
+                      </Revelar>
                     </LinhaCartaoLista>
                   </LinhasCartaoLista>
                 </CartaoLista>
