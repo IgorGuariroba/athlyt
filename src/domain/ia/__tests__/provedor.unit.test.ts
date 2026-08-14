@@ -36,15 +36,24 @@ describe("modeloDe", () => {
     }
   });
 
-  it("usa apenas variantes :free em desenvolvimento", () => {
+  /**
+   * Substitui a antiga regra ":free em desenvolvimento". O catálogo
+   * gratuito paralelo produziu falhas que só existiam localmente
+   * (modelo sem visão, modelo que ignorava o schema): validar contra
+   * modelo diferente do de produção testa o ambiente errado.
+   */
+  it("usa em desenvolvimento o mesmo modelo de produção", () => {
     for (const operacao of OPERACOES) {
-      expect(modeloDe(operacao, "desenvolvimento")).toMatch(/:free$/);
+      expect(modeloDe(operacao, "desenvolvimento")).toBe(
+        modeloDe(operacao, "producao"),
+      );
     }
   });
 
-  it("não usa modelo :free em produção", () => {
+  it("não usa modelo :free, que rotaciona sem aviso e ignora schema", () => {
     for (const operacao of OPERACOES) {
       expect(modeloDe(operacao, "producao")).not.toMatch(/:free$/);
+      expect(modeloDe(operacao, "desenvolvimento")).not.toMatch(/:free$/);
     }
   });
 });

@@ -21,41 +21,46 @@ import type { OperacaoIA } from "./contexto/tipos";
  */
 export type AmbienteIA = "producao" | "desenvolvimento";
 
+/**
+ * Modelo base do agent Athlyt.
+ *
+ * Multimodal (`text+image+file+audio+video`), com `structured_outputs`
+ * e `tools` — os dois requisitos do executor `decidir()` — e 1M de
+ * contexto. Ser multimodal em todas as operações evita a classe de
+ * falha que já ocorreu: um Recorte passar a enviar imagem e o modelo
+ * daquela operação ser só de texto.
+ */
+const MODELO_BASE = "google/gemini-2.5-flash-lite";
+
 const MODELOS_PRODUCAO: Record<OperacaoIA, string> = {
-  "copiloto-sessao": "openai/gpt-5-mini",
-  "revisao-semanal": "anthropic/claude-sonnet-4.5",
-  "plano-inicial": "anthropic/claude-sonnet-4.5",
-  "refeicao-texto": "openai/gpt-5-mini",
-  "refeicao-foto": "openai/gpt-5-mini",
-  "avaliacao-visual": "openai/gpt-5-mini",
-  "importacao-historico": "anthropic/claude-sonnet-4.5",
+  "copiloto-sessao": MODELO_BASE,
+  "revisao-semanal": MODELO_BASE,
+  "plano-inicial": MODELO_BASE,
+  "refeicao-texto": MODELO_BASE,
+  "refeicao-foto": MODELO_BASE,
+  "avaliacao-visual": MODELO_BASE,
+  "importacao-historico": MODELO_BASE,
 };
 
 /**
- * Só entram aqui modelos `:free` que declaram `structured_outputs` e
- * `tools` em `supported_parameters` — sem isso o `Output.object` do
- * executor falha e o teste local deixa de exercitar o caminho de
- * produção. Em julho/2026 apenas quatro `:free` cumprem o requisito,
- * e só o Gemma 4 26B soma visão, exigida por `refeicao-foto`.
+ * Desenvolvimento usa o mesmo modelo base de produção.
  *
- * Declarar o parâmetro não basta: `openai/gpt-oss-20b:free` anuncia
- * `structured_outputs` mas devolveu prosa em 3 de 3 tentativas, e por
- * isso ficou de fora. Os três abaixo acertaram 3 de 3.
+ * Antes o ambiente local rodava um catálogo `:free` paralelo, e isso
+ * custou duas falhas que só apareciam localmente: um modelo sem visão
+ * numa operação que passou a enviar fotos, e outro que ignorava o
+ * schema e devolvia prosa. Validar contra modelo diferente do que
+ * roda em produção testa o ambiente errado.
  *
- * O catálogo gratuito rotaciona sem aviso; quando um slug sair do ar,
- * `npm run ia:verificar` falha e a lista se refaz com:
- *   curl -s https://openrouter.ai/api/v1/models \
- *     -H "Authorization: Bearer $OPENROUTER_API_KEY"
+ * O Flash-Lite custa ~US$ 0,10/MTok de entrada, então a economia que
+ * justificava o catálogo `:free` deixou de compensar o risco. A
+ * separação de ambientes permanece para que trocar apenas o modelo
+ * de dev volte a ser possível sem mexer em produção.
+ *
+ * `npm run ia:modalidades` confere que cada modelo suporta as
+ * modalidades que o Recorte da operação envia.
  */
 const MODELOS_DESENVOLVIMENTO: Record<OperacaoIA, string> = {
-  "copiloto-sessao": "nvidia/nemotron-nano-9b-v2:free",
-  "revisao-semanal": "nvidia/nemotron-3-super-120b-a12b:free",
-  "plano-inicial": "nvidia/nemotron-3-super-120b-a12b:free",
-  "refeicao-texto": "nvidia/nemotron-nano-9b-v2:free",
-  // Único `:free` com structured outputs e entrada de imagem.
-  "refeicao-foto": "google/gemma-4-26b-a4b-it:free",
-  "avaliacao-visual": "google/gemma-4-26b-a4b-it:free",
-  "importacao-historico": "nvidia/nemotron-3-super-120b-a12b:free",
+  ...MODELOS_PRODUCAO,
 };
 
 /**

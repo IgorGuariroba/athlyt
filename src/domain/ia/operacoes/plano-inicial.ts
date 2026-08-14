@@ -179,25 +179,39 @@ function resumirMetasProporcao(valor: unknown) {
   ]);
 }
 
+/**
+ * Recorte de dados da operação, isolado da chamada ao provedor para que
+ * uma inspeção do que é enviado use o mesmo código que envia.
+ */
+export function montarDadosPlanoInicial(entrada: {
+  triagemCompleta: unknown;
+  fotosCorporais?: readonly { id: string; pose: string; observadoEm: Date | string }[];
+  linhaBaseCorporal?: unknown;
+  metasProporcao?: unknown;
+  historicoImportado?: unknown;
+}) {
+  return {
+    "triagem-completa": resumirTriagemParaPlano(entrada.triagemCompleta),
+    ...(entrada.fotosCorporais?.length ? {
+      "fotos-corporais": entrada.fotosCorporais.map(({ id, pose, observadoEm }) => ({
+        id,
+        pose,
+        observadoEm,
+      })),
+    } : {}),
+    "linha-base-corporal": resumirLinhaBaseCorporal(entrada.linhaBaseCorporal),
+    "metas-proporcao": resumirMetasProporcao(entrada.metasProporcao),
+    "historico-importado": entrada.historicoImportado,
+  };
+}
+
 export function gerarPlanoInicialComIA(entrada: EntradaPlanoInicial): Promise<ResultadoDecisao<PlanoGerado>> {
   return decidir({
     userId: entrada.userId,
     operacao: "plano-inicial",
     nucleo: entrada.nucleo,
     consentimentos: entrada.consentimentos,
-    dados: {
-      "triagem-completa": resumirTriagemParaPlano(entrada.triagemCompleta),
-      ...(entrada.fotosCorporais?.length ? {
-        "fotos-corporais": entrada.fotosCorporais.map(({ id, pose, observadoEm }) => ({
-          id,
-          pose,
-          observadoEm,
-        })),
-      } : {}),
-      "linha-base-corporal": resumirLinhaBaseCorporal(entrada.linhaBaseCorporal),
-      "metas-proporcao": resumirMetasProporcao(entrada.metasProporcao),
-      "historico-importado": entrada.historicoImportado,
-    },
+    dados: montarDadosPlanoInicial(entrada),
     imagens: entrada.fotosCorporais?.map(({ dados, mediaType }) => ({ dados, mediaType })),
     instrucao: INSTRUCAO,
     schema: planoInicialSchema,
