@@ -70,12 +70,18 @@ migrar() {
   npm run db:migrate
 }
 
+criar_sessao_dev() {
+  echo "[dev] preparando sessão local sem OAuth"
+  npx tsx scripts/seed-dev-session.ts
+}
+
 subir() {
   derrubar_app
   subir_banco
   migrar
+  criar_sessao_dev
   echo "[dev] iniciando next dev na porta ${PORTA}"
-  exec npx next dev --port "$PORTA"
+  AUTH_URL="http://localhost:${PORTA}" exec npx next dev --port "$PORTA"
 }
 
 derrubar() {
