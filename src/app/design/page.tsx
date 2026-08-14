@@ -7,6 +7,7 @@ import {
   Flame,
   GitBranch,
   Layers3,
+  LogOut,
   RefreshCw,
   Ruler,
   Scale,
@@ -53,6 +54,7 @@ import {
   EstadoVazio,
   FaixaDados,
   GraficoTendencia,
+  ItemAcaoNavegacao,
   ItemNavegacao,
   LinhaCartaoLista,
   LinhasCartaoLista,
@@ -62,6 +64,7 @@ import {
   NotaTela,
   PainelMetricas,
   PainelPendencias,
+  PerfilUsuario,
   PorQueIsso,
   Revelar,
   SecoesTela,
@@ -657,7 +660,22 @@ export default function GaleriaDesignPage() {
               rotulo="Sincronização"
               valor="3"
             />
+            <ItemAcaoNavegacao
+              acao="/design"
+              Icone={LogOut}
+              rotulo="Sair"
+            />
           </ListaNavegacao>
+        </Amostra>
+
+        <Amostra
+          titulo="Perfil de usuário"
+          nota="Identidade diretamente sobre o fundo, antes dos grupos de configurações."
+        >
+          <PerfilUsuario
+            nome="Atleta Athlyt"
+            detalhe="atleta@athlyt.com"
+          />
         </Amostra>
 
         <Amostra

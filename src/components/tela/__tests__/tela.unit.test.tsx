@@ -15,6 +15,7 @@ import {
   LinhaCartaoLista,
   LinhasCartaoLista,
   PainelPendencias,
+  PerfilUsuario,
   PorQueIsso,
   Revelar,
   TelaConteudo,
@@ -85,6 +86,18 @@ describe("CartaoLista", () => {
     );
 
     expect(within(screen.getByRole("list")).getAllByRole("listitem")).toHaveLength(2);
+  });
+});
+
+describe("PerfilUsuario", () => {
+  it("expõe a identidade em uma região nomeada", () => {
+    render(
+      <PerfilUsuario nome="Atleta Athlyt" detalhe="atleta@athlyt.com" />,
+    );
+
+    const perfil = screen.getByRole("region", { name: "Perfil" });
+    expect(within(perfil).getByText("Atleta Athlyt")).toBeDefined();
+    expect(within(perfil).getByText("atleta@athlyt.com")).toBeDefined();
   });
 });
 
