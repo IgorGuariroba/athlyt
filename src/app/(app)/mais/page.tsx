@@ -1,4 +1,4 @@
-import { GitBranch, RefreshCw, ShieldCheck } from "lucide-react";
+import { GitBranch, RefreshCw, ShieldCheck, Target } from "lucide-react";
 import { auth } from "@/auth";
 import { sair, sairDeTodosDispositivos } from "../../(auth)/actions";
 import { Button } from "@/components/ui/button";
@@ -41,6 +41,12 @@ export default async function MaisPage() {
         </CartaoLista>
 
         <ListaNavegacao>
+          <ItemNavegacao
+            href="/mais/objetivo"
+            Icone={Target}
+            rotulo="Objetivo e estratégia"
+            descricao="Objetivo atual e reavaliação do Plano Ativo"
+          />
           <ItemNavegacao
             href="/mais/trilhas"
             Icone={GitBranch}

@@ -2,33 +2,17 @@ import { redirect } from "next/navigation";
 import { Dumbbell, Flame, RefreshCw } from "lucide-react";
 import { auth } from "@/auth";
 import { RadioGroup } from "@/components/ui/radio-group";
-import { posicaoNaCascata, proximoDestinoCascata } from "@/domain/triagem/etapas";
+import { OBJETIVOS_COMPOSICAO, posicaoNaCascata, proximoDestinoCascata } from "@/domain/triagem/etapas";
 import { obterPerfilVigente } from "@/domain/triagem/perfil";
 import { CascataShell } from "@/components/tela/cascata-shell";
 import { EtapaForm } from "../_components/etapa-form";
 import { CartaoRadio } from "@/components/tela/opcao-cartao";
 
-const OBJETIVOS = [
-  {
-    value: "recomposicao",
-    titulo: "Recomposição corporal",
-    descricao:
-      "Reduzir gordura e desenvolver massa muscular a partir da sua linha de base, sem presumir percentuais",
-    Icone: RefreshCw,
-  },
-  {
-    value: "perder-gordura",
-    titulo: "Priorizar perda de gordura",
-    descricao: "Reduzir gordura corporal preservando o máximo de massa muscular",
-    Icone: Flame,
-  },
-  {
-    value: "ganhar-massa",
-    titulo: "Priorizar ganho de massa muscular",
-    descricao: "Maximizar hipertrofia com ganho de gordura controlado",
-    Icone: Dumbbell,
-  },
-] as const;
+const ICONE_OBJETIVO = {
+  recomposicao: RefreshCw,
+  "perder-gordura": Flame,
+  "ganhar-massa": Dumbbell,
+} as const;
 
 /** Tela 009 — Objetivo (specs/workflow/telas/009-objetivo.md). */
 export default async function ObjetivoPage() {
@@ -48,14 +32,14 @@ export default async function ObjetivoPage() {
           required
           className="gap-3"
         >
-          {OBJETIVOS.map(({ value, titulo, descricao, Icone }) => (
+          {OBJETIVOS_COMPOSICAO.map(({ value, titulo, descricao }) => (
             <CartaoRadio
               key={value}
               id={`objetivo-${value}`}
               value={value}
               titulo={titulo}
               descricao={descricao}
-              Icone={Icone}
+              Icone={ICONE_OBJETIVO[value]}
             />
           ))}
         </RadioGroup>

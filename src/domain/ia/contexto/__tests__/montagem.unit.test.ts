@@ -16,6 +16,7 @@ const TRIAGEM_COMPLETA: RespostasTriagem = {
   sexoBiologico: "masculino",
   alturaCm: 178,
   pesoKg: 82,
+  objetivoComposicao: "recomposicao",
   objetivoConfirmado: true,
   experienciaTreino: "intermediario",
   diasDisponiveis: ["segunda", "quarta", "sexta"],
@@ -46,6 +47,7 @@ describe("montarNucleo", () => {
     expect(nucleo.idadeAnos?.valor).toBe(31);
     expect(nucleo.idadeAnos?.proveniencia).toBe("medido");
     expect(nucleo.modoConservador).toBe(false);
+    expect(nucleo.objetivoComposicao?.valor).toBe("recomposicao");
   });
 
   it("omite campos não respondidos em vez de usar default", () => {

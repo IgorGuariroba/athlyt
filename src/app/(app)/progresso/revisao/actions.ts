@@ -10,6 +10,7 @@ import { avaliarConfiancaCorporal } from "@/domain/medicoes";
 import { atualizarEstadoRevisaoCorporal, obterPanoramaCorporal, obterRevisaoCorporal, registrarRevisaoCorporal, vincularAjusteAutomatico } from "@/domain/medicoes/repositorio";
 import { produzirRevisaoCorporal, type EvidenciaCorporal } from "@/domain/medicoes/revisao-corporal";
 import { aplicarReducaoVolumeAutomatica, ativarExperimentoPlano, desfazerAjusteAutomatico, obterOuGerarRascunho, obterPlanoAtivo, reverterAoPlanoEstavel } from "@/domain/plano/repositorio";
+import { incorporarReavaliacaoSePropostaEstrutural, obterReavaliacaoPendente, rejeitarReavaliacaoDaRevisao } from "@/domain/plano/reavaliacao";
 import type { ExercicioSessao } from "@/domain/sessao/repositorio";
 import { obterPerfilVigente } from "@/domain/triagem/perfil";
 
@@ -18,10 +19,11 @@ const limitar = (valor: number) => Math.max(0, Math.min(100, Math.round(valor)))
 export async function gerarRevisaoSemanal(fd: FormData) {
   const session = await auth(); if (!session?.user?.id) redirect("/");
   const fim = new Date(); const inicio = new Date(fim.getTime() - 7 * 86_400_000);
-  const [panorama, plano, perfil, sessoes, refeicoes] = await Promise.all([
+  const [panorama, plano, perfil, sessoes, refeicoes, reavaliacaoPendente] = await Promise.all([
     obterPanoramaCorporal(session.user.id), obterPlanoAtivo(session.user.id), obterPerfilVigente(session.user.id),
     db.select().from(workoutSessions).where(and(eq(workoutSessions.userId, session.user.id), gte(workoutSessions.startedAt, inicio))),
     db.select().from(foodEntries).where(and(eq(foodEntries.userId, session.user.id), gte(foodEntries.consumidoEm, inicio))),
+    obterReavaliacaoPendente(session.user.id),
   ]);
   const planejadasTreino = plano?.conteudo.bloco.dias.length ?? 0; const concluidas = sessoes.filter((item) => item.estado === "concluida").length;
   const planejadasRefeicao = (plano?.conteudo.nutricao.refeicoes.length ?? 0) * 7;
@@ -49,8 +51,28 @@ export async function gerarRevisaoSemanal(fd: FormData) {
   const recuperacaoInformada = limitar(Number(fd.get("recuperacao") ?? 3) * 20);
   const utilidadeInformada = limitar(Number(fd.get("utilidade") ?? 3) * 20);
   evidencias.push({ sentido: recuperacaoInformada >= 60 ? "favor" : "contra", descricao: `Recuperação percebida: ${recuperacaoInformada}/100`, fonte: "relato da Revisão Semanal", qualidade: "moderada", observadoEm: fim });
-  const revisao = produzirRevisaoCorporal({ dimensoes: { aderencia: Math.round((aderenciaTreino + aderenciaNutricao) / 2), desempenho: desempenhoScore, tendenciaCorporal: tendenciaScore, recuperacao: recuperacaoInformada, utilidade: utilidadeInformada }, confiancas, evidencias, semanasObservadas, riscoSaude: Boolean(respostas.lesoes?.trim() || respostas.condicoes?.trim()) });
+  const revisao = produzirRevisaoCorporal({
+    dimensoes: { aderencia: Math.round((aderenciaTreino + aderenciaNutricao) / 2), desempenho: desempenhoScore, tendenciaCorporal: tendenciaScore, recuperacao: recuperacaoInformada, utilidade: utilidadeInformada },
+    confiancas,
+    evidencias,
+    semanasObservadas,
+    riscoSaude: Boolean(respostas.lesoes?.trim() || respostas.condicoes?.trim()),
+    reavaliacaoPendente: reavaliacaoPendente ? {
+      gatilho: reavaliacaoPendente.gatilho,
+      impacto: reavaliacaoPendente.impacto,
+      objetivoAnterior: reavaliacaoPendente.objetivoAnterior,
+      objetivoNovo: reavaliacaoPendente.objetivoNovo,
+    } : undefined,
+  });
   const linha = await registrarRevisaoCorporal(session.user.id, { periodoInicio: inicio, periodoFim: fim, revisao, perfilVersao: perfil?.version });
+  if (reavaliacaoPendente) {
+    await incorporarReavaliacaoSePropostaEstrutural(
+      session.user.id,
+      reavaliacaoPendente.id,
+      linha.id,
+      revisao.proposta,
+    );
+  }
   if (revisao.proposta.tipo === "auto_aplicado") {
     const ajuste = await aplicarReducaoVolumeAutomatica(session.user.id, linha.id);
     if (ajuste) await vincularAjusteAutomatico(session.user.id, linha.id, ajuste);
@@ -63,18 +85,18 @@ export async function decidirPropostaRevisao(fd: FormData) {
   const reviewId = String(fd.get("reviewId")); const decisao = String(fd.get("decisao"));
   if (decisao === "aprovar") {
     const perfil = await obterPerfilVigente(session.user.id); if (!perfil) redirect("/triagem");
-    await atualizarEstadoRevisaoCorporal(session.user.id, reviewId, "aplicada");
     await obterOuGerarRascunho(session.user.id, perfil);
     revalidatePath("/plano/revisao"); redirect("/progresso/revisao/experimento");
   }
   await atualizarEstadoRevisaoCorporal(session.user.id, reviewId, "rejeitada");
+  await rejeitarReavaliacaoDaRevisao(session.user.id, reviewId);
   revalidatePath("/progresso/revisao"); redirect("/progresso/revisao/proposta");
 }
 
 export async function iniciarExperimento(fd: FormData) {
   const session = await auth(); if (!session?.user?.id) redirect("/");
   const variaveis = fd.getAll("variaveis").map(String);
-  await ativarExperimentoPlano(session.user.id, { planoId: String(fd.get("planoId")), hipotese: String(fd.get("hipotese") ?? ""), variaveis, criterioSucesso: String(fd.get("criterioSucesso") ?? ""), criterioInterrupcao: String(fd.get("criterioInterrupcao") ?? ""), janelaMinimaSemanas: Number(fd.get("janelaMinimaSemanas") ?? 2) });
+  await ativarExperimentoPlano(session.user.id, { planoId: String(fd.get("planoId")), reavaliacaoId: String(fd.get("reavaliacaoId") ?? "") || undefined, hipotese: String(fd.get("hipotese") ?? ""), variaveis, criterioSucesso: String(fd.get("criterioSucesso") ?? ""), criterioInterrupcao: String(fd.get("criterioInterrupcao") ?? ""), janelaMinimaSemanas: Number(fd.get("janelaMinimaSemanas") ?? 2) });
   revalidatePath("/inicio"); revalidatePath("/progresso"); redirect("/progresso/revisao/experimento");
 }
 

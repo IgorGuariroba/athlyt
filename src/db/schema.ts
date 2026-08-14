@@ -292,6 +292,28 @@ export const planExperiments = pgTable("plan_experiment", {
   endedAt: timestamp("ended_at", { mode: "date", withTimezone: true }),
 }, (t) => [index("plan_experiment_user_state_idx").on(t.userId, t.estado)]);
 
+/**
+ * Solicitação de reavaliação aberta por uma mudança relevante no Contexto do
+ * Atleta. Ela não modifica o Plano Ativo: preserva o baseline até que a
+ * Revisão Semanal produza e o atleta aprove um Experimento de Plano.
+ */
+export const planReassessments = pgTable("plan_reassessment", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  gatilho: text("gatilho").$type<"mudanca_objetivo">().notNull(),
+  estado: text("estado").$type<"pendente" | "incorporada" | "aplicada" | "rejeitada" | "cancelada">().notNull().default("pendente"),
+  impacto: text("impacto").$type<"estrutural">().notNull(),
+  baselinePlanId: uuid("baseline_plan_id").notNull().references(() => plans.id),
+  perfilVersaoAnterior: integer("perfil_versao_anterior").notNull(),
+  perfilVersaoNova: integer("perfil_versao_nova").notNull(),
+  objetivoAnterior: text("objetivo_anterior").notNull(),
+  objetivoNovo: text("objetivo_novo").notNull(),
+  reviewId: uuid("review_id").references(() => weeklyBodyReviews.id, { onDelete: "set null" }),
+  candidatePlanId: uuid("candidate_plan_id").references(() => plans.id, { onDelete: "set null" }),
+  createdAt: timestamp("created_at", { mode: "date", withTimezone: true }).notNull().defaultNow(),
+  resolvedAt: timestamp("resolved_at", { mode: "date", withTimezone: true }),
+}, (t) => [index("plan_reassessment_user_state_idx").on(t.userId, t.estado)]);
+
 export const workoutSessions = pgTable("workout_session", {
   id: uuid("id").primaryKey().defaultRandom(),
   userId: uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),

@@ -1,3 +1,4 @@
+import { rotuloObjetivoComposicao } from "@/domain/triagem/etapas";
 import type { ConfiancaCorporal, QualidadeMedicao } from "./index";
 
 export const SCORECARD_CORPORAL_VERSAO = "scorecard-v1";
@@ -10,6 +11,12 @@ export function produzirRevisaoCorporal(entrada: {
   evidencias: EvidenciaCorporal[];
   semanasObservadas: number;
   riscoSaude?: boolean;
+  reavaliacaoPendente?: {
+    gatilho: "mudanca_objetivo";
+    impacto: "estrutural";
+    objetivoAnterior: string;
+    objetivoNovo: string;
+  };
 }) {
   const valores = Object.values(entrada.dimensoes);
   if (valores.some((valor) => !Number.isFinite(valor) || valor < 0 || valor > 100)) throw new Error("Dimensão do Scorecard fora da faixa.");
@@ -19,6 +26,13 @@ export function produzirRevisaoCorporal(entrada: {
   const podePropor = entrada.semanasObservadas >= 2 && confiaveis >= 4 && !contraAlta && !entrada.riscoSaude;
   const proposta = entrada.riscoSaude
     ? { tipo: "manter" as const, exigeAprovacao: false, justificativa: "Saúde e recuperação prevalecem; mantenha o Plano Estável e investigue os sinais relatados." }
+    : entrada.reavaliacaoPendente?.impacto === "estrutural"
+      ? {
+          tipo: "estrutural" as const,
+          exigeAprovacao: true,
+          gatilho: entrada.reavaliacaoPendente.gatilho,
+          justificativa: `O objetivo mudou de ${rotuloObjetivoComposicao(entrada.reavaliacaoPendente.objetivoAnterior)} para ${rotuloObjetivoComposicao(entrada.reavaliacaoPendente.objetivoNovo)}; o Plano Ativo precisa de uma revisão estrutural antes de qualquer alteração.`,
+        }
     : podePropor && entrada.dimensoes.recuperacao < 50 && entrada.confiancas.saudeRecuperacao === "confiavel"
       ? { tipo: "auto_aplicado" as const, exigeAprovacao: false, justificativa: "Recuperação baixa e confiável: reduzir até 10% do volume por uma versão e permitir desfazer.", ajuste: { tipo: "reduzir-volume" as const, limitePercentual: 10, regraVersao: "ajuste-recuperacao-v1" } }
       : podePropor && geral < 55

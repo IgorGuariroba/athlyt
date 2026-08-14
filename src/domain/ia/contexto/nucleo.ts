@@ -20,6 +20,7 @@ export interface NucleoContexto {
   sexoBiologico?: ValorContexto<string>;
   alturaCm?: ValorContexto<number>;
   pesoKg?: ValorContexto<number>;
+  objetivoComposicao?: ValorContexto<string>;
   experienciaTreino?: ValorContexto<string>;
   diasDisponiveis?: ValorContexto<string[]>;
   duracaoSessaoMin?: ValorContexto<number>;
@@ -86,6 +87,10 @@ export function montarNucleo(entrada: {
     sexoBiologico: anota("sexoBiologico", respostas.sexoBiologico),
     alturaCm: anota("alturaCm", respostas.alturaCm),
     pesoKg: anota("pesoKg", respostas.pesoKg),
+    objetivoComposicao: anota(
+      "objetivoComposicao",
+      respostas.objetivoComposicao,
+    ),
     experienciaTreino: anota("experienciaTreino", respostas.experienciaTreino),
     diasDisponiveis: anota(
       "diasDisponiveis",

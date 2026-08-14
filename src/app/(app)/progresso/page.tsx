@@ -30,6 +30,7 @@ import {
 } from "@/components/tela";
 import type { MetaProporcao } from "@/domain/medicoes";
 import { obterPanoramaCorporal } from "@/domain/medicoes/repositorio";
+import { obterReavaliacaoPendente } from "@/domain/plano/reavaliacao";
 import { atualizarEnfasesCorporais } from "./actions";
 import { EnfasesCorporais } from "./enfases-corporais";
 
@@ -98,7 +99,10 @@ export default async function ProgressoPage({
     ? Number(periodo)
     : 90;
 
-  const panorama = await obterPanoramaCorporal(session.user.id);
+  const [panorama, reavaliacaoPendente] = await Promise.all([
+    obterPanoramaCorporal(session.user.id),
+    obterReavaliacaoPendente(session.user.id),
+  ]);
 
   // A janela conta a partir do registro mais recente, e não de hoje:
   // quem passou um mês sem medir veria todos os gráficos vazios.
@@ -397,6 +401,23 @@ export default async function ProgressoPage({
             </LinhasCartaoLista>
           </CartaoLista>
         </section>
+
+        {reavaliacaoPendente ? (
+          <CartaoLista>
+            <LinhasCartaoLista>
+              <LinhaCartaoLista
+                titulo="Reavaliação pendente"
+                meta="Mudança estrutural"
+              >
+                <p className="text-body-md leading-relaxed text-on-surface">
+                  Seu objetivo mudou. O Plano Ativo permanece igual até que a
+                  próxima Revisão Semanal apresente uma proposta para sua
+                  aprovação.
+                </p>
+              </LinhaCartaoLista>
+            </LinhasCartaoLista>
+          </CartaoLista>
+        ) : null}
 
         <section
           aria-labelledby="revisao-semanal"
