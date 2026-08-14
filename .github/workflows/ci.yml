@@ -29,6 +29,8 @@ jobs:
       - run: npm ci
       - run: npm run lint
       - run: npm run typecheck
+      - name: Governança do design system
+        run: npm run ui:verificar
 
   # Portão rápido: *.unit.test.ts não toca infraestrutura nenhuma, então
   # este job não provisiona banco de propósito — se algum teste passar a

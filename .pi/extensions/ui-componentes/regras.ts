@@ -28,6 +28,14 @@ type Regra = {
 
 const REGRAS: Regra[] = [
   {
+    id: "composicao-crua",
+    padrao: /import\s*\{[^}]*\bCard\b[^}]*\}\s*from\s*["']@\/components\/ui\/card["']/,
+    motivo:
+      "Card estrutural importado diretamente pela página permite recriar padrões visuais fora do kit de composição.",
+    correcao:
+      "Use um componente de `@/components/tela`. Se o padrão ainda não existir, crie-o nessa camada, exporte-o no catálogo e demonstre-o em `/design`.",
+  },
+  {
     id: "controle-cru",
     padrao: /<(button|select|textarea)\b/,
     motivo:

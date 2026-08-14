@@ -29,6 +29,7 @@
     "test:e2e": "playwright test",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
+    "ui:verificar": "vitest run --project unidade src/arquitetura/__tests__/governanca-ui.unit.test.ts",
     "ia:verificar": "tsx scripts/verificar-ia.ts",
     "ia:verificar-visual": "tsx scripts/verificar-avaliacao-visual.ts",
     "storage:verificar": "tsx scripts/verificar-r2.ts",

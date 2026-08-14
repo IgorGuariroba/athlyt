@@ -13,6 +13,7 @@ import {
   GraficoTendencia,
   LinhaCartaoLista,
   LinhasCartaoLista,
+  PainelPendencias,
   Revelar,
   TelaConteudo,
 } from "..";
@@ -82,6 +83,26 @@ describe("CartaoLista", () => {
     );
 
     expect(within(screen.getByRole("list")).getAllByRole("listitem")).toHaveLength(2);
+  });
+});
+
+describe("PainelPendencias", () => {
+  it("separa pendências em linhas e mantém uma única ação de resolução", () => {
+    render(
+      <PainelPendencias
+        titulo="Complete seu perfil"
+        descricao="Orientações ajustadas aos seus dados."
+        itens={[
+          { id: "idade", titulo: "Idade", descricao: "Ajusta energia" },
+          { id: "peso", titulo: "Peso", descricao: "Define a linha de base" },
+        ]}
+        acao={<button>Completar perfil</button>}
+      />,
+    );
+
+    const painel = screen.getByRole("region", { name: "Complete seu perfil" });
+    expect(within(painel).getAllByRole("listitem")).toHaveLength(2);
+    expect(within(painel).getAllByRole("button")).toHaveLength(1);
   });
 });
 

@@ -4,8 +4,7 @@ import { auth } from "@/auth";
 import { sair } from "../../(auth)/actions";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Card } from "@/components/ui/card";
-import { CORES_MACRO } from "@/components/tela";
+import { CORES_MACRO, CartaoLista, PainelPendencias } from "@/components/tela";
 import { obterPerfilVigente } from "@/domain/triagem/perfil";
 import { montarResumoTriagem } from "@/domain/triagem/resumo";
 import { obterPlanoAtivo } from "@/domain/plano/repositorio";
@@ -59,10 +58,10 @@ export default async function InicioPage() {
         </form>
       </header>
 
-      <Card className="p-4 text-body-md text-muted-foreground">
+      <CartaoLista className="p-4 text-body-md text-muted-foreground">
         Olá, {session?.user?.name ?? session?.user?.email}. Seus cartões de
         prioridade do dia vão aparecer aqui.
-      </Card>
+      </CartaoLista>
 
       {Object.values(confiancaCorporal).some((estado) => estado !== "confiavel") ? (
         <section
@@ -333,24 +332,22 @@ export default async function InicioPage() {
       ) : null}
 
       {resumo.modoConservador ? (
-        <Card className="flex flex-col gap-3 p-4">
-          <p className="text-body-md text-on-surface">
-            Complete seu perfil para sair do Modo Conservador. Enquanto isso,
-            você recebe apenas orientações de baixo risco.
-          </p>
-          <ul className="flex flex-col gap-1">
-            {resumo.itens
-              .filter((item) => item.obrigatoria && !item.respondida)
-              .map((item) => (
-                <li key={item.id} className="text-body-sm text-muted-foreground">
-                  {item.titulo} — {item.destrava}
-                </li>
-              ))}
-          </ul>
-          <Button asChild size="sm" className="w-fit">
-            <Link href="/triagem?retomar=1">Completar perfil</Link>
-          </Button>
-        </Card>
+        <PainelPendencias
+          titulo="Complete seu perfil"
+          descricao="Saia do Modo Conservador e receba orientações ajustadas aos seus dados."
+          itens={resumo.itens
+            .filter((item) => item.obrigatoria && !item.respondida)
+            .map((item) => ({
+              id: item.id,
+              titulo: item.titulo,
+              descricao: item.destrava,
+            }))}
+          acao={
+            <Button asChild size="lg">
+              <Link href="/triagem?retomar=1">Completar perfil</Link>
+            </Button>
+          }
+        />
       ) : null}
     </div>
   );

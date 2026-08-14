@@ -56,6 +56,7 @@ import {
   Metrica,
   NotaTela,
   PainelMetricas,
+  PainelPendencias,
   Revelar,
   SecoesTela,
   TelaConteudo,
@@ -693,6 +694,34 @@ export default function GaleriaDesignPage() {
               />
             </LinhasCartaoLista>
           </CartaoLista>
+        </Amostra>
+
+        <Amostra
+          titulo="Painel de pendências"
+          nota="Limitação persistente com contexto, pendências em linhas legíveis e uma única ação de resolução."
+        >
+          <PainelPendencias
+            titulo="Complete seu perfil"
+            descricao="Saia do Modo Conservador e receba orientações ajustadas aos seus dados."
+            itens={[
+              {
+                id: "idade",
+                titulo: "Idade",
+                descricao: "Cálculo de necessidades energéticas ajustado à idade",
+              },
+              {
+                id: "objetivo",
+                titulo: "Objetivo",
+                descricao: "Priorização de desempenho e composição corporal",
+              },
+              {
+                id: "disponibilidade",
+                titulo: "Disponibilidade semanal",
+                descricao: "Divisão de treino executável na sua rotina",
+              },
+            ]}
+            acao={<Button size="lg">Completar perfil</Button>}
+          />
         </Amostra>
 
         <Amostra
