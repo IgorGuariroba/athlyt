@@ -43,11 +43,11 @@ test("substitui exercício por equipamento indisponível preservando o estímulo
   await expect(page.getByText("Treino concluído")).toBeVisible();
 
   // A troca por equipamento persiste: a próxima sessão do mesmo dia já
-  // nasce com o exercício substituído. O Início já marca o dia como
-  // concluído hoje, então a próxima sessão começa pela prévia do dia.
+  // nasce com o exercício substituído. Como o bloco tem um único dia,
+  // concluir a sessão libera imediatamente esse treino outra vez.
   await page.goto("/inicio");
-  await expect(page.getByRole("link", { name: /Ver resumo do treino/ })).toBeVisible();
-  await page.goto("/sessao/previa/superior-a");
+  await expect(page.getByRole("heading", { name: "Superior A" })).toBeVisible();
+  await page.getByRole("link", { name: /Ver treino/ }).click();
   await page.getByRole("button", { name: /Iniciar treino/ }).click();
   await expect(page.getByRole("heading", { name: "Supino reto com halteres" })).toBeVisible();
 });
