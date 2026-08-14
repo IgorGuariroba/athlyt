@@ -52,7 +52,7 @@ test.describe("Acesso e casco autenticado", () => {
     await context.addCookies([cookie]);
 
     await page.goto("/mais");
-    await page.getByRole("button", { name: "Sair" }).click();
+    await page.getByRole("button", { name: "Sair", exact: true }).click();
 
     await expect(page).toHaveURL("/");
     await page.goto("/inicio");
