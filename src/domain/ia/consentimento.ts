@@ -1,4 +1,4 @@
-import { and, eq, isNull } from "drizzle-orm";
+import { and, desc, eq, isNull } from "drizzle-orm";
 import { db } from "@/db/client";
 import { consents } from "@/db/schema";
 import { obterRecorte } from "./contexto/recortes";
@@ -13,6 +13,93 @@ import type { OperacaoIA } from "./contexto/tipos";
  * (ADR 0006, invariante 3).
  */
 
+/** Consentimento concedido, com a versão de recorte em que foi dado. */
+export interface ConsentimentoRegistrado {
+  campo: string;
+  recorteVersao: number;
+}
+
+export interface EstadoConsentimento {
+  /** Versão de recorte vigente hoje para a operação. */
+  recorteVersao: number;
+  /** Campos consentidos na versão vigente — os únicos enviáveis. */
+  vigentes: string[];
+  /**
+   * Campos consentidos em versão anterior do recorte. Não são
+   * enviáveis, mas existem: o usuário já disse sim uma vez e só
+   * precisa reconfirmar o que mudou.
+   */
+  defasados: ConsentimentoRegistrado[];
+  /** Campos nunca consentidos nesta operação. */
+  ausentes: string[];
+  /**
+   * Verdadeiro quando o recorte evoluiu por baixo de um consentimento
+   * já dado. Distinguir isso de "nunca consentiu" é o que evita a
+   * operação rodar cega sem ninguém entender por quê.
+   */
+  precisaReconsentir: boolean;
+}
+
+/**
+ * Classifica consentimentos gravados contra o recorte vigente.
+ *
+ * Separada do banco de propósito: a regra de "o recorte subiu de
+ * versão" é justamente a que precisa ser testável sem infraestrutura.
+ */
+export function classificarConsentimentos(
+  registrados: readonly ConsentimentoRegistrado[],
+  recorte: { versao: number; campos: readonly { id: string }[] },
+): EstadoConsentimento {
+  const declarados = recorte.campos.map((campo) => campo.id);
+  const vigentes: string[] = [];
+  const defasados: ConsentimentoRegistrado[] = [];
+  const ausentes: string[] = [];
+
+  for (const id of declarados) {
+    const doCampo = registrados.filter((item) => item.campo === id);
+    if (doCampo.some((item) => item.recorteVersao === recorte.versao)) {
+      vigentes.push(id);
+      continue;
+    }
+    const anterior = doCampo
+      .filter((item) => item.recorteVersao < recorte.versao)
+      .sort((a, b) => b.recorteVersao - a.recorteVersao)[0];
+    if (anterior) defasados.push(anterior);
+    else ausentes.push(id);
+  }
+
+  return {
+    recorteVersao: recorte.versao,
+    vigentes,
+    defasados,
+    ausentes,
+    precisaReconsentir: defasados.length > 0,
+  };
+}
+
+/**
+ * Estado completo do consentimento da operação, incluindo o que
+ * caducou por mudança de recorte.
+ */
+export async function estadoConsentimento(
+  userId: string,
+  operacao: OperacaoIA,
+): Promise<EstadoConsentimento> {
+  const linhas = await db
+    .select({ campo: consents.campo, recorteVersao: consents.recorteVersao })
+    .from(consents)
+    .where(
+      and(
+        eq(consents.userId, userId),
+        eq(consents.operacao, operacao),
+        isNull(consents.revogadoEm),
+      ),
+    )
+    .orderBy(desc(consents.recorteVersao));
+
+  return classificarConsentimentos(linhas, obterRecorte(operacao));
+}
+
 /**
  * Ids de campo com consentimento vigente. Consentimento é amarrado à
  * versão do recorte em que foi dado: se o recorte muda o que envia,
@@ -22,21 +109,7 @@ export async function consentimentosVigentes(
   userId: string,
   operacao: OperacaoIA,
 ): Promise<string[]> {
-  const recorte = obterRecorte(operacao);
-
-  const linhas = await db
-    .select({ campo: consents.campo })
-    .from(consents)
-    .where(
-      and(
-        eq(consents.userId, userId),
-        eq(consents.operacao, operacao),
-        eq(consents.recorteVersao, recorte.versao),
-        isNull(consents.revogadoEm),
-      ),
-    );
-
-  return linhas.map((linha) => linha.campo);
+  return (await estadoConsentimento(userId, operacao)).vigentes;
 }
 
 export async function conceder(

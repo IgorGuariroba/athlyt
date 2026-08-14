@@ -17,6 +17,7 @@ import {
 } from "@/components/tela";
 import { db } from "@/db/client";
 import { consents } from "@/db/schema";
+import { estadoConsentimento } from "@/domain/ia/consentimento";
 import { revogarIAVisual, revogarStorageFotos } from "./actions";
 
 /**
@@ -47,6 +48,11 @@ export default async function ConsentimentosPage({
       item.operacao === "foto-corporal-armazenamento" && !item.revogadoEm,
   );
 
+  // Um consentimento pode caducar sem o usuário fazer nada: quando o recorte
+  // muda o que é enviado, a versão antiga deixa de cobrir a nova. Sem este
+  // aviso, o efeito só aparece como um plano pior, sem causa visível.
+  const plano = await estadoConsentimento(session.user.id, "plano-inicial");
+
   return (
     <TelaConteudo>
       <CabecalhoTela
@@ -61,6 +67,14 @@ export default async function ConsentimentosPage({
           <AvisoAcao tipo="sucesso">{aviso.sucesso}</AvisoAcao>
         ) : null}
         {aviso.erro ? <AvisoAcao tipo="erro">{aviso.erro}</AvisoAcao> : null}
+
+        {plano.precisaReconsentir ? (
+          <AvisoAcao tipo="erro">
+            O que o Athlyt envia ao provedor de IA para montar seu plano mudou
+            desde que você consentiu. Até confirmar de novo, o plano é gerado sem
+            seu histórico corporal e suas metas de proporção.
+          </AvisoAcao>
+        ) : null}
 
         <CartaoLista>
           <LinhasCartaoLista>

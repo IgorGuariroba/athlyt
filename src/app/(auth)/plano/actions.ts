@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { obterPerfilVigente } from "@/domain/triagem/perfil";
 import { ativarPlano, obterOuGerarRascunhoComIA, substituirNoRascunho } from "@/domain/plano/repositorio";
-import { conceder, consentimentosVigentes } from "@/domain/ia/consentimento";
+import { conceder, estadoConsentimento } from "@/domain/ia/consentimento";
 import { obterRecorte } from "@/domain/ia/contexto/recortes";
 import { NOME_PROVEDOR } from "@/domain/ia/provedor";
 
@@ -23,9 +23,12 @@ export async function gerarPlanoInicialAction(formData: FormData) {
     redirect("/triagem/resumo?erro=Confirme o envio dos dados ao provedor de IA.");
   }
 
+  // Concede na versão vigente do recorte. Campos consentidos numa versão
+  // anterior contam como faltantes: a confirmação desta tela cobre o que o
+  // recorte envia hoje, não o que enviava quando o consentimento foi dado.
   const campos = obterRecorte("plano-inicial").campos.map((campo) => campo.id);
-  const vigentes = await consentimentosVigentes(userId, "plano-inicial");
-  const faltantes = campos.filter((campo) => !vigentes.includes(campo));
+  const estado = await estadoConsentimento(userId, "plano-inicial");
+  const faltantes = campos.filter((campo) => !estado.vigentes.includes(campo));
   await conceder(userId, "plano-inicial", faltantes, NOME_PROVEDOR);
 
   const resultado = await obterOuGerarRascunhoComIA(userId, perfil, campos, {
@@ -41,9 +44,20 @@ export async function gerarPlanoInicialAction(formData: FormData) {
 
 export async function regenerarPlanoInicialAction() {
   const { userId, perfil } = await contexto();
-  const consentimentos = await consentimentosVigentes(userId, "plano-inicial");
+  const estado = await estadoConsentimento(userId, "plano-inicial");
 
-  const resultado = await obterOuGerarRascunhoComIA(userId, perfil, consentimentos, {
+  // Regenerar com o recorte mais novo que o consentimento produziria um plano
+  // cego (só o Núcleo) sem o usuário entender por quê. Manda reconfirmar em
+  // vez de degradar em silêncio — ADR 0006, invariante 5.
+  if (estado.precisaReconsentir) {
+    redirect(
+      `/triagem/resumo?erro=${encodeURIComponent(
+        "O Athlyt passou a enviar dados diferentes ao provedor de IA. Confirme novamente para gerar outro plano com seu histórico corporal.",
+      )}`,
+    );
+  }
+
+  const resultado = await obterOuGerarRascunhoComIA(userId, perfil, estado.vigentes, {
     tela: "revisao-plano",
     rota: "/plano/revisao",
     gatilho: "clique-gerar-outro-plano",
