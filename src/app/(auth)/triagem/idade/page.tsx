@@ -4,7 +4,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { posicaoNaCascata, proximoDestinoCascata } from "@/domain/triagem/etapas";
 import { obterPerfilVigente } from "@/domain/triagem/perfil";
-import { CascataShell } from "../_components/cascata-shell";
+import { CascataShell } from "@/components/tela/cascata-shell";
 import { EtapaForm } from "../_components/etapa-form";
 
 /**

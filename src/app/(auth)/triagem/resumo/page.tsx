@@ -7,7 +7,7 @@ import { CartaoLista } from "@/components/tela";
 import { obterPerfilVigente } from "@/domain/triagem/perfil";
 import { montarResumoTriagem } from "@/domain/triagem/resumo";
 import { ETAPAS_TRIAGEM } from "@/domain/triagem/etapas";
-import { TransicaoEtapa } from "../_components/transicao-etapa";
+import { TransicaoEtapa } from "@/components/tela/transicao-etapa";
 
 /**
  * Tela 024 — Resumo da triagem (specs/workflow/telas/024-resumo-

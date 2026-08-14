@@ -1,10 +1,10 @@
 import { Award, Dumbbell, Sprout, TrendingUp } from "lucide-react";
 import { RadioGroup } from "@/components/ui/radio-group";
 import { posicaoNaCascata, proximoDestinoCascata } from "@/domain/triagem/etapas";
-import { CascataShell } from "../_components/cascata-shell";
+import { CascataShell } from "@/components/tela/cascata-shell";
 import { carregarRespostasTriagem } from "../_lib/carregar-respostas";
 import { EtapaForm } from "../_components/etapa-form";
-import { CartaoRadio } from "../_components/opcao-cartao";
+import { CartaoRadio } from "@/components/tela/opcao-cartao";
 
 const OPCOES = [
   {

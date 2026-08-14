@@ -20,6 +20,7 @@ export {
 } from "./barra-macro";
 export { CabecalhoSecao } from "./cabecalho-secao";
 export { CabecalhoTela } from "./cabecalho-tela";
+export { CascataShell } from "./cascata-shell";
 export { CampoSelecao } from "./campo-selecao";
 export {
   CabecalhoCartaoLista,
@@ -42,6 +43,7 @@ export {
 } from "./grade-selecao-foto";
 export { ItemNavegacao, ListaNavegacao } from "./lista-navegacao";
 export { MedidorScore } from "./medidor-score";
+export { CartaoCheckbox, CartaoRadio } from "./opcao-cartao";
 export { Metrica, PainelMetricas } from "./painel-metricas";
 export { PainelPendencias, type ItemPendencia } from "./painel-pendencias";
 export { Revelar } from "./revelar";
