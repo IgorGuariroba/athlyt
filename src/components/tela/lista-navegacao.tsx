@@ -42,6 +42,45 @@ export function ListaNavegacao({
   );
 }
 
+/** Ação de conta apresentada com a mesma densidade dos destinos da lista. */
+export function ItemAcaoNavegacao({
+  acao,
+  Icone,
+  rotulo,
+  descricao,
+  destrutivo = false,
+}: {
+  acao: React.ComponentProps<"form">["action"];
+  Icone?: LucideIcon;
+  rotulo: string;
+  descricao?: string;
+  destrutivo?: boolean;
+}) {
+  return (
+    <li>
+      <form action={acao}>
+        <button
+          type="submit"
+          className={cn(
+            "flex min-h-[52px] w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-surface-container-high focus-visible:bg-surface-container-high focus-visible:outline-none",
+            destrutivo ? "text-error" : "text-on-surface-strong",
+          )}
+        >
+          {Icone ? <Icone aria-hidden="true" className="size-5 shrink-0" /> : null}
+          <span className="min-w-0 flex-1">
+            <span className="block text-body-lg">{rotulo}</span>
+            {descricao ? (
+              <span className="block text-body-sm text-muted-foreground">
+                {descricao}
+              </span>
+            ) : null}
+          </span>
+        </button>
+      </form>
+    </li>
+  );
+}
+
 /**
  * Um destino da lista. `descricao` é opcional e deve ser curta: se
  * precisar de um parágrafo para explicar o destino, o assunto é uma

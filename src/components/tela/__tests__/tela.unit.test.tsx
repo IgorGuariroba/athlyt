@@ -11,9 +11,11 @@ import {
   ChipSelecao,
   ControleSegmentado,
   GraficoTendencia,
+  ItemAcaoNavegacao,
   LinhaCartaoLista,
   LinhasCartaoLista,
   PainelPendencias,
+  PerfilUsuario,
   PorQueIsso,
   Revelar,
   TelaConteudo,
@@ -84,6 +86,31 @@ describe("CartaoLista", () => {
     );
 
     expect(within(screen.getByRole("list")).getAllByRole("listitem")).toHaveLength(2);
+  });
+});
+
+describe("PerfilUsuario", () => {
+  it("expõe a identidade em uma região nomeada", () => {
+    render(
+      <PerfilUsuario nome="Atleta Athlyt" detalhe="atleta@athlyt.com" />,
+    );
+
+    const perfil = screen.getByRole("region", { name: "Perfil" });
+    expect(within(perfil).getByText("Atleta Athlyt")).toBeDefined();
+    expect(within(perfil).getByText("atleta@athlyt.com")).toBeDefined();
+  });
+});
+
+describe("ItemAcaoNavegacao", () => {
+  it("mantém a ação como uma linha inteira da lista", () => {
+    render(
+      <ul>
+        <ItemAcaoNavegacao acao={() => undefined} rotulo="Sair" />
+      </ul>,
+    );
+
+    expect(screen.getByRole("button", { name: "Sair" })).toBeDefined();
+    expect(screen.getByRole("listitem")).toBeDefined();
   });
 });
 

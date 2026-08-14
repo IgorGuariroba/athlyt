@@ -1,84 +1,90 @@
-import { GitBranch, RefreshCw, ShieldCheck, Target } from "lucide-react";
-import { auth } from "@/auth";
-import { sair, sairDeTodosDispositivos } from "../../(auth)/actions";
-import { Button } from "@/components/ui/button";
 import {
+  GitBranch,
+  LogOut,
+  MonitorOff,
+  RefreshCw,
+  ShieldCheck,
+  Target,
+} from "lucide-react";
+
+import { auth } from "@/auth";
+import {
+  CabecalhoSecao,
   CabecalhoTela,
-  CartaoLista,
+  ItemAcaoNavegacao,
   ItemNavegacao,
-  LinhaCartaoLista,
-  LinhasCartaoLista,
   ListaNavegacao,
+  PerfilUsuario,
   SecoesTela,
   TelaConteudo,
 } from "@/components/tela";
+import { sair, sairDeTodosDispositivos } from "../../(auth)/actions";
 
 /**
- * Casco da aba Mais (telas 075–085). Perfil, Trilhas de Decisão,
- * consentimentos, exportação e configurações são acessados daqui,
- * mantendo controles de conta e privacidade no mesmo casco.
- *
- * Os destinos formam uma `ListaNavegacao` única, e não um cartão por
- * item: é o padrão de "More" do MacroFactor
- * (`147-mais-configuracoes.JPG`) e evita repetir superfície elevada
- * para relações idênticas.
+ * Aba Mais inspirada na anatomia da tela More do MacroFactor: identidade
+ * diretamente sobre o fundo, seguida por grupos compactos de configurações.
+ * Destinos relacionados dividem uma única superfície e divisores discretos.
  */
 export default async function MaisPage() {
   const session = await auth();
+  const email = session?.user?.email;
+  const nome = session?.user?.name ?? email ?? "Conta Athlyt";
 
   return (
     <TelaConteudo>
-      <CabecalhoTela titulo="Mais" />
+      <CabecalhoTela titulo="Mais" className="pb-4" />
 
-      <SecoesTela>
-        <CartaoLista>
-          <LinhasCartaoLista>
-            <LinhaCartaoLista
-              titulo={session?.user?.name ?? session?.user?.email ?? "Conta"}
-              meta={session?.user?.email}
+      <SecoesTela className="gap-8">
+        <PerfilUsuario
+          nome={nome}
+          detalhe={session?.user?.name ? email : "Sua conta Athlyt"}
+          imagem={session?.user?.image}
+        />
+
+        <section aria-labelledby="mais-plano" className="flex flex-col gap-3">
+          <CabecalhoSecao id="mais-plano" titulo="Plano e estratégia" />
+          <ListaNavegacao>
+            <ItemNavegacao
+              href="/mais/objetivo"
+              Icone={Target}
+              rotulo="Objetivo e estratégia"
             />
-          </LinhasCartaoLista>
-        </CartaoLista>
+            <ItemNavegacao
+              href="/mais/trilhas"
+              Icone={GitBranch}
+              rotulo="Trilhas de decisão"
+            />
+          </ListaNavegacao>
+        </section>
 
-        <ListaNavegacao>
-          <ItemNavegacao
-            href="/mais/objetivo"
-            Icone={Target}
-            rotulo="Objetivo e estratégia"
-            descricao="Objetivo atual e reavaliação do Plano Ativo"
-          />
-          <ItemNavegacao
-            href="/mais/trilhas"
-            Icone={GitBranch}
-            rotulo="Trilhas de Decisão"
-            descricao="Dados e regras por trás de cada recomendação"
-          />
-          <ItemNavegacao
-            href="/mais/consentimentos"
-            Icone={ShieldCheck}
-            rotulo="Consentimentos"
-            descricao="Armazenamento privado e operações de IA"
-          />
-          <ItemNavegacao
-            href="/mais/sincronizacao"
-            Icone={RefreshCw}
-            rotulo="Sincronização"
-            descricao="Pendências de envio e conflitos"
-          />
-        </ListaNavegacao>
+        <section aria-labelledby="mais-dados" className="flex flex-col gap-3">
+          <CabecalhoSecao id="mais-dados" titulo="Privacidade e dados" />
+          <ListaNavegacao>
+            <ItemNavegacao
+              href="/mais/consentimentos"
+              Icone={ShieldCheck}
+              rotulo="Consentimentos"
+            />
+            <ItemNavegacao
+              href="/mais/sincronizacao"
+              Icone={RefreshCw}
+              rotulo="Sincronização"
+            />
+          </ListaNavegacao>
+        </section>
 
-        <div className="flex flex-col gap-2">
-          <form action={sair}>
-            <Button type="submit" variant="secondary" className="w-full">
-              Sair
-            </Button>
-          </form>
-          <form action={sairDeTodosDispositivos}>
-            <Button type="submit" variant="ghost" className="w-full">
-              Sair de todos os dispositivos
-            </Button>
-          </form>
-        </div>
+        <section aria-labelledby="mais-conta" className="flex flex-col gap-3">
+          <CabecalhoSecao id="mais-conta" titulo="Conta" />
+          <ListaNavegacao>
+            <ItemAcaoNavegacao acao={sair} Icone={LogOut} rotulo="Sair" />
+            <ItemAcaoNavegacao
+              acao={sairDeTodosDispositivos}
+              Icone={MonitorOff}
+              rotulo="Sair de todos os dispositivos"
+              destrutivo
+            />
+          </ListaNavegacao>
+        </section>
       </SecoesTela>
     </TelaConteudo>
   );
