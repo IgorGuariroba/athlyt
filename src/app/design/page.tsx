@@ -46,6 +46,7 @@ import {
   CartaoCheckbox,
   CartaoLista,
   CartaoRadio,
+  CartaoSelecaoImagem,
   CascataShell,
   ChipSelecao,
   ControleSegmentado,
@@ -523,6 +524,20 @@ export default function GaleriaDesignPage() {
               defaultChecked
             />
           </div>
+        </Amostra>
+
+        <Amostra
+          titulo="Cartão de seleção com imagem"
+          nota="Catálogos visuais em linha: miniatura, rótulo e controle formam um único alvo de toque."
+        >
+          <CartaoSelecaoImagem
+            id="galeria-equipamento-halteres"
+            name="galeria-equipamentos"
+            value="halteres"
+            rotulo="Halteres"
+            src="/equipamentos/personalizado.svg"
+            defaultChecked
+          />
         </Amostra>
 
         <Amostra

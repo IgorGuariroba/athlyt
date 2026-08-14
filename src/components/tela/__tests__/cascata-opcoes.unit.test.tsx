@@ -2,7 +2,12 @@ import { cleanup, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it } from "vitest";
 
 import { RadioGroup } from "@/components/ui/radio-group";
-import { CascataShell, CartaoCheckbox, CartaoRadio } from "..";
+import {
+  CascataShell,
+  CartaoCheckbox,
+  CartaoRadio,
+  CartaoSelecaoImagem,
+} from "..";
 import { TransicaoEtapa } from "../transicao-etapa";
 
 afterEach(cleanup);
@@ -41,6 +46,24 @@ describe("CartaoCheckbox", () => {
     );
 
     const opcao = screen.getByRole("checkbox", { name: "Segunda-feira" });
+    expect(opcao.getAttribute("aria-checked")).toBe("true");
+  });
+});
+
+describe("CartaoSelecaoImagem", () => {
+  it("associa miniatura, rótulo e estado ao mesmo controle", () => {
+    render(
+      <CartaoSelecaoImagem
+        id="equipamento-halteres"
+        name="equipamentos"
+        value="halteres"
+        rotulo="Halteres"
+        src="/equipamentos/personalizado.svg"
+        defaultChecked
+      />,
+    );
+
+    const opcao = screen.getByRole("checkbox", { name: "Halteres" });
     expect(opcao.getAttribute("aria-checked")).toBe("true");
   });
 });

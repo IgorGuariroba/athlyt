@@ -6,6 +6,8 @@ import { obterPanoramaCorporal } from "@/domain/medicoes/repositorio";
 import type { RespostasTriagem } from "@/domain/triagem/etapas";
 import { gerarPlano, substituirExercicio } from "./gerador";
 import type { PlanoGerado } from "./tipos";
+import { montarNucleo } from "@/domain/ia/contexto/nucleo";
+import { gerarPlanoInicialComIA } from "@/domain/ia/operacoes/plano-inicial";
 
 export interface PlanoPersistido {
   id: string;
@@ -30,7 +32,51 @@ async function trilhaDeterministica(entrada: { userId: string; perfilVersao: num
   });
 }
 
-/** Reusa o rascunho do perfil vigente; gerar duas vezes não duplica plano. */
+export type ResultadoGeracaoRascunhoIA =
+  | { status: "ok"; plano: PlanoPersistido; reutilizado: boolean }
+  | { status: "indisponivel"; motivo: string };
+
+/** Gera o rascunho pelo agent; indisponibilidade nunca cai no motor local. */
+export async function obterOuGerarRascunhoComIA(
+  userId: string,
+  perfil: { version: number; respostas: RespostasTriagem; createdAt: Date },
+  consentimentos: readonly string[],
+  origem: { tela: string; rota: string; gatilho: string },
+): Promise<ResultadoGeracaoRascunhoIA> {
+  const [existente] = await db.select().from(plans).where(and(eq(plans.userId, userId), eq(plans.estado, "rascunho"), eq(plans.perfilVersao, perfil.version))).orderBy(desc(plans.createdAt)).limit(1);
+  if (existente) return { status: "ok", plano: mapear(existente), reutilizado: true };
+
+  const panorama = await obterPanoramaCorporal(userId);
+  const nucleo = montarNucleo({
+    perfilVersao: perfil.version,
+    respostas: perfil.respostas,
+    respondidoEm: perfil.createdAt,
+    agora: new Date(),
+  });
+  const resultado = await gerarPlanoInicialComIA({
+    userId,
+    nucleo,
+    consentimentos,
+    triagemCompleta: perfil.respostas,
+    linhaBaseCorporal: {
+      medicoes: panorama.medicoes,
+      pesos: panorama.pesos,
+      gorduras: panorama.gorduras,
+      avaliacoesVisuais: panorama.avaliacoesVisuais,
+      fotosDisponiveis: panorama.fotos.map(({ id, observadoEm }) => ({ id, observadoEm })),
+    },
+    metasProporcao: panorama.metas,
+    historicoImportado: { disponivel: false },
+    origem,
+  });
+  if (resultado.status === "indisponivel") return resultado;
+
+  const conteudo = resultado.valor;
+  const [inserido] = await db.insert(plans).values({ userId, perfilVersao: perfil.version, estado: "rascunho", regraVersao: conteudo.regraVersao, modoConservador: conteudo.modoConservador, conteudo }).returning();
+  return { status: "ok", plano: mapear(inserido), reutilizado: false };
+}
+
+/** Motor legado, mantido para regras locais e testes; não é usado pelo clique de geração. */
 export async function obterOuGerarRascunho(userId: string, perfil: { version: number; respostas: RespostasTriagem }): Promise<PlanoPersistido> {
   const [existente] = await db.select().from(plans).where(and(eq(plans.userId, userId), eq(plans.estado, "rascunho"), eq(plans.perfilVersao, perfil.version))).orderBy(desc(plans.createdAt)).limit(1);
   if (existente) return mapear(existente);

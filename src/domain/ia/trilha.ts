@@ -16,6 +16,7 @@ import type { OperacaoIA } from "./contexto/tipos";
 export interface ChamadaFerramenta {
   nome: string;
   argumentos: unknown;
+  resultado?: unknown;
 }
 
 export interface RegistroDecisao {
@@ -37,6 +38,12 @@ export interface RegistroDecisao {
   auditavel: boolean;
   resultado: unknown;
   erro?: string;
+  origemTela?: string;
+  origemRota?: string;
+  gatilho?: string;
+  contextoEnviado?: ContextoDoAtleta;
+  instrucaoSistema?: string;
+  promptEnviado?: string;
 }
 
 export async function registrarDecisao(
@@ -56,6 +63,12 @@ export async function registrarDecisao(
     ferramentasConsultadas: registro.ferramentasConsultadas,
     resultado: registro.resultado ?? null,
     erro: registro.erro ?? null,
+    origemTela: registro.origemTela ?? null,
+    origemRota: registro.origemRota ?? null,
+    gatilho: registro.gatilho ?? null,
+    contextoEnviado: registro.contextoEnviado ?? null,
+    instrucaoSistema: registro.instrucaoSistema ?? null,
+    promptEnviado: registro.promptEnviado ?? null,
   });
 }
 

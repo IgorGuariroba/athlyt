@@ -79,6 +79,31 @@ describe("decidir", () => {
       camposEnviados: ["exercicio", "prontidao-hoje"],
       camposOmitidos: [],
       perfilVersao: 4,
+      contextoEnviado: expect.objectContaining({
+        operacao: "copiloto-sessao",
+        recorte: expect.objectContaining({ exercicio: { nome: "Supino" } }),
+      }),
+      instrucaoSistema: "instrução",
+    });
+  });
+
+  it("registra argumentos e retorno das ferramentas chamadas pelo agent", async () => {
+    gerar.mockImplementation(async (entrada: { onStepFinish: (passo: { toolCalls: unknown[]; toolResults: unknown[] }) => void }) => {
+      entrada.onStepFinish({
+        toolCalls: [{ toolName: "historico_exercicio", input: { exercicioId: "supino" } }],
+        toolResults: [{ toolName: "historico_exercicio", input: { exercicioId: "supino" }, output: { melhorCargaKg: 80 } }],
+      });
+      return { output: { carga: 60 }, response: { modelId: "m" }, steps: [] };
+    });
+
+    await chamar();
+
+    expect(decisoesGravadas[0]).toMatchObject({
+      ferramentasConsultadas: [{
+        nome: "historico_exercicio",
+        argumentos: { exercicioId: "supino" },
+        resultado: { melhorCargaKg: 80 },
+      }],
     });
   });
 

@@ -233,6 +233,12 @@ export const decisionTrails = pgTable("decision_trail", {
   ferramentasConsultadas: jsonb("ferramentas_consultadas").notNull(),
   resultado: jsonb("resultado"),
   erro: text("erro"),
+  origemTela: text("origem_tela"),
+  origemRota: text("origem_rota"),
+  gatilho: text("gatilho"),
+  contextoEnviado: jsonb("contexto_enviado"),
+  instrucaoSistema: text("instrucao_sistema"),
+  promptEnviado: text("prompt_enviado"),
   createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
 });
 
