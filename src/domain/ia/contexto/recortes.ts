@@ -87,12 +87,17 @@ export const RECORTES: Record<OperacaoIA, RecorteDeclarado> = {
 
   "plano-inicial": {
     operacao: "plano-inicial",
-    versao: 2,
+    versao: 4,
     finalidade: "Gerar o Bloco de Treino e a estratégia nutricional iniciais",
     campos: [
       {
         id: "triagem-completa",
-        descricao: "Todas as respostas da triagem, incluindo saúde e lesões",
+        descricao: "Sono, nível de atividade, objetivo corporal, orçamento e tempo de preparo; dados universais do perfil não são repetidos",
+        sensivel: true,
+      },
+      {
+        id: "fotos-corporais",
+        descricao: "Até quatro fotos corporais recentes, com pose e data, para contextualizar a composição e as proporções no plano inicial",
         sensivel: true,
       },
       {

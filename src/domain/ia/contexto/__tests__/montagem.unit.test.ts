@@ -170,6 +170,9 @@ describe("renderizarContexto", () => {
     );
 
     expect(texto).toContain("pesoKg: 82 [medido, 2026-07-01]");
+    expect(texto).toContain(
+      "experienciaTreino: intermediário (entre 1 e 3 anos de treino consistente) [medido, 2026-07-01]",
+    );
     expect(texto).toContain("Desconforto no ombro direito");
   });
 

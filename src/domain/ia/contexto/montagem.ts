@@ -100,6 +100,26 @@ function rotuloProveniencia(
  * visíveis ao modelo — sem isso ele pondera dado `estimado` antigo
  * como se fosse medição de hoje (ADR 0006, invariante 1).
  */
+const EXPERIENCIA_TREINO_PARA_AGENT: Record<string, string> = {
+  "nunca-treinou": "nunca treinou musculação (sem experiência prévia)",
+  iniciante: "iniciante (menos de 1 ano de treino consistente)",
+  intermediario: "intermediário (entre 1 e 3 anos de treino consistente)",
+  avancado: "avançado (mais de 3 anos de treino consistente)",
+};
+
+function aplicarSemanticaDoCampo(chave: string, valor: unknown): unknown {
+  if (chave !== "experienciaTreino") return valor;
+
+  if (ehValorContexto(valor)) {
+    return {
+      ...valor,
+      valor: EXPERIENCIA_TREINO_PARA_AGENT[String(valor.valor)] ?? valor.valor,
+    };
+  }
+
+  return EXPERIENCIA_TREINO_PARA_AGENT[String(valor)] ?? valor;
+}
+
 function serializarValor(valor: unknown): string {
   if (ehValorContexto(valor)) {
     const conteudo = serializarValor(valor.valor);
@@ -136,7 +156,7 @@ export function renderizarContexto(contexto: ContextoDoAtleta): string {
   for (const [chave, valor] of Object.entries(contexto.nucleo)) {
     if (chave === "modoConservador" || chave === "perfilVersao") continue;
     if (valor === undefined) continue;
-    linhas.push(`- ${chave}: ${serializarValor(valor)}`);
+    linhas.push(`- ${chave}: ${serializarValor(aplicarSemanticaDoCampo(chave, valor))}`);
   }
 
   const entradasRecorte = Object.entries(contexto.recorte);

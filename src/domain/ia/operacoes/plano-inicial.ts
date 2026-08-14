@@ -78,6 +78,13 @@ export interface EntradaPlanoInicial {
   nucleo: NucleoContexto;
   consentimentos: readonly string[];
   triagemCompleta: unknown;
+  fotosCorporais?: readonly {
+    id: string;
+    pose: string;
+    observadoEm: Date | string;
+    dados: Uint8Array;
+    mediaType: string;
+  }[];
   linhaBaseCorporal?: unknown;
   metasProporcao?: unknown;
   historicoImportado?: unknown;
@@ -108,6 +115,24 @@ function mapearLista(valor: unknown, campos: readonly string[]) {
 }
 
 /**
+ * O núcleo já contém os dados universais da triagem. Este recorte leva apenas
+ * respostas adicionais necessárias ao plano, evitando repetir dados do atleta
+ * e enviar a data de nascimento quando a idade derivada já está no núcleo.
+ */
+function resumirTriagemParaPlano(valor: unknown) {
+  const triagem = comoRegistro(valor);
+  if (!triagem) return valor;
+
+  return selecionar(triagem, [
+    "horasSono",
+    "nivelAtividade",
+    "objetivoComposicao",
+    "orcamentoAlimentar",
+    "tempoPreparoMin",
+  ]);
+}
+
+/**
  * Converte registros de persistência no recorte semântico consumido pelo agent.
  * Identificadores internos, chaves de usuário e metadados de gravação nunca
  * atravessam esta fronteira; a Trilha de Decisão recebe o mesmo DTO enxuto.
@@ -116,7 +141,6 @@ function resumirLinhaBaseCorporal(valor: unknown) {
   const linhaBase = comoRegistro(valor);
   if (!linhaBase) return valor;
 
-  const fotos = mapearLista(linhaBase.fotosDisponiveis, ["observadoEm"]);
   const pesos = mapearLista(linhaBase.pesos, ["pesoGramas", "observadoEm"]);
   const gorduras = mapearLista(linhaBase.gorduras, [
     "percentualBasisPoints", "metodo", "confianca", "observadoEm",
@@ -144,10 +168,6 @@ function resumirLinhaBaseCorporal(valor: unknown) {
       ...avaliacao,
       observadoEm: createdAt,
     })),
-    fotos: {
-      quantidade: fotos.length,
-      observadasEm: fotos.flatMap((foto) => foto.observadoEm ? [foto.observadoEm] : []),
-    },
   };
 }
 
@@ -166,11 +186,19 @@ export function gerarPlanoInicialComIA(entrada: EntradaPlanoInicial): Promise<Re
     nucleo: entrada.nucleo,
     consentimentos: entrada.consentimentos,
     dados: {
-      "triagem-completa": entrada.triagemCompleta,
+      "triagem-completa": resumirTriagemParaPlano(entrada.triagemCompleta),
+      ...(entrada.fotosCorporais?.length ? {
+        "fotos-corporais": entrada.fotosCorporais.map(({ id, pose, observadoEm }) => ({
+          id,
+          pose,
+          observadoEm,
+        })),
+      } : {}),
       "linha-base-corporal": resumirLinhaBaseCorporal(entrada.linhaBaseCorporal),
       "metas-proporcao": resumirMetasProporcao(entrada.metasProporcao),
       "historico-importado": entrada.historicoImportado,
     },
+    imagens: entrada.fotosCorporais?.map(({ dados, mediaType }) => ({ dados, mediaType })),
     instrucao: INSTRUCAO,
     schema: planoInicialSchema,
     origem: entrada.origem,
