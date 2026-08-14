@@ -39,6 +39,24 @@ export async function gerarPlanoInicialAction(formData: FormData) {
   redirect("/plano/revisao");
 }
 
+export async function regenerarPlanoInicialAction() {
+  const { userId, perfil } = await contexto();
+  const consentimentos = await consentimentosVigentes(userId, "plano-inicial");
+
+  const resultado = await obterOuGerarRascunhoComIA(userId, perfil, consentimentos, {
+    tela: "revisao-plano",
+    rota: "/plano/revisao",
+    gatilho: "clique-gerar-outro-plano",
+  }, { forcarNovaGeracao: true });
+
+  if (resultado.status === "indisponivel") {
+    redirect(`/plano/revisao?erro=${encodeURIComponent("O agent não conseguiu gerar outro plano agora. Seu plano anterior foi mantido.")}`);
+  }
+
+  revalidatePath("/plano/revisao");
+  redirect("/plano/revisao");
+}
+
 export async function substituirExercicioAction(formData: FormData) {
   const { userId, perfil } = await contexto();
   await substituirNoRascunho(userId, {

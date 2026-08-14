@@ -42,9 +42,12 @@ export async function obterOuGerarRascunhoComIA(
   perfil: { version: number; respostas: RespostasTriagem; createdAt: Date },
   consentimentos: readonly string[],
   origem: { tela: string; rota: string; gatilho: string },
+  opcoes: { forcarNovaGeracao?: boolean } = {},
 ): Promise<ResultadoGeracaoRascunhoIA> {
   const [existente] = await db.select().from(plans).where(and(eq(plans.userId, userId), eq(plans.estado, "rascunho"), eq(plans.perfilVersao, perfil.version))).orderBy(desc(plans.createdAt)).limit(1);
-  if (existente) return { status: "ok", plano: mapear(existente), reutilizado: true };
+  if (existente && !opcoes.forcarNovaGeracao) {
+    return { status: "ok", plano: mapear(existente), reutilizado: true };
+  }
 
   const panorama = await obterPanoramaCorporal(userId);
   const nucleo = montarNucleo({
@@ -72,7 +75,16 @@ export async function obterOuGerarRascunhoComIA(
   if (resultado.status === "indisponivel") return resultado;
 
   const conteudo = resultado.valor;
-  const [inserido] = await db.insert(plans).values({ userId, perfilVersao: perfil.version, estado: "rascunho", regraVersao: conteudo.regraVersao, modoConservador: conteudo.modoConservador, conteudo }).returning();
+  const inserido = await db.transaction(async (tx) => {
+    if (opcoes.forcarNovaGeracao) {
+      await tx.update(plans).set({ estado: "arquivado" }).where(and(
+        eq(plans.userId, userId),
+        eq(plans.estado, "rascunho"),
+      ));
+    }
+    const [novoPlano] = await tx.insert(plans).values({ userId, perfilVersao: perfil.version, estado: "rascunho", regraVersao: conteudo.regraVersao, modoConservador: conteudo.modoConservador, conteudo }).returning();
+    return novoPlano;
+  });
   return { status: "ok", plano: mapear(inserido), reutilizado: false };
 }
 

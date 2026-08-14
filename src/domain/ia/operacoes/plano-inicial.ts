@@ -84,6 +84,81 @@ export interface EntradaPlanoInicial {
   origem?: { tela: string; rota: string; gatilho: string };
 }
 
+function comoRegistro(valor: unknown): Record<string, unknown> | null {
+  return typeof valor === "object" && valor !== null && !Array.isArray(valor)
+    ? valor as Record<string, unknown>
+    : null;
+}
+
+function selecionar(registro: Record<string, unknown>, campos: readonly string[]) {
+  return Object.fromEntries(
+    campos
+      .filter((campo) => registro[campo] !== undefined && registro[campo] !== null)
+      .map((campo) => [campo, registro[campo]]),
+  );
+}
+
+function mapearLista(valor: unknown, campos: readonly string[]) {
+  return Array.isArray(valor)
+    ? valor.flatMap((item) => {
+        const registro = comoRegistro(item);
+        return registro ? [selecionar(registro, campos)] : [];
+      })
+    : [];
+}
+
+/**
+ * Converte registros de persistência no recorte semântico consumido pelo agent.
+ * Identificadores internos, chaves de usuário e metadados de gravação nunca
+ * atravessam esta fronteira; a Trilha de Decisão recebe o mesmo DTO enxuto.
+ */
+function resumirLinhaBaseCorporal(valor: unknown) {
+  const linhaBase = comoRegistro(valor);
+  if (!linhaBase) return valor;
+
+  const fotos = mapearLista(linhaBase.fotosDisponiveis, ["observadoEm"]);
+  const pesos = mapearLista(linhaBase.pesos, ["pesoGramas", "observadoEm"]);
+  const gorduras = mapearLista(linhaBase.gorduras, [
+    "percentualBasisPoints", "metodo", "confianca", "observadoEm",
+  ]);
+  const avaliacoesVisuais = mapearLista(linhaBase.avaliacoesVisuais, [
+    "criterios", "gorduraMinBasisPoints", "gorduraMaxBasisPoints",
+    "observacoes", "limitacoes", "confianca", "createdAt",
+  ]);
+
+  return {
+    medicoes: mapearLista(linhaBase.medicoes, [
+      "regiao", "lado", "valorMm", "qualidade", "observadoEm",
+    ]),
+    pesos: pesos.map(({ pesoGramas, ...peso }) => ({
+      ...peso,
+      pesoKg: typeof pesoGramas === "number" ? pesoGramas / 1000 : pesoGramas,
+    })),
+    gorduras: gorduras.map(({ percentualBasisPoints, ...gordura }) => ({
+      ...gordura,
+      percentual: typeof percentualBasisPoints === "number"
+        ? percentualBasisPoints / 100
+        : percentualBasisPoints,
+    })),
+    avaliacoesVisuais: avaliacoesVisuais.map(({ createdAt, ...avaliacao }) => ({
+      ...avaliacao,
+      observadoEm: createdAt,
+    })),
+    fotos: {
+      quantidade: fotos.length,
+      observadasEm: fotos.flatMap((foto) => foto.observadoEm ? [foto.observadoEm] : []),
+    },
+  };
+}
+
+function resumirMetasProporcao(valor: unknown) {
+  if (!Array.isArray(valor)) return valor;
+  return mapearLista(valor, [
+    "regiao", "atualMm", "faixaMinMm", "faixaMaxMm", "metaCicloMm",
+    "direcao", "confianca", "justificativa",
+  ]);
+}
+
 export function gerarPlanoInicialComIA(entrada: EntradaPlanoInicial): Promise<ResultadoDecisao<PlanoGerado>> {
   return decidir({
     userId: entrada.userId,
@@ -92,8 +167,8 @@ export function gerarPlanoInicialComIA(entrada: EntradaPlanoInicial): Promise<Re
     consentimentos: entrada.consentimentos,
     dados: {
       "triagem-completa": entrada.triagemCompleta,
-      "linha-base-corporal": entrada.linhaBaseCorporal,
-      "metas-proporcao": entrada.metasProporcao,
+      "linha-base-corporal": resumirLinhaBaseCorporal(entrada.linhaBaseCorporal),
+      "metas-proporcao": resumirMetasProporcao(entrada.metasProporcao),
       "historico-importado": entrada.historicoImportado,
     },
     instrucao: INSTRUCAO,

@@ -41,8 +41,14 @@ describe("gerarPlanoInicialComIA", () => {
       nucleo,
       consentimentos: ["triagem-completa", "linha-base-corporal", "metas-proporcao", "historico-importado"],
       triagemCompleta: { objetivoComposicao: "ganhar-massa", horasSono: 8 },
-      linhaBaseCorporal: { pesoKg: 80, cinturaMm: 820 },
-      metasProporcao: [{ regiao: "ombros", direcao: "aumentar" }],
+      linhaBaseCorporal: {
+        medicoes: [{ id: "m1", userId: "u1", regiao: "cintura", lado: "unico", valorMm: 820, qualidade: "alta", observadoEm: "2026-08-14", createdAt: "2026-08-14" }],
+        pesos: [{ id: "p1", userId: "u1", pesoGramas: 80000, observadoEm: "2026-08-14", createdAt: "2026-08-14" }],
+        gorduras: [],
+        avaliacoesVisuais: [],
+        fotosDisponiveis: [{ id: "f1", observadoEm: "2026-08-13" }],
+      },
+      metasProporcao: [{ id: "meta1", userId: "u1", ativa: true, regiao: "ombros", atualMm: 1100, faixaMinMm: 1120, faixaMaxMm: 1160, metaCicloMm: 1130, direcao: "aumentar", confianca: "moderada", justificativa: "Prioridade do ciclo", createdAt: "2026-08-14" }],
       historicoImportado: { disponivel: false },
       origem: { tela: "resumo-triagem", rota: "/triagem/resumo", gatilho: "clique-gerar-meu-plano" },
     });
@@ -56,8 +62,14 @@ describe("gerarPlanoInicialComIA", () => {
       origem: { tela: "resumo-triagem", rota: "/triagem/resumo", gatilho: "clique-gerar-meu-plano" },
       dados: {
         "triagem-completa": { objetivoComposicao: "ganhar-massa", horasSono: 8 },
-        "linha-base-corporal": { pesoKg: 80, cinturaMm: 820 },
-        "metas-proporcao": [{ regiao: "ombros", direcao: "aumentar" }],
+        "linha-base-corporal": {
+          medicoes: [{ regiao: "cintura", lado: "unico", valorMm: 820, qualidade: "alta", observadoEm: "2026-08-14" }],
+          pesos: [{ observadoEm: "2026-08-14", pesoKg: 80 }],
+          gorduras: [],
+          avaliacoesVisuais: [],
+          fotos: { quantidade: 1, observadasEm: ["2026-08-13"] },
+        },
+        "metas-proporcao": [{ regiao: "ombros", atualMm: 1100, faixaMinMm: 1120, faixaMaxMm: 1160, metaCicloMm: 1130, direcao: "aumentar", confianca: "moderada", justificativa: "Prioridade do ciclo" }],
         "historico-importado": { disponivel: false },
       },
     }));
