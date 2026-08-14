@@ -2,7 +2,6 @@ import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { Check, Circle, ShieldCheck } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import {
@@ -14,6 +13,7 @@ import {
   LinhasCartaoLista,
   Metrica,
   PainelMetricas,
+  Revelar,
   SecoesTela,
   TelaConteudo,
 } from "@/components/tela";
@@ -25,6 +25,7 @@ import { gerarPlanoInicialAction } from "@/app/(auth)/plano/actions";
 import { obterRecorte } from "@/domain/ia/contexto/recortes";
 import { textoConsentimento } from "@/domain/ia/contexto/montagem";
 import { NOME_PROVEDOR } from "@/domain/ia/provedor";
+import { BotaoGerarPlano } from "./botao-gerar-plano";
 
 /**
  * Tela 024 — Resumo da triagem (specs/workflow/telas/024-resumo-
@@ -143,11 +144,21 @@ export default async function ResumoTriagemPage({ searchParams }: { searchParams
         <form action={gerarPlanoInicialAction} className="flex w-full flex-col gap-3">
           <div className="flex items-start gap-3">
             <Checkbox id="consentimentoIA" name="consentimentoIA" value="sim" className="mt-0.5" />
-            <Label htmlFor="consentimentoIA" className="whitespace-pre-line text-body-sm leading-relaxed font-normal text-muted-foreground">
-              {consentimento}
-            </Label>
+            <div className="min-w-0 flex-1">
+              <Label
+                htmlFor="consentimentoIA"
+                className="text-body-sm leading-relaxed font-normal text-muted-foreground"
+              >
+                Autorizo o uso destes dados para gerar meu plano com IA.
+              </Label>
+              <div className="mt-2">
+                <Revelar rotulo="Ver finalidade e dados enviados">
+                  <p className="whitespace-pre-line">{consentimento}</p>
+                </Revelar>
+              </div>
+            </div>
           </div>
-          <Button size="cta" className="w-full">Gerar meu plano com IA</Button>
+          <BotaoGerarPlano />
         </form>
       </BarraAcaoFixa>
     </TelaConteudo>
