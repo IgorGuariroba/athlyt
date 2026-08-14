@@ -128,7 +128,7 @@ async function decidirInternamente<T>(
     const mensagem = entrada.imagens?.length
       ? { messages: [{ role: "user" as const, content: [{ type: "text" as const, text: conteudo }, ...entrada.imagens.map((imagem) => ({ type: "file" as const, data: imagem.dados, mediaType: imagem.mediaType }))] }] }
       : { prompt: conteudo };
-    const resposta = await generateText({
+    const gerar = () => generateText({
       model: openrouter().chatModel(modeloSolicitado),
       output: Output.object({ schema: entrada.schema }),
       system: entrada.instrucao,
@@ -147,6 +147,15 @@ async function decidirInternamente<T>(
         }
       },
     });
+
+    let resposta;
+    try {
+      resposta = await gerar();
+    } catch (erro) {
+      const motivo = erro instanceof Error ? erro.message : String(erro);
+      if (!/invalid json response/i.test(motivo)) throw erro;
+      resposta = await gerar();
+    }
 
     // A auditoria exige o modelo efetivamente resolvido pelo
     // provedor, não o solicitado (ADR 0005).
