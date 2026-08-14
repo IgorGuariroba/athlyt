@@ -50,6 +50,14 @@ describe("modeloDe", () => {
     }
   });
 
+  it("usa GPT-5 Mini somente no plano inicial", () => {
+    expect(modeloDe("plano-inicial", "producao")).toBe("openai/gpt-5-mini");
+    expect(modeloDe("plano-inicial", "desenvolvimento")).toBe("openai/gpt-5-mini");
+    expect(modeloDe("copiloto-sessao", "producao")).toBe(
+      "google/gemini-2.5-flash-lite",
+    );
+  });
+
   it("não usa modelo :free, que rotaciona sem aviso e ignora schema", () => {
     for (const operacao of OPERACOES) {
       expect(modeloDe(operacao, "producao")).not.toMatch(/:free$/);
