@@ -43,5 +43,6 @@ export {
 export { ItemNavegacao, ListaNavegacao } from "./lista-navegacao";
 export { MedidorScore } from "./medidor-score";
 export { Metrica, PainelMetricas } from "./painel-metricas";
+export { PainelPendencias, type ItemPendencia } from "./painel-pendencias";
 export { Revelar } from "./revelar";
 export { NotaTela, SecoesTela, TelaConteudo } from "./tela-conteudo";

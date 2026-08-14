@@ -5,6 +5,25 @@ import nextTs from "eslint-config-next/typescript";
 const eslintConfig = defineConfig([
   ...nextVitals,
   ...nextTs,
+  {
+    files: ["src/app/**/*.{ts,tsx}"],
+    ignores: ["src/app/design/**"],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          paths: [
+            {
+              name: "@/components/ui/card",
+              importNames: ["Card"],
+              message:
+                "Páginas devem usar composições de @/components/tela. Se não houver uma adequada, crie-a, exponha-a no catálogo e em /design.",
+            },
+          ],
+        },
+      ],
+    },
+  },
   // Override default ignores of eslint-config-next.
   globalIgnores([
     // Default ignores of eslint-config-next:

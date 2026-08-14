@@ -2,9 +2,9 @@ import { CheckCircle2 } from "lucide-react";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import {
   CabecalhoSecao,
+  CartaoLista,
   CabecalhoTela,
   EstadoVazio,
   SecoesTela,
@@ -66,7 +66,7 @@ export default async function SincronizacaoPage() {
             descricao="Quando o mesmo registro divergir entre servidor e aparelho, a decisão aparece aqui."
           />
         ) : conflitos.map((conflito) => (
-          <Card key={conflito.id} className="flex flex-col gap-3 p-4">
+          <CartaoLista key={conflito.id} className="flex flex-col gap-3 p-4">
             <div>
               <p className="text-label-lg font-semibold">{ROTULO_MOTIVO[conflito.motivo] ?? conflito.motivo}</p>
               <p className="text-body-sm text-muted-foreground">
@@ -93,7 +93,7 @@ export default async function SincronizacaoPage() {
                 <Button type="submit" className="w-full">Usar o deste aparelho</Button>
               </form>
             </div>
-          </Card>
+          </CartaoLista>
         ))}
       </section>
       </SecoesTela>

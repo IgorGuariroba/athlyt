@@ -3,7 +3,7 @@ import Link from "next/link";
 import { auth } from "@/auth";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
+import { CartaoLista } from "@/components/tela";
 import { obterPerfilVigente } from "@/domain/triagem/perfil";
 import { montarResumoTriagem } from "@/domain/triagem/resumo";
 import { ETAPAS_TRIAGEM } from "@/domain/triagem/etapas";
@@ -43,19 +43,19 @@ export default async function ResumoTriagemPage() {
         </div>
 
         {resumo.modoConservador ? (
-          <Card className="p-4">
+          <CartaoLista className="p-4">
             <p className="text-body-md text-on-surface">
               Enquanto os dados obrigatórios não estiverem completos, o Athlyt
               oferece apenas orientações de baixo risco, sem estratégia
               energética agressiva.
             </p>
-          </Card>
+          </CartaoLista>
         ) : null}
 
         <ul className="flex flex-col gap-2">
           {resumo.itens.map((item) => (
             <li key={item.id}>
-              <Card className="flex flex-row items-center justify-between p-4">
+              <CartaoLista className="flex flex-row items-center justify-between p-4">
                 <div className="flex flex-col">
                   <span className="text-body-md text-on-surface">
                     {item.titulo}
@@ -74,7 +74,7 @@ export default async function ResumoTriagemPage() {
                 <Badge variant={item.respondida ? "default" : "outline"}>
                   {item.respondida ? "Preenchido" : "Pendente"}
                 </Badge>
-              </Card>
+              </CartaoLista>
             </li>
           ))}
         </ul>
