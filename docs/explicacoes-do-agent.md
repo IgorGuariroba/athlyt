@@ -112,9 +112,9 @@ Duas observações que sustentam as decisões:
    por causa do ombro do atleta. Isso muda a escolha; a justificativa genérica
    não.
 
-## Fatia 4 — Copiloto de Sessão
+## Fatia 4 — Copiloto de Sessão como agent
 
-**Estado:** pendente. Não é continuação das anteriores.
+**Estado:** especificada em [#104](https://github.com/IgorGuariroba/athlyt/issues/104). Não é continuação das anteriores.
 
 Esta não é sobre exibir explicação existente: é uma **operação de IA inteira que
 nunca chegou à interface**. `orientarProximaSerie`
@@ -123,24 +123,37 @@ nunca chegou à interface**. `orientarProximaSerie`
 `scripts/verificar-ia.ts`**. Nenhum arquivo em `src/app/` a invoca.
 
 O que a tela mostra é o `PainelCoach`, que roda o Coach Local determinístico no
-cliente. Ele está correto e existe para o caso offline — mas online, quando o
-Copiloto poderia orientar, ele também é tudo o que aparece.
+cliente. Ele foi desenhado como contingência offline — e virou, na prática, a
+experiência principal. **A decisão de produto é que o Copiloto seja um agent de
+verdade**, com o Coach Local restrito ao que sempre foi: rede ausente.
 
-Decisões de produto em aberto, que é o motivo de isto ser uma issue com PRD e
-não uma fatia de composição de UI:
+Três decisões já tomadas, que definem o desenho:
 
-- Onde a orientação da IA entra sem competir com o Coach Local, que declara
-  origem e versão da regra em toda orientação.
-- O que acontece quando o provedor degrada. `CONTEXT.md` é explícito: offline
-  nada simula IA — se o Copiloto não pode responder, a tela diz isso.
-- `alertaCautela` é **Alerta de Cautela** no domínio (`CONTEXT.md` > Segurança e
-  auditoria): admite override explícito e auditado. Tem semântica própria e não
-  é um texto qualquer na tela.
+| Questão | Decisão |
+| --- | --- |
+| Quando o agent fala | A cada série registrada |
+| Pode contradizer o plano | Não — ajusta carga, repetições, RIR e descanso; não troca nem encerra exercício |
+| Latência | A orientação aparece quando chega; o atleta nunca espera |
+
+A terceira é a que mais restringe, e coincide com uma invariante que a Sessão já
+respeita: o timer começa antes de qualquer ida à rede, porque o descanso é tempo
+real do atleta. A orientação entra na mesma regra — nada no caminho crítico do
+registro da série.
+
+Dois limites que o domínio impõe e a implementação não pode afrouxar:
+
+- **Offline nada simula IA.** Se o Copiloto não pode responder, o Coach Local
+  assume declarando origem e versão da regra, e a tela diz isso.
+- **`alertaCautela` é Alerta de Cautela** (`CONTEXT.md` > Segurança e auditoria):
+  admite override explícito e auditado. Tem semântica própria e não é mais uma
+  linha informativa no painel.
 
 ## Ordem sugerida
 
 **2 → 3 → 4.** A fatia 2 é barata e cobre o Diário, onde a pergunta nasce. A 3
-dá uso real à variante `icone`. A 4 é trabalho de produto.
+dá uso real à variante `icone`. A 4 tem PRD próprio em
+[#104](https://github.com/IgorGuariroba/athlyt/issues/104) e independe das duas
+primeiras — pode ser puxada antes se o Copiloto for prioridade.
 
 ## Ao implementar
 
