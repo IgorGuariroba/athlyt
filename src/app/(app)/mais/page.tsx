@@ -1,10 +1,13 @@
 import {
+  Dumbbell,
+  FlaskConical,
   GitBranch,
   LogOut,
   MonitorOff,
   RefreshCw,
   ShieldCheck,
   Target,
+  UserRound,
 } from "lucide-react";
 
 import { auth } from "@/auth";
@@ -45,6 +48,18 @@ export default async function MaisPage() {
           <CabecalhoSecao id="mais-plano" titulo="Plano e estratégia" />
           <ListaNavegacao>
             <ItemNavegacao
+              href="/mais/plano"
+              Icone={Dumbbell}
+              rotulo="Plano Ativo"
+              descricao="Revise ou peça uma nova sugestão ao agent"
+            />
+            <ItemNavegacao
+              href="/progresso/revisao/experimento"
+              Icone={FlaskConical}
+              rotulo="Experimentos de Plano"
+              descricao="Acompanhe candidatos e restaure o Plano Estável"
+            />
+            <ItemNavegacao
               href="/mais/objetivo"
               Icone={Target}
               rotulo="Objetivo e estratégia"
@@ -53,6 +68,18 @@ export default async function MaisPage() {
               href="/mais/trilhas"
               Icone={GitBranch}
               rotulo="Trilhas de decisão"
+            />
+          </ListaNavegacao>
+        </section>
+
+        <section aria-labelledby="mais-perfil" className="flex flex-col gap-3">
+          <CabecalhoSecao id="mais-perfil" titulo="Perfil e personalização" />
+          <ListaNavegacao>
+            <ItemNavegacao
+              href="/mais/perfil"
+              Icone={UserRound}
+              rotulo="Dados de treino, saúde e rotina"
+              descricao="Atualize as informações usadas pelo agent"
             />
           </ListaNavegacao>
         </section>
