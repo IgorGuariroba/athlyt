@@ -9,11 +9,13 @@ import {
   BarraAcaoFixa,
   CabecalhoTela,
   CartaoRadio,
+  ExplicacaoAgent,
   NotaTela,
   SecoesTela,
   TelaConteudo,
 } from "@/components/tela";
 import { obterReavaliacaoPendente } from "@/domain/plano/reavaliacao";
+import { obterPlanoAtivo } from "@/domain/plano/repositorio";
 import { OBJETIVOS_COMPOSICAO } from "@/domain/triagem/etapas";
 import { obterPerfilVigente } from "@/domain/triagem/perfil";
 import { alterarObjetivoAtual } from "./actions";
@@ -32,9 +34,10 @@ export default async function ObjetivoAtualPage({
   const session = await auth();
   if (!session?.user?.id) redirect("/");
 
-  const [perfil, reavaliacao, mensagens] = await Promise.all([
+  const [perfil, reavaliacao, planoAtivo, mensagens] = await Promise.all([
     obterPerfilVigente(session.user.id),
     obterReavaliacaoPendente(session.user.id),
+    obterPlanoAtivo(session.user.id),
     searchParams,
   ]);
   if (!perfil?.respostas.objetivoComposicao) redirect("/triagem/objetivo");
@@ -54,6 +57,16 @@ export default async function ObjetivoAtualPage({
           {mensagens.erro ? <AvisoAcao tipo="erro">{mensagens.erro}</AvisoAcao> : null}
           {mensagens.aviso ? <AvisoAcao tipo="sucesso">{mensagens.aviso}</AvisoAcao> : null}
           {mensagens.sucesso ? <AvisoAcao tipo="sucesso">{mensagens.sucesso}</AvisoAcao> : null}
+
+          {/* Trocar de objetivo é decidir contra a estratégia vigente:
+              o motivo dela pertence a esta tela, e não só à revisão do
+              plano onde foi lido uma única vez. */}
+          {planoAtivo ? (
+            <ExplicacaoAgent
+              pergunta="Por que esta é a estratégia atual?"
+              explicacao={planoAtivo.conteudo.nutricao.explicacoes?.estrategia}
+            />
+          ) : null}
 
           <RadioGroup
             name="objetivoComposicao"

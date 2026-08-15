@@ -6,6 +6,7 @@ import {
   CabecalhoTela,
   CartaoLista,
   EstadoVazio,
+  ExplicacaoAgent,
   FaixaDados,
   LinhaCartaoLista,
   LinhasCartaoLista,
@@ -15,6 +16,67 @@ import {
   TelaConteudo,
 } from "@/components/tela";
 import { listarTrilhas } from "@/domain/ia/trilha";
+import type { ExplicacaoDecisao } from "@/domain/plano/tipos";
+
+/**
+ * As explicações dirigidas ao atleta chegam aqui dentro do retorno
+ * bruto do agent, indistinguíveis do resto do JSON. Elas são o único
+ * pedaço da trilha escrito *para* o atleta, e não sobre a chamada:
+ * separá-las evita que a superfície de auditoria seja o único lugar
+ * do produto onde a explicação existe mas ninguém consegue lê-la.
+ */
+function explicacaoDe(valor: unknown): ExplicacaoDecisao | null {
+  const registro = valor as Record<string, unknown> | null;
+  if (!registro || typeof registro !== "object") return null;
+  const { porque, dadosUsados } = registro;
+  return typeof porque === "string" && Array.isArray(dadosUsados)
+    ? ({ porque, dadosUsados } as ExplicacaoDecisao)
+    : null;
+}
+
+/**
+ * `formatarRotulo` serve para chaves arbitrárias do JSON auditado, mas
+ * quebraria as metas nutricionais em "Carboidratos g": a unidade que
+ * vive no nome do campo não pertence a uma pergunta em voz humana.
+ */
+const PERGUNTA_META: Record<string, string> = {
+  calorias: "Por que estas calorias?",
+  proteinaG: "Por que esta meta de proteína?",
+  carboidratosG: "Por que esta meta de carboidratos?",
+  gordurasG: "Por que esta meta de gorduras?",
+  estrategia: "Por que esta estratégia?",
+};
+
+function coletarExplicacoes(
+  resultado: Record<string, unknown> | null,
+): Array<{ pergunta: string; explicacao: ExplicacaoDecisao }> {
+  if (!resultado) return [];
+  const coletadas: Array<{ pergunta: string; explicacao: ExplicacaoDecisao }> = [];
+  const adicionar = (pergunta: string, valor: unknown) => {
+    const explicacao = explicacaoDe(valor);
+    if (explicacao) coletadas.push({ pergunta, explicacao });
+  };
+
+  const bloco = resultado.bloco as Record<string, unknown> | undefined;
+  adicionar("Por que esta divisão?", bloco?.explicacao);
+  for (const dia of (bloco?.dias ?? []) as Array<Record<string, unknown>>) {
+    adicionar(`Por que o dia ${dia.nome}?`, dia.explicacao);
+    for (const exercicio of (dia.exercicios ?? []) as Array<Record<string, unknown>>) {
+      adicionar(`Por que ${exercicio.nome}?`, exercicio.explicacao);
+    }
+  }
+
+  const nutricao = resultado.nutricao as Record<string, unknown> | undefined;
+  const explicacoes = nutricao?.explicacoes as Record<string, unknown> | undefined;
+  for (const [chave, valor] of Object.entries(explicacoes ?? {})) {
+    adicionar(PERGUNTA_META[chave] ?? `Por que ${formatarRotulo(chave)}?`, valor);
+  }
+  for (const refeicao of (nutricao?.refeicoes ?? []) as Array<Record<string, unknown>>) {
+    adicionar(`Por que a refeição ${refeicao.nome}?`, refeicao.explicacao);
+  }
+
+  return coletadas;
+}
 
 function formatarRotulo(chave: string) {
   const texto = chave
@@ -164,6 +226,7 @@ export default async function TrilhasPage() {
                 argumentos: unknown;
                 resultado?: unknown;
               }>;
+              const explicacoes = coletarExplicacoes(resultado);
 
               return (
                 <CartaoLista key={trilha.id}>
@@ -196,6 +259,25 @@ export default async function TrilhasPage() {
                       <ConteudoAuditavel titulo="Instrução de sistema" valor={trilha.instrucaoSistema} />
                       <ConteudoAuditavel titulo="Prompt enviado ao agent" valor={trilha.promptEnviado} />
                       <ConteudoAuditavel titulo={`Ferramentas chamadas (${ferramentas.length})`} valor={ferramentas} />
+                      {explicacoes.length ? (
+                        <section className="flex flex-col gap-2">
+                          <Revelar
+                            rotulo="Explicações ao atleta"
+                            tom="forte"
+                            meta={`${explicacoes.length} ${explicacoes.length === 1 ? "decisão" : "decisões"}`}
+                          >
+                            <div className="flex flex-col gap-3">
+                              {explicacoes.map(({ pergunta, explicacao }, posicao) => (
+                                <ExplicacaoAgent
+                                  key={`${pergunta}-${posicao}`}
+                                  pergunta={pergunta}
+                                  explicacao={explicacao}
+                                />
+                              ))}
+                            </div>
+                          </Revelar>
+                        </section>
+                      ) : null}
                       <ConteudoAuditavel titulo="Retorno do agent" valor={resultado ?? trilha.erro ?? "Nenhum retorno registrado"} />
                       </div>
                       </Revelar>
