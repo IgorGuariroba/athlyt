@@ -13,19 +13,25 @@
 
 set -Eeuo pipefail
 
-cd "$(dirname "$0")/.."
+cd "$(dirname "${BASH_SOURCE[0]}")/.."
 RAIZ="$PWD"
 
 PORTA="${PORT:-3000}"
 
-# PIDs de processos Node que pertencem a este projeto (cwd na raiz do
-# repositório) e são servidores da aplicação — independente da porta.
+# PIDs de processos Node que pertencem a este projeto (cwd na raiz ou
+# abaixo dela) e são servidores da aplicação — independente da porta.
+# O standalone muda o cwd para .next/standalone; se um build apagar essa
+# pasta enquanto ele roda, /proc ainda acrescenta o sufixo " (deleted)".
 pids_do_projeto() {
   local pid cwd cmd
   for pid in $(pgrep -f 'next|\.next/standalone/server\.js' 2>/dev/null || true); do
     [ "$pid" = "$$" ] && continue
     cwd="$(readlink -f "/proc/$pid/cwd" 2>/dev/null || true)"
-    [ "$cwd" = "$RAIZ" ] || continue
+    cwd="${cwd% (deleted)}"
+    case "$cwd" in
+      "$RAIZ"|"$RAIZ"/*) ;;
+      *) continue ;;
+    esac
     cmd="$(tr '\0' ' ' < "/proc/$pid/cmdline" 2>/dev/null || true)"
     case "$cmd" in
       *dev-local.sh*|*app-local.sh*) continue ;;
@@ -103,11 +109,13 @@ derrubar() {
   echo "[dev] tudo parado"
 }
 
-case "${1:-up}" in
-  up) subir ;;
-  down) derrubar ;;
-  *)
-    echo "uso: $0 {up|down}" >&2
-    exit 1
-    ;;
-esac
+if [ "${BASH_SOURCE[0]}" = "$0" ]; then
+  case "${1:-up}" in
+    up) subir ;;
+    down) derrubar ;;
+    *)
+      echo "uso: $0 {up|down}" >&2
+      exit 1
+      ;;
+  esac
+fi
