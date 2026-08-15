@@ -62,7 +62,7 @@ explicação existe mas ninguém consegue lê-la.
 
 ## Fatia 2 — Diário
 
-**Estado:** pendente. Sem migração.
+**Estado:** entregue. Sem migração.
 
 As Entradas Planejadas **não são persistidas**: `montarDiarioDoDia` e
 `obterEntradaPlanejada` derivam tudo em memória do Plano Ativo. A explicação já
@@ -87,7 +87,7 @@ restrição alimentar e pelo seu tempo de preparo é o dado que muda a decisão.
 
 ## Fatia 3 — Sessão de Treino
 
-**Estado:** pendente. Sem migração — `workout_session.exercicios` é `jsonb`.
+**Estado:** entregue. Sem migração — `workout_session.exercicios` é `jsonb`.
 
 `planejarExercicios` (`src/domain/sessao/repositorio.ts`) monta o snapshot
 congelado do dia e descarta `explicacao`.
@@ -99,8 +99,10 @@ congelado do dia e descarta `explicacao`.
 | `src/app/(app)/sessao/[id]/substituir/page.tsx` | Explicação do exercício **original**, no topo |
 | `e2e/sessao.e2e.test.ts`, `e2e/substituicao.e2e.test.ts` | Asserções |
 
-Sessões criadas antes desta fatia ficam sem o campo; `PorQueIsso` já trata a
-ausência.
+Sessões criadas antes desta fatia ficam sem o campo. Exercícios substituídos
+também não exibem disclosure: a explicação continua no exercício original
+interrompido, mas não é herdada pelo substituto, que foi escolhido por regra
+determinística e não pelo agent.
 
 Duas observações que sustentam as decisões:
 
@@ -150,8 +152,7 @@ Dois limites que o domínio impõe e a implementação não pode afrouxar:
 
 ## Ordem sugerida
 
-**2 → 3 → 4.** A fatia 2 é barata e cobre o Diário, onde a pergunta nasce. A 3
-dá uso real à variante `icone`. A 4 tem PRD próprio em
+As fatias 2 e 3 estão entregues. A fatia 4 tem PRD próprio em
 [#104](https://github.com/IgorGuariroba/athlyt/issues/104) e independe das duas
 primeiras — pode ser puxada antes se o Copiloto for prioridade.
 

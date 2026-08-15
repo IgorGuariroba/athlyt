@@ -4,6 +4,7 @@ import { Info, Repeat2, X } from "lucide-react";
 import { auth } from "@/auth";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { ExplicacaoAgent } from "@/components/tela";
 import { AVISO_VARIEDADE, MOTIVOS_SUBSTITUICAO, type MotivoSubstituicao } from "@/domain/plano/substituicoes";
 import { alternativasParaSessao, obterSessao } from "@/domain/sessao/repositorio";
 import { substituirExercicioAction } from "../../actions";
@@ -44,6 +45,20 @@ export default async function SubstituirPage({ params, searchParams }: {
         <Info className="mt-0.5 size-4 shrink-0" aria-hidden />
         {AVISO_VARIEDADE}
       </p>
+
+      {/* Antes de trocar, o motivo pelo qual este exercício foi
+          escolhido para este atleta — e não a justificativa genérica de
+          catálogo, que aparece nas alternativas. Trocar um exercício
+          prescrito por causa de uma lesão é decisão diferente de trocar
+          um exercício qualquer. */}
+      {exercicio.explicacao ? (
+        <div className="rounded-xl border border-border bg-surface-container p-4">
+          <ExplicacaoAgent
+            pergunta="Por que este exercício foi escolhido?"
+            explicacao={exercicio.explicacao}
+          />
+        </div>
+      ) : null}
 
       <section className="flex flex-col gap-2">
         <h2 className="text-label-md tracking-wide text-muted-foreground uppercase">Por que trocar?</h2>

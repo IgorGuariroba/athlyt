@@ -3,7 +3,7 @@ import { ChevronLeft, Check, Dumbbell, MoreHorizontal, Repeat2 } from "lucide-re
 import Link from "next/link";
 import { auth } from "@/auth";
 import { Button } from "@/components/ui/button";
-import { CampoSelecao, Revelar } from "@/components/tela";
+import { CampoSelecao, ExplicacaoAgent, Revelar } from "@/components/tela";
 import { obterSessao } from "@/domain/sessao/repositorio";
 import { abandonarSessaoAction, concluirSessaoAction } from "../actions";
 import { BadgeConexao, ProvedorConexao } from "./estado-conexao";
@@ -75,6 +75,17 @@ export default async function SessaoPage({ params, searchParams }: { params: Pro
           <p className="border-b border-border bg-surface-container-high px-4 py-2 text-body-sm text-muted-foreground">
             Substitui <strong className="text-on-surface">{exercicio.substituiuNome}</strong> · motivo: {exercicio.motivoSubstituicao}
           </p>
+        ) : null}
+        {/* Sob carga, entre séries, o atleta lê uma frase — não uma
+            tabela de origem. Daí a apresentação de ícone. */}
+        {exercicio.explicacao ? (
+          <div className="border-b border-border px-4 py-3">
+            <ExplicacaoAgent
+              pergunta="Por que este exercício?"
+              explicacao={exercicio.explicacao}
+              apresentacao="icone"
+            />
+          </div>
         ) : null}
         <PainelCoach exercicio={exercicio} />
         <details className="border-b border-border px-4 py-3 text-body-sm"><summary className="cursor-pointer font-semibold">O que é RIR?</summary><p className="mt-2 text-muted-foreground">É quantas repetições você ainda conseguiria fazer com boa técnica ao encerrar a série. Quanto menor o RIR, mais difícil foi a série.</p></details>

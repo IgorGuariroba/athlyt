@@ -34,6 +34,10 @@ const plano: PlanoGerado = {
         rir: 2,
         descansoSeg: 90,
         justificativa: "Base de força",
+        explicacao: {
+          porque: "Escolhi halteres porque poupam seu ombro direito e estão na sua academia.",
+          dadosUsados: [{ campo: "lesoes", valor: "ombro direito" }],
+        },
       }],
     }],
   },
@@ -97,5 +101,19 @@ describe("jornada pública da Sessão de Treino", () => {
     const sessao = await obterSessao(userId, iniciada.id);
     expect(sessao).toEqual(expect.objectContaining({ estado: "abandonada", motivoAbandono: "dor" }));
     expect(sessao?.eventos.at(-1)).toEqual(expect.objectContaining({ tipo: "sessao_abandonada", dados: { motivo: "dor" } }));
+  });
+
+  it("congela a explicação do plano no snapshot, para o motivo sobreviver à sessão", async () => {
+    // O snapshot existe para que a sessão continue reproduzível depois
+    // de o plano evoluir. Se a explicação ficar de fora, o atleta perde
+    // o motivo exatamente onde executa o exercício.
+    const { userId } = await contexto();
+    const iniciada = await iniciarSessao(userId, "segunda-superior");
+
+    const relida = await obterSessao(userId, iniciada.id);
+    expect(relida?.exercicios[0].explicacao).toEqual({
+      porque: "Escolhi halteres porque poupam seu ombro direito e estão na sua academia.",
+      dadosUsados: [{ campo: "lesoes", valor: "ombro direito" }],
+    });
   });
 });

@@ -2,7 +2,7 @@ import Link from "next/link";
 import { Check, ChevronLeft, ChevronRight, Dumbbell, Pencil, Plus, Undo2, UtensilsCrossed } from "lucide-react";
 import { auth } from "@/auth";
 import { Button } from "@/components/ui/button";
-import { EstadoVazio } from "@/components/tela";
+import { EstadoVazio, ExplicacaoAgent } from "@/components/tela";
 import { FUSO_PADRAO, diaVizinho } from "@/domain/diario/dia-alimentar";
 import { hojeDoUsuario, montarDiarioDoDia } from "@/domain/diario/repositorio";
 import type { ItemLinhaDoTempo } from "@/domain/diario/tipos";
@@ -189,6 +189,15 @@ function cartao(item: ItemLinhaDoTempo, dia: string, fuso: string) {
               <li key={alimento.descricao}>{alimento.descricao}</li>
             ))}
           </ul>
+          {/* Enquanto planejada: é aqui, diante do prato, que a pergunta
+              nasce. Confirmada, a refeição vira consumo real e o motivo
+              da prescrição perde a função. */}
+          <div className="mt-2">
+            <ExplicacaoAgent
+              pergunta="Por que esta refeição?"
+              explicacao={entrada.explicacao}
+            />
+          </div>
         </div>
       </div>
       <div className="mt-3 flex items-center justify-end gap-2">

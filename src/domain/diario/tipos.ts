@@ -1,3 +1,5 @@
+import type { ExplicacaoDecisao } from "@/domain/plano/tipos";
+
 export interface Macros {
   calorias: number;
   proteinaG: number;
@@ -22,6 +24,14 @@ export interface EntradaPlanejada {
   horaLocal: string;
   itens: ItemAlimentar[];
   macros: Macros;
+  /**
+   * Por que esta refeição foi prescrita para este atleta. Vem do Plano
+   * Ativo e acompanha a entrada porque é no Diário, diante do prato,
+   * que a pergunta aparece — não na revisão do plano.
+   *
+   * Opcional porque planos anteriores a esta fatia continuam válidos.
+   */
+  explicacao?: ExplicacaoDecisao;
 }
 
 export type OrigemConsumo = "planejado" | "editado" | "avulso";

@@ -103,6 +103,7 @@ export function entradasPlanejadas(nutricao: MetaNutricional): EntradaPlanejada[
       // mantém cartão e detalhamento consistentes após o
       // arredondamento por item.
       macros: itens.length > 0 ? somarMacros(itens) : macros,
+      explicacao: refeicao.explicacao,
     };
   });
 }

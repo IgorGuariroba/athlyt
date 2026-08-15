@@ -7,7 +7,14 @@ import { allowEmail, seedAuthenticatedSession } from "./helpers/seed-session";
 const plano: PlanoGerado = {
   regraVersao: "motor-plano-v1", modoConservador: false, perfilVersao: 1, dadosUsados: [],
   nutricao: { calorias: 2400, proteinaG: 160, carboidratosG: 300, gordurasG: 62, fibrasG: 30, estrategia: "Manutenção", refeicoes: [] },
-  bloco: { duracaoSemanas: 6, divisao: "Superior", dias: [{ id: "superior-a", nome: "Superior A", diaSemana: "segunda", exercicios: [{ exercicioId: "supino-barra", nome: "Supino reto com barra", padrao: "empurrar-horizontal", series: 1, repeticoes: "6–10", rir: 2, descansoSeg: 2, justificativa: "Base de força" }] }] },
+  bloco: { duracaoSemanas: 6, divisao: "Superior", dias: [{ id: "superior-a", nome: "Superior A", diaSemana: "segunda", exercicios: [{
+    exercicioId: "supino-barra", nome: "Supino reto com barra", padrao: "empurrar-horizontal",
+    series: 1, repeticoes: "6–10", rir: 2, descansoSeg: 2, justificativa: "Base de força",
+    explicacao: {
+      porque: "Escolhi a barra porque você já domina o movimento e sua academia tem ráck.",
+      dadosUsados: [{ campo: "experienciaTreino", valor: "intermediário" }],
+    },
+  }] }] },
 };
 
 const planoTresSeries: PlanoGerado = {
@@ -30,12 +37,17 @@ test("substitui exercício por equipamento indisponível preservando o estímulo
 
   await page.getByRole("link", { name: "Substituir Supino reto com barra" }).click();
   await expect(page.getByText(/não troca exercícios por variedade/)).toBeVisible();
+  await page.getByText("Por que este exercício foi escolhido?").click();
+  await expect(page.getByText(/você já domina o movimento/)).toBeVisible();
   await page.getByRole("link", { name: /Equipamento indisponível/ }).click();
   await expect(page.getByText("Mesmo estímulo").first()).toBeVisible();
 
   await page.getByRole("button", { name: "Substituir por Supino reto com halteres" }).click();
   await expect(page.getByRole("heading", { name: "Supino reto com halteres" })).toBeVisible();
   await expect(page.getByText(/Substitui/)).toContainText("Supino reto com barra");
+  // O substituto veio da regra determinística de equivalência: não pode
+  // herdar uma explicação que o agent produziu para o exercício original.
+  await expect(page.getByText("Por que este exercício?")).toHaveCount(0);
 
   await page.getByLabel("Registrar série 1").click();
   await page.getByRole("button", { name: "Pular descanso" }).click();
