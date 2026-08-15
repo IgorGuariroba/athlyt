@@ -116,7 +116,7 @@ Duas observações que sustentam as decisões:
 
 ## Fatia 4 — Copiloto de Sessão como agent
 
-**Estado:** especificada em [#104](https://github.com/IgorGuariroba/athlyt/issues/104). Não é continuação das anteriores.
+**Estado:** entregue a partir da especificação em [#104](https://github.com/IgorGuariroba/athlyt/issues/104). Não é continuação das anteriores.
 
 Esta não é sobre exibir explicação existente: é uma **operação de IA inteira que
 nunca chegou à interface**. `orientarProximaSerie`

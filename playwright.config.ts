@@ -62,10 +62,18 @@ export default defineConfig({
       use: { ...devices["Pixel 7"] },
     },
   ],
-  webServer: {
-    command: comandoServidor,
-    url: baseURL,
-    reuseExistingServer: true,
-    timeout: 30_000,
-  },
+  webServer: [
+    {
+      command: "npx tsx scripts/servidor-ia-e2e.ts",
+      url: "http://127.0.0.1:4311/health",
+      reuseExistingServer: true,
+      timeout: 30_000,
+    },
+    {
+      command: `OPENROUTER_BASE_URL=http://127.0.0.1:4311/v1 OPENROUTER_API_KEY=athlyt-e2e ${comandoServidor}`,
+      url: baseURL,
+      reuseExistingServer: true,
+      timeout: 30_000,
+    },
+  ],
 });

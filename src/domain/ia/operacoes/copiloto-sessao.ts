@@ -79,6 +79,11 @@ export interface EntradaCopiloto {
     seriesNaSemana: number;
     sessoesNaSemana: number;
   };
+  origem?: {
+    tela: string;
+    rota: string;
+    gatilho: string;
+  };
 }
 
 export async function orientarProximaSerie(
@@ -97,5 +102,6 @@ export async function orientarProximaSerie(
     },
     instrucao: INSTRUCAO,
     schema: orientacaoSchema,
+    origem: entrada.origem,
   });
 }

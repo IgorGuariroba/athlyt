@@ -1,12 +1,18 @@
 "use client";
 
-import { createContext, useContext, useEffect, useSyncExternalStore } from "react";
+import { createContext, useContext, useEffect, useReducer, useRef, useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
 import { AlertTriangle, CircleDot, CloudOff, RefreshCw, TriangleAlert } from "lucide-react";
 import Link from "next/link";
 import { assinarOutbox, drenarFila, lerOutbox, lerOutboxServidor, liberarRegistrosConfirmados, recarregarFila, registrarNaFila } from "@/lib/store-outbox";
 import { useOnline } from "@/lib/use-online";
 import type { SerieRegistrada, TipoEventoOutbox } from "@/domain/sessao/outbox";
+import {
+  ESTADO_INICIAL_COPILOTO,
+  reduzirEstadoCopiloto,
+  type EstadoCopilotoCliente,
+} from "@/domain/sessao/copiloto-cliente";
+import { continuarAposAlertaCautelaAction, solicitarOrientacaoCopilotoAction } from "../actions";
 
 /**
  * Estado de conexão e sincronização (user story 38; telas 042 e 085).
@@ -24,8 +30,10 @@ interface Contexto {
   fila: number;
   conflitos: number;
   registrosLocais: SerieRegistrada[];
+  copiloto: EstadoCopilotoCliente;
+  confirmarAlertaCautela: (exercicioId: string) => Promise<void>;
   /** Enfileira o evento localmente e tenta drenar em seguida. */
-  registrar: (tipo: TipoEventoOutbox, dados: Record<string, unknown>) => Promise<void>;
+  registrar: (tipo: TipoEventoOutbox, dados: Record<string, unknown>, proximaSerie?: number) => Promise<void>;
 }
 
 const ContextoConexao = createContext<Contexto | null>(null);
@@ -45,6 +53,8 @@ export function ProvedorConexao({ sessionId, seriesConfirmadas, children }: {
   const router = useRouter();
   const online = useOnline();
   const outbox = useSyncExternalStore(assinarOutbox, lerOutbox, lerOutboxServidor);
+  const [copiloto, despacharCopiloto] = useReducer(reduzirEstadoCopiloto, ESTADO_INICIAL_COPILOTO);
+  const sequenciaCopiloto = useRef(0);
 
   // Drenagem automática: a mudança de `online` reexecuta o efeito, e a
   // fila sai sozinha ao voltar a rede — sem o usuário precisar pedir,
@@ -79,10 +89,49 @@ export function ProvedorConexao({ sessionId, seriesConfirmadas, children }: {
       fila: outbox.fila.length,
       conflitos: outbox.conflitos,
       registrosLocais: outbox.registrosLocais,
-      registrar: async (tipo, dados) => {
+      copiloto,
+      confirmarAlertaCautela: async (exercicioId) => {
+        if (copiloto.estado !== "orientacao" || !copiloto.orientacao.alertaCautela) return;
+        await continuarAposAlertaCautelaAction(sessionId, {
+          exercicioId,
+          proximaSerie: copiloto.proximaSerie,
+          alerta: copiloto.orientacao.alertaCautela,
+        });
+        despacharCopiloto({ tipo: "cautela-confirmada", proximaSerie: copiloto.proximaSerie });
+      },
+      registrar: async (tipo, dados, proximaSerie) => {
         await registrarNaFila(sessionId, tipo, dados);
+
+        const requisicao = ++sequenciaCopiloto.current;
+        if (tipo === "serie_registrada") {
+          despacharCopiloto({ tipo: "serie-registrada", requisicao, proximaSerie: proximaSerie ?? null });
+          if (!navigator.onLine && proximaSerie !== undefined) {
+            despacharCopiloto({ tipo: "indisponivel", requisicao, proximaSerie, motivo: "offline" });
+          }
+        }
+
         const { aplicou } = await drenarFila(sessionId);
         if (aplicou) router.refresh();
+        if (tipo !== "serie_registrada" || proximaSerie === undefined || !navigator.onLine) return;
+
+        void solicitarOrientacaoCopilotoAction(sessionId, {
+          exercicioId: String(dados.exercicioId),
+          serieRegistrada: Number(dados.numero),
+        }).then((resultado) => {
+          if (resultado.status === "ok") {
+            despacharCopiloto({
+              tipo: "resposta-recebida",
+              requisicao,
+              proximaSerie: resultado.proximaSerie,
+              orientacao: resultado.orientacao,
+              versao: resultado.versao,
+            });
+          } else if (resultado.status === "indisponivel") {
+            despacharCopiloto({ tipo: "indisponivel", requisicao, proximaSerie, motivo: "provedor-indisponivel" });
+          }
+        }).catch(() => {
+          despacharCopiloto({ tipo: "indisponivel", requisicao, proximaSerie, motivo: "provedor-indisponivel" });
+        });
       },
     }}>
       {children}
