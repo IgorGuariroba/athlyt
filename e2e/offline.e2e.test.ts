@@ -35,9 +35,9 @@ test("mantém a sessão viva sem rede e sincroniza a fila ao reconectar", async 
   // quando algo quebra.
   await expect(page.getByLabel(/Estado da conexão: Online/)).toBeVisible();
 
-  // O Coach Local orienta e declara a origem da orientação.
-  await expect(page.getByLabel("Orientações do Coach Local")).toContainText("origem: regra local");
-  await expect(page.getByLabel("Orientações do Coach Local")).toContainText("coach-local-v1");
+  // Online, o Coach Local não ocupa o lugar do Copiloto antes de qualquer
+  // série: ele é contingência, não a experiência principal.
+  await expect(page.getByLabel("Orientações do Coach Local")).toHaveCount(0);
 
   await page.getByLabel("Registrar série 1").click();
   await page.getByRole("button", { name: "Pular descanso" }).click();
@@ -45,7 +45,10 @@ test("mantém a sessão viva sem rede e sincroniza a fila ao reconectar", async 
   // ---- rede cai no meio do treino ----
   await context.setOffline(true);
   await expect(page.getByLabel(/Estado da conexão: Offline/)).toBeVisible();
-  await expect(page.getByText("o Copiloto de Sessão está indisponível")).toBeVisible();
+  const coachLocal = page.getByLabel("Orientações do Coach Local");
+  await expect(coachLocal).toContainText("origem: regra local");
+  await expect(coachLocal).toContainText("coach-local-v1");
+  await expect(coachLocal).toContainText("Sem rede: nenhuma sugestão de IA é gerada aqui.");
 
   // Registro de série continua funcionando, e o timer também.
   await page.getByLabel("Registrar série 2").click();
