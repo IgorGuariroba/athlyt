@@ -4,7 +4,13 @@ import { ArrowRight, CalendarDays, Dumbbell, Flame, History, Ruler } from "lucid
 import { auth } from "@/auth";
 import { sair } from "../../(auth)/actions";
 import { Button } from "@/components/ui/button";
-import { CORES_MACRO, CartaoLista, ItemNavegacao, ListaNavegacao } from "@/components/tela";
+import {
+  CORES_MACRO,
+  CartaoLista,
+  ExplicacaoAgent,
+  ItemNavegacao,
+  ListaNavegacao,
+} from "@/components/tela";
 import { obterPerfilVigente } from "@/domain/triagem/perfil";
 import { montarResumoTriagem } from "@/domain/triagem/resumo";
 import { obterPlanoAtivo } from "@/domain/plano/repositorio";
@@ -191,6 +197,13 @@ export default async function InicioPage() {
             </span>
           </div>
 
+          <div className="px-5 pb-4">
+            <ExplicacaoAgent
+              pergunta="Por que esta divisão?"
+              explicacao={planoAtivo.conteudo.bloco.explicacao}
+            />
+          </div>
+
           <div className="grid grid-cols-2 gap-px bg-border">
             <div className="bg-background p-4">
               <CalendarDays
@@ -259,6 +272,13 @@ export default async function InicioPage() {
                 aria-hidden="true"
               />
             </div>
+
+            {/* A meta calórica é o número que mais gera desconfiança: sem
+                o motivo ao lado, parece arbitrário. */}
+            <ExplicacaoAgent
+              pergunta="Como cheguei nessas calorias?"
+              explicacao={planoAtivo.conteudo.nutricao.explicacoes?.calorias}
+            />
 
             <div
               className="flex h-3 overflow-hidden rounded-full bg-surface-container-high"

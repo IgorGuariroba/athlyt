@@ -11,6 +11,11 @@ import type { ExplicacaoDecisao } from "@/domain/plano/tipos";
  *
  * Quando a explicação não existe — plano gravado antes desta fatia, já
  * imutável — o componente admite a lacuna em vez de inventar um motivo.
+ *
+ * `compacto` omite os pares campo/valor. É para a Sessão de Treino:
+ * entre séries o atleta tem atenção para uma frase, não para a tabela
+ * de origem, e a origem completa continua a um toque na revisão do
+ * plano e na Trilha de Decisão.
  */
 
 const ROTULOS: Record<string, string> = {
@@ -39,7 +44,13 @@ const ROTULOS: Record<string, string> = {
   "historico-importado": "Histórico importado",
 };
 
-export function PorQueIsso({ explicacao }: { explicacao?: ExplicacaoDecisao }) {
+export function PorQueIsso({
+  explicacao,
+  compacto = false,
+}: {
+  explicacao?: ExplicacaoDecisao;
+  compacto?: boolean;
+}) {
   if (!explicacao) {
     return (
       <p>
@@ -48,6 +59,8 @@ export function PorQueIsso({ explicacao }: { explicacao?: ExplicacaoDecisao }) {
       </p>
     );
   }
+
+  if (compacto) return <p>{explicacao.porque}</p>;
 
   return (
     <div className="flex flex-col gap-2">

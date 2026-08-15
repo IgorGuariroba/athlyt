@@ -6,6 +6,7 @@ import {
   BarraAcaoFixa,
   CabecalhoTela,
   CartaoLista,
+  ExplicacaoAgent,
   FaixaDados,
   LinhaCartaoLista,
   LinhasCartaoLista,
@@ -44,6 +45,15 @@ export default async function PreviaSessaoPage({
       />
 
       <SecoesTela>
+        {/* A explicação do agent existe desde a geração do plano, mas até
+            aqui só aparecia na revisão do onboarding: quem abre a prévia
+            semanas depois é justamente quem esqueceu o motivo. */}
+        <ExplicacaoAgent
+          pergunta="Por que este treino?"
+          explicacao={dia.explicacao}
+          tom="forte"
+        />
+
         <CartaoLista>
           <LinhasCartaoLista>
             {dia.exercicios.map((exercicio, indice) => (
@@ -62,6 +72,11 @@ export default async function PreviaSessaoPage({
                   {exercicio.series} × {exercicio.repeticoes} reps · RIR{" "}
                   {exercicio.rir}
                 </FaixaDados>
+
+                <ExplicacaoAgent
+                  pergunta="Por que este exercício?"
+                  explicacao={exercicio.explicacao}
+                />
               </LinhaCartaoLista>
             ))}
           </LinhasCartaoLista>

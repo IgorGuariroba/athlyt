@@ -52,6 +52,7 @@ import {
   ChipSelecao,
   ControleSegmentado,
   EstadoVazio,
+  ExplicacaoAgent,
   FaixaDados,
   GraficoTendencia,
   ItemAcaoNavegacao,
@@ -104,6 +105,17 @@ export const metadata: Metadata = {
  * a tela de boas-vindas antes de chegarmos a este ponto.
  */
 const EM_DESENVOLVIMENTO = process.env.NODE_ENV !== "production";
+
+/** Uma única explicação nas três apresentações: a diferença está no
+ * peso de atenção que cada tela pode cobrar, não no conteúdo. */
+const EXPLICACAO_EXEMPLO = {
+  porque:
+    "Escolhi o supino com halteres porque sua academia não tem barra livre e o halter poupa seu ombro direito.",
+  dadosUsados: [
+    { campo: "equipamentos", valor: "halteres, banco" },
+    { campo: "lesoes", valor: "ombro direito" },
+  ],
+};
 
 
 const PRIMITIVOS = [
@@ -900,23 +912,43 @@ export default function GaleriaDesignPage() {
               últimos 14 dias, o que reduz o efeito de variação de água e
               conteúdo intestinal.
             </Revelar>
-            <Revelar rotulo="Por que estas calorias?">
-              <PorQueIsso
-                explicacao={{
-                  porque:
-                    "Estimei sua manutenção a partir de 80 kg, 180 cm e 35 anos, com atividade moderada.",
-                  dadosUsados: [
-                    { campo: "pesoKg", valor: "80 kg" },
-                    { campo: "alturaCm", valor: "180 cm" },
-                    { campo: "idadeAnos", valor: "35 anos" },
-                  ],
-                }}
-              />
-            </Revelar>
+            <PorQueIsso
+              explicacao={{
+                porque:
+                  "Estimei sua manutenção a partir de 80 kg, 180 cm e 35 anos, com atividade moderada.",
+                dadosUsados: [
+                  { campo: "pesoKg", valor: "80 kg" },
+                  { campo: "alturaCm", valor: "180 cm" },
+                  { campo: "idadeAnos", valor: "35 anos" },
+                ],
+              }}
+            />
             <Revelar rotulo="Trocar exercício" Icone={Ruler}>
               Substituições mantêm o padrão de movimento e a faixa de repetições
               prescrita.
             </Revelar>
+          </div>
+        </Amostra>
+
+        <Amostra
+          titulo="Explicação do agent"
+          nota="A mesma explicação, com três pesos de atenção. Fechado é o padrão; aberto só quando o atleta está prestes a divergir do plano; ícone só sob carga física, sem os pares campo/valor."
+        >
+          <div className="flex flex-col gap-4">
+            <ExplicacaoAgent
+              pergunta="Por que este exercício?"
+              explicacao={EXPLICACAO_EXEMPLO}
+            />
+            <ExplicacaoAgent
+              pergunta="Por que esta refeição?"
+              explicacao={EXPLICACAO_EXEMPLO}
+              apresentacao="aberto"
+            />
+            <ExplicacaoAgent
+              pergunta="Por que este exercício?"
+              explicacao={EXPLICACAO_EXEMPLO}
+              apresentacao="icone"
+            />
           </div>
         </Amostra>
 

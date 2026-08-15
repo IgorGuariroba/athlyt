@@ -10,6 +10,7 @@ import {
   CartaoLista,
   ChipSelecao,
   ControleSegmentado,
+  ExplicacaoAgent,
   GraficoTendencia,
   ItemAcaoNavegacao,
   LinhaCartaoLista,
@@ -354,6 +355,75 @@ describe("PorQueIsso", () => {
 
     expect(screen.queryByRole("list")).toBeNull();
     expect(screen.getByText(/gerado antes/i)).toBeDefined();
+  });
+
+  it("omite os dados de origem no modo compacto, preservando o motivo", () => {
+    // Sob carga física o atleta lê uma frase; a tabela de origem
+    // continua disponível na revisão do plano e na Trilha de Decisão.
+    render(
+      <PorQueIsso
+        compacto
+        explicacao={{
+          porque: "Escolhi este por causa do seu ombro sensível.",
+          dadosUsados: [{ campo: "lesoes", valor: "ombro direito" }],
+        }}
+      />,
+    );
+
+    expect(screen.getByText(/ombro sensível/)).toBeDefined();
+    expect(screen.queryByRole("list")).toBeNull();
+  });
+});
+
+describe("ExplicacaoAgent", () => {
+  const explicacao = {
+    porque: "Seus 60 minutos por sessão cabem em quatro exercícios.",
+    dadosUsados: [{ campo: "duracaoSessaoMin", valor: "60 min" }],
+  };
+
+  it("fica fechado por padrão, sem custo de espaço na tela", () => {
+    render(
+      <ExplicacaoAgent pergunta="Por que este dia?" explicacao={explicacao} />,
+    );
+
+    expect(screen.getByRole("group").getAttribute("open")).toBeNull();
+  });
+
+  it("abre por padrão quando o motivo é o que muda a decisão do atleta", () => {
+    render(
+      <ExplicacaoAgent
+        pergunta="Por que esta refeição?"
+        explicacao={explicacao}
+        apresentacao="aberto"
+      />,
+    );
+
+    expect(screen.getByRole("group").getAttribute("open")).not.toBeNull();
+  });
+
+  it("corta os dados de origem na apresentação de ícone", () => {
+    render(
+      <ExplicacaoAgent
+        pergunta="Por que este exercício?"
+        explicacao={explicacao}
+        apresentacao="icone"
+      />,
+    );
+
+    expect(screen.getByText(/60 minutos por sessão/)).toBeDefined();
+    expect(screen.queryByRole("list")).toBeNull();
+  });
+
+  it("usa a pergunta como o nome acessível do disclosure", () => {
+    // O rótulo é o único alvo de toque: se não for a pergunta que o
+    // atleta faria, a explicação continua invisível na prática.
+    render(
+      <ExplicacaoAgent pergunta="Por que esta divisão?" explicacao={explicacao} />,
+    );
+
+    expect(
+      within(screen.getByRole("group")).getByText("Por que esta divisão?"),
+    ).toBeDefined();
   });
 });
 
