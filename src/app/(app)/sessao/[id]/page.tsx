@@ -90,7 +90,7 @@ export default async function SessaoPage({ params, searchParams }: { params: Pro
         <PainelCoach exercicio={exercicio} />
         <details className="border-b border-border px-4 py-3 text-body-sm"><summary className="cursor-pointer font-semibold">O que é RIR?</summary><p className="mt-2 text-muted-foreground">É quantas repetições você ainda conseguiria fazer com boa técnica ao encerrar a série. Quanto menor o RIR, mais difícil foi a série.</p></details>
         <div className="px-3">
-          {exercicio.series.map((serie) => <RegistroSerie key={serie.numero} exercicioId={exercicio.exercicioId} numero={serie.numero} repeticoesSugeridas={serie.repeticoesSugeridas} rirSugerido={serie.rir} descansoSeg={exercicio.descansoSeg} concluida={serie.concluida} cargaInicial={serie.cargaKg} cargaSugerida={serie.cargaSugeridaKg ?? 0} melhorCargaAnterior={serie.melhorCargaAnteriorKg ?? 0} repeticoesIniciais={serie.repeticoes} />)}
+          {exercicio.series.map((serie, indice) => <RegistroSerie key={serie.numero} exercicioId={exercicio.exercicioId} numero={serie.numero} repeticoesSugeridas={serie.repeticoesSugeridas} rirSugerido={serie.rir} descansoSeg={exercicio.descansoSeg} concluida={serie.concluida} cargaInicial={serie.cargaKg} cargaSugerida={serie.cargaSugeridaKg ?? 0} melhorCargaAnterior={serie.melhorCargaAnteriorKg ?? 0} repeticoesIniciais={serie.repeticoes} temProximaSerie={indice < exercicio.series.length - 1} />)}
         </div>
       </section>
 

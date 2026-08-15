@@ -46,7 +46,7 @@ export interface Substituicao {
   diaId: string; exercicioOriginalId: string; exercicioNovoId: string;
   motivo: MotivoSubstituicao; persistente: boolean; observacao: string | null; createdAt: Date;
 }
-export interface EventoSessao { id: string; tipo: "sessao_iniciada" | "serie_registrada" | "sessao_concluida" | "sessao_abandonada" | "exercicio_substituido"; dados: unknown; createdAt: Date }
+export interface EventoSessao { id: string; tipo: "sessao_iniciada" | "serie_registrada" | "sessao_concluida" | "sessao_abandonada" | "exercicio_substituido" | "alerta_cautela_ignorado"; dados: unknown; createdAt: Date }
 export interface SessaoTreino {
   id: string; diaId: string; nome: string; estado: EstadoSessao; exercicios: ExercicioSessao[];
   startedAt: Date; endedAt: Date | null; motivoAbandono: string | null; eventos: EventoSessao[];
@@ -132,6 +132,24 @@ export async function registrarSerie(userId: string, sessionId: string, entrada:
     const [atualizada] = await tx.update(workoutSessions).set({ exercicios }).where(eq(workoutSessions.id, sessionId)).returning();
     await tx.insert(workoutEvents).values({ sessionId, userId, tipo: "serie_registrada", dados: entrada });
     return mapear(atualizada);
+  });
+}
+
+export async function registrarOverrideAlertaCautela(userId: string, sessionId: string, entrada: {
+  exercicioId: string;
+  proximaSerie: number;
+  alerta: string;
+}): Promise<void> {
+  const sessao = await obterSessao(userId, sessionId);
+  const exercicio = sessao?.exercicios.find((item) => item.exercicioId === entrada.exercicioId);
+  if (!sessao || sessao.estado !== "em_andamento" || !exercicio?.series.some((serie) => serie.numero === entrada.proximaSerie && !serie.concluida)) {
+    throw new Error("Alerta de Cautela não corresponde à próxima série.");
+  }
+  await db.insert(workoutEvents).values({
+    sessionId,
+    userId,
+    tipo: "alerta_cautela_ignorado",
+    dados: { ...entrada, decisao: "continuar" },
   });
 }
 

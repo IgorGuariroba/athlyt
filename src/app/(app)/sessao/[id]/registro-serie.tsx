@@ -8,16 +8,20 @@ import { useConexao } from "./estado-conexao";
 
 const FECHAR_TIMERS_DE_DESCANSO = "athlyt:fechar-timers-de-descanso";
 
-export function RegistroSerie({ exercicioId, numero, repeticoesSugeridas, rirSugerido, descansoSeg, concluida, cargaInicial, cargaSugerida, melhorCargaAnterior, repeticoesIniciais }: {
+export function RegistroSerie({ exercicioId, numero, repeticoesSugeridas, rirSugerido, descansoSeg, concluida, cargaInicial, cargaSugerida, melhorCargaAnterior, repeticoesIniciais, temProximaSerie }: {
   exercicioId: string; numero: number; repeticoesSugeridas: string; rirSugerido: number;
   descansoSeg: number; concluida: boolean; cargaInicial: number | null; cargaSugerida: number; melhorCargaAnterior: number; repeticoesIniciais: number | null;
+  temProximaSerie: boolean;
 }) {
   const [restante, setRestante] = useState<number | null>(null);
   const [timerMinimizado, setTimerMinimizado] = useState(false);
   const [enviando, setEnviando] = useState(false);
-  const { registrar: enfileirarEvento, registrosLocais } = useConexao();
+  const { registrar: enfileirarEvento, registrosLocais, copiloto } = useConexao();
   const local = registrosLocais.find((r) => r.exercicioId === exercicioId && r.numero === numero);
   const registrada = concluida || local !== undefined;
+  const bloqueadaPorCautela = copiloto.estado === "orientacao"
+    && copiloto.proximaSerie === numero
+    && !copiloto.alertaConfirmado;
   const carga = local?.cargaKg ?? cargaInicial;
   const reps = local?.repeticoes ?? repeticoesIniciais;
 
@@ -65,7 +69,7 @@ export function RegistroSerie({ exercicioId, numero, repeticoesSugeridas, rirSug
       cargaKg: Number(formData.get("cargaKg")),
       repeticoes: Number(formData.get("repeticoes")),
       rir: Number(formData.get("rir")),
-    });
+    }, temProximaSerie ? numero + 1 : undefined);
     if ("Notification" in window && Notification.permission === "default") await Notification.requestPermission();
     await promessa;
     setEnviando(false);
@@ -91,7 +95,7 @@ export function RegistroSerie({ exercicioId, numero, repeticoesSugeridas, rirSug
         <label className="text-caption text-muted-foreground">RIR
           <Input name="rir" type="number" inputMode="numeric" min="0" max="10" defaultValue={local?.rir ?? rirSugerido} required disabled={registrada} className="mt-1 h-12 text-center text-lg font-bold tabular-nums" />
         </label>
-        <Button type="submit" size="icon" disabled={enviando || registrada} aria-label={`Registrar série ${numero}`} className="mb-0 size-12 rounded-full">
+        <Button type="submit" size="icon" disabled={enviando || registrada || bloqueadaPorCautela} aria-label={`Registrar série ${numero}`} className="mb-0 size-12 rounded-full">
           <Check className="size-5" />
         </Button>
         {registrada ? <div className="col-span-5 flex items-center justify-between pl-10 text-caption text-muted-foreground"><span>10RM estimado: {estimativa10Rm ?? "—"} kg</span>{novoRecorde ? <strong className="flex items-center gap-1 text-warning"><Trophy className="size-3" /> Novo recorde</strong> : null}</div> : null}
