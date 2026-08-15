@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Check, ChevronLeft, ChevronRight, Dumbbell, Pencil, Plus, Undo2, UtensilsCrossed } from "lucide-react";
+import { Camera, Check, ChevronLeft, ChevronRight, Dumbbell, Pencil, Plus, Sparkles, Undo2, UtensilsCrossed } from "lucide-react";
 import { auth } from "@/auth";
 import { Button } from "@/components/ui/button";
 import { EstadoVazio, ExplicacaoAgent } from "@/components/tela";
@@ -16,6 +16,14 @@ import { PainelDeMacros } from "./painel-macros";
  *
  * O dia navegável vem da URL para que a tela seja endereçável e o
  * fuso permaneça explícito em toda ação de escrita.
+ *
+ * A ação principal da tela é **fotografar**, e não "registrar
+ * alimento". Editar uma refeição planejada ou montar um Prato item a
+ * item são os caminhos de quem quer precisão; o caminho frequente é
+ * apontar a câmera para o prato e deixar o agent estimar. Enquanto o
+ * botão único dizia "Registrar alimento", esse caminho ficava a dois
+ * toques de distância e escondido atrás de um painel de abas — o
+ * atalho mais usado era o mais custoso.
  */
 function rotuloDoDia(dia: string, hoje: string, fuso: string): string {
   if (dia === hoje) return "Hoje";
@@ -63,6 +71,28 @@ export default async function DiarioPage({
 
       {diario ? <PainelDeMacros painel={diario.painel} /> : null}
 
+      {/* Registro em um toque, acima da linha do tempo: quem abre o
+          Diário com o prato na frente não precisa rolar até o fim para
+          começar. Duas opções apenas — a câmera como caminho padrão e
+          a busca como caminho preciso. */}
+      <div className="flex gap-2">
+        <Button asChild size="lg" className="h-14 flex-1 flex-col gap-0.5">
+          <Link href={`/diario/registrar/foto?dia=${dia}`}>
+            <span className="flex items-center gap-2 text-label-lg">
+              <Camera className="size-5" aria-hidden="true" /> Fotografar refeição
+            </span>
+            <span className="text-caption font-normal opacity-80">
+              o agent estima calorias e macros
+            </span>
+          </Link>
+        </Button>
+        <Button asChild size="lg" variant="outline" className="h-14 w-14 shrink-0">
+          <Link href={`/diario/registrar?dia=${dia}`} aria-label="Registrar buscando alimento">
+            <Plus className="size-5" aria-hidden="true" />
+          </Link>
+        </Button>
+      </div>
+
       {diario && diario.linhaDoTempo.length > 0 ? (
         <ol aria-label="Linha do tempo do dia" className="flex flex-col">
           {diario.linhaDoTempo.map((item) => (
@@ -83,24 +113,20 @@ export default async function DiarioPage({
           titulo={diario ? "O dia começa vazio" : "Diário indisponível"}
           descricao={
             diario
-              ? "Sem Plano Ativo não há Cardápio Diário. Você ainda pode registrar o que comeu."
+              ? "Fotografe o que você comeu — o agent identifica os alimentos e estima energia e macros."
               : "Entre na sua conta para ver e registrar seu Diário."
+          }
+          acao={
+            diario ? (
+              <Button asChild>
+                <Link href={`/diario/registrar/foto?dia=${dia}`}>
+                  <Camera className="size-4" aria-hidden="true" /> Fotografar refeição
+                </Link>
+              </Button>
+            ) : undefined
           }
         />
       )}
-
-      {/* Botão + dos Atalhos de Registro (tela 050), no lugar que a
-          referência do MacroFactor reserva para ele: acessível com o
-          polegar, sem cobrir a linha do tempo. */}
-      <Button
-        asChild
-        size="lg"
-        className="sticky bottom-4 mt-2 h-14 w-full text-base font-bold"
-      >
-        <Link href={`/diario/registrar?dia=${dia}`}>
-          <Plus className="size-5" aria-hidden="true" /> Registrar alimento
-        </Link>
-      </Button>
     </section>
   );
 }
@@ -138,12 +164,23 @@ function cartao(item: ItemLinhaDoTempo, dia: string, fuso: string) {
   if (item.tipo === "consumo") {
     const { consumo } = item;
     const delta = consumo.planejado ? consumo.macros.calorias - consumo.planejado.calorias : 0;
+    // Um consumo estimado por foto não pode se parecer com um medido:
+    // a marca fica no próprio cartão para que a revisão do dia saiba
+    // qual número merece desconfiança (user story 59).
+    const estimado = consumo.itens.some(
+      (alimentar) => (alimentar as { origemDado?: string }).origemDado === "estimativa-ia",
+    );
     return (
       <div className="rounded-xl border border-success/40 bg-surface-container p-4">
         <div className="flex items-start gap-3">
           <Check className="mt-1 size-5 shrink-0 text-success" aria-hidden="true" />
           <div className="min-w-0 flex-1">
             <p className="truncate text-title font-bold text-on-surface-strong">{consumo.nome}</p>
+            {estimado ? (
+              <p className="flex items-center gap-1 text-caption text-muted-foreground">
+                <Sparkles className="size-3" aria-hidden="true" /> Estimado por foto
+              </p>
+            ) : null}
             <p className="text-body-sm tabular-nums text-muted-foreground">
               {consumo.macros.calorias} kcal · {consumo.macros.proteinaG}P ·{" "}
               {consumo.macros.carboidratosG}C · {consumo.macros.gordurasG}G
@@ -200,23 +237,47 @@ function cartao(item: ItemLinhaDoTempo, dia: string, fuso: string) {
           </div>
         </div>
       </div>
-      <div className="mt-3 flex items-center justify-end gap-2">
-        <Button asChild variant="ghost" size="sm">
-          <Link
-            href={`/diario/refeicao/${encodeURIComponent(entrada.refeicaoRef)}?dia=${dia}`}
-            aria-label={`Editar ${entrada.nome}`}
-          >
-            <Pencil className="size-4" aria-hidden="true" /> Editar
-          </Link>
-        </Button>
+      {/* Três saídas diante do prato, na ordem do esforço que exigem:
+          comi como planejado (um toque), comi outra coisa (foto) e
+          ajustar porções (edição item a item). Antes só as duas pontas
+          existiam, e quem comeu algo diferente do plano — o caso mais
+          comum — caía na edição manual por falta de alternativa.
+
+          Empilhadas, e não numa linha: três rótulos lado a lado não
+          cabem na largura de um celular — o primeiro botão vazava para
+          fora do cartão. A confirmação ocupa a linha inteira porque é a
+          ação esperada; as duas divergentes dividem a linha de baixo. */}
+      <div className="mt-3 flex flex-col gap-2">
         <form action={confirmarRefeicaoAction}>
           <input type="hidden" name="dia" value={dia} />
           <input type="hidden" name="fuso" value={fuso} />
           <input type="hidden" name="refeicaoRef" value={entrada.refeicaoRef} />
-          <Button type="submit" size="sm" aria-label={`Comi como planejado: ${entrada.nome}`}>
+          <Button
+            type="submit"
+            className="w-full"
+            aria-label={`Comi como planejado: ${entrada.nome}`}
+          >
             <Check className="size-4" aria-hidden="true" /> Comi como planejado
           </Button>
         </form>
+        <div className="flex gap-2">
+          <Button asChild variant="ghost" size="sm" className="flex-1">
+            <Link
+              href={`/diario/registrar/foto?dia=${dia}`}
+              aria-label={`Comi outra coisa no lugar de ${entrada.nome}`}
+            >
+              <Camera className="size-4" aria-hidden="true" /> Comi outra coisa
+            </Link>
+          </Button>
+          <Button asChild variant="ghost" size="sm" className="flex-1">
+            <Link
+              href={`/diario/refeicao/${encodeURIComponent(entrada.refeicaoRef)}?dia=${dia}`}
+              aria-label={`Editar ${entrada.nome}`}
+            >
+              <Pencil className="size-4" aria-hidden="true" /> Ajustar porções
+            </Link>
+          </Button>
+        </div>
       </div>
     </div>
   );

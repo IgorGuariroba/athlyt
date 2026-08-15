@@ -37,6 +37,7 @@ import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
 import { RadioGroup } from "@/components/ui/radio-group";
 import { Textarea } from "@/components/ui/textarea";
+import { DemoCapturaFoto } from "./demo-captura-foto";
 import {
   BarraFaixa,
   BarraMacro,
@@ -554,6 +555,13 @@ export default function GaleriaDesignPage() {
             src="/equipamentos/personalizado.svg"
             defaultChecked
           />
+        </Amostra>
+
+        <Amostra
+          titulo="Captura de foto"
+          nota="Câmera traseira em um toque e galeria como alternativa, com prévia antes do envio. Usada no registro de refeição por foto."
+        >
+          <DemoCapturaFoto />
         </Amostra>
 
         <Amostra

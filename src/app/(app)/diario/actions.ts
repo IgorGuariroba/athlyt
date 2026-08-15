@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { escalarMacros } from "@/domain/diario/cardapio";
 import { alternarFavorito, registrarPrato, salvarAlimentoProprio } from "@/domain/alimentos/repositorio";
-import { itemDeAlimento, itemManual, type ItemPrato } from "@/domain/alimentos/prato";
+import { itemDeAlimento, itemEstimado, itemManual, type ItemPrato } from "@/domain/alimentos/prato";
 import {
   confirmarRefeicao,
   desfazerConfirmacao,
@@ -86,17 +86,31 @@ export async function registrarPratoAction(formData: FormData) {
   if (!Array.isArray(bruto) || bruto.length === 0) {
     throw new Error("Um registro precisa de ao menos um item no Prato.");
   }
-  const itens = (bruto as ItemPrato[]).map((item) =>
-    item.alimentoId
-      ? itemDeAlimento(item.alimentoId, { quantidade: item.quantidade, unidade: item.unidade })
-      : itemManual({
-          nome: item.descricao,
-          quantidade: item.quantidade ?? 1,
-          unidade: item.unidade ?? "porção",
-          calorias: item.calorias, proteinaG: item.proteinaG,
-          carboidratosG: item.carboidratosG, gordurasG: item.gordurasG, fibrasG: item.fibrasG,
-        }),
-  );
+  const itens = (bruto as ItemPrato[]).map((item) => {
+    if (item.alimentoId) {
+      return itemDeAlimento(item.alimentoId, { quantidade: item.quantidade, unidade: item.unidade });
+    }
+    // Estimativa de foto preserva a origem: reconstruir como entrada
+    // manual apagaria da auditoria que aquele número veio de uma foto,
+    // e a ponderação de fontes trata as duas com credenciais distintas.
+    if (item.origemDado === "estimativa-ia") {
+      return itemEstimado({
+        descricao: item.descricao.replace(/\s\d+\s?g$/, ""),
+        quantidadeGramas: item.quantidade ?? 100,
+        calorias: item.calorias, proteinaG: item.proteinaG,
+        carboidratosG: item.carboidratosG, gordurasG: item.gordurasG, fibrasG: item.fibrasG,
+        confianca: item.confianca ?? "baixa",
+        modelo: item.versaoFonte ?? "modelo não identificado",
+      });
+    }
+    return itemManual({
+      nome: item.descricao,
+      quantidade: item.quantidade ?? 1,
+      unidade: item.unidade ?? "porção",
+      calorias: item.calorias, proteinaG: item.proteinaG,
+      carboidratosG: item.carboidratosG, gordurasG: item.gordurasG, fibrasG: item.fibrasG,
+    });
+  });
 
   await registrarPrato(await usuario(), { nome: nome || "Registro avulso", itens, dia, fuso });
   revalidatePath("/diario");
