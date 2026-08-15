@@ -88,6 +88,71 @@ export function itemManual(entrada: EntradaManual): ItemPrato {
   };
 }
 
+export interface EntradaEstimada extends Macros {
+  descricao: string;
+  quantidadeGramas: number;
+  confianca: Confianca;
+  /** Modelo que produziu a estimativa, para a auditoria do registro. */
+  modelo: string;
+}
+
+/**
+ * Item estimado pela IA a partir da foto do prato.
+ *
+ * Origem própria (`estimativa-ia`) em vez de reaproveitar
+ * `itemManual`: as duas são incertas, mas por motivos diferentes — o
+ * atleta que digita sabe o que comeu e erra o número; o modelo que
+ * olha a foto pode errar o próprio alimento. A ponderação de fontes
+ * (`proveniencia.ts`) já dá a `estimativa-ia` a menor credencial de
+ * todas, e apagar essa distinção no registro tornaria impossível
+ * revisar depois o que veio de foto.
+ *
+ * A confiança vem do modelo por item, e não do conjunto: numa foto,
+ * o frango costuma ser identificável e o óleo do preparo, não.
+ */
+export function itemEstimado(entrada: EntradaEstimada): ItemPrato {
+  const gramas = Math.max(1, Math.round(entrada.quantidadeGramas));
+  return {
+    descricao: `${entrada.descricao} ${gramas} g`,
+    calorias: Math.round(entrada.calorias),
+    proteinaG: Math.round(entrada.proteinaG),
+    carboidratosG: Math.round(entrada.carboidratosG),
+    gordurasG: Math.round(entrada.gordurasG),
+    fibrasG: Math.round(entrada.fibrasG),
+    alimentoId: null,
+    quantidade: gramas,
+    unidade: "g",
+    origemDado: "estimativa-ia",
+    fonte: "Estimativa por foto",
+    versaoFonte: entrada.modelo,
+    confianca: entrada.confianca,
+  };
+}
+
+/**
+ * Reescala um item mantendo proveniência e confiança.
+ *
+ * É a operação que a tela de foto usa quando o atleta corrige a
+ * porção estimada ("era meia concha"): corrigir quantidade não
+ * transforma uma estimativa de IA em medição, então a origem
+ * permanece — só os números mudam.
+ */
+export function reescalarItem(item: ItemPrato, gramas: number): ItemPrato {
+  const alvo = Math.max(1, Math.round(gramas));
+  const fator = alvo / Math.max(1, item.quantidade);
+  return {
+    ...item,
+    descricao: item.descricao.replace(/\s\d+\s?g$/, "") + ` ${alvo} g`,
+    quantidade: alvo,
+    unidade: "g",
+    calorias: Math.round(item.calorias * fator),
+    proteinaG: Math.round(item.proteinaG * fator),
+    carboidratosG: Math.round(item.carboidratosG * fator),
+    gordurasG: Math.round(item.gordurasG * fator),
+    fibrasG: Math.round(item.fibrasG * fator),
+  };
+}
+
 export function adicionarAoPrato(prato: readonly ItemPrato[], item: ItemPrato): ItemPrato[] {
   return [...prato, item];
 }

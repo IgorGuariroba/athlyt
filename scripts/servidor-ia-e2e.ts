@@ -16,6 +16,33 @@ const server = createServer((req, res) => {
   let corpo = "";
   req.on("data", (parte) => { corpo += parte; });
   req.on("end", () => {
+    // Estimativa de refeição por foto: reconhecida pela instrução de
+    // sistema da operação, e não pela imagem — o corpo carrega a foto
+    // em base64 e casar contra ela seria frágil.
+    if (/quantidadeGramas/.test(corpo)) {
+      const refeicao = JSON.stringify({
+        nome: "Almoço: arroz, feijão e frango",
+        itens: [
+          { descricao: "Arroz branco cozido", quantidadeGramas: 150, calorias: 192, proteinaG: 3, carboidratosG: 42, gordurasG: 0, fibrasG: 2, confianca: "media" },
+          { descricao: "Feijão carioca cozido", quantidadeGramas: 80, calorias: 61, proteinaG: 4, carboidratosG: 11, gordurasG: 1, fibrasG: 6, confianca: "media" },
+          { descricao: "Peito de frango grelhado", quantidadeGramas: 120, calorias: 191, proteinaG: 38, carboidratosG: 0, gordurasG: 4, fibrasG: 0, confianca: "alta" },
+          { descricao: "Óleo de preparo", quantidadeGramas: 5, calorias: 44, proteinaG: 0, carboidratosG: 0, gordurasG: 5, fibrasG: 0, confianca: "baixa" },
+        ],
+        limitacoes: ["O óleo do preparo não é visível na foto", "Sem referência de escala ao lado do prato"],
+        confianca: "media",
+      });
+      res.writeHead(200, { "content-type": "application/json" });
+      res.end(JSON.stringify({
+        id: "chatcmpl-athlyt-e2e-foto",
+        object: "chat.completion",
+        created: Math.floor(Date.now() / 1000),
+        model: "athlyt-refeicao-foto-e2e-v1",
+        choices: [{ index: 0, message: { role: "assistant", content: refeicao }, finish_reason: "stop" }],
+        usage: { prompt_tokens: 100, completion_tokens: 80, total_tokens: 180 },
+      }));
+      return;
+    }
+
     if (/cargaKg[^\d]{0,20}13/.test(corpo)) {
       res.writeHead(503, { "content-type": "application/json" });
       res.end(JSON.stringify({ error: { message: "provedor indisponível no cenário E2E" } }));

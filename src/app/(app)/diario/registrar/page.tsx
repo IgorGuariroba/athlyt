@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Camera, ChevronRight } from "lucide-react";
 import { auth } from "@/auth";
 import { Button } from "@/components/ui/button";
 import { FUSO_PADRAO } from "@/domain/diario/dia-alimentar";
@@ -40,6 +40,27 @@ export default async function RegistrarPage({
         </p>
         <span className="size-10" />
       </header>
+
+      {/* A foto vive acima das abas de propósito: ela não é mais um
+          método de busca, é o caminho de quem não quer buscar nada.
+          Dentro do painel de abas ela competiria em igualdade com
+          "Manual", que é o oposto do esforço que ela poupa. */}
+      <div className="shrink-0 px-4 pb-3">
+        <Button asChild variant="outline" className="h-14 w-full justify-between">
+          <Link href={`/diario/registrar/foto?dia=${dia}`}>
+            <span className="flex items-center gap-3">
+              <Camera className="size-5" aria-hidden="true" />
+              <span className="flex flex-col items-start">
+                <span className="text-label-lg text-on-surface-strong">Fotografar o prato</span>
+                <span className="text-caption text-muted-foreground">
+                  o agent identifica e estima os macros
+                </span>
+              </span>
+            </span>
+            <ChevronRight className="size-4 text-muted-foreground" aria-hidden="true" />
+          </Link>
+        </Button>
+      </div>
 
       <Atalhos
         dia={dia}

@@ -177,3 +177,36 @@ export const ROTULO_CONFIANCA: Record<Confianca, string> = {
   media: "Valor aproximado",
   baixa: "Estimativa — pode variar bastante",
 };
+
+/**
+ * Confiança de um valor **estimado por IA a partir de imagem**.
+ *
+ * Precisa de rótulos próprios porque `ROTULO_CONFIANCA` fala da fonte
+ * ponderada: dizer "valor de tabela analítica" sobre um frango que o
+ * modelo apenas reconheceu numa foto é falso, e falso exatamente no
+ * ponto que a user story 59 protege — estimativa não pode se passar
+ * por medição. Aqui `alta` significa "o modelo está seguro do que viu",
+ * o que continua sendo um palpite sobre a porção.
+ */
+export const ROTULO_CONFIANCA_ESTIMATIVA: Record<Confianca, string> = {
+  alta: "Estimativa — alimento e porção claros na foto",
+  media: "Estimativa — porção incerta",
+  baixa: "Estimativa — pouco visível na foto",
+};
+
+/**
+ * Rótulo de confiança adequado à origem do dado.
+ *
+ * A origem é dita junto porque "quanto isto é confiável?" e "de onde
+ * veio?" são a mesma pergunta na tela: o que o atleta digitou é
+ * estimativa dele, o que a foto produziu é estimativa do modelo, e só
+ * a base nutricional fala em tabela.
+ */
+export function rotuloDeConfianca(
+  confianca: Confianca,
+  origem: "base" | "usuario" | "estimativa-ia",
+): string {
+  if (origem === "estimativa-ia") return ROTULO_CONFIANCA_ESTIMATIVA[confianca];
+  if (origem === "usuario") return "Estimativa sua — informada por você";
+  return ROTULO_CONFIANCA[confianca];
+}

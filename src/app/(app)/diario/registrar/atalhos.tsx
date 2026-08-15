@@ -19,7 +19,7 @@ import {
   subtotalDoPrato,
   type ItemPrato,
 } from "@/domain/alimentos/prato";
-import { ROTULO_CONFIANCA } from "@/domain/alimentos/proveniencia";
+import { ROTULO_CONFIANCA, rotuloDeConfianca } from "@/domain/alimentos/proveniencia";
 import type { ItemBiblioteca, Recorrente } from "@/domain/alimentos/repositorio";
 
 type Aba = "busca" | "manual" | "favoritos";
@@ -533,7 +533,7 @@ function PratoRodape({
               <div className="min-w-0 flex-1">
                 <p className="truncate text-body-sm text-on-surface-strong">{item.descricao}</p>
                 <p className="text-caption tabular-nums text-muted-foreground">
-                  {item.calorias} kcal · {ROTULO_CONFIANCA[item.confianca]}
+                  {item.calorias} kcal · {rotuloDeConfianca(item.confianca, item.origemDado)}
                 </p>
               </div>
               <button

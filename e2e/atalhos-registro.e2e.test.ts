@@ -34,7 +34,7 @@ test("busca, monta o Prato e registra consumo fora do plano", async ({ page, con
   await expect(macros.getByText("0/2400")).toBeVisible();
 
   // Botão + abre o painel de Atalhos de Registro (tela 050).
-  await page.getByRole("link", { name: "Registrar alimento" }).click();
+  await page.getByRole("link", { name: "Registrar buscando alimento" }).click();
   await expect(page.getByRole("navigation", { name: "Atalhos de Registro" })).toBeVisible();
 
   // Busca na base com proveniência visível por alimento (tela 051).
@@ -115,7 +115,7 @@ test("favorito salvo reaparece na aba Favoritos e recorrente vira atalho", async
   await prato.getByLabel("Nome da refeição").fill("Lanche");
   await prato.getByRole("button", { name: "Registrar" }).click();
 
-  await page.getByRole("link", { name: "Registrar alimento" }).click();
+  await page.getByRole("link", { name: "Registrar buscando alimento" }).click();
   await expect(page.getByRole("region", { name: "Recorrentes" })).toBeVisible();
   await expect(page.getByText(/1× nos últimos registros/)).toBeVisible();
 });

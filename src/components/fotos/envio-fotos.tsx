@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { AvisoAcao } from "@/components/tela/aviso-acao";
 import { CampoSelecao } from "@/components/tela/campo-selecao";
+import { reduzirImagemParaEnvio } from "./reduzir-imagem";
 
 /** Janelas de retenção oferecidas para as fotos corporais. */
 const RETENCAO = [
@@ -37,9 +38,6 @@ const RETENCAO = [
  * escolhe as quatro de uma vez.
  */
 
-const LADO_MAXIMO = 1600;
-const QUALIDADE = 0.85;
-
 const POSES = [
   { nome: "frente", pose: "frente", rotulo: "Frente", dica: "Braços levemente afastados do tronco, palmas para frente." },
   { nome: "costas", pose: "costas", rotulo: "Costas", dica: "De costas para a câmera, mesma distância e mesmo enquadramento." },
@@ -53,43 +51,6 @@ const GUIA = [
   "Roupa justa ou mínima, sempre parecida entre as sessões.",
   "Postura relaxada e respiração normal, sem estufar nem contrair.",
 ] as const;
-
-/**
- * `imageOrientation: "from-image"` aplica o EXIF antes do desenho: sem
- * isso, uma foto de retrato tirada na horizontal chegaria deitada ao
- * servidor, que já removeu o metadado e não teria como corrigir.
- */
-async function reduzirParaEnvio(arquivo: File): Promise<File> {
-  if (typeof createImageBitmap !== "function") return arquivo;
-
-  try {
-    const bitmap = await createImageBitmap(arquivo, { imageOrientation: "from-image" });
-    const escala = Math.min(1, LADO_MAXIMO / Math.max(bitmap.width, bitmap.height));
-    const largura = Math.round(bitmap.width * escala);
-    const altura = Math.round(bitmap.height * escala);
-
-    const canvas = document.createElement("canvas");
-    canvas.width = largura;
-    canvas.height = altura;
-    const contexto = canvas.getContext("2d");
-    if (!contexto) return arquivo;
-    contexto.drawImage(bitmap, 0, 0, largura, altura);
-    bitmap.close();
-
-    const blob = await new Promise<Blob | null>((resolve) =>
-      canvas.toBlob(resolve, "image/webp", QUALIDADE),
-    );
-    if (!blob || blob.size >= arquivo.size) return arquivo;
-
-    return new File([blob], `${arquivo.name.replace(/\.[^.]+$/, "")}.webp`, {
-      type: "image/webp",
-    });
-  } catch {
-    // Navegador sem suporte a WebP no canvas ou arquivo ilegível: o
-    // original ainda pode caber, e o servidor continua validando.
-    return arquivo;
-  }
-}
 
 export function EnvioFotos({
   action,
@@ -132,7 +93,7 @@ export function EnvioFotos({
 
     try {
       for (const [indice, { pose, rotulo, arquivo }] of escolhidas.entries()) {
-        const reduzido = await reduzirParaEnvio(arquivo);
+        const reduzido = await reduzirImagemParaEnvio(arquivo);
         const corpo = new FormData();
         corpo.set("pose", pose);
         corpo.set("foto", reduzido, reduzido.name);
