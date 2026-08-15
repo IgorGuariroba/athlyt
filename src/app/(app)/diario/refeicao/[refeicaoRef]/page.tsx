@@ -4,6 +4,7 @@ import { ArrowLeft, Check } from "lucide-react";
 import { auth } from "@/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { ExplicacaoAgent } from "@/components/tela";
 import { FUSO_PADRAO } from "@/domain/diario/dia-alimentar";
 import { hojeDoUsuario, obterEntradaPlanejada } from "@/domain/diario/repositorio";
 import { confirmarRefeicaoEditadaAction } from "../../actions";
@@ -57,6 +58,18 @@ export default async function EditarRefeicaoPage({
           Ajuste as porções para registrar o que você realmente comeu. Planejado:{" "}
           {planejada.macros.calorias} kcal.
         </p>
+
+        {/* Único ponto do produto que abre por padrão: o atleta está
+            prestes a divergir do plano, e saber que a refeição foi
+            montada pela sua restrição e pelo seu tempo de preparo é o
+            dado que muda a decisão — não um detalhe secundário. */}
+        <div className="mt-3">
+          <ExplicacaoAgent
+            pergunta="Por que esta refeição?"
+            explicacao={planejada.explicacao}
+            apresentacao="aberto"
+          />
+        </div>
       </section>
 
       <section className="overflow-hidden rounded-2xl border border-border bg-surface-container">

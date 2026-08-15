@@ -48,4 +48,28 @@ describe("Cardápio Diário como Entradas Planejadas", () => {
   it("cardápio sem refeições não produz entradas planejadas", () => {
     expect(entradasPlanejadas({ ...nutricao, refeicoes: [] })).toEqual([]);
   });
+
+  it("leva a explicação do agent junto da refeição materializada", () => {
+    // Sem isso o Diário mostra a prescrição sem o motivo, e a pergunta
+    // "por que estou comendo isso?" fica sem resposta na tela em que
+    // ela nasce — embora a explicação exista no Plano Ativo.
+    const explicacao = {
+      porque: "Montei com itens de preparo rápido pelos seus 15 minutos pela manhã.",
+      dadosUsados: [{ campo: "tempoPreparoMin", valor: "15 min" }],
+    };
+    const [entrada] = entradasPlanejadas({
+      ...nutricao,
+      refeicoes: [{ ...nutricao.refeicoes[0], explicacao }],
+    });
+
+    expect(entrada.explicacao).toEqual(explicacao);
+  });
+
+  it("refeição de plano anterior, sem explicação, materializa sem inventá-la", () => {
+    // Plano Ativo é imutável: planos gravados antes da explicação
+    // continuam válidos e a entrada precisa admitir a lacuna.
+    const [entrada] = entradasPlanejadas(nutricao);
+
+    expect(entrada.explicacao).toBeUndefined();
+  });
 });

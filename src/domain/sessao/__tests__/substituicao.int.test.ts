@@ -19,7 +19,11 @@ const plano: PlanoGerado = {
   bloco: {
     duracaoSemanas: 6, divisao: "Superior", dias: [{
       id: "superior-a", nome: "Superior A", diaSemana: "segunda",
-      exercicios: [{ exercicioId: "supino-barra", nome: "Supino reto com barra", padrao: "empurrar-horizontal", series: 3, repeticoes: "6–10", rir: 2, descansoSeg: 120, justificativa: "Base de força" }],
+      exercicios: [{
+        exercicioId: "supino-barra", nome: "Supino reto com barra", padrao: "empurrar-horizontal",
+        series: 3, repeticoes: "6–10", rir: 2, descansoSeg: 120, justificativa: "Base de força",
+        explicacao: { porque: "Barra livre porque sua academia tem ráck e você já treina há dois anos.", dadosUsados: [{ campo: "equipamentos", valor: "ráck, barra" }] },
+      }],
     }],
   },
 };
@@ -67,6 +71,22 @@ describe("substituição de exercício na Sessão de Treino", () => {
     expect(await listarSubstituicoes(userId, "superior-a")).toEqual([
       expect.objectContaining({ exercicioOriginalId: "supino-barra", exercicioNovoId: "supino-halteres", persistente: true }),
     ]);
+  });
+
+  it("substituto não herda a explicação do exercício que ele trocou", async () => {
+    // A explicação justifica *aquele* exercício ("barra livre porque sua
+    // academia tem ráck"). O substituto vem de regra determinística, e
+    // não do agent: manter o texto do original seria atribuir ao
+    // substituto um motivo que ninguém produziu para ele.
+    const userId = await contexto();
+    const sessao = await iniciarSessao(userId, "superior-a");
+    expect(sessao.exercicios[0].explicacao).toBeDefined();
+
+    const atualizada = await substituirExercicioNaSessao(userId, sessao.id, {
+      exercicioId: "supino-barra", novoExercicioId: "supino-halteres", motivo: "equipamento",
+    });
+
+    expect(atualizada.exercicios[0].explicacao).toBeUndefined();
   });
 
   it("não oferece alternativa que carrega a região dolorida relatada", async () => {

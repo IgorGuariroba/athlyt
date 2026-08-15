@@ -40,6 +40,12 @@ test("executa o treino do dia, usa o timer e consulta o resumo no histórico", a
   await expect(page.getByText("SESSÃO EM ANDAMENTO")).toBeVisible();
   await expect(page.getByRole("button", { name: /Complete 1 séries/ })).toBeDisabled();
 
+  // O motivo sobrevive ao congelamento do snapshot e continua ao alcance
+  // durante a execução — sem ocupar a tela, porque aqui o atleta está
+  // sob carga.
+  await page.getByText("Por que este exercício?").click();
+  await expect(page.getByText(/Halteres poupam seu ombro direito/)).toBeVisible();
+
   await page.getByLabel("Registrar série 1").click();
   const timer = page.getByRole("dialog", { name: "Timer de descanso" });
   await expect(timer).toBeVisible();

@@ -13,7 +13,8 @@ const plano: PlanoGerado = {
     refeicoes: [
       { nome: "Café da manhã", percentual: 25, calorias: 600, proteinaG: 40, itens: ["Aveia 60 g", "Ovos 2 un"] },
       { nome: "Almoço", percentual: 35, calorias: 840, proteinaG: 56, itens: ["Arroz 150 g", "Frango 150 g"] },
-      { nome: "Jantar", percentual: 25, calorias: 600, proteinaG: 40, itens: ["Batata 250 g"] },
+      { nome: "Jantar", percentual: 25, calorias: 600, proteinaG: 40, itens: ["Batata 250 g"],
+        explicacao: { porque: "Carboidrato de digestão lenta à noite pelo seu horário de treino.", dadosUsados: [{ campo: "tempoPreparoMin", valor: "20 min" }] } },
       { nome: "Lanche", percentual: 15, calorias: 360, proteinaG: 24, itens: ["Fruta 1 un"] },
     ],
   },
@@ -49,6 +50,10 @@ test("prescrição, confirmação em 1 toque e edição atualizam os macros rest
   // Editar antes de confirmar registra consumo real distinto do planejado.
   await page.getByRole("link", { name: "Editar Jantar" }).click();
   await expect(page.getByRole("heading", { name: "Jantar" })).toBeVisible();
+
+  // Prestes a divergir do plano: o motivo da prescrição é o dado que
+  // muda a decisão, e por isso chega aberto, sem exigir toque.
+  await expect(page.getByText(/Carboidrato de digestão lenta à noite/)).toBeVisible();
   await page.getByLabel("Porção de Batata 250 g", { exact: true }).fill("0.5");
   await page.getByRole("button", { name: "Confirmar consumo real" }).click();
 

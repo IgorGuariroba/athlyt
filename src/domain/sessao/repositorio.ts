@@ -4,7 +4,7 @@ import { decisionTrails, exerciseSubstitutions, plans, workoutEvents, workoutSes
 import { encontrarExercicio, regioesLesionadas } from "@/domain/plano/exercicios";
 import { alternativasEquivalentes, motivoPersistente, type Alternativa, type MotivoSubstituicao } from "@/domain/plano/substituicoes";
 import { obterPerfilVigente } from "@/domain/triagem/perfil";
-import type { DiaTreino, PlanoGerado } from "@/domain/plano/tipos";
+import type { DiaTreino, ExplicacaoDecisao, PlanoGerado } from "@/domain/plano/tipos";
 
 export type MotivoAbandono = "tempo" | "equipamento" | "dor" | "outro";
 export type EstadoSessao = "em_andamento" | "concluida" | "abandonada";
@@ -21,6 +21,13 @@ export interface SerieSessao {
 }
 export interface ExercicioSessao {
   exercicioId: string; nome: string; descansoSeg: number; series: SerieSessao[];
+  /**
+   * Por que este exercício foi prescrito para este atleta, congelada do
+   * Plano Ativo no início da sessão. Ausente em sessões anteriores a
+   * esta fatia e em exercícios substituídos — o substituto vem de regra
+   * determinística, não do agent, e não herda o motivo do original.
+   */
+  explicacao?: ExplicacaoDecisao;
   /** Presente quando este exercício entrou no lugar de outro. */
   substituiuExercicioId?: string;
   substituiuNome?: string;
@@ -52,6 +59,10 @@ export interface ResumoSessao extends SessaoTreino {
 function planejarExercicios(dia: DiaTreino, melhoresCargas: Map<string, number>): ExercicioSessao[] {
   return dia.exercicios.map((exercicio) => ({
     exercicioId: exercicio.exercicioId, nome: exercicio.nome, descansoSeg: exercicio.descansoSeg,
+    // Congelada junto da prescrição: o snapshot existe para a sessão
+    // continuar reproduzível depois de o plano evoluir, e o motivo faz
+    // parte do que foi prescrito.
+    explicacao: exercicio.explicacao,
     series: Array.from({ length: exercicio.series }, (_, indice) => ({
       numero: indice + 1, repeticoesSugeridas: exercicio.repeticoes, cargaKg: null,
       cargaSugeridaKg: melhoresCargas.get(exercicio.exercicioId) ?? 0,
@@ -212,6 +223,10 @@ async function aplicarSubstituicoesPersistentes(userId: string, diaId: string, e
 function trocarNoExercicio(exercicio: ExercicioSessao, novoId: string, novoNome: string, motivo: MotivoSubstituicao, melhorCarga: number): ExercicioSessao {
   return {
     ...exercicio, exercicioId: novoId, nome: novoNome,
+    // A explicação justificava *aquele* exercício para este atleta. O
+    // substituto vem de regra determinística, não do agent: herdar o
+    // texto seria atribuir a ele um motivo que ninguém produziu.
+    explicacao: undefined,
     substituiuExercicioId: exercicio.substituiuExercicioId ?? exercicio.exercicioId,
     substituiuNome: exercicio.substituiuNome ?? exercicio.nome,
     motivoSubstituicao: motivo,
@@ -253,6 +268,7 @@ function dividirNaSubstituicao(exercicio: ExercicioSessao, novoId: string, novoN
     substituiuExercicioId: exercicio.substituiuExercicioId ?? exercicio.exercicioId,
     substituiuNome: exercicio.substituiuNome ?? exercicio.nome,
     motivoSubstituicao: motivo,
+    explicacao: undefined,
     interrompido: false,
     seriesPlanejadas: restantes.length,
     // A numeração recém-começa: as séries do substituto são dele, e
