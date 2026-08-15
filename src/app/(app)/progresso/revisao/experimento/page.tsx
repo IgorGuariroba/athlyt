@@ -53,7 +53,7 @@ export default async function ExperimentoPage({
         contexto="Experimento de Plano"
         titulo="Uma hipótese, poucas variáveis"
         descricao="O Plano Estável permanece preservado para rollback."
-        voltar={{ href: "/progresso/revisao/proposta", rotulo: "Voltar à proposta" }}
+        voltar={{ href: "/mais", rotulo: "Voltar para Mais" }}
       />
 
       <SecoesTela>
@@ -82,7 +82,7 @@ export default async function ExperimentoPage({
               </Button>
             </form>
           </CartaoLista>
-        ) : rascunho && planoAtivo ? (
+        ) : rascunho && planoAtivo && reavaliacao ? (
           <form action={iniciarExperimento} className="flex flex-col gap-5">
             <input type="hidden" name="planoId" value={rascunho.id} />
             {reavaliacao ? <input type="hidden" name="reavaliacaoId" value={reavaliacao.id} /> : null}

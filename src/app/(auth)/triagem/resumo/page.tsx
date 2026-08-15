@@ -6,11 +6,11 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import {
   BarraAcaoFixa,
-  CabecalhoCartaoLista,
+  CabecalhoSecao,
   CabecalhoTela,
   CartaoLista,
-  LinhaCartaoLista,
-  LinhasCartaoLista,
+  ItemNavegacao,
+  ListaNavegacao,
   Metrica,
   PainelMetricas,
   Revelar,
@@ -99,18 +99,19 @@ export default async function ResumoTriagemPage({ searchParams }: { searchParams
             </CartaoLista>
           ) : null}
 
-          <CartaoLista aria-labelledby="dados-triagem">
-            <CabecalhoCartaoLista
+          <section aria-labelledby="dados-triagem" className="flex flex-col gap-3">
+            <CabecalhoSecao
               id="dados-triagem"
               titulo="Dados da triagem"
-              meta={`${preenchidos} de ${resumo.itens.length} preenchidos`}
+              descricao={`${preenchidos} de ${resumo.itens.length} preenchidos. Toque em um item para revisar.`}
             />
-            <LinhasCartaoLista>
+            <ListaNavegacao>
               {resumo.itens.map((item) => (
-                <LinhaCartaoLista
+                <ItemNavegacao
                   key={item.id}
-                  titulo={item.titulo}
-                  meta={
+                  href={`/triagem/${item.id}?retorno=/triagem/resumo`}
+                  rotulo={item.titulo}
+                  descricao={
                     item.respondida
                       ? item.obrigatoria
                         ? undefined
@@ -135,8 +136,8 @@ export default async function ResumoTriagemPage({ searchParams }: { searchParams
                   }
                 />
               ))}
-            </LinhasCartaoLista>
-          </CartaoLista>
+            </ListaNavegacao>
+          </section>
         </SecoesTela>
       </TransicaoEtapa>
 

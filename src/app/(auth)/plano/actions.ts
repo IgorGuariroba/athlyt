@@ -42,7 +42,15 @@ export async function gerarPlanoInicialAction(formData: FormData) {
   redirect("/plano/revisao");
 }
 
-export async function regenerarPlanoInicialAction() {
+async function gerarOutroPlano({
+  tela,
+  rota,
+  rotaErro,
+}: {
+  tela: string;
+  rota: string;
+  rotaErro: string;
+}) {
   const { userId, perfil } = await contexto();
   const estado = await estadoConsentimento(userId, "plano-inicial");
 
@@ -57,18 +65,44 @@ export async function regenerarPlanoInicialAction() {
     );
   }
 
-  const resultado = await obterOuGerarRascunhoComIA(userId, perfil, estado.vigentes, {
-    tela: "revisao-plano",
-    rota: "/plano/revisao",
-    gatilho: "clique-gerar-outro-plano",
-  }, { forcarNovaGeracao: true });
+  const resultado = await obterOuGerarRascunhoComIA(
+    userId,
+    perfil,
+    estado.vigentes,
+    {
+      tela,
+      rota,
+      gatilho: "clique-gerar-outro-plano",
+    },
+    { forcarNovaGeracao: true },
+  );
 
   if (resultado.status === "indisponivel") {
-    redirect(`/plano/revisao?erro=${encodeURIComponent("O agent não conseguiu gerar outro plano agora. Seu plano anterior foi mantido.")}`);
+    redirect(
+      `${rotaErro}?erro=${encodeURIComponent(
+        "O agent não conseguiu gerar outro plano agora. Seu plano anterior foi mantido.",
+      )}`,
+    );
   }
 
   revalidatePath("/plano/revisao");
   redirect("/plano/revisao");
+}
+
+export async function regenerarPlanoInicialAction() {
+  await gerarOutroPlano({
+    tela: "revisao-plano",
+    rota: "/plano/revisao",
+    rotaErro: "/plano/revisao",
+  });
+}
+
+export async function gerarNovoPlanoAtivoAction() {
+  await gerarOutroPlano({
+    tela: "refazer-plano-ativo",
+    rota: "/mais/plano",
+    rotaErro: "/mais/plano",
+  });
 }
 
 export async function substituirExercicioAction(formData: FormData) {

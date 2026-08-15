@@ -95,6 +95,12 @@ export async function submeterEtapaTriagem(
   // listas adicionadas no cliente, como equipamentos personalizados.
   revalidatePath("/triagem", "layout");
   revalidatePath("/inicio");
+  revalidatePath("/mais/perfil");
+
+  const retorno = formData.get("retorno");
+  if (retorno === "/mais/perfil" || retorno === "/triagem/resumo") {
+    redirect(retorno);
+  }
 
   if (etapaAtual === "peso") redirect("/triagem/avaliacao-corporal");
 

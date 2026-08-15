@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
+import { useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { submeterEtapaTriagem } from "../actions";
 import type { EtapaId } from "@/domain/triagem/etapas";
@@ -22,6 +23,8 @@ export function EtapaForm({
   proximaEtapa: EtapaId | "resumo";
   children: React.ReactNode;
 }) {
+  const searchParams = useSearchParams();
+  const retorno = searchParams.get("retorno");
   const [estado, formAction, pendente] = useActionState<EstadoForm, FormData>(
     async (_estadoAnterior, formData) => {
       const resultado = await submeterEtapaTriagem(
@@ -36,6 +39,7 @@ export function EtapaForm({
 
   return (
     <form action={formAction} className="flex flex-1 flex-col gap-6">
+      {retorno ? <input type="hidden" name="retorno" value={retorno} /> : null}
       <div className="flex flex-1 flex-col gap-4">{children}</div>
 
       {estado?.erro ? (
@@ -45,7 +49,7 @@ export function EtapaForm({
       ) : null}
 
       <Button type="submit" size="lg" className="h-12 w-full" disabled={pendente}>
-        Continuar
+        {retorno ? "Salvar" : "Continuar"}
       </Button>
     </form>
   );
