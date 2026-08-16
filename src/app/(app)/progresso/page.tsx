@@ -420,7 +420,7 @@ export default async function ProgressoPage({
 
         <Button asChild size="cta">
           <Link href="/progresso/revisao">
-            Levar isto à Revisão Semanal
+            Iniciar ou revisar
             <ArrowRight aria-hidden="true" />
           </Link>
         </Button>
