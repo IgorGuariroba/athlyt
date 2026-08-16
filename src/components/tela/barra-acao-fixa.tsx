@@ -9,7 +9,7 @@
  */
 export function BarraAcaoFixa({ children }: { children: React.ReactNode }) {
   return (
-    <div className="fixed inset-x-0 bottom-0 z-20 border-t border-border bg-background/95 px-6 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur">
+    <div className="fixed inset-x-0 bottom-0 z-20 border-t border-border bg-background/95 px-6 pt-3 pb-[max(0.75rem,var(--safe-bottom))] backdrop-blur">
       <div className="mx-auto w-full max-w-md">{children}</div>
     </div>
   );

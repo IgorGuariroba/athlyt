@@ -36,6 +36,22 @@
   --data-violet: #8b5cf6;
   --radius: 0.375rem;
 
+  /*
+   * Safe areas como token, e não `env()` solto em cada componente.
+   *
+   * Dois motivos. Primeiro, `env()` não é testável: nem o Chromium do
+   * Playwright nem o Firefox implementam a emulação de insets, então
+   * `env(safe-area-inset-top)` resolve `0px` em todo E2E e a regressão
+   * passa despercebida. Com o valor atrás de uma variável, o teste
+   * injeta insets reais sobrescrevendo o token.
+   *
+   * Segundo, centraliza o fallback: `env()` sem segundo argumento vira
+   * declaração inválida em navegador que não o conhece, derrubando o
+   * padding inteiro.
+   */
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+
   --card: var(--surface-container);
   --card-foreground: var(--on-surface);
   --popover: var(--surface-container-high);
