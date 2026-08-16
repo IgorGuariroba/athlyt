@@ -59,6 +59,7 @@ import {
   ItemAcaoNavegacao,
   ItemNavegacao,
   LinhaCartaoLista,
+  LinhaTempoProgresso,
   LinhasCartaoLista,
   ListaNavegacao,
   MedidorScore,
@@ -70,7 +71,10 @@ import {
   PorQueIsso,
   Revelar,
   SecoesTela,
+  SeloVariacao,
+  SparklineTendencia,
   TelaConteudo,
+  calcularDeltaTendencia,
 } from "@/components/tela";
 import { TransicaoEtapa } from "@/components/tela/transicao-etapa";
 
@@ -883,6 +887,45 @@ export default function GaleriaDesignPage() {
             unidade="kg"
             series={[{ nome: "Tendência", valores: SERIE_PESO }]}
           />
+        </Amostra>
+
+        <Amostra
+          titulo="Indicadores compactos de tendência"
+          nota="Sparkline apoia uma métrica já escrita; o selo sempre explicita direção, magnitude e janela sem julgar por cor."
+        >
+          <CartaoLista className="flex flex-col gap-3 p-4">
+            <div className="flex items-baseline justify-between gap-3">
+              <span className="text-label-lg text-on-surface-strong">
+                Peso de tendência
+              </span>
+              <SeloVariacao
+                delta={calcularDeltaTendencia(SERIE_PESO)}
+                unidade="kg"
+                porSemana
+              />
+            </div>
+            <SparklineTendencia
+              serie={SERIE_PESO}
+              cor="text-nutrition-calories"
+              className="h-14"
+            />
+          </CartaoLista>
+          <CartaoLista className="mt-3 px-2 py-2">
+            <LinhaTempoProgresso
+              eventos={[
+                {
+                  data: hoje,
+                  titulo: "Peso",
+                  detalhe: "78,5 kg",
+                },
+                {
+                  data: diasAtras(7),
+                  titulo: "Cintura",
+                  detalhe: "82,1 cm",
+                },
+              ]}
+            />
+          </CartaoLista>
         </Amostra>
 
         <Amostra
