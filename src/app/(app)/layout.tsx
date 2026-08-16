@@ -13,6 +13,13 @@ import { BottomNav } from "@/components/navigation/bottom-nav";
  * para trás da barra do navegador. `min-h-0` no `<main>` é obrigatório,
  * senão o item flex não encolhe abaixo do conteúdo e volta a empurrar a
  * `BottomNav` para fora da tela.
+ *
+ * O `pt-[var(--safe-top)]` cobre o caso instalado na tela de início. Mesmo
+ * com a status bar opaca (`src/app/layout.tsx`), o iPhone reserva o
+ * inset superior em paisagem e em modelos com Dynamic Island durante a
+ * transição de orientação; sem ele o primeiro título encosta no topo
+ * físico. Vai no casco, e não no `<main>`, para que o padding não role
+ * junto com o conteúdo.
  */
 export default async function AppLayout({
   children,
@@ -25,7 +32,7 @@ export default async function AppLayout({
   }
 
   return (
-    <div className="flex h-dvh flex-col overflow-hidden">
+    <div className="flex h-dvh flex-col overflow-hidden pt-[var(--safe-top)]">
       <main className="flex min-h-0 flex-1 flex-col overflow-y-auto">{children}</main>
       <BottomNav />
     </div>
