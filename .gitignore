@@ -54,3 +54,6 @@ next-env.d.ts
 /public/sw.js.map
 /public/swe-worker*.js
 /public/swe-worker*.js.map
+
+# temp local
+/.tmp

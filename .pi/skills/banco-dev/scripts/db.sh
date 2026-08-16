@@ -7,9 +7,9 @@
 # no histórico do shell e nos logs do agente.
 set -euo pipefail
 
-SERVICE="${ATHLYT_PG_SERVICE:-athlyt-dev}"
+readonly SERVICE="athlyt-dev"
 CONF="${PGSERVICEFILE:-$HOME/.pg_service.conf}"
-CONN="service=$SERVICE"
+readonly CONN="service=$SERVICE"
 
 erro() { printf '\033[31merro:\033[0m %s\n' "$1" >&2; exit 1; }
 info() { printf '\033[36m%s\033[0m\n' "$1"; }
@@ -75,19 +75,29 @@ EOF
     exige_service
     [ $# -ge 1 ] || erro "uso: $0 query \"SELECT ...\""
     exige_leitura "$1"
-    psql "$CONN" -c "$1"
+    PGOPTIONS="${PGOPTIONS:+$PGOPTIONS }-c default_transaction_read_only=on" \
+      psql "$CONN" -c "$1"
     ;;
 
   write)
     exige_service
-    [ $# -ge 1 ] || erro "uso: $0 write \"INSERT ...\""
+    confirmado=false
+    if [ "${1:-}" = "--yes" ]; then
+      confirmado=true
+      shift
+    fi
+    [ $# -ge 1 ] || erro "uso: $0 write [--yes] \"INSERT ...\""
     printf '\033[33mSQL de escrita:\033[0m %s\n' "$1"
-    printf 'Confirma? [s/N] '
-    read -r resposta
-    case "$resposta" in
-      s|S|sim|SIM) psql "$CONN" -c "$1" ;;
-      *) erro "cancelado" ;;
-    esac
+    if [ "$confirmado" = true ]; then
+      psql "$CONN" -c "$1"
+    else
+      printf 'Confirma? [s/N] '
+      read -r resposta
+      case "$resposta" in
+        s|S|sim|SIM) psql "$CONN" -c "$1" ;;
+        *) erro "cancelado" ;;
+      esac
+    fi
     ;;
 
   psql)
@@ -104,10 +114,10 @@ Banco de desenvolvimento do Athlyt (PostgreSQL via psql)
   $0 tables             lista as tabelas
   $0 schema <tabela>    descreve uma tabela
   $0 query "SELECT ..." executa SQL de leitura
-  $0 write "INSERT ..." executa SQL de escrita (pede confirmação)
+  $0 write [--yes] "SQL" executa escrita (--yes indica aprovação prévia)
   $0 psql [args]        sessão psql interativa
 
-Service usado: $SERVICE   (sobrescreva com ATHLYT_PG_SERVICE)
+Service usado: $SERVICE
 Credenciais:   $CONF
 EOF
     ;;
