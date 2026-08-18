@@ -102,8 +102,15 @@ test("mostra orientação assíncrona do Copiloto e cai para o Coach Local ao pe
   await page.goto("/inicio");
   await page.getByRole("link", { name: /Ver treino/ }).click();
   await page.getByRole("button", { name: /Iniciar treino/ }).click();
+
+  // A sincronização alimenta o Copiloto, mas o descanso é relógio do atleta:
+  // mesmo com a rede lenta, o modal precisa abrir sem aguardar esse POST.
+  await page.route("**/api/sessao/*/sincronizar", async (rota) => {
+    await new Promise((resolve) => setTimeout(resolve, 2_000));
+    await rota.continue();
+  }, { times: 1 });
   await page.getByLabel("Registrar série 1").click();
-  await expect(page.getByRole("dialog", { name: "Timer de descanso" })).toBeVisible();
+  await expect(page.getByRole("dialog", { name: "Timer de descanso" })).toBeVisible({ timeout: 500 });
   await page.getByRole("button", { name: "Fechar timer" }).click();
 
   await expect(page.getByRole("region", { name: "Orientação do Copiloto" })).toContainText("Copiloto (IA)");

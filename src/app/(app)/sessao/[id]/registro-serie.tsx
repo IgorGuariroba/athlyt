@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { Check, ChevronDown, Minus, Plus, TimerReset, Trophy, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,6 +16,7 @@ export function RegistroSerie({ exercicioId, numero, repeticoesSugeridas, rirSug
   const [restante, setRestante] = useState<number | null>(null);
   const [timerMinimizado, setTimerMinimizado] = useState(false);
   const [enviando, setEnviando] = useState(false);
+  const [erroRegistro, setErroRegistro] = useState<string | null>(null);
   const { registrar: enfileirarEvento, registrosLocais, copiloto } = useConexao();
   const local = registrosLocais.find((r) => r.exercicioId === exercicioId && r.numero === numero);
   const registrada = concluida || local !== undefined;
@@ -54,25 +55,37 @@ export function RegistroSerie({ exercicioId, numero, repeticoesSugeridas, rirSug
    * que o app não sabe se o evento existe — e o timer, que é a razão
    * de o atleta olhar a tela, ficaria esperando a rede.
    */
-  async function registrar(formData: FormData) {
+  function registrar(evento: FormEvent<HTMLFormElement>) {
+    evento.preventDefault();
+    const formData = new FormData(evento.currentTarget);
     setEnviando(true);
+    setErroRegistro(null);
     // Há um RegistroSerie montado para cada série. Antes de abrir este
     // timer, fecha qualquer timer iniciado por outra série para garantir
     // uma única camada modal e uma única contagem de descanso na sessão.
     window.dispatchEvent(new Event(FECHAR_TIMERS_DE_DESCANSO));
-    // O timer começa antes de qualquer ida à rede: o descanso é tempo
-    // real do atleta e não pode depender de latência.
+    // O timer começa fora de uma React Form Action: Actions retêm as
+    // atualizações de estado até a Promise terminar, o que faria o descanso
+    // aguardar a sincronização da série e a preparação do Copiloto.
     setRestante(descansoSeg);
     setTimerMinimizado(false);
+
     const promessa = enfileirarEvento("serie_registrada", {
       exercicioId, numero,
       cargaKg: Number(formData.get("cargaKg")),
       repeticoes: Number(formData.get("repeticoes")),
       rir: Number(formData.get("rir")),
     }, temProximaSerie ? numero + 1 : undefined);
-    if ("Notification" in window && Notification.permission === "default") await Notification.requestPermission();
-    await promessa;
-    setEnviando(false);
+    void promessa.then(
+      () => setEnviando(false),
+      () => {
+        setEnviando(false);
+        setErroRegistro("A série não foi salva. Confira os dados e tente novamente.");
+      },
+    );
+    if ("Notification" in window && Notification.permission === "default") {
+      void Notification.requestPermission();
+    }
   }
 
   const novoRecorde = registrada && (carga ?? 0) > melhorCargaAnterior;
@@ -82,7 +95,7 @@ export function RegistroSerie({ exercicioId, numero, repeticoesSugeridas, rirSug
 
   return (
     <>
-      <form action={registrar} className={`grid grid-cols-[2rem_1fr_1fr_4rem_3rem] items-end gap-2 py-3 ${registrada ? "opacity-60" : ""}`}>
+      <form onSubmit={registrar} className={`grid grid-cols-[2rem_1fr_1fr_4rem_3rem] items-end gap-2 py-3 ${registrada ? "opacity-60" : ""}`}>
         <span className="mb-3 flex size-8 items-center justify-center rounded-full bg-surface-container-high text-label-lg font-bold">{registrada ? <Check className="size-4 text-success" /> : numero}</span>
         <input type="hidden" name="exercicioId" value={exercicioId} />
         <input type="hidden" name="numero" value={numero} />
@@ -100,6 +113,7 @@ export function RegistroSerie({ exercicioId, numero, repeticoesSugeridas, rirSug
         </Button>
         {registrada ? <div className="col-span-5 flex items-center justify-between pl-10 text-caption text-muted-foreground"><span>10RM estimado: {estimativa10Rm ?? "—"} kg</span>{novoRecorde ? <strong className="flex items-center gap-1 text-warning"><Trophy className="size-3" /> Novo recorde</strong> : null}</div> : null}
       </form>
+      {erroRegistro ? <p role="alert" className="pb-3 pl-10 text-body-sm font-semibold text-error">{erroRegistro}</p> : null}
 
       {restante !== null && timerMinimizado ? <button type="button" onClick={() => setTimerMinimizado(false)} className="fixed right-4 bottom-24 z-40 flex h-14 items-center gap-2 rounded-full bg-success px-5 font-bold text-background shadow-xl"><TimerReset className="size-5" /> {Math.floor(Math.max(restante, 0) / 60)}:{String(Math.max(restante, 0) % 60).padStart(2, "0")}</button> : null}
       {restante !== null && !timerMinimizado ? (
