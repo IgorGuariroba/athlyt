@@ -51,7 +51,11 @@ test("substitui exercício por equipamento indisponível preservando o estímulo
 
   await page.getByLabel("Registrar série 1").click();
   await page.getByRole("button", { name: "Pular descanso" }).click();
-  await page.getByRole("button", { name: "Concluir treino" }).click();
+  // Fechar o timer não implica mais que a sincronização terminou. O botão
+  // dentro do form reaparece quando o servidor já confirmou a série.
+  const concluirSincronizado = page.locator("form").getByRole("button", { name: "Concluir treino" });
+  await expect(concluirSincronizado).toBeVisible({ timeout: 10_000 });
+  await concluirSincronizado.click();
   await expect(page.getByText("Treino concluído")).toBeVisible();
 
   // A troca por equipamento persiste: a próxima sessão do mesmo dia já
@@ -97,7 +101,9 @@ test("substitui no meio da execução quando a dor aparece durante o exercício"
   await page.getByRole("button", { name: "Pular descanso" }).click();
   await page.getByLabel("Registrar série 2").click();
   await page.getByRole("button", { name: "Pular descanso" }).click();
-  await page.getByRole("button", { name: "Concluir treino" }).click();
+  const concluirSincronizado = page.locator("form").getByRole("button", { name: "Concluir treino" });
+  await expect(concluirSincronizado).toBeVisible({ timeout: 10_000 });
+  await concluirSincronizado.click();
 
   await expect(page.getByText("Treino concluído")).toBeVisible();
   await expect(page.getByText(/Interrompido após 1 de 3 séries/)).toBeVisible();
