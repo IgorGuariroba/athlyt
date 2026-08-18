@@ -102,8 +102,15 @@ test("mostra orientação assíncrona do Copiloto e cai para o Coach Local ao pe
   await page.goto("/inicio");
   await page.getByRole("link", { name: /Ver treino/ }).click();
   await page.getByRole("button", { name: /Iniciar treino/ }).click();
+
+  // A sincronização alimenta o Copiloto, mas o descanso é relógio do atleta:
+  // mesmo com a rede lenta, o modal precisa abrir sem aguardar esse POST.
+  await page.route("**/api/sessao/*/sincronizar", async (rota) => {
+    await new Promise((resolve) => setTimeout(resolve, 2_000));
+    await rota.continue();
+  }, { times: 1 });
   await page.getByLabel("Registrar série 1").click();
-  await expect(page.getByRole("dialog", { name: "Timer de descanso" })).toBeVisible();
+  await expect(page.getByRole("dialog", { name: "Timer de descanso" })).toBeVisible({ timeout: 500 });
   await page.getByRole("button", { name: "Fechar timer" }).click();
 
   await expect(page.getByRole("region", { name: "Orientação do Copiloto" })).toContainText("Copiloto (IA)");
@@ -141,6 +148,8 @@ test("usa o Coach Local sem simular IA quando o provedor está indisponível", a
   await page.getByRole("button", { name: "Fechar timer" }).click();
 
   const local = page.getByRole("region", { name: "Orientações do Coach Local" });
-  await expect(local).toContainText("Coach Local (regra)");
+  // O SDK tenta o provedor novamente antes de declarar indisponibilidade;
+  // o fallback precisa cobrir a janela completa dessa política de retry.
+  await expect(local).toContainText("Coach Local (regra)", { timeout: 15_000 });
   await expect(local).toContainText("Copiloto indisponível: nenhuma sugestão de IA");
 });
