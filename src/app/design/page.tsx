@@ -52,6 +52,7 @@ import {
   CascataShell,
   ChipSelecao,
   ControleSegmentado,
+  EstadoErro,
   EstadoVazio,
   ExplicacaoAgent,
   FaixaDados,
@@ -1001,6 +1002,26 @@ export default function GaleriaDesignPage() {
               apresentacao="icone"
             />
           </div>
+        </Amostra>
+
+        <Amostra
+          titulo="Estado de erro"
+          nota="Falha terminal de uma etapa, com confirmação técnica e uma única ação de recuperação."
+        >
+          <EstadoErro
+            className="min-h-[36rem]"
+            titulo="Não foi possível continuar"
+            descricao="Algo interrompeu esta etapa. Tente carregá-la novamente para continuar."
+            statusDescricao="A ocorrência foi enviada para investigação."
+            referencia="erro-exemplo-4f83a"
+            ajuda="Se acontecer de novo, feche e abra o Athlyt."
+            acao={
+              <Button type="button" size="cta">
+                <RefreshCw aria-hidden="true" />
+                Tentar novamente
+              </Button>
+            }
+          />
         </Amostra>
 
         <Amostra

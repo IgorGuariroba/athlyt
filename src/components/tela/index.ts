@@ -32,6 +32,7 @@ export {
 export { ChipSelecao } from "./chip-selecao";
 export { CartaoSelecaoImagem } from "./cartao-selecao-imagem";
 export { ControleSegmentado } from "./controle-segmentado";
+export { EstadoErro } from "./estado-erro";
 export { EstadoVazio } from "./estado-vazio";
 export { ExplicacaoAgent } from "./explicacao-agent";
 export {
