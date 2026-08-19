@@ -85,6 +85,7 @@ import {
   FaixaDemonstracao,
   MenuSuspenso,
   RoletaDemonstracao,
+  SeletorSegmentadoDemonstracao,
 } from "./galeria-interativa";
 
 export const metadata: Metadata = {
@@ -657,6 +658,13 @@ export default function GaleriaDesignPage() {
               { valor: "365", rotulo: "1a", href: "/design?periodo=365", ativo: false },
             ]}
           />
+        </Amostra>
+
+        <Amostra
+          titulo="Seletor segmentado"
+          nota="Irmão do controle segmentado para preferência local: não navega, não entra no histórico e mantém alvo de 44px — usado no descanso entre séries."
+        >
+          <SeletorSegmentadoDemonstracao />
         </Amostra>
 
         <Amostra titulo="Menu suspenso">

@@ -44,11 +44,20 @@ describe("governança de composição das telas", () => {
     const fontesTestes = readdirSync(diretorioTestes).map((arquivo) =>
       readFileSync(join(diretorioTestes, arquivo), "utf8"),
     );
+    // A galeria é a rota /design inteira, não só `page.tsx`: componentes
+    // controlados só podem ser demonstrados a partir do arquivo de
+    // cliente, e exigir o uso em `page.tsx` empurraria demonstração de
+    // estado local para fora da galeria.
+    const diretorioGaleria = join(cwd, "src/app/design");
+    const fonteGaleria = readdirSync(diretorioGaleria)
+      .filter((arquivo) => arquivo.endsWith(".tsx"))
+      .map((arquivo) => readFileSync(join(diretorioGaleria, arquivo), "utf8"))
+      .join("\n");
 
     expect(
       validarNovosComponentesDeTela({
         nomes,
-        fonteGaleria: readFileSync(join(cwd, "src/app/design/page.tsx"), "utf8"),
+        fonteGaleria,
         fontesTestes,
       }),
     ).toEqual([]);

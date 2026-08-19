@@ -18,6 +18,8 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { RoletaValor } from "@/components/ui/roleta-valor";
 import { ControleFaixa } from "@/components/ui/controle-faixa";
 import { AvisoAcao } from "@/components/tela/aviso-acao";
+import { SeletorSegmentado } from "@/components/tela/seletor-segmentado";
+import { opcoesDescanso, type RitmoDescanso } from "@/domain/sessao/descanso";
 
 /**
  * Parte da galeria que depende de estado de cliente: controles de
@@ -125,6 +127,29 @@ export function RoletaDemonstracao() {
           descreverValor={(valor) => `${valor} centímetros`}
         />
       </div>
+    </div>
+  );
+}
+
+export function SeletorSegmentadoDemonstracao() {
+  const [ritmo, setRitmo] = useState<RitmoDescanso>("prescrito");
+  const opcoes = opcoesDescanso(90);
+  const escolhida = opcoes.find((opcao) => opcao.ritmo === ritmo);
+
+  return (
+    <div className="flex flex-col gap-3">
+      <SeletorSegmentado
+        rotulo="Descanso entre séries"
+        name="galeria-descanso"
+        valor={ritmo}
+        opcoes={opcoes.map((opcao) => ({
+          valor: opcao.ritmo,
+          rotulo: opcao.rotulo,
+          descricao: opcao.descricao,
+        }))}
+        aoMudar={setRitmo}
+      />
+      <p className="text-body-sm text-muted-foreground">{escolhida?.descricao}</p>
     </div>
   );
 }

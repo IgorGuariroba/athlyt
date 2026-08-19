@@ -11,6 +11,7 @@ vi.mock("../estado-conexao", () => ({
   }),
 }));
 
+import { definirRitmoDescanso, reiniciarDescanso } from "@/lib/store-descanso";
 import { RegistroSerie } from "../registro-serie";
 
 function promessaPendente() {
@@ -24,6 +25,8 @@ function promessaPendente() {
 afterEach(() => {
   cleanup();
   registrarEvento.mockReset();
+  reiniciarDescanso();
+  window.localStorage.clear();
 });
 
 const propriedades = {
@@ -59,6 +62,20 @@ describe("RegistroSerie", () => {
     }, 2);
     expect(screen.getByRole("dialog", { name: "Timer de descanso" })).toBeDefined();
     expect(screen.getByText("1:30")).toBeDefined();
+
+    await act(async () => pendente.resolver());
+  });
+
+  it("conta o descanso escolhido para o exercício, e não o prescrito", async () => {
+    const pendente = promessaPendente();
+    registrarEvento.mockReturnValue(pendente.promessa);
+    definirRitmoDescanso("supino", "longo");
+
+    render(<RegistroSerie {...propriedades} />);
+    fireEvent.click(screen.getByRole("button", { name: "Registrar série 1" }));
+
+    // 90s prescritos, ritmo longo: 135s.
+    expect(screen.getByText("2:15")).toBeDefined();
 
     await act(async () => pendente.resolver());
   });
