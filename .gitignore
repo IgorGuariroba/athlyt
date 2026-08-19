@@ -57,3 +57,6 @@ next-env.d.ts
 
 # temp local
 /.tmp
+
+# estado efêmero do pi (task list por sessão)
+/.pi/tasks/
