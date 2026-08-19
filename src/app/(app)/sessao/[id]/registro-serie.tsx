@@ -4,6 +4,8 @@ import { useEffect, useState, type FormEvent } from "react";
 import { Check, ChevronDown, Minus, Plus, TimerReset, Trophy, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { segundosDeDescanso } from "@/domain/sessao/descanso";
+import { useRitmoDescanso } from "@/lib/store-descanso";
 import { useConexao } from "./estado-conexao";
 
 const FECHAR_TIMERS_DE_DESCANSO = "athlyt:fechar-timers-de-descanso";
@@ -18,6 +20,10 @@ export function RegistroSerie({ exercicioId, numero, repeticoesSugeridas, rirSug
   const [enviando, setEnviando] = useState(false);
   const [erroRegistro, setErroRegistro] = useState<string | null>(null);
   const { registrar: enfileirarEvento, registrosLocais, copiloto } = useConexao();
+  // O descanso que vale é o escolhido para este exercício; sem escolha,
+  // o prescrito pelo plano.
+  const ritmoDescanso = useRitmoDescanso(exercicioId);
+  const descansoEfetivoSeg = segundosDeDescanso(descansoSeg, ritmoDescanso);
   const local = registrosLocais.find((r) => r.exercicioId === exercicioId && r.numero === numero);
   const registrada = concluida || local !== undefined;
   const bloqueadaPorCautela = copiloto.estado === "orientacao"
@@ -67,7 +73,7 @@ export function RegistroSerie({ exercicioId, numero, repeticoesSugeridas, rirSug
     // O timer começa fora de uma React Form Action: Actions retêm as
     // atualizações de estado até a Promise terminar, o que faria o descanso
     // aguardar a sincronização da série e a preparação do Copiloto.
-    setRestante(descansoSeg);
+    setRestante(descansoEfetivoSeg);
     setTimerMinimizado(false);
 
     const promessa = enfileirarEvento("serie_registrada", {

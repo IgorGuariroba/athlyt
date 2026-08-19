@@ -27,6 +27,52 @@ const planoCopiloto: PlanoGerado = {
   },
 };
 
+const planoDescanso: PlanoGerado = {
+  ...plano,
+  bloco: {
+    ...plano.bloco,
+    dias: [{
+      ...plano.bloco.dias[0],
+      exercicios: [{ ...plano.bloco.dias[0].exercicios[0], series: 2, descansoSeg: 90 }],
+    }],
+  },
+};
+
+test("escolhe o descanso entre séries e a escolha vale para o próximo timer", async ({ page, context }) => {
+  const email = `e2e-descanso-${Date.now()}@example.com`;
+  await allowEmail(email);
+  const { cookie, user } = await seedAuthenticatedSession(email);
+  await db.insert(plans).values({ userId: user.id, perfilVersao: 1, versao: 1, estado: "ativo", regraVersao: planoDescanso.regraVersao, modoConservador: false, conteudo: planoDescanso, activatedAt: new Date() });
+  await context.addCookies([cookie]);
+
+  await page.goto("/inicio");
+  await page.getByRole("link", { name: /Ver treino/ }).click();
+  await page.getByRole("button", { name: /Iniciar treino/ }).click();
+
+  // Três opções derivadas do descanso prescrito (90 s), rótulo em
+  // duração e não em adjetivo.
+  const seletor = page.getByRole("radiogroup", { name: "Descanso entre séries" });
+  await expect(seletor).toBeVisible();
+  await expect(seletor.getByRole("radio")).toHaveCount(3);
+  await expect(page.getByRole("radio", { name: "Descanso do plano: 1:30" })).toBeChecked();
+
+  await page.getByRole("radio", { name: "Descanso longo: 2:15" }).check();
+  await page.getByLabel("Registrar série 1").click();
+  const timer = page.getByRole("dialog", { name: "Timer de descanso" });
+  await expect(timer).toContainText("2:1");
+  await page.getByRole("button", { name: "Fechar timer" }).click();
+
+  // A escolha é do exercício, não do timer aberto: sobrevive a recarregar
+  // a página e continua valendo para a série seguinte.
+  await page.reload();
+  await expect(page.getByRole("radio", { name: "Descanso longo: 2:15" })).toBeChecked();
+
+  await page.getByRole("radio", { name: "Descanso curto: 1:00" }).check();
+  await page.getByLabel("Registrar série 2").click();
+  await expect(timer).toContainText("1:0");
+  await page.getByRole("button", { name: "Fechar timer" }).click();
+});
+
 test("executa o treino do dia, usa o timer e consulta o resumo no histórico", async ({ page, context }) => {
   const email = `e2e-sessao-${Date.now()}@example.com`;
   await allowEmail(email);

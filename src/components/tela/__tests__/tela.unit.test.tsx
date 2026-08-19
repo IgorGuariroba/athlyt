@@ -1,5 +1,5 @@
-import { cleanup, render, screen, within } from "@testing-library/react";
-import { afterEach, describe, expect, it } from "vitest";
+import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import {
   BarraFaixa,
@@ -19,6 +19,7 @@ import {
   PerfilUsuario,
   PorQueIsso,
   Revelar,
+  SeletorSegmentado,
   TelaConteudo,
 } from "..";
 import { cn } from "@/lib/utils";
@@ -219,6 +220,54 @@ describe("ControleSegmentado", () => {
     expect(within(grupo).getByRole("link", { current: "page" }).textContent).toBe(
       "90d",
     );
+  });
+});
+
+describe("SeletorSegmentado", () => {
+  const opcoes = [
+    { valor: "curto", rotulo: "1:00", descricao: "Descanso curto: 1:00" },
+    { valor: "prescrito", rotulo: "1:30", descricao: "Descanso do plano: 1:30" },
+    { valor: "longo", rotulo: "2:15", descricao: "Descanso longo: 2:15" },
+  ] as const;
+
+  const renderizar = (aoMudar = vi.fn()) => {
+    render(
+      <SeletorSegmentado
+        rotulo="Descanso entre séries"
+        name="descanso"
+        valor="prescrito"
+        opcoes={opcoes}
+        aoMudar={aoMudar}
+      />,
+    );
+    return aoMudar;
+  };
+
+  it("expõe as opções como um grupo de rádio nomeado", () => {
+    renderizar();
+
+    const grupo = screen.getByRole("radiogroup", { name: "Descanso entre séries" });
+    expect(within(grupo).getAllByRole("radio")).toHaveLength(3);
+  });
+
+  it("nomeia cada segmento pela descrição, já que a duração sozinha não diz o que é", () => {
+    renderizar();
+
+    expect(
+      (screen.getByRole("radio", { name: "Descanso do plano: 1:30" }) as HTMLInputElement)
+        .checked,
+    ).toBe(true);
+    expect(
+      (screen.getByRole("radio", { name: "Descanso curto: 1:00" }) as HTMLInputElement).checked,
+    ).toBe(false);
+  });
+
+  it("avisa a escolha sem navegar nem recarregar a tela", () => {
+    const aoMudar = renderizar();
+
+    fireEvent.click(screen.getByRole("radio", { name: "Descanso longo: 2:15" }));
+
+    expect(aoMudar).toHaveBeenCalledWith("longo");
   });
 });
 
