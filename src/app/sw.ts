@@ -1,7 +1,7 @@
 /// <reference lib="webworker" />
 
 import { defaultCache } from "@serwist/next/worker";
-import { ExpirationPlugin, NetworkFirst, Serwist } from "serwist";
+import { CacheFirst, ExpirationPlugin, NetworkFirst, Serwist } from "serwist";
 import type { PrecacheEntry, SerwistGlobalConfig } from "serwist";
 
 declare global {
@@ -37,6 +37,22 @@ const serwist = new Serwist({
         cacheName: "sessao-de-treino",
         networkTimeoutSeconds: 3,
         plugins: [new ExpirationPlugin({ maxEntries: 16, maxAgeSeconds: 60 * 60 * 24 })],
+      }),
+    },
+    /**
+     * Mídia de Execução (CONTEXT.md): GIF espelhado no R2 e servido por
+     * `/api/midia-execucao/{id}` com chave estável e conteúdo imutável.
+     * O catch-all de `defaultCache` para `/api/*` usa `NetworkFirst` com
+     * só 16 entradas — certo para dados que mudam, errado para mídia que
+     * não muda; por isso esta regra vem antes e usa `CacheFirst`. Na
+     * academia offline, a animação precisa continuar disponível depois
+     * da primeira visita ao exercício.
+     */
+    {
+      matcher: ({ url, sameOrigin }) => sameOrigin && url.pathname.startsWith("/api/midia-execucao/"),
+      handler: new CacheFirst({
+        cacheName: "midia-execucao",
+        plugins: [new ExpirationPlugin({ maxEntries: 64, maxAgeSeconds: 60 * 60 * 24 * 30 })],
       }),
     },
     ...defaultCache,

@@ -123,8 +123,8 @@ export function RegistroSerie({ exercicioId, numero, repeticoesSugeridas, rirSug
 
       {restante !== null && timerMinimizado ? <button type="button" onClick={() => setTimerMinimizado(false)} className="fixed right-4 bottom-24 z-40 flex h-14 items-center gap-2 rounded-full bg-success px-5 font-bold text-background shadow-xl"><TimerReset className="size-5" /> {Math.floor(Math.max(restante, 0) / 60)}:{String(Math.max(restante, 0) % 60).padStart(2, "0")}</button> : null}
       {restante !== null && !timerMinimizado ? (
-        <div role="dialog" aria-label="Timer de descanso" className="fixed inset-0 z-50 flex items-end bg-black/70 backdrop-blur-sm">
-          <section className="w-full rounded-t-3xl border-t border-border bg-surface-container p-6 pb-8 text-center">
+        <div role="dialog" aria-label="Timer de descanso" className="fixed inset-0 z-50 flex items-end bg-black/60 backdrop-blur-sm">
+          <section className="w-full rounded-t-2xl border-t border-border bg-surface-container p-6 pb-8 text-center">
             <div className="mb-6 flex items-center justify-between">
               <div className="flex items-center gap-2 text-label-lg text-muted-foreground"><TimerReset className="size-5" /> Descanso</div>
               <div className="flex gap-1"><Button variant="ghost" size="icon" onClick={() => setTimerMinimizado(true)} aria-label="Minimizar timer"><ChevronDown /></Button><Button variant="ghost" size="icon" onClick={() => setRestante(null)} aria-label="Fechar timer"><X /></Button></div>

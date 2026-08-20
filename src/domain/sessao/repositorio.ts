@@ -40,6 +40,12 @@ export interface ExercicioSessao {
    */
   interrompido?: boolean;
   seriesPlanejadas?: number;
+  /**
+   * Instruções de execução em português, preenchidas pelo agent
+   * de planejamento via ExerciseDB. Quando ausente, a tela usa
+   * o fallback do catálogo estático.
+   */
+  comoExecutar?: string;
 }
 
 export interface Substituicao {

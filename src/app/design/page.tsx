@@ -52,10 +52,13 @@ import {
   CascataShell,
   ChipSelecao,
   ControleSegmentado,
+  DiagramaMuscular,
   EstadoErro,
   EstadoVazio,
   ExplicacaoAgent,
   FaixaDados,
+  FichaExercicio,
+  rotuloVistaDoGrupo,
   GraficoTendencia,
   ItemAcaoNavegacao,
   ItemNavegacao,
@@ -1009,6 +1012,60 @@ export default function GaleriaDesignPage() {
               explicacao={EXPLICACAO_EXEMPLO}
               apresentacao="icone"
             />
+          </div>
+        </Amostra>
+
+        <Amostra
+          titulo="Diagrama de músculos-alvo"
+          nota="Mídia de Execução (CONTEXT.md): diagrama que complementa o fallback em texto, marcando a região trabalhada por exercício. Frente e costas convivem lado a lado só nesta amostra; a ficha do exercício mostra apenas a vista do grupo primário."
+        >
+          <div className="grid grid-cols-5 gap-3">
+            {(
+              [
+                "peito",
+                "ombros",
+                "biceps",
+                "quadriceps",
+                "core",
+                "costas",
+                "triceps",
+                "gluteos",
+                "posteriores",
+                "panturrilhas",
+              ] as const
+            ).map((grupo) => (
+              <div key={grupo} className="flex flex-col items-center gap-1 rounded-lg border border-border bg-surface-container-high p-2">
+                <DiagramaMuscular grupo={grupo} className="h-20" />
+                <p className="text-center text-caption text-muted-foreground">{rotuloVistaDoGrupo(grupo)}</p>
+              </div>
+            ))}
+          </div>
+        </Amostra>
+
+        <Amostra
+          titulo="Ficha do exercício"
+          nota="Mídia de Execução (CONTEXT.md): ícone de informação junto ao nome do exercício, separado das ações operacionais, abre a animação real da ExerciseDB (espelhada no R2 via /api/midia-execucao/{id}), com texto e diagrama de músculos-alvo como fallback. Toque para abrir."
+        >
+          <div className="flex flex-col gap-4">
+            <div className="flex items-center gap-1">
+              <h3 className="text-title font-bold">Supino reto com barra</h3>
+              <FichaExercicio
+                nome="Supino reto com barra"
+                grupo="peito"
+                grupoMuscular="Peito"
+                comoExecutar="Deitado no banco, retraça as escápulas e mantenha os pés firmes no chão. Desça a barra até tocar levemente o peito, cotovelos a cerca de 45° do tronco, e empurre de volta sem travar bruscamente o cotovelo."
+                midiaUrl="/api/midia-execucao/supino-barra"
+              />
+            </div>
+            <div className="flex items-center gap-1">
+              <h3 className="text-title font-bold">Prancha isométrica</h3>
+              <FichaExercicio
+                nome="Prancha isométrica"
+                grupo="core"
+                grupoMuscular="Core"
+                comoExecutar="Apoie antebraços e pontas dos pés no chão, corpo alinhado da cabeça aos calcanhares. Contraia abdômen e glúteos mantendo o quadril na mesma altura dos ombros, sem deixar a lombar ceder."
+              />
+            </div>
           </div>
         </Amostra>
 

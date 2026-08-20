@@ -7,6 +7,7 @@ import {
   exercicioViavel,
   exerciciosElegiveis,
   regioesLesionadas,
+  rotuloGrupoMuscular,
 } from "../exercicios";
 
 describe("catálogo de exercícios", () => {
@@ -23,6 +24,20 @@ describe("catálogo de exercícios", () => {
     for (const exercicio of EXERCICIOS) {
       expect(exercicio.justificativa.length).toBeGreaterThan(20);
     }
+  });
+
+  it("todo exercício tem instrução de execução não vazia (Mídia de Execução, CONTEXT.md)", () => {
+    for (const exercicio of EXERCICIOS) {
+      expect(exercicio.comoExecutar.length).toBeGreaterThan(20);
+    }
+  });
+});
+
+describe("rotuloGrupoMuscular", () => {
+  it("traduz cada grupo muscular do catálogo para pt-BR", () => {
+    expect(rotuloGrupoMuscular("peito")).toBe("Peito");
+    expect(rotuloGrupoMuscular("quadriceps")).toBe("Quadríceps");
+    expect(rotuloGrupoMuscular("gluteos")).toBe("Glúteos");
   });
 });
 

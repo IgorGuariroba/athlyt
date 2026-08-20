@@ -3,7 +3,9 @@ import { ChevronLeft, Check, Dumbbell, MoreHorizontal, Repeat2 } from "lucide-re
 import Link from "next/link";
 import { auth } from "@/auth";
 import { Button } from "@/components/ui/button";
-import { CampoSelecao, ExplicacaoAgent, Revelar } from "@/components/tela";
+import { CampoSelecao, ExplicacaoAgent, FichaExercicio, Revelar } from "@/components/tela";
+import { encontrarExercicio, rotuloGrupoMuscular } from "@/domain/plano/exercicios";
+import { midiaDoExercicio } from "@/domain/plano/midia-execucao";
 import { obterSessao } from "@/domain/sessao/repositorio";
 import { abandonarSessaoAction, concluirSessaoAction } from "../actions";
 import { BadgeConexao, ProvedorConexao } from "./estado-conexao";
@@ -31,6 +33,8 @@ export default async function SessaoPage({ params, searchParams }: { params: Pro
   const exercicio = sessao.exercicios[indiceAtual];
   const feito = exercicio.series.every((serie) => serie.concluida);
   const proximoIndice = Math.min(indiceAtual + 1, sessao.exercicios.length - 1);
+  const definicaoExercicio = encontrarExercicio(exercicio.exercicioId);
+  const midia = midiaDoExercicio(exercicio.exercicioId);
 
   return (
     <ProvedorConexao
@@ -61,7 +65,22 @@ export default async function SessaoPage({ params, searchParams }: { params: Pro
       <section className="overflow-hidden rounded-2xl border border-border bg-surface-container">
         <div className="flex items-center gap-3 border-b border-border p-4">
           <div className={`flex size-12 items-center justify-center rounded-xl ${feito ? "bg-success/15 text-success" : "bg-surface-container-high"}`}><Dumbbell className="size-5" /></div>
-          <div className="min-w-0 flex-1"><p className="text-caption font-semibold tracking-wide text-muted-foreground uppercase">Exercício {indiceAtual + 1} de {sessao.exercicios.length}</p><h2 className="truncate text-title font-bold">{exercicio.nome}</h2><p className="text-body-sm text-muted-foreground">{exercicio.series.length} séries · {exercicio.series[0].repeticoesSugeridas} reps · RIR {exercicio.series[0].rir}</p></div>
+          <div className="min-w-0 flex-1">
+            <p className="text-caption font-semibold tracking-wide text-muted-foreground uppercase">Exercício {indiceAtual + 1} de {sessao.exercicios.length}</p>
+            <div className="flex min-w-0 items-center gap-1">
+              <h2 className="truncate text-title font-bold">{exercicio.nome}</h2>
+              {definicaoExercicio ? (
+                <FichaExercicio
+                  nome={exercicio.nome}
+                  grupo={definicaoExercicio.grupoPrimario}
+                  grupoMuscular={rotuloGrupoMuscular(definicaoExercicio.grupoPrimario)}
+                  comoExecutar={exercicio.comoExecutar ?? definicaoExercicio.comoExecutar}
+                  midiaUrl={midia ? `/api/midia-execucao/${exercicio.exercicioId}` : undefined}
+                />
+              ) : null}
+            </div>
+            <p className="text-body-sm text-muted-foreground">{exercicio.series.length} séries · {exercicio.series[0].repeticoesSugeridas} reps · RIR {exercicio.series[0].rir}</p>
+          </div>
           {exercicio.interrompido ? null : (
             <Button asChild variant="ghost" size="icon" className="shrink-0">
               <Link href={`/sessao/${sessao.id}/substituir?exercicio=${exercicio.exercicioId}`} aria-label={`Substituir ${exercicio.nome}`}><Repeat2 /></Link>

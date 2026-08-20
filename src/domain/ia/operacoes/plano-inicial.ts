@@ -4,6 +4,7 @@ import type { PlanoGerado } from "@/domain/plano/tipos";
 import { decidir, type ResultadoDecisao } from "../decidir";
 import { RECORTES } from "../contexto/recortes";
 import type { NucleoContexto } from "../contexto/nucleo";
+import { consultarExercicio } from "../ferramentas/consultar-exercicio";
 
 /**
  * Explicação de uma decisão do plano (user story 20: todo item
@@ -106,6 +107,12 @@ const exercicioSchema = z.object({
   descansoSeg: z.number().int().min(30).max(300),
   justificativa: z.string(),
   explicacao: explicacaoAncoradaEm(ANCORAS.exercicio),
+  /**
+   * Instruções de execução em português, buscadas via
+   * ferramenta consultarExercicio da ExerciseDB e traduzidas
+   * pelo agent. Quando ausente, a tela usa o fallback do catálogo.
+   */
+  comoExecutar: z.string().optional(),
 }).superRefine((exercicio, contexto) => {
   const catalogado = EXERCICIOS.find((item) => item.id === exercicio.exercicioId);
   if (!catalogado) {
@@ -158,9 +165,19 @@ export const planoInicialSchema = z.object({
   dadosUsados: z.array(z.string()),
 });
 
-const catalogo = EXERCICIOS.map(({ id, nome, padrao, requer, evitarSeLesaoEm, exigeTecnicaAvancada }) => ({ id, nome, padrao, requer, evitarSeLesaoEm, exigeTecnicaAvancada }));
+const catalogo = EXERCICIOS.map(({ id, nome, padrao, requer, evitarSeLesaoEm, exigeTecnicaAvancada, comoExecutar }) => ({ id, nome, padrao, requer, evitarSeLesaoEm, exigeTecnicaAvancada, comoExecutar }));
 
 const INSTRUCAO = `Você é o agent de planejamento do Athlyt. Gere um Plano Ativo altamente personalizado para um atleta natural, combinando Bloco de Treino e estratégia nutricional.
+
+Você tem acesso à ferramenta "consultarExercicio" que busca instruções detalhadas na ExerciseDB (banco internacional com 11.000+ exercícios). Use-a para:
+- Obter instruções passo a passo de qualquer exercício
+- Confirmar músculos-alvo e secundários
+- Verificar equipamento necessário
+- Validar sua escolha de exercício
+
+Como usar: passe o nome do exercício em inglês ou português. A ferramenta retorna instruções em inglês — traduza-as para português e preencha o campo "comoExecutar" do exercício no plano.
+
+CATÁLOGO ATHLYT — estes são os IDs válidos para exercicioId; você deve escolher dentre eles. Use a ferramenta consultarExercicio para buscar instruções detalhadas de cada exercício que prescrever.
 
 Regras obrigatórias:
 - Use todas as informações fornecidas e explique escolhas específicas nas justificativas.
@@ -327,6 +344,7 @@ export function gerarPlanoInicialComIA(entrada: EntradaPlanoInicial): Promise<Re
     imagens: entrada.fotosCorporais?.map(({ dados, mediaType }) => ({ dados, mediaType })),
     instrucao: INSTRUCAO,
     schema: planoInicialSchema,
+    ferramentas: { consultarExercicio },
     origem: entrada.origem,
   });
 }

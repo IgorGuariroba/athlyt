@@ -25,6 +25,12 @@ export interface ExercicioPlanejado {
   descansoSeg: number;
   justificativa: string;
   explicacao?: ExplicacaoDecisao;
+  /**
+   * Instruções de execução traduzidas para português, vindas da
+   * ExerciseDB via agent. Quando ausente, a tela usa o fallback
+   * do catálogo estático (`DefinicaoExercicio.comoExecutar`).
+   */
+  comoExecutar?: string;
 }
 
 export interface DiaTreino {

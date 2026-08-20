@@ -179,6 +179,9 @@ describe("gerarPlanoInicialComIA", () => {
       },
       imagens: [{ dados: new Uint8Array([1, 2, 3]), mediaType: "image/jpeg" }],
     }));
+    expect(decidir).toHaveBeenCalledWith(expect.objectContaining({
+      ferramentas: expect.objectContaining({ consultarExercicio: expect.anything() }),
+    }));
   });
 
   it("rejeita exercício sem explicação ancorada em dados do atleta", () => {
