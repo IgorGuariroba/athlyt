@@ -1,14 +1,6 @@
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 import type { StoragePrivado } from "@/infra/storage";
-
-// A rota importa `@/auth` (NextAuth) no escopo do módulo só para
-// montar o handler padrão exportado como `GET`; este teste exercita
-// `criarHandlerMidiaExecucao` isoladamente, então o auth real nunca é
-// chamado — o stub evita puxar `next-auth` (e sua dependência de
-// `next/server`) para dentro do ambiente jsdom do Vitest.
-vi.mock("@/auth", () => ({ auth: vi.fn() }));
-
-const { criarHandlerMidiaExecucao } = await import("../[exercicioId]/route");
+import { criarHandlerMidiaExecucao } from "../[exercicioId]/handler";
 
 /**
  * Rota de mídia (CONTEXT.md, Mídia de Execução): serve o GIF espelhado
