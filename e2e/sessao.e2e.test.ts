@@ -27,6 +27,19 @@ const planoCopiloto: PlanoGerado = {
   },
 };
 
+const planoComExercicioDoCatalogo: PlanoGerado = {
+  ...plano,
+  bloco: {
+    ...plano.bloco,
+    dias: [{
+      ...plano.bloco.dias[0],
+      // Id real do catálogo (`src/domain/plano/exercicios.ts`) — só
+      // com um exercício conhecido a ficha (ícone ℹ) é renderizada.
+      exercicios: [{ ...plano.bloco.dias[0].exercicios[0], exercicioId: "supino-halteres", nome: "Supino reto com halteres" }],
+    }],
+  },
+};
+
 const planoDescanso: PlanoGerado = {
   ...plano,
   bloco: {
@@ -198,4 +211,28 @@ test("usa o Coach Local sem simular IA quando o provedor está indisponível", a
   // o fallback precisa cobrir a janela completa dessa política de retry.
   await expect(local).toContainText("Coach Local (regra)", { timeout: 15_000 });
   await expect(local).toContainText("Copiloto indisponível: nenhuma sugestão de IA");
+});
+
+test("mostra o fallback em texto da ficha do exercício quando não há Mídia de Execução disponível", async ({ page, context }) => {
+  // Caminho do CI: sem R2 configurado, a rota /api/midia-execucao
+  // devolve 404 (falha fechada) e a ficha precisa continuar útil com
+  // o texto de execução e o diagrama de músculos-alvo, sem depender de
+  // rede externa à ExerciseDB (docs/memory/mudanca-ui-atualiza-e2e.md).
+  const email = `e2e-ficha-exercicio-${Date.now()}@example.com`;
+  await allowEmail(email);
+  const { cookie, user } = await seedAuthenticatedSession(email);
+  await db.insert(plans).values({ userId: user.id, perfilVersao: 1, versao: 1, estado: "ativo", regraVersao: planoComExercicioDoCatalogo.regraVersao, modoConservador: false, conteudo: planoComExercicioDoCatalogo, activatedAt: new Date() });
+  await context.addCookies([cookie]);
+
+  await page.goto("/inicio");
+  await page.getByRole("link", { name: /Ver treino/ }).click();
+  await page.getByRole("button", { name: /Iniciar treino/ }).click();
+
+  await page.getByRole("button", { name: "Ver como executar Supino reto com halteres" }).click();
+  const ficha = page.getByRole("dialog", { name: "Supino reto com halteres" });
+  await expect(ficha).toBeVisible();
+  await expect(ficha.locator("img")).toHaveCount(0);
+  await expect(ficha.getByRole("heading", { name: "Supino reto com halteres" })).toBeVisible();
+  await expect(ficha.getByText("Como executar")).toBeVisible();
+  await expect(ficha.getByText(/Deitado no banco/)).toBeVisible();
 });
