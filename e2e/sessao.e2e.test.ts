@@ -232,6 +232,7 @@ test("mostra o fallback em texto da ficha do exercício quando não há Mídia d
   const ficha = page.getByRole("dialog", { name: "Supino reto com halteres" });
   await expect(ficha).toBeVisible();
   await expect(ficha.locator("img")).toHaveCount(0);
+  await expect(ficha.getByRole("heading", { name: "Supino reto com halteres" })).toBeVisible();
   await expect(ficha.getByText("Como executar")).toBeVisible();
-  await expect(ficha.getByText(/halteres/i)).toBeVisible();
+  await expect(ficha.getByText(/Deitado no banco/)).toBeVisible();
 });
