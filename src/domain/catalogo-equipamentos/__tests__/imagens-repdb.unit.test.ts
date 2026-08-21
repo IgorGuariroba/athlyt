@@ -14,7 +14,11 @@ describe("imagens RepDB dos equipamentos", () => {
       "polia-baixa",
       "paralelas",
     ]) {
-      expect(IMAGENS_EQUIPAMENTOS_REPDB[id as keyof typeof IMAGENS_EQUIPAMENTOS_REPDB]).toMatch(/^https:\/\//);
+      expect(IMAGENS_EQUIPAMENTOS_REPDB[id as keyof typeof IMAGENS_EQUIPAMENTOS_REPDB]).toMatch(
+        id === "polia-alta" || id === "polia-baixa"
+          ? /^\/equipamentos\/(polia-alta|polia-baixa)\.svg$/
+          : /^https:\/\//,
+      );
     }
   });
 });
