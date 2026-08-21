@@ -71,7 +71,35 @@ subir_banco() {
   docker compose -f docker/compose.yml up -d --wait
 }
 
+# drizzle-kit só tem o subcomando `migrate` a partir da 0.20. Um downgrade
+# acidental em package.json (ou um node_modules defasado) faz o comando morrer
+# com "unknown command 'migrate'", erro que não aponta para a causa. Falhamos
+# antes, dizendo exatamente o que corrigir.
+verificar_drizzle_kit() {
+  local instalada esperada
+  instalada=$(node -p "require('./node_modules/drizzle-kit/package.json').version" 2>/dev/null || echo "")
+  esperada=$(node -p "require('./package.json').devDependencies['drizzle-kit']" 2>/dev/null || echo "")
+
+  if [ -z "$instalada" ]; then
+    echo "[dev] drizzle-kit não está instalado. Rode: npm ci" >&2
+    exit 1
+  fi
+
+  local major minor
+  major=${instalada%%.*}
+  minor=${instalada#*.}
+  minor=${minor%%.*}
+
+  if [ "$major" -eq 0 ] && [ "$minor" -lt 20 ]; then
+    echo "[dev] drizzle-kit $instalada não tem o subcomando 'migrate' (exige >= 0.20)." >&2
+    echo "[dev] package.json pede '$esperada'. Se houve downgrade acidental, restaure:" >&2
+    echo "[dev]   git checkout -- package.json package-lock.json && npm ci" >&2
+    exit 1
+  fi
+}
+
 migrar() {
+  verificar_drizzle_kit
   echo "[dev] aplicando migrações"
   npm run db:migrate
 }

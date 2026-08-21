@@ -60,3 +60,6 @@ next-env.d.ts
 
 # estado efêmero do pi (task list por sessão)
 /.pi/tasks/
+
+# install area gerada pelo pi a partir de .pi/settings.json
+/.pi/npm/
