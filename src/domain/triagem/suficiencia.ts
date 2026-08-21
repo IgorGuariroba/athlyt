@@ -53,7 +53,8 @@ export function avaliarSuficiencia(
     .map((e) => e.id);
 
   return {
-    modoConservador: etapasObrigatoriasFaltantes.length > 0,
+    modoConservador:
+      respostas.modoConservadorManual ?? etapasObrigatoriasFaltantes.length > 0,
     completo: faltantes.length === 0,
     etapasObrigatoriasFaltantes,
     etapasComplementaresFaltantes,

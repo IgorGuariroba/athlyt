@@ -5,6 +5,7 @@ import {
   LogOut,
   MonitorOff,
   RefreshCw,
+  ShieldAlert,
   ShieldCheck,
   Target,
   UserRound,
@@ -75,6 +76,12 @@ export default async function MaisPage() {
         <section aria-labelledby="mais-perfil" className="flex flex-col gap-3">
           <CabecalhoSecao id="mais-perfil" titulo="Perfil e personalização" />
           <ListaNavegacao>
+            <ItemNavegacao
+              href="/mais/modo-conservador"
+              Icone={ShieldAlert}
+              rotulo="Modo conservador"
+              descricao="Ative ou desative a proteção das próximas gerações"
+            />
             <ItemNavegacao
               href="/mais/perfil"
               Icone={UserRound}
