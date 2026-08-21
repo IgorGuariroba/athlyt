@@ -100,7 +100,7 @@ function explicacaoAncoradaEm(ancoras: readonly string[]) {
 const exercicioSchema = z.object({
   exercicioId: z.string(),
   nome: z.string(),
-  padrao: z.enum(["empurrar-horizontal", "empurrar-vertical", "puxar-horizontal", "puxar-vertical", "agachar", "dobradica", "extensao-joelho", "flexao-joelho", "elevacao-lateral", "flexao-cotovelo", "extensao-cotovelo", "panturrilha", "core"]),
+  padrao: z.enum(["empurrar-horizontal", "empurrar-vertical", "puxar-horizontal", "puxar-vertical", "agachar", "dobradica", "extensao-joelho", "flexao-joelho", "elevacao-lateral", "flexao-cotovelo", "extensao-cotovelo", "panturrilha", "core", "cardio"]),
   series: z.number().int().min(1).max(8),
   repeticoes: z.string(),
   rir: z.number().int().min(0).max(5),
@@ -112,7 +112,7 @@ const exercicioSchema = z.object({
    * ferramenta consultarExercicio da ExerciseDB e traduzidas
    * pelo agent. Quando ausente, a tela usa o fallback do catálogo.
    */
-  comoExecutar: z.string().optional(),
+  comoExecutar: z.string().min(1),
 }).superRefine((exercicio, contexto) => {
   const catalogado = EXERCICIOS.find((item) => item.id === exercicio.exercicioId);
   if (!catalogado) {

@@ -28,6 +28,7 @@ describe("gerarPlano — tabela de cenários", () => {
     };
     const plano = gerarPlano({ perfilVersao: 14, respostas, agora: new Date("2025-06-01") });
     expect(plano.bloco.dias).toHaveLength(dias);
+    expect(plano.bloco.dias.flatMap((d) => d.exercicios).some((e) => e.padrao === "cardio")).toBe(true);
     expect(plano.bloco.duracaoSemanas).toBe(semanas);
     expect(plano.bloco.dias.every((d) => d.exercicios.every((e) => e.series > 0 && e.repeticoes && e.rir >= 0 && e.descansoSeg > 0 && e.justificativa))).toBe(true);
   });

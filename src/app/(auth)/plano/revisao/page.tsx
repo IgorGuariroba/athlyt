@@ -57,6 +57,7 @@ export default async function RevisaoPlanoPage({
         contexto="Seu programa"
         titulo="Seu Plano Ativo está pronto"
         descricao="Confira como treino e nutrição foram organizados antes de ativar seu programa."
+        voltar={{ href: "/inicio", rotulo: "Voltar ao Início" }}
         acao={
           plano.conteudo.modoConservador ? (
             <Badge variant="secondary">Modo Conservador</Badge>

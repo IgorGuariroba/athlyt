@@ -14,6 +14,7 @@
  */
 
 import { EQUIPAMENTOS } from "@/domain/triagem/equipamentos";
+import type { ModalidadeProtocolo } from "@/domain/sessao/protocolo-execucao";
 
 export type GrupoMuscular =
   | "peito"
@@ -25,7 +26,8 @@ export type GrupoMuscular =
   | "posteriores"
   | "gluteos"
   | "panturrilhas"
-  | "core";
+  | "core"
+  | "cardio";
 
 /**
  * Padrão de movimento — a unidade de estímulo que uma substituição
@@ -45,7 +47,8 @@ export type PadraoMovimento =
   | "flexao-cotovelo"
   | "extensao-cotovelo"
   | "panturrilha"
-  | "core";
+  | "core"
+  | "cardio";
 
 /**
  * Região corporal citada em lesão. O plano evita exercícios que
@@ -68,6 +71,8 @@ export interface DefinicaoExercicio {
   grupoPrimario: GrupoMuscular;
   /** Multiarticular: recebe mais séries e descanso mais longo. */
   composto: boolean;
+  /** Protocolo de registro da execução; ausente = repetições tradicional. */
+  protocolo?: ModalidadeProtocolo;
   /** Disjunção de conjunções; vazio = peso do corpo. */
   requer: readonly (readonly string[])[];
   evitarSeLesaoEm: readonly RegiaoCorporal[];
@@ -583,6 +588,26 @@ export const EXERCICIOS: readonly DefinicaoExercicio[] = [
       "Em pé, apoie a ponta dos pés em uma superfície elevada ou no chão. Eleve os calcanhares o máximo possível, contraindo a panturrilha no topo, e desça com controle até sentir alongar.",
   },
 
+  // Cardio
+  {
+    id: "corrida-esteira", nome: "Corrida na esteira", padrao: "cardio", grupoPrimario: "cardio", protocolo: "duracao", composto: false,
+    requer: [[]], evitarSeLesaoEm: ["joelho", "tornozelo"], exigeTecnicaAvancada: false, prioridade: 1,
+    justificativa: "Cardio acessível para desenvolver condicionamento em intensidade controlada.",
+    comoExecutar: "Mantenha postura ereta, olhar à frente e passada confortável. Ajuste a velocidade para sustentar a duração sem perder a técnica.",
+  },
+  {
+    id: "bicicleta-ergometrica", nome: "Bicicleta ergométrica", padrao: "cardio", grupoPrimario: "cardio", protocolo: "calorias", composto: false,
+    requer: [[]], evitarSeLesaoEm: ["joelho"], exigeTecnicaAvancada: false, prioridade: 2,
+    justificativa: "Alternativa de baixo impacto para elevar o gasto energético com controle de esforço.",
+    comoExecutar: "Ajuste o banco para manter leve flexão do joelho no ponto mais baixo. Pedale de forma contínua.",
+  },
+  {
+    id: "caminhada-esteira", nome: "Caminhada na esteira", padrao: "cardio", grupoPrimario: "cardio", protocolo: "distancia", composto: false,
+    requer: [[]], evitarSeLesaoEm: ["joelho", "tornozelo"], exigeTecnicaAvancada: false, prioridade: 3,
+    justificativa: "Cardio de baixo impacto para aumentar a atividade sem exigir alta complexidade técnica.",
+    comoExecutar: "Caminhe com passadas naturais, tronco ereto e sem apoiar o peso nos braços da esteira.",
+  },
+
   // Core
   {
     id: "prancha",
@@ -590,6 +615,7 @@ export const EXERCICIOS: readonly DefinicaoExercicio[] = [
     padrao: "core",
     grupoPrimario: "core",
     composto: false,
+    protocolo: "tempo",
     requer: [["colchonete"], []],
     evitarSeLesaoEm: ["lombar", "ombro"],
     exigeTecnicaAvancada: false,
@@ -612,6 +638,7 @@ const ROTULOS_GRUPO_MUSCULAR: Record<GrupoMuscular, string> = {
   gluteos: "Glúteos",
   panturrilhas: "Panturrilhas",
   core: "Core",
+  cardio: "Cardio",
 };
 
 /** Rótulo em pt-BR do grupo muscular, para exibição na Ficha do Exercício. */

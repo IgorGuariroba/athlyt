@@ -5,6 +5,7 @@ import { encontrarExercicio, regioesLesionadas } from "@/domain/plano/exercicios
 import { alternativasEquivalentes, motivoPersistente, type Alternativa, type MotivoSubstituicao } from "@/domain/plano/substituicoes";
 import { obterPerfilVigente } from "@/domain/triagem/perfil";
 import type { DiaTreino, ExplicacaoDecisao, PlanoGerado } from "@/domain/plano/tipos";
+import type { ModalidadeProtocolo } from "./protocolo-execucao";
 
 export type MotivoAbandono = "tempo" | "equipamento" | "dor" | "outro";
 export type EstadoSessao = "em_andamento" | "concluida" | "abandonada";
@@ -20,7 +21,7 @@ export interface SerieSessao {
   concluida: boolean;
 }
 export interface ExercicioSessao {
-  exercicioId: string; nome: string; descansoSeg: number; series: SerieSessao[];
+  exercicioId: string; nome: string; descansoSeg: number; protocolo?: ModalidadeProtocolo; series: SerieSessao[];
   /**
    * Por que este exercício foi prescrito para este atleta, congelada do
    * Plano Ativo no início da sessão. Ausente em sessões anteriores a
@@ -64,7 +65,7 @@ export interface ResumoSessao extends SessaoTreino {
 
 function planejarExercicios(dia: DiaTreino, melhoresCargas: Map<string, number>): ExercicioSessao[] {
   return dia.exercicios.map((exercicio) => ({
-    exercicioId: exercicio.exercicioId, nome: exercicio.nome, descansoSeg: exercicio.descansoSeg,
+    exercicioId: exercicio.exercicioId, nome: exercicio.nome, descansoSeg: exercicio.descansoSeg, protocolo: exercicio.protocolo,
     // Congelada junto da prescrição: o snapshot existe para a sessão
     // continuar reproduzível depois de o plano evoluir, e o motivo faz
     // parte do que foi prescrito.
