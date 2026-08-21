@@ -1,9 +1,9 @@
 ---
-name: entrega-git
+name: subir-git
 description: "Use quando o usuário pedir a sequência completa de entrega: commit, push, CI, correção de falhas e merge."
 ---
 
-# Entrega Git
+# Subir Git
 
 Execute a sequência em ordem e só avance após o critério de conclusão de cada etapa:
 
