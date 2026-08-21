@@ -80,6 +80,8 @@ export function rotuloObjetivoComposicao(objetivo: string): string {
  * um merge de todas as respostas já dadas.
  */
 export interface RespostasTriagem {
+  /** Override explícito da proteção automática, controlado em Mais. */
+  modoConservadorManual?: boolean;
   dataNascimento?: string;
   sexoBiologico?: SexoBiologico;
   alturaCm?: number;
