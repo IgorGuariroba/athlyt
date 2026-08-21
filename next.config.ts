@@ -21,6 +21,12 @@ const nextConfig: NextConfig = {
    */
   outputFileTracingRoot: __dirname,
 
+  images: {
+    remotePatterns: [
+      { protocol: "https", hostname: "exercise-dataset.com", pathname: "/images/flat/**" },
+    ],
+  },
+
   /**
    * @serwist/next injeta um `webpack()` no config mesmo com `disable`
    * ativo (ver node_modules/@serwist/next/src/index.ts). A partir do

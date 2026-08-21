@@ -18,6 +18,11 @@ import {
  * seleção, e categoria órfã o esconderia da tela inteira.
  */
 describe("catálogo de equipamentos", () => {
+  it("não repete o mesmo equipamento com nomes externos diferentes", () => {
+    const rotulos = EQUIPAMENTOS.map((e) => e.rotulo.toLocaleLowerCase());
+    expect(new Set(rotulos).size).toBe(rotulos.length);
+  });
+
   it("não tem ids duplicados", () => {
     const ids = EQUIPAMENTOS.map((e) => e.id);
     expect(new Set(ids).size).toBe(ids.length);
