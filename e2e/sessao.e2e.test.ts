@@ -70,6 +70,7 @@ test("escolhe o descanso entre séries e a escolha vale para o próximo timer", 
   await expect(page.getByRole("radio", { name: "Descanso do plano: 1:30" })).toBeChecked();
 
   await page.getByRole("radio", { name: "Descanso longo: 2:15" }).check();
+  await page.locator('input[name="cargaKg"]:not(:disabled)').first().fill("20");
   await page.getByLabel("Registrar série 1").click();
   const timer = page.getByRole("dialog", { name: "Timer de descanso" });
   await expect(timer).toContainText("2:1");
@@ -81,6 +82,7 @@ test("escolhe o descanso entre séries e a escolha vale para o próximo timer", 
   await expect(page.getByRole("radio", { name: "Descanso longo: 2:15" })).toBeChecked();
 
   await page.getByRole("radio", { name: "Descanso curto: 1:00" }).check();
+  await page.locator('input[name="cargaKg"]:not(:disabled)').first().fill("20");
   await page.getByLabel("Registrar série 2").click();
   await expect(timer).toContainText("1:0");
   await page.getByRole("button", { name: "Fechar timer" }).click();
@@ -116,6 +118,7 @@ test("executa o treino do dia, usa o timer e consulta o resumo no histórico", a
   await page.getByText("Por que este exercício?").click();
   await expect(page.getByText(/Halteres poupam seu ombro direito/)).toBeVisible();
 
+  await page.locator('input[name="cargaKg"]:not(:disabled)').first().fill("20");
   await page.getByLabel("Registrar série 1").click();
   const timer = page.getByRole("dialog", { name: "Timer de descanso" });
   await expect(timer).toBeVisible();
@@ -168,6 +171,7 @@ test("mostra orientação assíncrona do Copiloto e cai para o Coach Local ao pe
     await new Promise((resolve) => setTimeout(resolve, 2_000));
     await rota.continue();
   }, { times: 1 });
+  await page.locator('input[name="cargaKg"]:not(:disabled)').first().fill("20");
   await page.getByLabel("Registrar série 1").click();
   await expect(page.getByRole("dialog", { name: "Timer de descanso" })).toBeVisible({ timeout: 500 });
   await page.getByRole("button", { name: "Fechar timer" }).click();
@@ -176,6 +180,7 @@ test("mostra orientação assíncrona do Copiloto e cai para o Coach Local ao pe
   await expect(page.getByRole("region", { name: "Orientação do Copiloto" })).toContainText("26 kg · 9 reps · RIR 2");
 
   await context.setOffline(true);
+  await page.locator('input[name="cargaKg"]:not(:disabled)').first().fill("20");
   await page.getByLabel("Registrar série 2").click();
   await page.getByRole("button", { name: "Fechar timer" }).click();
   await expect(page.getByRole("region", { name: "Orientações do Coach Local" })).toContainText("Coach Local (regra)");
@@ -202,7 +207,8 @@ test("usa o Coach Local sem simular IA quando o provedor está indisponível", a
   await page.goto("/inicio");
   await page.getByRole("link", { name: /Ver treino/ }).click();
   await page.getByRole("button", { name: /Iniciar treino/ }).click();
-  await page.getByRole("spinbutton", { name: "KG" }).first().fill("13");
+  await page.locator('input[name="cargaKg"]:not(:disabled)').first().fill("13");
+  await page.locator('input[name="cargaKg"]:not(:disabled)').first().fill("13");
   await page.getByLabel("Registrar série 1").click();
   await page.getByRole("button", { name: "Fechar timer" }).click();
 

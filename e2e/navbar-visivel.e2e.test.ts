@@ -97,6 +97,7 @@ test("a barra de navegação permanece visível nas telas com conteúdo longo", 
     for (const serie of [1, 2]) {
       const botao = page.getByRole("button", { name: `Registrar série ${serie}` });
       await expect(botao).toBeEnabled({ timeout: 15_000 });
+      await page.locator('input[name="cargaKg"]:not(:disabled)').first().fill("20");
       await fecharTimer();
       await botao.click();
       await fecharTimer();

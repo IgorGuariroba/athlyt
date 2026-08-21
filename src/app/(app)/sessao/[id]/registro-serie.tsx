@@ -106,7 +106,7 @@ export function RegistroSerie({ exercicioId, numero, repeticoesSugeridas, rirSug
         <input type="hidden" name="exercicioId" value={exercicioId} />
         <input type="hidden" name="numero" value={numero} />
         <label className="text-caption text-muted-foreground">KG
-          <Input name="cargaKg" type="number" inputMode="decimal" step="0.5" min="0" defaultValue={carga ?? cargaSugerida} required disabled={registrada} className="mt-1 h-12 text-center text-lg font-bold tabular-nums" />
+          <Input name="cargaKg" type="number" inputMode="decimal" step="0.5" min="0" defaultValue={carga ?? undefined} placeholder={String(cargaSugerida)} required disabled={registrada} className="mt-1 h-12 text-center text-lg font-bold tabular-nums" />
         </label>
         <label className="text-caption text-muted-foreground">REPS <span className="sr-only">sugeridas {repeticoesSugeridas}</span>
           <Input name="repeticoes" type="number" inputMode="numeric" min="0" defaultValue={reps ?? Number.parseInt(repeticoesSugeridas)} required disabled={registrada} className="mt-1 h-12 text-center text-lg font-bold tabular-nums" />

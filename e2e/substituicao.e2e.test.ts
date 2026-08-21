@@ -49,6 +49,7 @@ test("substitui exercício por equipamento indisponível preservando o estímulo
   // herdar uma explicação que o agent produziu para o exercício original.
   await expect(page.getByText("Por que este exercício?")).toHaveCount(0);
 
+  await page.locator('input[name="cargaKg"]:not(:disabled)').first().fill("20");
   await page.getByLabel("Registrar série 1").click();
   await page.getByRole("button", { name: "Pular descanso" }).click();
   // Fechar o timer não implica mais que a sincronização terminou. O botão
@@ -81,6 +82,7 @@ test("substitui no meio da execução quando a dor aparece durante o exercício"
 
   // O atleta faz a primeira série e só então sente dor — é impossível
   // saber antes de executar.
+  await page.locator('input[name="cargaKg"]:not(:disabled)').first().fill("20");
   await page.getByLabel("Registrar série 1").click();
   await page.getByRole("button", { name: "Pular descanso" }).click();
 
@@ -97,8 +99,10 @@ test("substitui no meio da execução quando a dor aparece durante o exercício"
 
   // A série já executada continua contando na sessão.
   await expect(page.getByText("1/3")).toBeVisible();
+  await page.locator('input[name="cargaKg"]:not(:disabled)').first().fill("20");
   await page.getByLabel("Registrar série 1").click();
   await page.getByRole("button", { name: "Pular descanso" }).click();
+  await page.locator('input[name="cargaKg"]:not(:disabled)').first().fill("20");
   await page.getByLabel("Registrar série 2").click();
   await page.getByRole("button", { name: "Pular descanso" }).click();
   const concluirSincronizado = page.locator("form").getByRole("button", { name: "Concluir treino" });
