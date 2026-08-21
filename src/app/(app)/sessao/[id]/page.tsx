@@ -64,7 +64,13 @@ export default async function SessaoPage({ params, searchParams }: { params: Pro
 
       <section className="overflow-hidden rounded-2xl border border-border bg-surface-container">
         <div className="flex items-center gap-3 border-b border-border p-4">
-          <div className={`flex size-12 items-center justify-center rounded-xl ${feito ? "bg-success/15 text-success" : "bg-surface-container-high"}`}><Dumbbell className="size-5" /></div>
+          <div className={`flex size-16 shrink-0 items-center justify-center overflow-hidden rounded-xl ${feito ? "bg-success/15 text-success" : "bg-surface-container-high"}`}>
+            {midia ? (
+              // GIF nativo do plano Basic: pequeno aqui para preservar nitidez.
+              // eslint-disable-next-line @next/next/no-img-element -- mídia same-origin da rota protegida
+              <img src={`/api/midia-execucao/${exercicio.exercicioId}`} alt="" aria-hidden className="size-full object-contain" />
+            ) : <Dumbbell className="size-5" />}
+          </div>
           <div className="min-w-0 flex-1">
             <p className="text-caption font-semibold tracking-wide text-muted-foreground uppercase">Exercício {indiceAtual + 1} de {sessao.exercicios.length}</p>
             <div className="flex min-w-0 items-center gap-1">
