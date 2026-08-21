@@ -39,6 +39,7 @@ test("mantém a sessão viva sem rede e sincroniza a fila ao reconectar", async 
   // série: ele é contingência, não a experiência principal.
   await expect(page.getByLabel("Orientações do Coach Local")).toHaveCount(0);
 
+  await page.locator('input[name="cargaKg"]:not(:disabled)').first().fill("20");
   await page.getByLabel("Registrar série 1").click();
   await page.getByRole("button", { name: "Pular descanso" }).click();
 
@@ -51,11 +52,13 @@ test("mantém a sessão viva sem rede e sincroniza a fila ao reconectar", async 
   await expect(coachLocal).toContainText("Sem rede: nenhuma sugestão de IA é gerada aqui.");
 
   // Registro de série continua funcionando, e o timer também.
+  await page.locator('input[name="cargaKg"]:not(:disabled)').first().fill("20");
   await page.getByLabel("Registrar série 2").click();
   const timerOffline = page.getByRole("dialog", { name: "Timer de descanso" });
   await expect(timerOffline).toBeVisible();
   await expect(timerOffline).toBeHidden({ timeout: 5_000 });
 
+  await page.locator('input[name="cargaKg"]:not(:disabled)').first().fill("20");
   await page.getByLabel("Registrar série 3").click();
   await page.getByRole("button", { name: "Pular descanso" }).click();
 
