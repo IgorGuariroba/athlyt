@@ -39,6 +39,12 @@ function explicacaoDe(valor: unknown): ExplicacaoDecisao | null {
  * quebraria as metas nutricionais em "Carboidratos g": a unidade que
  * vive no nome do campo não pertence a uma pergunta em voz humana.
  */
+/** Nome da operação em voz humana; o id técnico não diz nada ao atleta. */
+const ROTULOS_OPERACAO: Record<string, string> = {
+  "plano-treino": "Plano de treino",
+  "plano-nutricao": "Plano de nutrição",
+};
+
 const PERGUNTA_META: Record<string, string> = {
   calorias: "Por que estas calorias?",
   proteinaG: "Por que esta meta de proteína?",
@@ -233,9 +239,7 @@ export default async function TrilhasPage() {
                   <LinhasCartaoLista>
                     <LinhaCartaoLista
                       titulo={`Envio ${indice + 1} de ${trilhas.length} — ${
-                        trilha.operacao === "plano-inicial"
-                          ? "Plano inicial"
-                          : trilha.operacao
+                        ROTULOS_OPERACAO[trilha.operacao] ?? trilha.operacao
                       }`}
                       meta={trilha.createdAt.toLocaleString("pt-BR")}
                       valor={

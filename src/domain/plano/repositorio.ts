@@ -23,7 +23,7 @@ function mapear(linha: typeof plans.$inferSelect): PlanoPersistido {
   return { id: linha.id, versao: linha.versao, estado: linha.estado, conteudo: linha.conteudo as PlanoGerado, createdAt: linha.createdAt, activatedAt: linha.activatedAt };
 }
 
-async function trilhaDeterministica(entrada: { userId: string; perfilVersao: number; operacao: "plano-inicial"; resultado: unknown; campos: string[] }) {
+async function trilhaDeterministica(entrada: { userId: string; perfilVersao: number; operacao: "plano-treino"; resultado: unknown; campos: string[] }) {
   await db.insert(decisionTrails).values({
     userId: entrada.userId, operacao: entrada.operacao, recorteVersao: 2,
     perfilVersao: entrada.perfilVersao, modeloSolicitado: "motor-adaptativo",
@@ -127,7 +127,7 @@ export async function obterOuGerarRascunho(userId: string, perfil: { version: nu
     : gerarMetasProporcao(panorama.medicoes);
   const conteudo = gerarPlano({ perfilVersao: perfil.version, respostas, confiancaCorporal, metasProporcao });
   const [inserido] = await db.insert(plans).values({ userId, perfilVersao: perfil.version, estado: "rascunho", regraVersao: conteudo.regraVersao, modoConservador: conteudo.modoConservador, conteudo }).returning();
-  await trilhaDeterministica({ userId, perfilVersao: perfil.version, operacao: "plano-inicial", resultado: { tipo: "plano-gerado", planoId: inserido.id, regraVersao: conteudo.regraVersao, modoConservador: conteudo.modoConservador }, campos: conteudo.dadosUsados });
+  await trilhaDeterministica({ userId, perfilVersao: perfil.version, operacao: "plano-treino", resultado: { tipo: "plano-gerado", planoId: inserido.id, regraVersao: conteudo.regraVersao, modoConservador: conteudo.modoConservador }, campos: conteudo.dadosUsados });
   return mapear(inserido);
 }
 
@@ -142,7 +142,7 @@ export async function substituirNoRascunho(userId: string, entrada: { planoId: s
     if (!linha || linha.estado !== "rascunho") throw new Error("Somente um rascunho pode ser alterado.");
     const conteudo = substituirExercicio(linha.conteudo as PlanoGerado, entrada, respostas);
     const [atualizado] = await tx.update(plans).set({ conteudo }).where(eq(plans.id, linha.id)).returning();
-    await tx.insert(decisionTrails).values({ userId, operacao: "plano-inicial", recorteVersao: 2, perfilVersao: linha.perfilVersao, modeloSolicitado: "motor-adaptativo", modeloResolvido: "motor-plano-v2", auditavel: true, degradado: false, camposEnviados: ["equipamentos", "lesoes", "experienciaTreino"], camposOmitidos: [], ferramentasConsultadas: [], resultado: { tipo: "substituicao-pre-ativacao", planoId: linha.id, diaId: entrada.diaId, de: entrada.exercicioId, para: entrada.novoExercicioId } });
+    await tx.insert(decisionTrails).values({ userId, operacao: "plano-treino", recorteVersao: 1, perfilVersao: linha.perfilVersao, modeloSolicitado: "motor-adaptativo", modeloResolvido: "motor-plano-v2", auditavel: true, degradado: false, camposEnviados: ["equipamentos", "lesoes", "experienciaTreino"], camposOmitidos: [], ferramentasConsultadas: [], resultado: { tipo: "substituicao-pre-ativacao", planoId: linha.id, diaId: entrada.diaId, de: entrada.exercicioId, para: entrada.novoExercicioId } });
     return mapear(atualizado);
   });
 }

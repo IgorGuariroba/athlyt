@@ -1,5 +1,7 @@
 /**
- * Dry-run do contexto enviado ao agent na operação `plano-inicial`.
+ * Dry-run do contexto enviado ao agent nas operações do plano.
+ *
+ * Uso: npx tsx scripts/inspecionar-prompt-plano.ts <userId> [--operacao plano-nutricao]
  *
  * Monta exatamente o mesmo Contexto do Atleta que `obterOuGerarRascunhoComIA`
  * monta e imprime o texto renderizado, sem chamar o provedor de IA.
@@ -17,7 +19,8 @@ import { estadoConsentimento } from "../src/domain/ia/consentimento";
 import { obterRecorte } from "../src/domain/ia/contexto/recortes";
 import { obterPanoramaCorporal } from "../src/domain/medicoes/repositorio";
 import type { RespostasTriagem } from "../src/domain/triagem/etapas";
-import { montarDadosPlanoInicial } from "../src/domain/ia/operacoes/plano-inicial";
+import { montarDadosPlano } from "../src/domain/ia/operacoes/plano-dados";
+import type { OperacaoIA } from "../src/domain/ia/contexto/tipos";
 
 async function main() {
   const userId = process.argv[2];
@@ -34,9 +37,13 @@ async function main() {
   const panorama = await obterPanoramaCorporal(userId);
   // --consentir-tudo simula consentimento vigente sem escrever no banco,
   // para inspecionar o prompt completo quando o recorte mudou de versão.
-  const estado = await estadoConsentimento(userId, "plano-inicial");
+  const indiceOperacao = process.argv.indexOf("--operacao");
+  const operacao = (indiceOperacao > 0
+    ? process.argv[indiceOperacao + 1]
+    : "plano-treino") as OperacaoIA;
+  const estado = await estadoConsentimento(userId, operacao);
   const consentimentos = process.argv.includes("--consentir-tudo")
-    ? obterRecorte("plano-inicial").campos.map((c) => c.id)
+    ? obterRecorte(operacao).campos.map((c) => c.id)
     : estado.vigentes;
 
   const nucleo = montarNucleo({
@@ -54,10 +61,10 @@ async function main() {
     : [];
 
   const contexto = montarContexto({
-    operacao: "plano-inicial",
+    operacao,
     nucleo,
     consentimentos,
-    dados: montarDadosPlanoInicial({
+    dados: montarDadosPlano({
       triagemCompleta: perfil.respostas,
       fotosCorporais: fotos,
       linhaBaseCorporal: {
@@ -73,6 +80,7 @@ async function main() {
 
   console.log(renderizarContexto(contexto));
   console.log("\n--- meta ---");
+  console.log("operacao:", operacao);
   console.log("perfilVersao:", perfil.version);
   console.log("consentimentos:", consentimentos.join(", ") || "(nenhum)");
   console.log("camposOmitidos:", contexto.camposOmitidos.join(", ") || "(nenhum)");

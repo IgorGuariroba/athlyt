@@ -32,13 +32,18 @@ export type AmbienteIA = "producao" | "desenvolvimento";
  */
 const MODELO_BASE = "google/gemini-2.5-flash-lite";
 
-/** O Gemini rejeita o schema completo do plano; o GPT-5 Mini o aceita. */
-const MODELO_PLANO_INICIAL = "openai/gpt-5-mini";
+/**
+ * O Gemini rejeita o schema do plano. O Luna aceita, custa menos que o
+ * GPT-5 Mini e mantém `structured_outputs`, `tools` e entrada multimodal
+ * — as fotos corporais vão nas duas operações do plano.
+ */
+const MODELO_PLANO = "openai/gpt-5.6-luna";
 
 const MODELOS_PRODUCAO: Record<OperacaoIA, string> = {
   "copiloto-sessao": MODELO_BASE,
   "revisao-semanal": MODELO_BASE,
-  "plano-inicial": MODELO_PLANO_INICIAL,
+  "plano-treino": MODELO_PLANO,
+  "plano-nutricao": MODELO_PLANO,
   "refeicao-texto": MODELO_BASE,
   "refeicao-foto": MODELO_BASE,
   "avaliacao-visual": MODELO_BASE,
@@ -144,5 +149,13 @@ export const OPCOES_PROVEDOR = {
       allow_fallbacks: false,
       require_parameters: true,
     },
+    /**
+     * O Luna raciocina em `medium` por padrão, e cada token de raciocínio
+     * atrasa o primeiro token da resposta. As decisões do Athlyt são
+     * guiadas por schema e por âncoras declaradas, não por deliberação
+     * longa do modelo — `low` troca um esforço que não usávamos por
+     * latência menor.
+     */
+    reasoning: { effort: "low" },
   },
 } as const;

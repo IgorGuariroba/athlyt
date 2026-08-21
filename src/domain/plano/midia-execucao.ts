@@ -10,6 +10,15 @@
  * lista candidatos por busca, mas só entra aqui depois de revisão
  * humana comparando nome, padrão de movimento e equipamento.
  *
+ * TRABALHO FUTURO — instruções de execução por exercício. O agent do
+ * plano já não gera `comoExecutar`: pedir isso ao modelo custava o
+ * texto nas duas pontas do prompt e devolvia, medido na Trilha de
+ * Decisão, exatamente o texto do catálogo estático. Melhorar o "como
+ * executar" que o atleta vê passa por esta curadoria — trazer da
+ * ExerciseDB instrução passo a passo junto do GIF, traduzida e
+ * cacheada fora do caminho de geração do plano — e não por uma
+ * chamada de IA na hora de montar o Bloco de Treino.
+ *
  * O mapa é intencionalmente parcial: 22 dos 32 exercícios do catálogo
  * têm entrada nesta primeira curadoria (ids em `exerciseId` conferidos
  * contra `GET /api/v1/exercises/{id}` em oss.exercisedb.dev). Os
