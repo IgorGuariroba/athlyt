@@ -1,5 +1,6 @@
 import type { ConfiancaCorporal, MetaProporcao } from "@/domain/medicoes";
 import type { PadraoMovimento } from "./exercicios";
+import type { ModalidadeProtocolo } from "@/domain/sessao/protocolo-execucao";
 
 /**
  * Por que uma decisão do plano foi tomada **para este atleta**, com os
@@ -21,6 +22,7 @@ export interface ExercicioPlanejado {
   padrao: PadraoMovimento;
   series: number;
   repeticoes: string;
+  protocolo?: ModalidadeProtocolo;
   rir: number;
   descansoSeg: number;
   justificativa: string;

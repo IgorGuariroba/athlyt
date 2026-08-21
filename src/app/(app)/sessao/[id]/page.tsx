@@ -85,7 +85,7 @@ export default async function SessaoPage({ params, searchParams }: { params: Pro
                 />
               ) : null}
             </div>
-            <p className="text-body-sm text-muted-foreground">{exercicio.series.length} séries · {exercicio.series[0].repeticoesSugeridas} reps · RIR {exercicio.series[0].rir}</p>
+            <p className="text-body-sm text-muted-foreground">{exercicio.series.length} séries · {exercicio.series[0].repeticoesSugeridas}{definicaoExercicio?.id === "prancha" ? " s" : " reps"} · RIR {exercicio.series[0].rir}</p>
           </div>
           {exercicio.interrompido ? null : (
             <Button asChild variant="ghost" size="icon" className="shrink-0">
@@ -117,7 +117,7 @@ export default async function SessaoPage({ params, searchParams }: { params: Pro
         <AjusteDescanso exercicioId={exercicio.exercicioId} descansoPrescritoSeg={exercicio.descansoSeg} />
         <details className="border-b border-border px-4 py-3 text-body-sm"><summary className="cursor-pointer font-semibold">O que é RIR?</summary><p className="mt-2 text-muted-foreground">É quantas repetições você ainda conseguiria fazer com boa técnica ao encerrar a série. Quanto menor o RIR, mais difícil foi a série.</p></details>
         <div className="px-3">
-          {exercicio.series.map((serie, indice) => <RegistroSerie key={serie.numero} exercicioId={exercicio.exercicioId} numero={serie.numero} repeticoesSugeridas={serie.repeticoesSugeridas} rirSugerido={serie.rir} descansoSeg={exercicio.descansoSeg} concluida={serie.concluida} cargaInicial={serie.cargaKg} cargaSugerida={serie.cargaSugeridaKg ?? 0} melhorCargaAnterior={serie.melhorCargaAnteriorKg ?? 0} repeticoesIniciais={serie.repeticoes} temProximaSerie={indice < exercicio.series.length - 1} />)}
+          {exercicio.series.map((serie, indice) => <RegistroSerie key={serie.numero} exercicioId={exercicio.exercicioId} numero={serie.numero} repeticoesSugeridas={serie.repeticoesSugeridas} rirSugerido={serie.rir} descansoSeg={exercicio.descansoSeg} concluida={serie.concluida} cargaInicial={serie.cargaKg} cargaSugerida={serie.cargaSugeridaKg ?? 0} melhorCargaAnterior={serie.melhorCargaAnteriorKg ?? 0} repeticoesIniciais={serie.repeticoes} temProximaSerie={indice < exercicio.series.length - 1} modo={exercicio.protocolo ?? (definicaoExercicio?.id === "prancha" ? "tempo" : "repeticoes")} />)}
         </div>
       </section>
 

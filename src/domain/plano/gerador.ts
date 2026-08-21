@@ -48,7 +48,8 @@ function prescricao(ex: DefinicaoExercicio, experiencia: string | undefined, con
     nome: ex.nome,
     padrao: ex.padrao,
     series: (ex.composto ? (iniciante ? 2 : 3) : 2) + (priorizado && !iniciante ? 1 : 0),
-    repeticoes: ex.composto ? "6–10" : "10–15",
+    repeticoes: ex.id === "prancha" ? "30–45" : ex.composto ? "6–10" : "10–15",
+    protocolo: ex.protocolo ?? "repeticoes",
     rir: iniciante ? 3 : 2,
     descansoSeg: ex.composto ? 120 : 75,
     justificativa: ex.justificativa,
@@ -117,9 +118,12 @@ export function gerarPlano(entrada: { perfilVersao: number; respostas: Respostas
   const frequencia = Math.min(modoConservador ? 3 : 5, Math.max(1, diasPerfil.length));
   const modelos = PADROES[frequencia];
   const dias: DiaTreino[] = modelos.map((modelo, i) => {
-    const limite = Math.max(3, Math.min(modelo.padroes.length, Math.floor((respostas.duracaoSessaoMin ?? 45) / 9)));
+    // Cardio é uma modalidade transversal: entra uma vez por sessão,
+    // preservando o treino de força e permitindo validar seu protocolo.
+    const padroesDoDia: PadraoMovimento[] = ["cardio", ...modelo.padroes];
+    const limite = Math.max(3, Math.min(padroesDoDia.length, Math.floor((respostas.duracaoSessaoMin ?? 45) / 9)));
     const usados = new Set<string>();
-    const exercicios = modelo.padroes.flatMap((padrao) => {
+    const exercicios = padroesDoDia.flatMap((padrao) => {
       const opcoes = porPadrao.get(padrao) ?? [];
       const escolha = opcoes.find((e) => !usados.has(e.id)) ?? opcoes[0];
       if (!escolha) return [];

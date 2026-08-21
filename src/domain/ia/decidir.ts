@@ -15,6 +15,9 @@ import {
 } from "./contexto/montagem";
 import type { NucleoContexto } from "./contexto/nucleo";
 import type { OperacaoIA } from "./contexto/tipos";
+import { detalhesErroProvedor } from "./detalhes-erro-provedor";
+import { detalhesErroGeracao } from "./detalhes-erro-geracao";
+import { executarComTimeout } from "./timeout-geracao";
 import { logger } from "@/observabilidade/logger";
 import { observarOperacao } from "@/observabilidade/operacao";
 import {
@@ -136,8 +139,9 @@ async function decidirInternamente<T>(
     const mensagem = entrada.imagens?.length
       ? { messages: [{ role: "user" as const, content: [{ type: "text" as const, text: conteudo }, ...entrada.imagens.map((imagem) => ({ type: "file" as const, data: imagem.dados, mediaType: imagem.mediaType }))] }] }
       : { prompt: conteudo };
-    const gerar = (promptCorrecao?: string) => generateText({
+    const gerar = (promptCorrecao?: string) => executarComTimeout((signal) => generateText({
       model: openrouter().chatModel(modeloSolicitado),
+      abortSignal: signal,
       output: Output.object({ schema: entrada.schema }),
       system: entrada.instrucao,
       ...(promptCorrecao === undefined ? mensagem : { prompt: promptCorrecao }),
@@ -154,7 +158,7 @@ async function decidirInternamente<T>(
           });
         }
       },
-    });
+    }));
 
     let resposta;
     try {
@@ -221,7 +225,9 @@ ${erro.text}`);
       degradado: contexto.degradado,
     };
   } catch (erro) {
-    const motivo = erro instanceof Error ? erro.message : String(erro);
+    const motivo = erro instanceof Error && NoObjectGeneratedError.isInstance(erro)
+      ? detalhesErroGeracao(erro)
+      : detalhesErroProvedor(erro instanceof Error ? erro as Error & { statusCode?: number; responseBody?: string } : { message: String(erro) });
 
     logger.error(
       {

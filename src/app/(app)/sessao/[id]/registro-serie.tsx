@@ -10,11 +10,14 @@ import { useConexao } from "./estado-conexao";
 
 const FECHAR_TIMERS_DE_DESCANSO = "athlyt:fechar-timers-de-descanso";
 
-export function RegistroSerie({ exercicioId, numero, repeticoesSugeridas, rirSugerido, descansoSeg, concluida, cargaInicial, cargaSugerida, melhorCargaAnterior, repeticoesIniciais, temProximaSerie }: {
+export function RegistroSerie({ exercicioId, numero, repeticoesSugeridas, rirSugerido, descansoSeg, concluida, cargaInicial, cargaSugerida, melhorCargaAnterior, repeticoesIniciais, temProximaSerie, modo }: {
   exercicioId: string; numero: number; repeticoesSugeridas: string; rirSugerido: number;
   descansoSeg: number; concluida: boolean; cargaInicial: number | null; cargaSugerida: number; melhorCargaAnterior: number; repeticoesIniciais: number | null;
   temProximaSerie: boolean;
+  modo?: "repeticoes" | "tempo" | "distancia" | "duracao" | "calorias" | "ritmo" | "unilateral" | "circuito";
 }) {
+  const modoEfetivo = modo ?? "repeticoes";
+  const rotulos = { repeticoes: "REPS", tempo: "TEMPO (S)", distancia: "DISTÂNCIA (M)", duracao: "DURAÇÃO (MIN)", calorias: "CALORIAS", ritmo: "RITMO", unilateral: "LADOS", circuito: "RODADAS" } as const;
   const [restante, setRestante] = useState<number | null>(null);
   const [timerMinimizado, setTimerMinimizado] = useState(false);
   const [enviando, setEnviando] = useState(false);
@@ -105,15 +108,19 @@ export function RegistroSerie({ exercicioId, numero, repeticoesSugeridas, rirSug
         <span className="mb-3 flex size-8 items-center justify-center rounded-full bg-surface-container-high text-label-lg font-bold">{registrada ? <Check className="size-4 text-success" /> : numero}</span>
         <input type="hidden" name="exercicioId" value={exercicioId} />
         <input type="hidden" name="numero" value={numero} />
-        <label className="text-caption text-muted-foreground">KG
-          <Input name="cargaKg" type="number" inputMode="decimal" step="0.5" min="0" defaultValue={carga ?? undefined} placeholder={String(cargaSugerida)} required disabled={registrada} className="mt-1 h-12 text-center text-lg font-bold tabular-nums" />
-        </label>
-        <label className="text-caption text-muted-foreground">REPS <span className="sr-only">sugeridas {repeticoesSugeridas}</span>
+        {modoEfetivo !== "repeticoes" && modoEfetivo !== "unilateral" ? (
+          <input type="hidden" name="cargaKg" value="0" />
+        ) : (
+          <label className="text-caption text-muted-foreground">KG
+            <Input name="cargaKg" type="number" inputMode="decimal" step="0.5" min="0" defaultValue={carga ?? undefined} placeholder={String(cargaSugerida)} required disabled={registrada} className="mt-1 h-12 text-center text-lg font-bold tabular-nums" />
+          </label>
+        )}
+        <label className="text-caption text-muted-foreground">{rotulos[modoEfetivo]} <span className="sr-only">sugeridas {repeticoesSugeridas}</span>
           <Input name="repeticoes" type="number" inputMode="numeric" min="0" defaultValue={reps ?? Number.parseInt(repeticoesSugeridas)} required disabled={registrada} className="mt-1 h-12 text-center text-lg font-bold tabular-nums" />
         </label>
-        <label className="text-caption text-muted-foreground">RIR
+        {modoEfetivo === "repeticoes" || modoEfetivo === "unilateral" ? <label className="text-caption text-muted-foreground">RIR
           <Input name="rir" type="number" inputMode="numeric" min="0" max="10" defaultValue={local?.rir ?? rirSugerido} required disabled={registrada} className="mt-1 h-12 text-center text-lg font-bold tabular-nums" />
-        </label>
+        </label> : <input type="hidden" name="rir" value="0" />}
         <Button type="submit" size="icon" disabled={enviando || registrada || bloqueadaPorCautela} aria-label={`Registrar série ${numero}`} className="mb-0 size-12 rounded-full">
           <Check className="size-5" />
         </Button>

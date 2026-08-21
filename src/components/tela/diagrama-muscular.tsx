@@ -28,6 +28,7 @@ const VISTA_POR_GRUPO: Record<GrupoMuscular, "frente" | "costas"> = {
   gluteos: "costas",
   posteriores: "costas",
   panturrilhas: "costas",
+  cardio: "frente",
 };
 
 const ROTULO_VISTA: Record<"frente" | "costas", string> = {

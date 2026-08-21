@@ -72,6 +72,7 @@ const exercicioValido = {
   rir: 2,
   descansoSeg: 120,
   justificativa: "Composto principal de empurrar horizontal",
+  comoExecutar: "Deite no banco, mantenha os pés firmes e empurre a barra com controle.",
   explicacao: {
     porque: "Você tem barra e banco na academia e 60 minutos por sessão, o que comporta um composto pesado.",
     dadosUsados: [{ campo: "equipamentos", valor: "barra olímpica, banco reto" }],
