@@ -1,6 +1,6 @@
 ---
 name: entrega-git
-description: Use quando o usuário pedir a sequência completa de entrega: commit, push, CI, correção de falhas e merge.
+description: "Use quando o usuário pedir a sequência completa de entrega: commit, push, CI, correção de falhas e merge."
 ---
 
 # Entrega Git
