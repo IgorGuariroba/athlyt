@@ -1,17 +1,22 @@
 import { auth } from "@/auth";
 import { configuracaoR2, criarStorageR2 } from "@/infra/storage";
 import { midiaDoExercicio as midiaDoExercicioPadrao } from "@/domain/plano/midia-execucao";
-import { criarHandlerMidiaExecucao } from "./handler";
+import { baixarGifDaExerciseDB, criarHandlerMidiaExecucao } from "./handler";
 
 /**
  * Serve o GIF espelhado no R2 da Mídia de Execução (CONTEXT.md), por
  * uma rota same-origin — não por URL assinada — para caber de forma
  * estável no cache do service worker (ver `src/app/sw.ts`).
  *
- * Falha fechada em qualquer ausência (sem mapeamento, sem R2, objeto
- * inexistente): 404, nunca 500. A ficha do exercício sempre tem o
+ * Falha fechada em qualquer ausência (sem mapeamento, sem R2, origem
+ * indisponível): 404, nunca 500. A ficha do exercício sempre tem o
  * fallback em texto; uma rota barulhenta aqui não pode quebrar a
  * Sessão de Treino.
+ *
+ * Objeto ausente no bucket não é mais um 404: a rota espelha o GIF da
+ * ExerciseDB na primeira leitura e serve o resultado, tornando
+ * `npm run midia:importar -- --espelhar` um aquecimento opcional em
+ * vez de um passo manual obrigatório fora do deploy.
  */
 
 const handlerPadrao = criarHandlerMidiaExecucao({
@@ -20,6 +25,7 @@ const handlerPadrao = criarHandlerMidiaExecucao({
     return Boolean(session?.user?.id);
   },
   midiaDoExercicio: midiaDoExercicioPadrao,
+  baixarGifDeOrigem: baixarGifDaExerciseDB,
   obterStorage() {
     const config = configuracaoR2();
     return config ? criarStorageR2(config) : null;

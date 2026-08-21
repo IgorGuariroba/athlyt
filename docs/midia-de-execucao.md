@@ -29,10 +29,6 @@ ADR 0001. Enquanto pendente, `scripts/importar-midia-exercicios.ts
 ## Como a mídia chega à tela
 
 ```
-scripts/importar-midia-exercicios.ts --espelhar
-  → baixa o GIF de static.exercisedb.dev
-  → grava em R2: midia-execucao/{exercicioId}.gif
-
 FichaExercicio (componente de tela)
   → recebe midiaUrl="/api/midia-execucao/{exercicioId}" (ou undefined)
   → <img src={midiaUrl} ... onError={cai para o fallback} />
@@ -40,9 +36,21 @@ FichaExercicio (componente de tela)
 /api/midia-execucao/[exercicioId]/route.ts
   → autentica a sessão
   → midiaDoExercicio(id) → 404 se não mapeado
-  → storage.ler(chaveObjeto) → 404 se R2 ausente ou objeto inexistente
-  → 200 com o GIF, cache-control longo
+  → storage.ler(chaveObjeto) → 200 com o GIF, cache-control longo
+  → objeto ausente? espelha sob demanda:
+      baixa de static.exercisedb.dev/media/{exerciseId}.gif
+      grava em R2: midia-execucao/{exercicioId}.gif
+      → 200 com o GIF (404 só se a origem estiver indisponível)
 ```
+
+**O espelhamento acontece sozinho na primeira leitura.** A rota trata
+objeto ausente no bucket como cache miss, não como erro: baixa o GIF
+da ExerciseDB, grava no R2 e serve. Um ambiente novo se popula com o
+uso, sem passo manual no deploy.
+
+Se a gravação no R2 falhar (credencial sem permissão de escrita), a
+rota ainda devolve o GIF já baixado — a animação aparece na tela e a
+próxima requisição tenta espelhar de novo.
 
 O service worker (`src/app/sw.ts`) cacheia `/api/midia-execucao/*` com
 `CacheFirst` — a chave é estável e o conteúdo imutável, então a
@@ -66,11 +74,21 @@ Fluxo para adicionar/revisar um exercício:
 3. Adicione a entrada em `MIDIA_EXECUCAO` (`midia-execucao.ts`).
 4. Rode `npm run test:unit -- src/domain/plano/__tests__/midia-execucao.unit.test.ts`
    para confirmar a invariante (toda chave existe no catálogo).
-5. Depois de confirmado o licenciamento (ADR 0001), rode
-   `npm run midia:importar -- --espelhar` para gravar o GIF no R2.
+5. Opcionalmente, rode `npm run midia:importar -- --espelhar` para
+   pré-aquecer o R2 em lote. Não é mais obrigatório: sem ele, a rota
+   espelha o exercício na primeira vez que alguém abrir a ficha.
 
 Exercício sem entrada no mapa é um estado válido: a ficha usa o
 fallback em texto (`comoExecutar`) e o diagrama de músculos-alvo.
+
+## Espelhamento em lote (`--espelhar`)
+
+`npm run midia:importar -- --espelhar` continua útil para pré-aquecer
+o bucket — evita que o primeiro atleta a abrir cada exercício pague a
+latência do download. É idempotente (pula o que já existe, salvo
+`--forcar`) e grava no bucket do `.env` da máquina onde roda; apontar
+para o bucket de testes (`docs/storage-r2-tests.md`) deixa produção
+intocada.
 
 ## Comportamento sem R2 configurado
 
