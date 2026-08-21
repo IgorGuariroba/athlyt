@@ -189,13 +189,28 @@ export function textoConsentimento(
   recorte: RecorteDeclarado,
   provedor: string,
 ): string {
-  const sensiveis = recorte.campos.filter((c) => c.sensivel);
-  const itens = sensiveis.map((c) => `- ${c.descricao}`).join("\n");
+  return textoConsentimentoDe([recorte], provedor);
+}
+
+/**
+ * Texto único para várias operações consentidas na mesma confirmação,
+ * como o plano inicial, que decide treino e nutrição em duas chamadas.
+ * As finalidades continuam visíveis uma a uma — o usuário precisa saber
+ * para que cada envio serve — e os dados são listados sem repetição.
+ */
+export function textoConsentimentoDe(
+  recortes: readonly RecorteDeclarado[],
+  provedor: string,
+): string {
+  const sensiveis = recortes.flatMap((recorte) =>
+    recorte.campos.filter((campo) => campo.sensivel),
+  );
+  const descricoes = [...new Set(sensiveis.map((campo) => campo.descricao))];
   return [
-    `Finalidade: ${recorte.finalidade}.`,
+    `Finalidade: ${recortes.map((r) => r.finalidade).join("; ")}.`,
     `Provedor: ${provedor}.`,
-    sensiveis.length > 0
-      ? `Dados enviados:\n${itens}`
+    descricoes.length > 0
+      ? `Dados enviados:\n${descricoes.map((d) => `- ${d}`).join("\n")}`
       : "Nenhum dado sensível é enviado nesta operação.",
   ].join("\n");
 }

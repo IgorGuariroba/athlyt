@@ -50,9 +50,10 @@ describe("modeloDe", () => {
     }
   });
 
-  it("usa GPT-5 Mini somente no plano inicial", () => {
-    expect(modeloDe("plano-inicial", "producao")).toBe("openai/gpt-5-mini");
-    expect(modeloDe("plano-inicial", "desenvolvimento")).toBe("openai/gpt-5-mini");
+  it("usa o Luna somente nas operações do plano", () => {
+    expect(modeloDe("plano-treino", "producao")).toBe("openai/gpt-5.6-luna");
+    expect(modeloDe("plano-nutricao", "producao")).toBe("openai/gpt-5.6-luna");
+    expect(modeloDe("plano-treino", "desenvolvimento")).toBe("openai/gpt-5.6-luna");
     expect(modeloDe("copiloto-sessao", "producao")).toBe(
       "google/gemini-2.5-flash-lite",
     );

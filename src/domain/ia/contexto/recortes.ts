@@ -85,10 +85,15 @@ export const RECORTES: Record<OperacaoIA, RecorteDeclarado> = {
     ],
   },
 
-  "plano-inicial": {
-    operacao: "plano-inicial",
-    versao: 4,
-    finalidade: "Gerar o Bloco de Treino e a estratégia nutricional iniciais",
+  /**
+   * O plano inicial é decidido em duas operações independentes, geradas
+   * em paralelo: o Bloco de Treino e a estratégia nutricional não dependem
+   * um do outro e cada um tem seu próprio recorte declarado.
+   */
+  "plano-treino": {
+    operacao: "plano-treino",
+    versao: 1,
+    finalidade: "Gerar o Bloco de Treino inicial",
     campos: [
       {
         id: "triagem-completa",
@@ -98,6 +103,39 @@ export const RECORTES: Record<OperacaoIA, RecorteDeclarado> = {
       {
         id: "fotos-corporais",
         descricao: "Até quatro fotos corporais recentes, com pose e data, para contextualizar a composição e as proporções no plano inicial",
+        sensivel: true,
+      },
+      {
+        id: "linha-base-corporal",
+        descricao: "Circunferências consolidadas, composição corporal, qualidade e recência",
+        sensivel: true,
+      },
+      {
+        id: "metas-proporcao",
+        descricao: "Metas de Proporção Corporal, preferências e confiança",
+        sensivel: true,
+      },
+      {
+        id: "historico-importado",
+        descricao: "Histórico de treino e alimentação que você importou",
+        sensivel: true,
+      },
+    ],
+  },
+
+  "plano-nutricao": {
+    operacao: "plano-nutricao",
+    versao: 1,
+    finalidade: "Gerar a estratégia nutricional inicial",
+    campos: [
+      {
+        id: "triagem-completa",
+        descricao: "Sono, nível de atividade, objetivo corporal, orçamento e tempo de preparo; dados universais do perfil não são repetidos",
+        sensivel: true,
+      },
+      {
+        id: "fotos-corporais",
+        descricao: "Até quatro fotos corporais recentes, com pose e data, para contextualizar a composição corporal na estratégia energética",
         sensivel: true,
       },
       {

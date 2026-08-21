@@ -52,7 +52,12 @@ export default async function ConsentimentosPage({
   // Um consentimento pode caducar sem o usuário fazer nada: quando o recorte
   // muda o que é enviado, a versão antiga deixa de cobrir a nova. Sem este
   // aviso, o efeito só aparece como um plano pior, sem causa visível.
-  const plano = await estadoConsentimento(session.user.id, "plano-inicial");
+  const [planoTreino, planoNutricao] = await Promise.all([
+    estadoConsentimento(session.user.id, "plano-treino"),
+    estadoConsentimento(session.user.id, "plano-nutricao"),
+  ]);
+  const planoPrecisaReconsentir =
+    planoTreino.precisaReconsentir || planoNutricao.precisaReconsentir;
 
   return (
     <TelaConteudo>
@@ -69,7 +74,7 @@ export default async function ConsentimentosPage({
         ) : null}
         {aviso.erro ? <AvisoAcao tipo="erro">{aviso.erro}</AvisoAcao> : null}
 
-        {plano.precisaReconsentir ? (
+        {planoPrecisaReconsentir ? (
           <AvisoAcao tipo="erro">
             O que o Athlyt envia ao provedor de IA para montar seu plano mudou
             desde que você consentiu. Até confirmar de novo, o plano é gerado sem

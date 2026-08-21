@@ -23,7 +23,7 @@ import { ETAPAS_TRIAGEM } from "@/domain/triagem/etapas";
 import { TransicaoEtapa } from "@/components/tela/transicao-etapa";
 import { gerarPlanoInicialAction } from "@/app/(auth)/plano/actions";
 import { obterRecorte } from "@/domain/ia/contexto/recortes";
-import { textoConsentimento } from "@/domain/ia/contexto/montagem";
+import { textoConsentimentoDe } from "@/domain/ia/contexto/montagem";
 import { NOME_PROVEDOR } from "@/domain/ia/provedor";
 import { BotaoGerarPlano } from "./botao-gerar-plano";
 
@@ -45,7 +45,10 @@ export default async function ResumoTriagemPage({ searchParams }: { searchParams
   const perfil = await obterPerfilVigente(userId);
   const resumo = montarResumoTriagem(perfil?.respostas ?? {});
   const { erro } = await searchParams;
-  const consentimento = textoConsentimento(obterRecorte("plano-inicial"), NOME_PROVEDOR);
+  const consentimento = textoConsentimentoDe(
+    [obterRecorte("plano-treino"), obterRecorte("plano-nutricao")],
+    NOME_PROVEDOR,
+  );
 
   const preenchidos = resumo.itens.filter((item) => item.respondida).length;
   const pendentes = resumo.itens.length - preenchidos;

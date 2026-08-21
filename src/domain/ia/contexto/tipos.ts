@@ -44,7 +44,8 @@ export function estimado<T>(valor: T, observadoEm?: Date): ValorContexto<T> {
 export type OperacaoIA =
   | "copiloto-sessao"
   | "revisao-semanal"
-  | "plano-inicial"
+  | "plano-treino"
+  | "plano-nutricao"
   | "refeicao-texto"
   | "refeicao-foto"
   | "avaliacao-visual"
