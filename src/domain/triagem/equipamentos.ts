@@ -15,6 +15,8 @@
  * sem migração.
  */
 
+import { EQUIPAMENTOS_REPDB } from "./equipamentos-repdb";
+
 export type CategoriaEquipamentoId =
   | "pesos-livres"
   | "bancos-e-suportes"
@@ -122,6 +124,9 @@ export const EQUIPAMENTOS: readonly DefinicaoEquipamento[] = [
   { id: "bicicleta", rotulo: "Bicicleta ergométrica", categoria: "cardio", presentePor: ACADEMIAS },
   { id: "eliptico", rotulo: "Elíptico", categoria: "cardio", presentePor: NENHUM },
   { id: "remo-ergometro", rotulo: "Remo ergômetro", categoria: "cardio", presentePor: NENHUM },
+
+  // Tipos adicionais importados do catálogo RepDB.
+  ...EQUIPAMENTOS_REPDB,
 ];
 
 const POR_ID = new Map(EQUIPAMENTOS.map((e) => [e.id, e]));

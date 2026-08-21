@@ -35,6 +35,7 @@
     "ia:verificar-visual": "tsx scripts/verificar-avaliacao-visual.ts",
     "storage:verificar": "tsx scripts/verificar-r2.ts",
     "midia:importar": "tsx scripts/importar-midia-exercicios.ts",
+    "equipamentos:imagens": "tsx scripts/importar-imagens-equipamentos-repdb.ts",
     "storage:retencao": "tsx scripts/aplicar-retencao-fotos.ts"
   },
   "overrides": {

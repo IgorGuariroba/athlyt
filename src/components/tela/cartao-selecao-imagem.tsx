@@ -20,6 +20,7 @@ export function CartaoSelecaoImagem({
   defaultChecked,
   onCheckedChange,
   acao,
+  loading = "lazy",
 }: {
   id: string;
   name: string;
@@ -30,6 +31,7 @@ export function CartaoSelecaoImagem({
   defaultChecked?: boolean;
   onCheckedChange?: (marcado: boolean) => void;
   acao?: React.ReactNode;
+  loading?: "eager" | "lazy";
 }) {
   return (
     <Label
@@ -42,6 +44,7 @@ export function CartaoSelecaoImagem({
           alt=""
           width={160}
           height={112}
+          loading={loading}
           className="h-full w-full object-contain"
         />
       </span>

@@ -22,6 +22,7 @@ import {
 import { CartaoRadio } from "@/components/tela/opcao-cartao";
 import { CartaoSelecaoImagem } from "@/components/tela/cartao-selecao-imagem";
 import { salvarEquipamentosPersonalizados } from "../../actions";
+import { IMAGENS_EQUIPAMENTOS_REPDB } from "@/domain/triagem/imagens-equipamentos-repdb";
 
 const LOCAIS = [
   {
@@ -302,6 +303,7 @@ export function SelecaoEquipamentos({
                   value={nome}
                   rotulo={nome}
                   src="/equipamentos/personalizado.svg"
+                  loading="eager"
                   checked={personalizadosSelecionados.has(nome)}
                   onCheckedChange={async (marcado) => {
                     const proximos = new Set(personalizadosSelecionados);
@@ -371,7 +373,11 @@ export function SelecaoEquipamentos({
                       name="equipamentos"
                       value={equipamento.id}
                       rotulo={equipamento.rotulo}
-                      src={imagemEquipamento(equipamento.id)}
+                      src={
+                        IMAGENS_EQUIPAMENTOS_REPDB[equipamento.id as keyof typeof IMAGENS_EQUIPAMENTOS_REPDB] ??
+                        imagemEquipamento(equipamento.id)
+                      }
+                      loading="eager"
                       checked={selecionados.has(equipamento.id)}
                       onCheckedChange={() => alternar(equipamento.id)}
                     />
