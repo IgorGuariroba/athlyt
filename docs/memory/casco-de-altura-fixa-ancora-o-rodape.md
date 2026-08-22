@@ -1,7 +1,7 @@
 ---
 type: Development Learning
 title: "Rodapé só fica ancorado se o casco travar a altura na viewport"
-description: "Com min-height percentual e viewportFit cover, a rolagem pertence ao documento e a bottom nav sticky desliza para trás da barra do navegador."
+description: "Trave o casco na viewport, fixe a bottom nav e estabeleça o containing block do scroll container para não criar rolagem dupla."
 tags: [ui, layout, mobile, css, pwa, viewport]
 status: stable
 generated:
@@ -25,6 +25,7 @@ Dois detalhes decidem o resultado e são fáceis de errar:
 
 - `h-dvh` num item flex é anulado por `flex-1` (que define `flex-basis: 0`); o casco não pode ter as duas classes.
 - sem `min-h-0`, o `<main>` não encolhe abaixo do próprio conteúdo e continua empurrando a nav para fora da tela, mesmo com o pai de altura fixa.
+- controles `position: absolute` dentro de um scroll container precisam de um containing block (`relative`) no casco; caso contrário, inputs ocultos podem aumentar `document.documentElement.scrollHeight` e criar uma segunda barra.
 
 # Aplicação futura
 
@@ -32,10 +33,12 @@ Cascos com rodapé fixo travam a altura na viewport dinâmica e transferem a rol
 
 ```tsx
 <div className="flex h-dvh flex-col overflow-hidden">
-  <main className="flex min-h-0 flex-1 flex-col overflow-y-auto">{children}</main>
-  <BottomNav />   {/* shrink-0, sem sticky */}
+  <main className="relative flex min-h-0 flex-1 flex-col overflow-y-auto pb-[calc(4rem+var(--safe-bottom))]">{children}</main>
+  <BottomNav />   {/* fixed na viewport */}
 </div>
 ```
+
+Em controles escondidos, prefira input transparente cobrindo o alvo (`absolute inset-0 size-full opacity-0`) a `sr-only`, para que o alvo de toque e a posição do controle permaneçam no componente.
 
 Cubra a regressão com asserção geométrica em vez de inspeção visual: a nav precisa terminar dentro de `window.innerHeight` e `document.scrollingElement` não pode ter excedente de rolagem, verificados no topo e após rolar.
 

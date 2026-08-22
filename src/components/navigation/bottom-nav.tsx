@@ -10,10 +10,9 @@ import { cn } from "@/lib/utils";
  * fixada como bottom navigation (DESIGN.md > Components > Bottom
  * navigation; specs/workflow.md > Decisões estruturais).
  *
- * Não usa `sticky`: a nav é irmã do `<main>` rolável dentro de um casco
- * de altura fixa, então basta `shrink-0`. Enquanto era `sticky`, a
- * rolagem pertencia ao documento e a barra descia com ele, ficando
- * atrás da barra do navegador.
+ * Fica `fixed` na viewport para não depender do tamanho calculado pelo
+ * casco quando uma tela longa cresce. O `<main>` reserva a mesma altura
+ * no padding inferior, então a barra não cobre o último conteúdo.
  *
  * O padding inferior sai do token `--safe-bottom` (globals.css) em vez
  * de `env()` inline: assim o E2E consegue injetar insets reais, já que
@@ -38,7 +37,7 @@ export function BottomNav() {
   return (
     <nav
       aria-label="Navegação principal"
-      className="z-10 flex h-[calc(4rem+var(--safe-bottom))] shrink-0 items-stretch border-t border-border bg-surface pb-[var(--safe-bottom)]"
+      className="fixed inset-x-0 bottom-0 z-10 flex h-[calc(4rem+var(--safe-bottom))] items-stretch border-t border-border bg-surface pb-[var(--safe-bottom)]"
     >
       {ABAS.map((aba) => {
         const ativo = pathname.startsWith(aba.href);
