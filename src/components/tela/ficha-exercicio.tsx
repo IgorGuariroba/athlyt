@@ -127,7 +127,7 @@ export function FichaExercicio({
             aria-labelledby={tituloId}
             aria-describedby={descricaoId}
             tabIndex={-1}
-            className="flex max-h-[90vh] w-full flex-col overflow-y-auto rounded-t-2xl border-t border-border bg-surface-container p-6 pb-8"
+            className="scrollbar-hidden flex max-h-[90vh] w-full flex-col overflow-y-auto rounded-t-2xl border-t border-border bg-surface-container p-6 pb-8"
           >
             <div className="mb-4 flex items-start justify-between gap-3">
               <div>

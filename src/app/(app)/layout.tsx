@@ -33,7 +33,7 @@ export default async function AppLayout({
 
   return (
     <div className="flex h-dvh flex-col overflow-hidden pt-[var(--safe-top)]">
-      <main className="flex min-h-0 flex-1 flex-col overflow-y-auto">{children}</main>
+      <main tabIndex={0} className="scrollbar-hidden flex min-h-0 flex-1 flex-col overflow-y-auto">{children}</main>
       <BottomNav />
     </div>
   );

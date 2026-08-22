@@ -103,7 +103,12 @@ export function Atalhos({
         ))}
       </nav>
 
-      <div className="min-h-0 flex-1 overflow-y-auto p-4">
+      <div
+        role="region"
+        tabIndex={0}
+        aria-label="Conteúdo do registro"
+        className="scrollbar-hidden min-h-0 flex-1 overflow-y-auto p-4"
+      >
         {/* O seletor de porção vale para qualquer aba: escolher um
             alimento nos Favoritos precisa levar ao mesmo lugar que
             escolhê-lo na Busca, senão o toque não produz efeito. */}
@@ -524,7 +529,7 @@ function PratoRodape({
           Adicione alimentos para montar a refeição e registrar tudo de uma vez.
         </p>
       ) : (
-        <ul className="mb-3 flex max-h-40 flex-col gap-1 overflow-y-auto">
+        <ul className="scrollbar-hidden mb-3 flex max-h-40 flex-col gap-1 overflow-y-auto">
           {prato.map((item, indice) => (
             <li
               key={`${item.descricao}-${indice}`}
