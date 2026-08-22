@@ -444,7 +444,7 @@ export function CompartilharResultado(props: Props) {
           <div className="flex items-center gap-1.5">
             <Trophy aria-hidden="true" className="size-3 text-success" />
             <span className="text-caption font-semibold tracking-[0.2em] text-on-surface-strong uppercase">
-              Treino concluído
+              Resumo compartilhável
             </span>
           </div>
           <p className="font-brand text-title leading-[0.95] font-bold tracking-tight uppercase">

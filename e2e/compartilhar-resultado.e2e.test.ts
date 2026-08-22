@@ -21,7 +21,9 @@ import { allowEmail, seedAuthenticatedSession } from "./helpers/seed-session";
  * versionamento.
  */
 
-const EVIDENCIAS = "/home/movida/Downloads/evidencias-e2e";
+const EVIDENCIAS = process.env.CI
+  ? "test-results/evidencias-e2e"
+  : "/home/movida/Downloads/evidencias-e2e";
 
 const plano: PlanoGerado = {
   regraVersao: "motor-plano-v1",

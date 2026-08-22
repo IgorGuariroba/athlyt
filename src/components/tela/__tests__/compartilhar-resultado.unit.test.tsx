@@ -45,7 +45,7 @@ const dados = {
  * mantém o teste válido enquanto a composição do card evolui.
  */
 function previa() {
-  const kicker = screen.getByText("Treino concluído");
+  const kicker = screen.getByText("Resumo compartilhável");
   const faixa =
     screen.queryByText("Recorde desbloqueado") ??
     screen.queryByText("Treino registrado");
@@ -62,7 +62,7 @@ describe("CompartilharResultado", () => {
     render(<CompartilharResultado {...dados} />);
 
     const card = previa();
-    expect(within(card).getByText("Treino concluído")).toBeDefined();
+    expect(within(card).getByText("Resumo compartilhável")).toBeDefined();
     expect(within(card).getByText("Segunda-feira - A")).toBeDefined();
 
     // Rótulo e valor de cada métrica, com a unidade ao lado do número.
