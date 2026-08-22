@@ -4,6 +4,10 @@
 
 Inicie o projeto com `npm run dev`.
 
+## Evidências de testes web
+
+Ao executar testes E2E com Playwright, grave as evidências em `/home/movida/Downloads/evidencias-e2e/`, para facilitar a inspeção manual. Use nomes descritivos e mantenha os artefatos locais fora do versionamento.
+
 ## Memória de desenvolvimento
 
 Aprendizados importantes e reutilizáveis vivem no bundle OKF em `docs/memory/`.

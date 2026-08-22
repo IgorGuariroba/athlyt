@@ -18,7 +18,6 @@ export function ConclusaoSessao({ concluirAction, seriesPendentes }: {
   const { registrosLocais, estado, registrar } = useConexao();
   const [encerradaLocalmente, setEncerrada] = useState(false);
   const faltam = Math.max(0, seriesPendentes - registrosLocais.length);
-  const completo = faltam === 0;
 
   if (encerradaLocalmente) {
     return (
@@ -33,8 +32,11 @@ export function ConclusaoSessao({ concluirAction, seriesPendentes }: {
   if (estado !== "offline" && registrosLocais.length === 0) {
     return (
       <form action={concluirAction}>
-        <Button size="lg" disabled={!completo} className="h-14 w-full text-base font-bold">
-          {completo ? "Concluir treino" : `Complete ${faltam} séries para concluir`}
+        <p className="mb-3 text-center text-body-sm text-muted-foreground">
+          {faltam > 0 ? `${faltam} séries não registradas serão ignoradas.` : "Todas as séries foram registradas."}
+        </p>
+        <Button size="lg" className="h-14 w-full text-base font-bold">
+          Concluir treino
         </Button>
       </form>
     );
@@ -43,14 +45,13 @@ export function ConclusaoSessao({ concluirAction, seriesPendentes }: {
   return (
     <Button
       size="lg"
-      disabled={!completo}
       className="h-14 w-full text-base font-bold"
       onClick={async () => {
         setEncerrada(true);
         await registrar("sessao_concluida", {});
       }}
     >
-      {completo ? "Concluir treino" : `Complete ${faltam} séries para concluir`}
+      Concluir treino
     </Button>
   );
 }

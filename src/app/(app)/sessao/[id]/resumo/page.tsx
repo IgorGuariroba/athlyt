@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import {
   BarraAcaoFixa,
   CabecalhoSecao,
+  CompartilharResultado,
   CartaoLista,
   LinhaCartaoLista,
   LinhasCartaoLista,
@@ -83,6 +84,17 @@ export default async function ResumoPage({
             rotulo="Volume"
           />
         </PainelMetricas>
+
+        {concluida ? (
+          <CompartilharResultado
+            nome={resumo.nome}
+            duracaoMin={duracaoMin}
+            totalSeries={resumo.totalSeries}
+            volumeKg={resumo.volumeKg}
+            recordes={resumo.recordes.map(({ nome, valor }) => ({ nome, valor }))}
+            exercicios={resumo.exercicios.map(({ nome }) => ({ nome }))}
+          />
+        ) : null}
 
         {resumo.recordes.length ? (
           <section className="flex flex-col gap-3">

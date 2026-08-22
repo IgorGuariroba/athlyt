@@ -19,6 +19,7 @@ export {
   type MacroEnergetico,
 } from "./barra-macro";
 export { CabecalhoSecao } from "./cabecalho-secao";
+export { CompartilharResultado } from "./compartilhar-resultado";
 export { CabecalhoTela } from "./cabecalho-tela";
 export { CascataShell } from "./cascata-shell";
 export { CampoSelecao } from "./campo-selecao";
