@@ -7,7 +7,6 @@ const eslintConfig = defineConfig([
   ...nextTs,
   {
     files: ["src/app/**/*.{ts,tsx}"],
-    ignores: ["src/app/design/**"],
     rules: {
       "no-restricted-imports": [
         "error",
@@ -17,7 +16,7 @@ const eslintConfig = defineConfig([
               name: "@/components/ui/card",
               importNames: ["Card"],
               message:
-                "Páginas devem usar composições de @/components/tela. Se não houver uma adequada, crie-a, exponha-a no catálogo e em /design.",
+                "Páginas devem usar composições de @/components/tela. Se não houver uma adequada, crie-a, exponha-a no catálogo e demonstre-a em uma story ao lado do componente.",
             },
           ],
         },
@@ -39,6 +38,10 @@ const eslintConfig = defineConfig([
      // fonte, afogando erros reais em milhares de falsos positivos.
     "playwright-report/**",
     "test-results/**",
+    // Galeria estática gerada por `npm run storybook:build` (já no
+    // .gitignore). Mesmo caso do relatório do Playwright: são bundles
+    // minificados que o lint tentaria analisar como fonte.
+    "storybook-static/**",
   ]),
 ]);
 

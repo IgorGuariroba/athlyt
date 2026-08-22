@@ -18,11 +18,17 @@ import { seedAuthenticatedSession, allowEmail } from "../e2e/helpers/seed-sessio
 const BASE = process.env.AUDIT_BASE_URL ?? "http://localhost:3000";
 const SAIDA = "evidencias-e2e/auditoria";
 
-/** Telas sem sessão. */
+/**
+ * Telas sem sessão.
+ *
+ * A galeria do design system saiu desta lista ao virar Storybook: ela
+ * não é mais uma rota do produto, e capturar componentes isolados nunca
+ * foi o objetivo aqui — a auditoria compara *telas* com as referências
+ * do MacroFactor.
+ */
 const PUBLICAS = [
   ["boas-vindas", "/"],
   ["acesso-restrito", "/acesso-restrito"],
-  ["design-galeria", "/design"],
 ] as const;
 
 /** Telas do casco autenticado e da cascata de triagem. */

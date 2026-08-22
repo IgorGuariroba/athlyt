@@ -6,7 +6,7 @@
 
 | Job | Portão |
 | --- | --- |
-| `estatica` | `npm run lint` + `npm run typecheck` |
+| `estatica` | `npm run lint` + `npm run typecheck` + governança e render da galeria |
 | `unidade` | `npm run test:unit` — sem infraestrutura |
 | `integracao` | `npm run test:int` — Postgres 16 efêmero + migrations |
 | `build` | `npm run build` (Next em modo produção) |
@@ -15,6 +15,14 @@
 
 `e2e` depende de `estatica`, `unidade` e `integracao` — falha barata aborta
 antes do runner caro.
+
+A galeria (Storybook) é verificada dentro de `estatica`, e não em job próprio:
+o ruleset da `main` exige exatamente 6 checks **pelo nome**, e um job novo
+entraria como não-exigido — o portão existiria sem proteger nada. São dois
+passos com propósitos distintos: `storybook:build` compila, e
+`storybook:verificar` abre cada story em navegador porque o Storybook desenha
+erro de execução na moldura dele e sai com código 0
+(`docs/memory/galeria-compila-mas-nao-renderiza.md`).
 
 ## Níveis de teste
 
@@ -26,7 +34,7 @@ O nível de cada teste está no nome do arquivo, não numa lista mantida à mão
 | `*.int.test.ts` | integração | Postgres migrado | `npm run test:int` |
 | `*.e2e.test.ts` | ponta a ponta | app + Postgres + navegador | `npm run test:e2e` |
 
-Os dois primeiros são projects do Vitest (`vitest.config.ts`); o terceiro roda
+Os dois primeiros são projects do Vitest (`vitest.config.mts`); o terceiro roda
 no Playwright, a partir de `e2e/`.
 
 Um arquivo `.test.ts` **sem sufixo não é coletado por nenhum project** — é

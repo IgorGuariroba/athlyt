@@ -107,7 +107,7 @@ determinística e não pelo agent.
 Duas observações que sustentam as decisões:
 
 1. **A apresentação `icone` existe por causa desta tela.** Ela entrou na fatia 1
-   e está demonstrada em `/design`, mas **sem nenhum uso real** — esta fatia é o
+   e está demonstrada no Storybook, mas **sem nenhum uso real** — esta fatia é o
    que a justifica.
 2. **Na tela de substituir, hoje aparece `alternativa.justificativa`** — texto de
    catálogo, genérico. Falta dizer que o exercício sendo trocado foi escolhido
@@ -161,8 +161,9 @@ primeiras — pode ser puxada antes se o Copiloto for prioridade.
 - Reutilize `ExplicacaoAgent`; não recomponha `Revelar` + `PorQueIsso` na página.
   Se um caso não couber, estenda o componente para que a correção alcance todas
   as telas — é a regra de `DESIGN.md` e do kit em `src/components/tela/`.
-- Toda nova composição de tela exige demonstração em `/design` e teste de
-  contrato: `npm run ui:verificar` reprova o que faltar.
+- Toda nova composição de tela exige uma story ao lado do componente
+  (`*.stories.tsx`) e teste de contrato: `npm run ui:verificar` reprova o que
+  faltar, apontando o caminho exato do arquivo ausente.
 - Disclosure novo altera o contrato acessível. Atualize o E2E da jornada no mesmo
   conjunto de mudança (`docs/memory/mudanca-ui-atualiza-e2e.md`).
 - Para rodar E2E localmente, siga
