@@ -233,6 +233,8 @@ ${erro.text}`);
       {
         operacao: entrada.operacao,
         modeloSolicitado,
+        motivo,
+        tipoErro: erro instanceof Error ? erro.constructor.name : typeof erro,
         err: erro instanceof Error ? erro : new Error(motivo),
       },
       "decisão de IA indisponível",

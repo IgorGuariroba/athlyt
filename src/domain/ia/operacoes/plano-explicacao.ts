@@ -76,7 +76,7 @@ export const ANCORAS = {
   exercicio: ["equipamentos", "localTreino", "lesoes", "condicoes"],
   dia: ["diasDisponiveis", "duracaoSessaoMin"],
   bloco: ["experienciaTreino", "modoConservador"],
-  calorias: ["pesoKg", "alturaCm", "idadeAnos", "sexoBiologico", "nivelAtividade"],
+  calorias: ["pesoKg", "alturaCm", "idadeAnos", "sexoBiologico", "nivelAtividade", "linha-base-corporal"],
   proteinaG: ["pesoKg", "objetivoComposicao"],
   carboidratosG: ["diasDisponiveis", "nivelAtividade", "objetivoComposicao"],
   gordurasG: ["pesoKg"],
