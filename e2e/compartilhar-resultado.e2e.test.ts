@@ -213,8 +213,6 @@ test("gera o card 9:16 de 1080x1920 do treino concluído e grava a evidência em
     `Card suspeito de estar vazio (${png.byteLength} bytes): ${destino}`,
   ).toBeGreaterThan(10_000);
 
-  // A prévia em tela precisa contar a mesma história do PNG.
-  await expect(page.getByText("Recorde desbloqueado")).toBeVisible();
   await expect(
     page.getByText("Card salvo. Abra o Instagram para publicar nos Stories."),
   ).toBeVisible();
@@ -229,9 +227,6 @@ test("gera o card 9:16 também quando a sessão não bateu recorde", async ({ pa
   expect(largura).toBe(1080);
   expect(altura).toBe(1920);
   expect(png.byteLength).toBeGreaterThan(10_000);
-
-  // O card não fica mudo sem recorde: a faixa vira o registro do treino.
-  await expect(page.getByText("Treino registrado")).toBeVisible();
 
   console.log(`Evidência do card 9:16 (sem recordes): ${destino}`);
 });

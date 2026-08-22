@@ -1,6 +1,6 @@
 "use client";
 
-import { Share2, Trophy } from "lucide-react";
+import { Share2 } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { AvisoAcao } from "./aviso-acao";
@@ -393,16 +393,9 @@ async function gerarCard(props: Props) {
   );
 }
 
-/** Card visual 9:16, transparente e com margens seguras para Stories. */
+/** Ação compacta que gera e compartilha o card 9:16 para Stories. */
 export function CompartilharResultado(props: Props) {
   const [mensagem, setMensagem] = useState<string | null>(null);
-
-  const metricas: Array<[string, string, string]> = [
-    ["Volume total", props.volumeKg.toLocaleString("pt-BR"), "kg"],
-    ["Duração", `${props.duracaoMin}`, "min"],
-    ["Séries", `${props.totalSeries}`, "total"],
-  ];
-  const temRecorde = props.recordes.length > 0;
 
   async function compartilhar() {
     try {
@@ -434,80 +427,18 @@ export function CompartilharResultado(props: Props) {
   }
 
   return (
-    <div className="flex flex-col gap-3">
-      {/* Prévia: mesma composição do canvas em escala reduzida. */}
-      <div
-        aria-hidden="true"
-        className="mx-auto flex aspect-[9/16] w-60 flex-col overflow-hidden rounded-2xl"
+    <div className="flex flex-col items-end gap-3">
+      <Button
+        type="button"
+        variant="ghost"
+        size="icon-lg"
+        className="size-12"
+        aria-label="Compartilhar no Instagram"
+        onClick={compartilhar}
       >
-        <div className="flex flex-1 flex-col gap-2 rounded-2xl border border-border bg-surface/85 p-3 pr-8">
-          <div className="flex items-center gap-1.5">
-            <Trophy aria-hidden="true" className="size-3 text-success" />
-            <span className="text-caption font-semibold tracking-[0.2em] text-on-surface-strong uppercase">
-              Resumo compartilhável
-            </span>
-          </div>
-          <p className="font-brand text-title leading-[0.95] font-bold tracking-tight uppercase">
-            {props.nome}
-          </p>
-          <span className="flex h-1 w-16 overflow-hidden rounded-pill bg-border">
-            <span className="h-full w-2/3 rounded-pill bg-success" />
-          </span>
-          <div className="mt-1 flex flex-col">
-            {metricas.map(([nome, valor, unidade], indice) => (
-              <div
-                key={nome}
-                className={`flex items-center gap-2 py-1.5 ${indice > 0 ? "border-t border-border" : ""}`}
-              >
-                <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-success/15 text-success">
-                  <Trophy aria-hidden="true" className="size-3" />
-                </span>
-                <span className="flex flex-col leading-none">
-                  <span className="text-caption tracking-[0.18em] text-muted-foreground uppercase">
-                    {nome}
-                  </span>
-                  <span className="font-brand text-title font-bold">
-                    {valor}
-                    <span className="text-caption ml-1 font-semibold tracking-widest text-success uppercase">
-                      {unidade}
-                    </span>
-                  </span>
-                </span>
-              </div>
-            ))}
-          </div>
-          <div className="mt-auto flex items-center gap-2 rounded-xl border border-success/40 bg-success/10 p-2">
-            <span className="flex size-7 shrink-0 items-center justify-center rounded-full border border-success/60 bg-success/15 text-success">
-              <Trophy aria-hidden="true" className="size-3.5" />
-            </span>
-            <span className="flex min-w-0 flex-col">
-              <span className="text-caption tracking-[0.18em] text-muted-foreground uppercase">
-                {temRecorde ? "Recorde desbloqueado" : "Treino registrado"}
-              </span>
-              <span className="text-body-sm truncate font-bold uppercase">
-                {temRecorde ? props.recordes[0].nome : props.nome}
-              </span>
-            </span>
-          </div>
-        </div>
-        <div className="flex items-center justify-between bg-background px-3 py-1.5">
-          <span className="text-caption tracking-[0.18em] text-muted-foreground uppercase">
-            Athlyt
-          </span>
-          <span className="text-caption tracking-[0.18em] text-success uppercase">
-            #athlyt
-          </span>
-        </div>
-      </div>
-      <Button type="button" size="lg" className="w-full" onClick={compartilhar}>
         <Share2 aria-hidden="true" />
-        Compartilhar no Instagram
       </Button>
-      {mensagem ? (
-        <AvisoAcao tipo="sucesso">
-          <Trophy aria-hidden="true" className="inline size-4" /> {mensagem}
-        </AvisoAcao>
-      ) : null}
+      {mensagem ? <AvisoAcao tipo="sucesso">{mensagem}</AvisoAcao> : null}
     </div>
   );
 }

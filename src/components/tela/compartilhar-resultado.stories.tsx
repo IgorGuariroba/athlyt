@@ -9,7 +9,7 @@ const meta = {
     docs: {
       description: {
         component:
-          "Prévia do card 9:16 usado para publicar o treino concluído nos Stories. O card final é desenhado em canvas e compartilhado por `navigator.share`; a prévia repete a mesma composição em escala reduzida.",
+          "Ação compacta para compartilhar o resultado do treino nos Stories. O card 9:16 é desenhado em canvas e compartilhado por `navigator.share`; a interface exibe somente o ícone.",
       },
     },
   },
@@ -33,4 +33,21 @@ export const ComRecorde: Story = {};
 
 export const SemRecorde: Story = {
   args: { recordes: [] },
+};
+
+/** Estados de interação do ícone, priorizando o feedback necessário no toque. */
+export const Hover: Story = {
+  parameters: { pseudo: { hover: true } },
+};
+
+export const Focus: Story = {
+  parameters: { pseudo: { focus: true } },
+};
+
+export const FocusVisible: Story = {
+  parameters: { pseudo: { focusVisible: true } },
+};
+
+export const Active: Story = {
+  parameters: { pseudo: { active: true } },
 };
