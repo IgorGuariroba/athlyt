@@ -110,7 +110,7 @@ test("executa o treino do dia, usa o timer e consulta o resumo no histórico", a
 
   await page.getByRole("button", { name: /Iniciar treino/ }).click();
   await expect(page.getByText("SESSÃO EM ANDAMENTO")).toBeVisible();
-  await expect(page.getByRole("button", { name: /Complete 1 séries/ })).toBeDisabled();
+  await expect(page.getByRole("button", { name: "Concluir treino" })).toBeEnabled();
 
   // O motivo sobrevive ao congelamento do snapshot e continua ao alcance
   // durante a execução — sem ocupar a tela, porque aqui o atleta está
