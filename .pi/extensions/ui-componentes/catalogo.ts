@@ -18,6 +18,8 @@ export type ComponenteCatalogo = {
   camada: string;
   /** Nomes exportados (componentes, tipos e helpers). */
   exports: string[];
+  /** Subconjunto de `exports` exportado como `type`/`interface`. */
+  tipos: string[];
   /** Variantes declaradas via cva: grupo -> opções. */
   variantes: Record<string, string[]>;
   /** Primeiro bloco de documentação do arquivo, quando existe. */
@@ -44,24 +46,47 @@ function listarArquivos(dir: string): string[] {
     }
     if (!entrada.endsWith(".tsx") && !entrada.endsWith(".ts")) continue;
     if (entrada.endsWith(".test.ts") || entrada.endsWith(".test.tsx")) continue;
+    // Uma story exporta `Padrao`, `Variantes`, `Estados` — nomes que
+    // parecem componentes e entrariam no catálogo como se fossem
+    // reutilizáveis. A story descreve um componente; não é um.
+    if (entrada.endsWith(".stories.ts") || entrada.endsWith(".stories.tsx")) continue;
     if (entrada === "index.ts") continue;
     resultado.push(caminho);
   }
   return resultado;
 }
 
-function extrairExports(fonte: string): string[] {
+/**
+ * Nomes exportados, separando o que é tipo do que é valor.
+ *
+ * A distinção não é cosmética: a governança exige uma story de cada
+ * componente, e `type Serie` ou `type Macro` jamais poderiam ter uma.
+ * Sem separar, a única saída seria uma lista de exceções mantida à mão
+ * — exatamente o que este catálogo existe para eliminar.
+ */
+function extrairExports(fonte: string): { exports: string[]; tipos: string[] } {
   const nomes = new Set<string>();
-  const declarado = /export\s+(?:async\s+)?(?:function|const|type|interface)\s+([A-Za-z0-9_]+)/g;
-  for (const m of fonte.matchAll(declarado)) nomes.add(m[1]);
+  const tipos = new Set<string>();
+
+  const declarado =
+    /export\s+(?:async\s+)?(function|const|type|interface)\s+([A-Za-z0-9_]+)/g;
+  for (const m of fonte.matchAll(declarado)) {
+    nomes.add(m[2]);
+    if (m[1] === "type" || m[1] === "interface") tipos.add(m[2]);
+  }
+
   const reexport = /export\s*\{([^}]*)\}/g;
   for (const m of fonte.matchAll(reexport)) {
     for (const parte of m[1].split(",")) {
+      const ehTipo = /\btype\b/.test(parte);
       const nome = parte.replace(/\btype\b/, "").split(/\s+as\s+/).pop()?.trim();
-      if (nome) nomes.add(nome);
+      if (!nome) continue;
+      nomes.add(nome);
+      if (ehTipo) tipos.add(nome);
     }
   }
-  return [...nomes];
+
+  return { exports: [...nomes], tipos: [...tipos] };
 }
 
 /** Extrai `variants: { grupo: { opcao: ... } }` de blocos cva. */
@@ -128,11 +153,13 @@ export function lerCatalogo(cwd: string): ComponenteCatalogo[] {
       const fonte = readFileSync(caminho, "utf8");
       const rel = relative(cwd, caminho);
       const semExt = rel.replace(/\.tsx?$/, "").replace(/^src[\\/]/, "");
+      const { exports, tipos } = extrairExports(fonte);
       return {
         arquivo: rel.split(sep).join("/"),
         importPath: `@/${semExt.split(sep).join("/")}`,
         camada: rel.split(sep)[2] ?? "componentes",
-        exports: extrairExports(fonte),
+        exports,
+        tipos,
         variantes: extrairVariantes(fonte),
         doc: extrairDoc(fonte),
       } satisfies ComponenteCatalogo;

@@ -4,6 +4,18 @@
 
 Inicie o projeto com `npm run dev`.
 
+## Galeria de componentes
+
+A referência visual do design system é o Storybook (`npm run storybook`), não
+uma rota do produto — a antiga `/design` foi descontinuada.
+
+Todo componente de `src/components/**` precisa de uma story ao lado dele
+(`*.stories.tsx`) e, fora da camada `ui`, de teste de contrato.
+`npm run ui:verificar` reprova o que faltar, apontando o caminho exato do
+arquivo ausente. `npm run storybook:verificar` confere que cada story de fato
+renderiza — `storybook build` compila mas não renderiza
+(`docs/memory/galeria-compila-mas-nao-renderiza.md`).
+
 ## Evidências de testes web
 
 Ao executar testes E2E com Playwright, grave as evidências em `/home/movida/Downloads/evidencias-e2e/`, para facilitar a inspeção manual. Use nomes descritivos e mantenha os artefatos locais fora do versionamento.

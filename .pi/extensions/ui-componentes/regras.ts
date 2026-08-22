@@ -33,7 +33,7 @@ const REGRAS: Regra[] = [
     motivo:
       "Card estrutural importado diretamente pela página permite recriar padrões visuais fora do kit de composição.",
     correcao:
-      "Use um componente de `@/components/tela`. Se o padrão ainda não existir, crie-o nessa camada, exporte-o no catálogo e demonstre-o em `/design`.",
+      "Use um componente de `@/components/tela`. Se o padrão ainda não existir, crie-o nessa camada, exporte-o no catálogo e demonstre-o em uma story ao lado do componente (`*.stories.tsx`).",
   },
   {
     id: "controle-cru",

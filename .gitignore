@@ -49,6 +49,9 @@ next-env.d.ts
 /evidencias-e2e
 /.playwright-cli
 
+# galeria estática gerada pelo Storybook
+/storybook-static
+
 # service worker gerado (Serwist)
 /public/sw.js
 /public/sw.js.map

@@ -36,7 +36,7 @@ Ao receber um pedido de conformidade visual ampla:
 1. Escreva o script de captura antes de editar qualquer tela. Reaproveite `scripts/auditoria-visual.ts` — a lista de rotas é o único trecho que muda.
 2. Suba o servidor com `AUTH_URL` casando o host, senão todas as rotas autenticadas redirecionam para `/` e as capturas saem idênticas (ver `e2e-auth-url-local.md`).
 3. Compare cada captura com a referência correspondente em `workflow-imagens-references/macrofactor/` antes de decidir o que mudar.
-4. Extraia o padrão divergente para um componente, registre-o na galeria `/design` e só então aplique nas telas.
+4. Extraia o padrão divergente para um componente, demonstre-o em uma story ao lado dele (`*.stories.tsx`, visível em `npm run storybook`) e só então aplique nas telas.
 
 Métricas úteis como porta de saída: `grep -rn '<select\|<progress' src/app` deve retornar zero, e toda página deve importar de `@/components/tela`.
 
