@@ -7,6 +7,26 @@ export const metadata: Metadata = {
   title: "Athlyt",
   description: "Seu coach adaptativo pessoal de treino, alimentação e evolução corporal.",
   manifest: "/manifest.webmanifest",
+  icons: {
+    icon: [
+      { url: "/icons/favicon-16x16.png", sizes: "16x16", type: "image/png" },
+      { url: "/icons/favicon-32x32.png", sizes: "32x32", type: "image/png" },
+      { url: "/icons/favicon-48x48.png", sizes: "48x48", type: "image/png" },
+    ],
+    apple: "/apple-touch-icon.png",
+    other: [{ rel: "mask-icon", url: "/safari-pinned-tab.svg" }],
+  },
+  openGraph: {
+    type: "website",
+    images: [{ url: "/og-image.png", width: 1200, height: 630, alt: "Athlyt" }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    images: ["/twitter-image.png"],
+  },
+  other: {
+    "msapplication-config": "/browserconfig.xml",
+  },
   /**
    * `statusBarStyle` fica em `black` (opaco), e não em
    * `black-translucent`.
