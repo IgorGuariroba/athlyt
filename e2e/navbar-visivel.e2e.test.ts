@@ -28,8 +28,8 @@ const plano = {
 
 /**
  * Regressão do rodapé coberto: com conteúdo mais alto que a viewport, o
- * scroll saía para o body e a `BottomNav` (então `sticky`) descia junto,
- * ficando atrás da barra do navegador. A checagem é geométrica: a nav
+ * scroll saía para o body e a `BottomNav` descia junto, ficando atrás da
+ * barra do navegador. A checagem é geométrica: a nav
  * precisa terminar dentro de `innerHeight` em qualquer posição de rolagem.
  */
 async function navDentroDaViewport(page: import("@playwright/test").Page, etapa: string) {
