@@ -246,6 +246,30 @@
 }
 
 /**
+ * Casco horizontal das quatro abas principais. O gesto é tratado pelo
+ * componente para trocar a rota; o CSS mantém a rolagem vertical nativa e
+ * impede que uma tentativa de arrastar na horizontal crie uma segunda
+ * barra de rolagem.
+ */
+.swipe-navegacao {
+  display: flex;
+  min-height: 0;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+  touch-action: pan-y;
+  overscroll-behavior-x: contain;
+}
+
+.swipe-navegacao__conteudo {
+  display: flex;
+  min-height: 100%;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+}
+
+/**
  * Transição entre etapas da cascata de triagem (DESIGN.md > Motion &
  * Interaction: "transição de página: 200-300ms", `ease-out` ao entrar).
  * A etapa entra deslizando no sentido do avanço — da direita ao seguir

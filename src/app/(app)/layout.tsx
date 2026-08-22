@@ -1,6 +1,7 @@
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { BottomNav } from "@/components/navigation/bottom-nav";
+import { SwipeNavigation } from "@/components/navigation/swipe-navigation";
 
 /**
  * Casco autenticado das quatro abas (Início, Diário, Progresso, Mais).
@@ -39,7 +40,7 @@ export default async function AppLayout({
         tabIndex={0}
         className="relative flex min-h-dvh flex-col overflow-x-clip pb-[calc(4rem+var(--safe-bottom))]"
       >
-        {children}
+        <SwipeNavigation>{children}</SwipeNavigation>
       </main>
       <BottomNav />
     </div>

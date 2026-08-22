@@ -95,7 +95,7 @@ describe("governança de composição das telas", () => {
       }
     }
 
-    const fontesTestes = ["tela", "ui", "fotos"].flatMap((camada) => {
+    const fontesTestes = ["tela", "ui", "fotos", "navigation"].flatMap((camada) => {
       const dir = join(cwd, "src/components", camada, "__tests__");
       if (!existsSync(dir)) return [];
       return readdirSync(dir).map((arquivo) =>
