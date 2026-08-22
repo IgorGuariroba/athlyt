@@ -6,6 +6,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { segundosDeDescanso } from "@/domain/sessao/descanso";
 import { useRitmoDescanso } from "@/lib/store-descanso";
+import {
+  limparBadgeTreino,
+  marcarDescansoPronto,
+  notificarDescansoConcluido,
+  solicitarPermissaoNotificacoes,
+} from "@/lib/treino-notificacoes";
 import { useConexao } from "./estado-conexao";
 
 const FECHAR_TIMERS_DE_DESCANSO = "athlyt:fechar-timers-de-descanso";
@@ -47,7 +53,8 @@ export function RegistroSerie({ exercicioId, numero, repeticoesSugeridas, rirSug
       if (valor === null) return null;
       if (valor <= 1) {
         navigator.vibrate?.([180, 80, 180]);
-        if (Notification.permission === "granted") new Notification("Descanso concluído", { body: "Sua próxima série está pronta." });
+        void notificarDescansoConcluido();
+        void marcarDescansoPronto();
         // O descanso concluído não mantém uma camada modal em 0:00
         // bloqueando o registro da próxima série.
         return null;
@@ -73,6 +80,7 @@ export function RegistroSerie({ exercicioId, numero, repeticoesSugeridas, rirSug
     // timer, fecha qualquer timer iniciado por outra série para garantir
     // uma única camada modal e uma única contagem de descanso na sessão.
     window.dispatchEvent(new Event(FECHAR_TIMERS_DE_DESCANSO));
+    void limparBadgeTreino();
     // O timer começa fora de uma React Form Action: Actions retêm as
     // atualizações de estado até a Promise terminar, o que faria o descanso
     // aguardar a sincronização da série e a preparação do Copiloto.
@@ -92,9 +100,7 @@ export function RegistroSerie({ exercicioId, numero, repeticoesSugeridas, rirSug
         setErroRegistro("A série não foi salva. Confira os dados e tente novamente.");
       },
     );
-    if ("Notification" in window && Notification.permission === "default") {
-      void Notification.requestPermission();
-    }
+    void solicitarPermissaoNotificacoes();
   }
 
   const novoRecorde = registrada && (carga ?? 0) > melhorCargaAnterior;

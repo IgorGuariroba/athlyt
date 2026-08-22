@@ -1,8 +1,10 @@
 "use client";
 
+import { useEffect } from "react";
 import { BookOpen, ChartLine, Ellipsis, House } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { ouvirMensagensDoServiceWorker } from "@/lib/treino-notificacoes";
 import { cn } from "@/lib/utils";
 
 /**
@@ -33,6 +35,8 @@ const ABAS = [
 
 export function BottomNav() {
   const pathname = usePathname();
+
+  useEffect(() => ouvirMensagensDoServiceWorker(), []);
 
   return (
     <nav
