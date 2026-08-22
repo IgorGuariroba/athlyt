@@ -26,7 +26,11 @@ export const Padrao: Story = {
     // do canvas. É o único jeito de mostrar, numa story, a relação
     // entre a barra e o conteúdo que passa por baixo dela.
     <div className="relative h-96 translate-x-0 overflow-hidden rounded-lg border border-border">
-      <div className="h-full overflow-y-auto p-4 pb-24">
+      <div
+        className="h-full overflow-y-auto p-4 pb-24"
+        tabIndex={0}
+        aria-label="Conteúdo rolável da etapa"
+      >
         <div className="flex flex-col gap-3">
           {Array.from({ length: 12 }, (_, i) => (
             <p key={i} className="text-body-md text-muted-foreground">

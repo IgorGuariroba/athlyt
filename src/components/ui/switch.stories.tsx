@@ -11,7 +11,14 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const Padrao: Story = {};
+export const Padrao: Story = {
+  render: () => (
+    <div className="flex items-center justify-between gap-3">
+      <Label htmlFor="story-switch-default">Notificações</Label>
+      <Switch id="story-switch-default" />
+    </div>
+  ),
+};
 
 export const Estados: Story = {
   render: () => (

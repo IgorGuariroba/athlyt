@@ -11,7 +11,14 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const Padrao: Story = {};
+export const Padrao: Story = {
+  render: () => (
+    <div className="flex items-center gap-3">
+      <Checkbox id="story-check-default" />
+      <Label htmlFor="story-check-default">Aceito os termos</Label>
+    </div>
+  ),
+};
 
 export const Estados: Story = {
   render: () => (

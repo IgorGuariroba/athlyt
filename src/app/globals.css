@@ -20,14 +20,16 @@
   --surface-container-high: #242424;
   --on-surface: #f2f2f2;
   --on-surface-strong: #ffffff;
-  --muted-color: #808080;
+  /* Neutral-400 mantém texto secundário em AA sobre as superfícies escuras. */
+  --muted-color: #a3a3a3;
   --border-color: #343434;
   --border-strong: #565656;
   --inverse-surface: #ffffff;
   --inverse-on-surface: #111111;
   --success: #66b98a;
   --warning: #f3d765;
-  --error: #d75a5a;
+  /* Vermelho semântico com AA também em texto pequeno sobre superfícies. */
+  --error: #df6868;
   --info: #5878f3;
   --nutrition-protein: #f58a5b;
   --nutrition-fat: #f3d765;
