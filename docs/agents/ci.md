@@ -82,9 +82,10 @@ gh pr create --fill
 gh pr merge --squash   # só passa com os 6 checks verdes
 ```
 
-O hook local `.githooks/pre-push` (ative com `git config core.hooksPath .githooks`)
-virou conveniência, não portão: adianta lint/typecheck/testes antes de gastar
-uma rodada de CI. A garantia real está no servidor.
+Os hooks locais vivem em `.githooks/` e são ativados com
+`git config core.hooksPath .githooks`. O `pre-commit` recusa commits na `main`;
+o `pre-push` adianta lint/typecheck/testes antes de gastar uma rodada de CI.
+Eles são conveniência, não portão: a garantia real está no servidor.
 
 ### O que cada regra impede
 
