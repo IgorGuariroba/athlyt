@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
-import { Flame, Scale } from "lucide-react";
+import { LoaderCircle } from "lucide-react";
 
 import { Button } from "./button";
 
@@ -20,51 +20,47 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const Padrao: Story = {};
+export const Default: Story = {};
 
-export const Variantes: Story = {
+export const Variants: Story = {
   render: () => (
     <div className="flex flex-wrap items-center gap-3">
       {(
         ["default", "outline", "secondary", "ghost", "destructive", "link"] as const
-      ).map((variante) => (
-        <Button key={variante} variant={variante}>
-          {variante}
+      ).map((variant) => (
+        <Button key={variant} variant={variant}>
+          {variant}
         </Button>
       ))}
     </div>
   ),
 };
 
-export const Tamanhos: Story = {
-  render: () => (
-    <div className="flex flex-col gap-4">
-      <div className="flex flex-wrap items-center gap-3">
-        {(["xs", "sm", "default", "lg"] as const).map((tamanho) => (
-          <Button key={tamanho} size={tamanho}>
-            {tamanho}
-          </Button>
-        ))}
-        <Button size="icon" aria-label="Ação com ícone">
-          <Flame aria-hidden="true" />
-        </Button>
-      </div>
-      <Button size="cta">CTA principal (48px)</Button>
-    </div>
-  ),
+export const Hover: Story = {
+  parameters: { pseudo: { hover: true } },
 };
 
-export const Estados: Story = {
+export const Focus: Story = {
+  parameters: { pseudo: { focus: true } },
+};
+
+export const FocusVisible: Story = {
+  parameters: { pseudo: { focusVisible: true } },
+};
+
+export const Active: Story = {
+  parameters: { pseudo: { active: true } },
+};
+
+export const Disabled: Story = {
+  args: { disabled: true },
+};
+
+export const Loading: Story = {
   render: () => (
-    <div className="flex flex-wrap items-center gap-3">
-      <Button disabled>Desabilitado</Button>
-      <Button variant="outline" disabled>
-        Desabilitado outline
-      </Button>
-      <Button>
-        <Scale aria-hidden="true" />
-        Com ícone
-      </Button>
-    </div>
+    <Button disabled aria-busy="true">
+      <LoaderCircle aria-hidden="true" className="animate-spin" />
+      Carregando
+    </Button>
   ),
 };

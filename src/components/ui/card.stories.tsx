@@ -54,7 +54,7 @@ export const Completo: Story = {
         </p>
       </CardContent>
       <CardFooter>
-        <Button variant="outline" size="sm">
+        <Button variant="secondary" size="lg">
           Ver detalhamento
         </Button>
       </CardFooter>
