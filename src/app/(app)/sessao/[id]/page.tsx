@@ -59,7 +59,7 @@ export default async function SessaoPage({ params, searchParams }: { params: Pro
       >
         {sessao.exercicios.map((item, indice) => {
           const concluido = item.interrompido || item.series.every((serie) => serie.concluida);
-          return <Link key={`${item.exercicioId}-${indice}`} href={`/sessao/${sessao.id}?exercicio=${indice}`} aria-label={`Abrir ${item.nome}`} aria-current={indice === indiceAtual ? "step" : undefined} className={`flex size-14 shrink-0 snap-start items-center justify-center rounded-xl border ${indice === indiceAtual ? "border-on-surface-strong bg-on-surface-strong text-background" : "border-border bg-surface-container"}`}>
+          return <Link key={`${item.exercicioId}-${indice}`} href={`/sessao/${sessao.id}/exercicio/${item.exercicioId}`} aria-label={`Abrir ${item.nome}`} aria-current={indice === indiceAtual ? "step" : undefined} className={`flex size-14 shrink-0 snap-start items-center justify-center rounded-xl border ${indice === indiceAtual ? "border-on-surface-strong bg-on-surface-strong text-background" : "border-border bg-surface-container"}`}>
             {concluido ? <Check className="size-5 text-success" /> : <span className="text-label-lg font-bold">{indice + 1}</span>}
           </Link>;
         })}
@@ -124,7 +124,7 @@ export default async function SessaoPage({ params, searchParams }: { params: Pro
         </div>
       </section>
 
-      {feito && indiceAtual < sessao.exercicios.length - 1 ? <Button asChild size="lg" className="h-14 w-full text-base font-bold"><Link href={`/sessao/${sessao.id}?exercicio=${proximoIndice}`}>Próximo exercício</Link></Button> : null}
+      {feito && indiceAtual < sessao.exercicios.length - 1 ? <Button asChild size="lg" className="h-14 w-full text-base font-bold"><Link href={`/sessao/${sessao.id}/exercicio/${sessao.exercicios[proximoIndice].exercicioId}`}>Próximo exercício</Link></Button> : null}
       <ConclusaoSessao concluirAction={concluirSessaoAction.bind(null, sessao.id)} seriesPendentes={total - concluidas} />
       <div className="rounded-xl border border-border p-4">
         <Revelar rotulo="Abandonar sessão">
