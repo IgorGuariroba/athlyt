@@ -75,13 +75,21 @@ export function CapturaFoto({
   return (
     <div className={cn("flex flex-col gap-3", className)}>
       {/* ui-excecao: seletor de arquivo/câmera é justamente o controle
-          que este componente do catálogo encapsula para as telas. */}
+          que este componente do catálogo encapsula para as telas.
+
+          O `aria-label` repete o rótulo do botão que dispara este
+          input, e não um texto próprio: o input está em `sr-only` e
+          quem chega nele pela navegação por formulários de um leitor
+          de tela precisa ouvir o mesmo nome que o botão visível
+          anuncia — dois nomes para um controle só seriam dois
+          controles na percepção de quem não vê a tela. */}
       <input
         ref={camera}
         id={idCaptura}
         type="file"
         accept="image/jpeg,image/png,image/webp"
         capture="environment"
+        aria-label={rotuloCaptura}
         className="sr-only"
         onChange={(evento) => aoEscolher(evento.target.files?.[0] ?? null)}
       />
@@ -91,6 +99,7 @@ export function CapturaFoto({
         id={idGaleria}
         type="file"
         accept="image/jpeg,image/png,image/webp"
+        aria-label={rotuloGaleria}
         className="sr-only"
         onChange={(evento) => aoEscolher(evento.target.files?.[0] ?? null)}
       />

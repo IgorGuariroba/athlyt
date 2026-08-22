@@ -49,6 +49,7 @@ jobs:
           curl --retry 30 --retry-delay 1 --retry-all-errors -sf \
             http://localhost:6006/index.json > /dev/null
           STORYBOOK_URL=http://localhost:6006 npm run storybook:verificar
+          STORYBOOK_URL=http://localhost:6006 npm run storybook:a11y
 
   # Portão rápido: *.unit.test.ts não toca infraestrutura nenhuma, então
   # este job não provisiona banco de propósito — se algum teste passar a

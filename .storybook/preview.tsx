@@ -51,10 +51,10 @@ const preview: Preview = {
       },
     },
     a11y: {
-      // A galeria reporta as violações sem derrubar a story: o teste
-      // de acessibilidade que barra entrega é o `ui_varrer` sobre a
-      // tela real, onde o componente aparece no contexto que importa.
-      test: "todo",
+      // O addon bloqueia a story quando o axe encontra uma violação.
+      // O CI também roda `scripts/verificar-a11y.ts` contra cada iframe,
+      // porque `storybook build` não executa o painel do addon.
+      test: "error",
     },
   },
   initialGlobals: {

@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import withBundleAnalyzer from "@next/bundle-analyzer";
 import withSerwistInit from "@serwist/next";
 
 const nextConfig: NextConfig = {
@@ -62,4 +63,9 @@ const withSerwist = withSerwistInit({
   disable: process.env.NODE_ENV !== "production",
 });
 
-export default withSerwist(nextConfig);
+const withAnalyzer = withBundleAnalyzer({
+  enabled: process.env.ANALYZE === "true",
+  openAnalyzer: false,
+});
+
+export default withAnalyzer(withSerwist(nextConfig));

@@ -40,7 +40,10 @@ export function CascataShell({
       </Link>
 
       <div className="flex flex-col gap-2">
-        <Progress value={(indice / total) * 100} />
+        <Progress
+          value={(indice / total) * 100}
+          aria-label={`Progresso da triagem: etapa ${indice} de ${total}`}
+        />
         <p className="text-body-sm text-muted-foreground">
           Etapa {indice} de {total}
         </p>
