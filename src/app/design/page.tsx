@@ -44,6 +44,7 @@ import {
   CabecalhoCartaoLista,
   CabecalhoSecao,
   CabecalhoTela,
+  CompartilharResultado,
   CampoSelecao,
   CartaoCheckbox,
   CartaoLista,
@@ -1086,6 +1087,20 @@ export default function GaleriaDesignPage() {
                 Tentar novamente
               </Button>
             }
+          />
+        </Amostra>
+
+        <Amostra
+          titulo="Compartilhar resultado"
+          nota="Prévia do card 9:16 usado para publicar o treino concluído nos Stories."
+        >
+          <CompartilharResultado
+            nome="Segunda-feira — A"
+            duracaoMin={54}
+            totalSeries={18}
+            volumeKg={8760}
+            recordes={[{ nome: "Supino reto com halteres", valor: 82 }]}
+            exercicios={[{ nome: "Supino reto com halteres" }, { nome: "Remada curvada" }]}
           />
         </Amostra>
 

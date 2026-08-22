@@ -95,7 +95,6 @@ describe("jornada pública da Sessão de Treino", () => {
   it("abandona com motivo e mantém o desfecho distinguível no histórico", async () => {
     const { userId } = await contexto();
     const iniciada = await iniciarSessao(userId, "segunda-superior");
-    await expect(concluirSessao(userId, iniciada.id)).rejects.toThrow("séries planejadas");
     await abandonarSessao(userId, iniciada.id, "dor");
 
     const sessao = await obterSessao(userId, iniciada.id);

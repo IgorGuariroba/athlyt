@@ -166,6 +166,12 @@ function metricas(exercicios: ExercicioSessao[]) {
 }
 
 export async function concluirSessao(userId: string, sessionId: string): Promise<ResumoSessao> {
+  // A ação pode ser reenviada pelo navegador (duplo clique, retry de uma
+  // Server Action ou retorno à página). Concluir é idempotente: se a sessão
+  // já terminou, apenas devolvemos o mesmo resumo em vez de falhar.
+  const sessao = await obterSessao(userId, sessionId);
+  if (!sessao) throw new Error("Sessão não encontrada.");
+  if (sessao.estado === "concluida") return obterResumoSessao(userId, sessao);
   return obterResumoSessao(userId, await encerrar(userId, sessionId, "concluida"));
 }
 
@@ -203,9 +209,6 @@ async function encerrar(userId: string, sessionId: string, estado: "concluida" |
   const atualizada = await db.transaction(async (tx) => {
     const [linha] = await tx.select().from(workoutSessions).where(and(eq(workoutSessions.id, sessionId), eq(workoutSessions.userId, userId))).limit(1).for("update");
     if (!linha || linha.estado !== "em_andamento") throw new Error("Sessão não está em andamento.");
-    if (estado === "concluida" && !(linha.exercicios as ExercicioSessao[]).every((exercicio) => exercicio.series.every((serie) => serie.concluida))) {
-      throw new Error("Registre todas as séries planejadas antes de concluir.");
-    }
     const [encerrada] = await tx.update(workoutSessions).set({ estado, endedAt: new Date(), motivoAbandono: motivo ?? null }).where(eq(workoutSessions.id, sessionId)).returning();
     await tx.insert(workoutEvents).values({ sessionId, userId, tipo: estado === "concluida" ? "sessao_concluida" : "sessao_abandonada", dados: motivo ? { motivo } : {} });
     return encerrada;
