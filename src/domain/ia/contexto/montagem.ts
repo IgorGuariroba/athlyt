@@ -146,6 +146,7 @@ export function renderizarContexto(contexto: ContextoDoAtleta): string {
   const linhas: string[] = [];
 
   linhas.push("## Perfil do atleta");
+  linhas.push(`- modoConservador: ${contexto.nucleo.modoConservador}`);
   if (contexto.nucleo.modoConservador) {
     linhas.push(
       "MODO CONSERVADOR ATIVO: faltam dados obrigatórios do perfil. " +

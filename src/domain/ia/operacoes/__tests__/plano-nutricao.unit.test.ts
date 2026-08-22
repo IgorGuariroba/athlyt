@@ -4,6 +4,7 @@ const decidir = vi.fn();
 vi.mock("../../decidir", () => ({ decidir: (...args: unknown[]) => decidir(...args) }));
 
 const { gerarPlanoNutricaoComIA, planoNutricaoSchema } = await import("../plano-nutricao");
+const { montarDadosPlano } = await import("../plano-dados");
 
 const nucleo = { perfilVersao: 7, modoConservador: false };
 
@@ -75,6 +76,29 @@ describe("gerarPlanoNutricaoComIA", () => {
       operacao: "plano-nutricao",
       imagens: [{ dados: new Uint8Array([9]), mediaType: "image/jpeg" }],
     }));
+  });
+
+  it("envia o percentual de gordura corporal no contexto nutricional", () => {
+    const dados = montarDadosPlano({
+      triagemCompleta: {},
+      linhaBaseCorporal: {
+        gorduras: [{ percentualBasisPoints: 1820, metodo: "bioimpedancia", confianca: "alta", observadoEm: "2026-08-17" }],
+      },
+    });
+
+    expect(dados["linha-base-corporal"]).toMatchObject({
+      gorduras: [{ percentual: 18.2, metodo: "bioimpedancia", confianca: "alta" }],
+    });
+  });
+
+  it("instrui a considerar a gordura corporal no cálculo", async () => {
+    decidir.mockResolvedValue({ status: "ok", valor: nutricaoValida, contexto: {}, modeloResolvido: "openai/gpt-5.6-luna", degradado: false });
+
+    await gerarPlanoNutricaoComIA({ userId: "u1", nucleo, consentimentos: [], triagemCompleta: {}, linhaBaseCorporal: { gorduras: [{ percentualBasisPoints: 1820 }] } });
+
+    const { instrucao } = decidir.mock.calls[0][0] as { instrucao: string };
+    expect(instrucao).toContain("percentual de gordura");
+    expect(instrucao).toContain("massa livre de gordura");
   });
 
   it("não envia o catálogo de exercícios", async () => {

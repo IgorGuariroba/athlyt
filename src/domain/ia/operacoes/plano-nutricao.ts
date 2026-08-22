@@ -44,7 +44,8 @@ ${regrasDeExplicacao({
   estrategia: ANCORAS.estrategia,
   refeicao: ANCORAS.refeicao,
 })}
-- Exemplo de calorias bem explicadas: "Estimei sua manutenção a partir de 80 kg, 180 cm e 35 anos, com fator de atividade moderado, e acrescentei um superávit leve pelo seu objetivo de ganhar massa."
+- Ao existir uma medição de percentual de gordura em linha-base-corporal.gorduras, considere-a obrigatoriamente no cálculo: estime a massa livre de gordura (peso × (1 − percentual)) e use-a para calibrar a manutenção (por exemplo, Cunningham/Katch-McArdle), em vez de tratar todo o peso como massa metabolicamente ativa. Se não houver medição, declare que ela não estava disponível e use a equação baseada em peso, altura, idade e sexo.
+- Exemplo de calorias bem explicadas: "Estimei sua manutenção a partir de 80 kg, 180 cm e 35 anos, com fator de atividade moderado, ajustando a estimativa pela sua massa livre de gordura de acordo com o percentual de gordura registrado, e acrescentei um superávit leve pelo seu objetivo de ganhar massa."
 - Restrições alimentares, orçamento, tempo de preparo, sono e objetivo são limites reais; nunca os ignore.
 - Não diagnostique, não prescreva medicamentos e não prometa resultados.
 - Em MODO CONSERVADOR, evite estratégia energética agressiva.
