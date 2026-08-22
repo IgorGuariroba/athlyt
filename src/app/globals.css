@@ -161,6 +161,12 @@
 @layer base {
   * {
     @apply border-border outline-ring/50;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  *::-webkit-scrollbar {
+    display: none;
   }
 
   body {
@@ -200,8 +206,8 @@
 /*
  * Rolagem continua nativa; só a representação persistente da barra some.
  * Isso mantém gesto, wheel, teclado e momentum scrolling no iOS, sem
- * transformar o container em `overflow-hidden`. A classe é deliberada:
- * listas longas e conteúdos pouco óbvios podem manter seus indicadores.
+ * transformar o container em `overflow-hidden`. A classe permanece como
+ * uma API semântica para containers que deixam a intenção explícita.
  */
 .scrollbar-hidden {
   scrollbar-width: none;
