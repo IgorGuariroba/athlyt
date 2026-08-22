@@ -37,7 +37,7 @@ export default async function AppLayout({
     <div className="min-h-dvh pt-[var(--safe-top)]">
       <main
         tabIndex={0}
-        className="relative flex min-h-dvh flex-col pb-[calc(4rem+var(--safe-bottom))]"
+        className="relative flex min-h-dvh flex-col overflow-x-clip pb-[calc(4rem+var(--safe-bottom))]"
       >
         {children}
       </main>
