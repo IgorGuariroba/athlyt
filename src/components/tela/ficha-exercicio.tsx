@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { Dumbbell, Info, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { GrupoMuscular } from "@/domain/plano/exercicios";
@@ -50,11 +50,66 @@ export function FichaExercicio({
 }) {
   const [aberta, setAberta] = useState(false);
   const [midiaComFalha, setMidiaComFalha] = useState(false);
+  const botaoAbrirRef = useRef<HTMLButtonElement>(null);
+  const botaoFecharRef = useRef<HTMLButtonElement>(null);
+  const dialogRef = useRef<HTMLElement>(null);
+  const dialogAbertoRef = useRef(false);
+  const tituloId = useId();
+  const descricaoId = useId();
+
+  useEffect(() => {
+    if (!aberta) {
+      if (dialogAbertoRef.current) {
+        botaoAbrirRef.current?.focus();
+        dialogAbertoRef.current = false;
+      }
+      return;
+    }
+
+    dialogAbertoRef.current = true;
+    botaoFecharRef.current?.focus();
+
+    function aoPressionarTecla(evento: KeyboardEvent) {
+      if (evento.key === "Escape") {
+        evento.preventDefault();
+        setAberta(false);
+        return;
+      }
+
+      if (evento.key !== "Tab") return;
+
+      const dialogo = dialogRef.current;
+      if (!dialogo) return;
+      const focaveis = Array.from(
+        dialogo.querySelectorAll<HTMLElement>(
+          'button:not([disabled]), a[href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
+        ),
+      );
+      if (focaveis.length === 0) {
+        evento.preventDefault();
+        return;
+      }
+
+      const primeiro = focaveis[0];
+      const ultimo = focaveis[focaveis.length - 1];
+      if (evento.shiftKey && document.activeElement === primeiro) {
+        evento.preventDefault();
+        ultimo.focus();
+      } else if (!evento.shiftKey && document.activeElement === ultimo) {
+        evento.preventDefault();
+        primeiro.focus();
+      }
+    }
+
+    document.addEventListener("keydown", aoPressionarTecla);
+    return () => document.removeEventListener("keydown", aoPressionarTecla);
+  }, [aberta]);
   const mostrarMidia = Boolean(midiaUrl) && !midiaComFalha;
 
   return (
     <>
       <Button
+        ref={botaoAbrirRef}
         type="button"
         variant="ghost"
         size="icon-sm"
@@ -66,8 +121,12 @@ export function FichaExercicio({
       {aberta ? (
         <div className="fixed inset-0 z-50 flex items-end bg-black/60 backdrop-blur-sm">
           <section
+            ref={dialogRef}
             role="dialog"
-            aria-label={nome}
+            aria-modal="true"
+            aria-labelledby={tituloId}
+            aria-describedby={descricaoId}
+            tabIndex={-1}
             className="flex max-h-[90vh] w-full flex-col overflow-y-auto rounded-t-2xl border-t border-border bg-surface-container p-6 pb-8"
           >
             <div className="mb-4 flex items-start justify-between gap-3">
@@ -75,9 +134,12 @@ export function FichaExercicio({
                 <p className="text-caption font-semibold tracking-wide text-muted-foreground uppercase">
                   {grupoMuscular}
                 </p>
-                <h2 className="text-title font-bold">{nome}</h2>
+                <h2 id={tituloId} className="text-title font-bold">
+                  {nome}
+                </h2>
               </div>
               <Button
+                ref={botaoFecharRef}
                 variant="ghost"
                 size="icon"
                 aria-label="Fechar ficha do exercício"
@@ -108,7 +170,12 @@ export function FichaExercicio({
             )}
             <div>
               <p className="mb-1 text-label-md font-semibold text-muted-foreground">Como executar</p>
-              <p className="text-body-md leading-relaxed text-on-surface">{comoExecutar}</p>
+              <p
+                id={descricaoId}
+                className="text-body-md leading-relaxed text-on-surface"
+              >
+                {comoExecutar}
+              </p>
             </div>
           </section>
         </div>

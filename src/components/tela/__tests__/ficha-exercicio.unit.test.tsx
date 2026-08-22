@@ -120,4 +120,57 @@ describe("FichaExercicio", () => {
     expect(dialogo.querySelector("svg")).not.toBeNull();
     expect(dialogo.textContent).toContain("Deite no banco e empurre a barra.");
   });
+
+  it("abre um diálogo modal, move o foco para fechar e retorna ao gatilho com Escape", () => {
+    render(
+      <FichaExercicio
+        nome="Supino reto com barra"
+        grupo="peito"
+        grupoMuscular="Peito"
+        comoExecutar="Deite no banco e empurre a barra."
+      />,
+    );
+
+    const gatilho = screen.getByRole("button", {
+      name: "Ver como executar Supino reto com barra",
+    });
+    fireEvent.click(gatilho);
+
+    const dialogo = screen.getByRole("dialog", {
+      name: "Supino reto com barra",
+    });
+    expect(dialogo.getAttribute("aria-modal")).toBe("true");
+    expect(document.activeElement).toBe(
+      screen.getByRole("button", { name: "Fechar ficha do exercício" }),
+    );
+
+    fireEvent.keyDown(document, { key: "Escape" });
+
+    expect(screen.queryByRole("dialog")).toBeNull();
+    expect(document.activeElement).toBe(gatilho);
+  });
+
+  it("mantém o foco dentro do diálogo ao tabular a partir do último controle", () => {
+    render(
+      <FichaExercicio
+        nome="Supino reto com barra"
+        grupo="peito"
+        grupoMuscular="Peito"
+        comoExecutar="Deite no banco e empurre a barra."
+      />,
+    );
+    fireEvent.click(
+      screen.getByRole("button", {
+        name: "Ver como executar Supino reto com barra",
+      }),
+    );
+
+    const fechar = screen.getByRole("button", {
+      name: "Fechar ficha do exercício",
+    });
+    fechar.focus();
+    fireEvent.keyDown(document, { key: "Tab" });
+
+    expect(document.activeElement).toBe(fechar);
+  });
 });

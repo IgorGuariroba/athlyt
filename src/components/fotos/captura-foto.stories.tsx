@@ -1,6 +1,7 @@
 "use client";
 
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
+import { expect } from "storybook/test";
 import { useState } from "react";
 
 import { CapturaFoto } from "./captura-foto";
@@ -43,5 +44,31 @@ export const RotulosPadrao: Story = {
   render: function RotulosPadrao() {
     const [arquivo, setArquivo] = useState<File | null>(null);
     return <CapturaFoto arquivo={arquivo} aoEscolher={setArquivo} />;
+  },
+};
+
+export const Interacoes: Story = {
+  render: function Interacoes() {
+    const [arquivo, setArquivo] = useState<File | null>(null);
+    return <CapturaFoto arquivo={arquivo} aoEscolher={setArquivo} />;
+  },
+  play: async ({ canvas, userEvent }) => {
+    const fotoDaCamera = new File(["foto"], "prato.jpg", { type: "image/jpeg" });
+    await userEvent.upload(canvas.getByLabelText("Tirar foto"), fotoDaCamera);
+
+    await expect(canvas.getByAltText("Prévia da foto escolhida")).toBeInTheDocument();
+    await expect(canvas.getByText("prato.jpg")).toBeInTheDocument();
+
+    await userEvent.click(canvas.getByRole("button", { name: "Trocar foto" }));
+    await expect(canvas.getByRole("button", { name: "Tirar foto" })).toBeInTheDocument();
+    await expect(canvas.queryByAltText("Prévia da foto escolhida")).not.toBeInTheDocument();
+
+    const fotoDaGaleria = new File(["foto nova"], "prato-da-galeria.png", {
+      type: "image/png",
+    });
+    await userEvent.upload(canvas.getByLabelText("Escolher da galeria"), fotoDaGaleria);
+
+    await expect(canvas.getByAltText("Prévia da foto escolhida")).toBeInTheDocument();
+    await expect(canvas.getByText("prato-da-galeria.png")).toBeInTheDocument();
   },
 };
