@@ -10,7 +10,6 @@ import {
   ExplicacaoAgent,
   ItemNavegacao,
   ListaNavegacao,
-  TelaConteudo,
 } from "@/components/tela";
 import { obterPerfilVigente } from "@/domain/triagem/perfil";
 import { montarResumoTriagem } from "@/domain/triagem/resumo";
@@ -53,8 +52,7 @@ export default async function InicioPage() {
     : null;
 
   return (
-    <TelaConteudo>
-      <div className="flex flex-col gap-6 p-4">
+    <div className="flex flex-col gap-6 p-4">
       <header className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <h1 className="text-headline-md font-bold text-on-surface-strong">
@@ -372,7 +370,6 @@ export default async function InicioPage() {
         </section>
       ) : null}
 
-      </div>
-    </TelaConteudo>
+    </div>
   );
 }

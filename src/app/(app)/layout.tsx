@@ -8,16 +8,16 @@ import { SwipeNavigation } from "@/components/navigation/swipe-navigation";
  * O middleware já bloqueia rotas sem sessão, mas a checagem aqui
  * garante que nenhum conteúdo do casco renderize sem `session.user`.
  *
- * A rolagem pertence ao documento, e não a um `<main>` aninhado com
- * `overflow-y-auto`. Isso permite que o navegador entregue o pull-to-refresh
- * nativo quando a página está no topo; não há indicador ou gesto paralelo
- * competindo com o comportamento da plataforma.
+ * A altura é travada em `h-dvh` (e não `min-h-*`) para que a rolagem
+ * pertença ao `<main>`, nunca ao documento: com `viewportFit: "cover"`,
+ * altura percentual resolve contra a viewport grande. `min-h-0` no `<main>`
+ * é obrigatório, senão o item flex não encolhe abaixo do conteúdo.
  *
  * A `BottomNav` fica fixa na viewport; o padding inferior deste `<main>`
  * reserva a faixa tocável e impede que o último conteúdo seja coberto.
  * `relative` estabelece o containing block dos controles absolutos dentro das
- * telas. `tabIndex={0}` deixa o conteúdo disponível para PageUp, PageDown e
- * setas quando o foco chega nele por teclado.
+ * telas. `tabIndex={0}` deixa o próprio scroll container disponível para
+ * PageUp, PageDown e setas quando o foco chega nele por teclado.
  *
  * O `pt-[var(--safe-top)]` cobre o caso instalado na tela de início. Mesmo
  * com a status bar opaca (`src/app/layout.tsx`), o iPhone reserva o inset
@@ -35,10 +35,10 @@ export default async function AppLayout({
   }
 
   return (
-    <div className="min-h-dvh pt-[var(--safe-top)]">
+    <div className="flex h-dvh flex-col overflow-hidden pt-[var(--safe-top)]">
       <main
         tabIndex={0}
-        className="relative flex min-h-dvh flex-col overflow-x-clip pb-[calc(4rem+var(--safe-bottom))]"
+        className="scrollbar-hidden relative flex min-h-0 flex-1 flex-col overflow-x-clip overflow-y-auto pb-[calc(4rem+var(--safe-bottom))]"
       >
         <SwipeNavigation>{children}</SwipeNavigation>
       </main>

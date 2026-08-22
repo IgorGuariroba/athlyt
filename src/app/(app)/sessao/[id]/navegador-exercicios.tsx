@@ -16,11 +16,18 @@ export function NavegadorExercicios({
   sessaoId,
   indiceInicial,
   concluido,
+  nomes,
   children,
 }: {
   sessaoId: string;
   indiceInicial: number;
   concluido: boolean[];
+  /**
+   * O rótulo de cada atalho carrega o nome do exercício, e não a posição:
+   * "Abrir exercício 2" não diz a quem navega por leitor de tela qual
+   * exercício será aberto, e a posição ainda muda quando há substituição.
+   */
+  nomes: string[];
   children: ReactNode;
 }) {
   const itens = Array.isArray(children) ? children : [children];
@@ -30,11 +37,19 @@ export function NavegadorExercicios({
   const cardsRef = useRef<Array<HTMLElement | null>>([]);
   const indiceAtualRef = useRef(indiceSeguro);
 
+  /**
+   * O terceiro argumento vai como **string**, e não como objeto `URL`.
+   * O SerwistProvider monkey-patcha `history.replaceState` e repassa esse
+   * argumento para `messageSW`, que serializa por structured clone — um
+   * `URL` não é clonável e derruba a chamada com `DataCloneError`
+   * ("URL object could not be cloned"), quebrando o cache de navegação da
+   * PWA a cada troca de exercício.
+   */
   function atualizarUrl(indice: number) {
     const url = new URL(window.location.href);
     url.pathname = `/sessao/${sessaoId}`;
     url.searchParams.set("exercicio", String(indice));
-    window.history.replaceState(window.history.state, "", url);
+    window.history.replaceState(window.history.state, "", `${url.pathname}${url.search}`);
   }
 
   function irPara(indice: number) {
@@ -107,7 +122,7 @@ export function NavegadorExercicios({
             type="button"
             variant={indice === indiceAtual ? "default" : "outline"}
             size="icon"
-            aria-label={`Abrir exercício ${indice + 1}`}
+            aria-label={`Abrir ${nomes[indice] ?? `exercício ${indice + 1}`}`}
             aria-current={indice === indiceAtual ? "step" : undefined}
             onClick={() => irPara(indice)}
             className={`size-14 shrink-0 snap-start rounded-xl ${indice === indiceAtual ? "border-on-surface-strong bg-on-surface-strong text-background" : "border-border bg-surface-container"}`}

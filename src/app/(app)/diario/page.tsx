@@ -2,7 +2,7 @@ import Link from "next/link";
 import { Camera, Check, ChevronLeft, ChevronRight, Dumbbell, Pencil, Plus, Sparkles, Undo2, UtensilsCrossed } from "lucide-react";
 import { auth } from "@/auth";
 import { Button } from "@/components/ui/button";
-import { EstadoVazio, ExplicacaoAgent, TelaConteudo } from "@/components/tela";
+import { EstadoVazio, ExplicacaoAgent } from "@/components/tela";
 import { FUSO_PADRAO, diaVizinho } from "@/domain/diario/dia-alimentar";
 import { hojeDoUsuario, montarDiarioDoDia } from "@/domain/diario/repositorio";
 import type { ItemLinhaDoTempo } from "@/domain/diario/tipos";
@@ -49,8 +49,7 @@ export default async function DiarioPage({
     : null;
 
   return (
-    <TelaConteudo>
-      <section aria-label="Diário" className="flex flex-col gap-4 p-4 pb-8">
+    <section aria-label="Diário" className="flex flex-col gap-4 p-4 pb-8">
       <header className="flex items-center justify-between">
         <Button asChild variant="ghost" size="icon">
           <Link href={`/diario?dia=${diaVizinho(dia, -1, fuso)}`} aria-label="Dia anterior">
@@ -128,8 +127,7 @@ export default async function DiarioPage({
           }
         />
       )}
-      </section>
-    </TelaConteudo>
+    </section>
   );
 }
 

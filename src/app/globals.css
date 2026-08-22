@@ -251,21 +251,36 @@
  * impede que uma tentativa de arrastar na horizontal crie uma segunda
  * barra de rolagem.
  */
+/*
+ * `flex: 1` encolheria o wrapper até a altura do `<main>` (basis 0 com
+ * shrink 1) e o conteúdo transbordaria. Num scroll container, o
+ * `padding-bottom` não se aplica à parte transbordada: o fim da tela
+ * fica sob a `BottomNav` e vira alvo intocável. Por isso o wrapper
+ * cresce com o conteúdo (`flex: 1 0 auto`) em vez de encolher — quem
+ * trava a altura é o casco, e quem rola é o `<main>`.
+ */
 .swipe-navegacao {
   display: flex;
-  min-height: 0;
   min-width: 0;
-  flex: 1;
+  flex: 1 0 auto;
   flex-direction: column;
   touch-action: pan-y;
   overscroll-behavior-x: contain;
 }
 
+/*
+ * `min-height: 100%` aqui colapsava a rolagem do `<main>`:
+ * `scrollHeight` igualava `clientHeight` e a `BarraAcaoFixa` cobria de
+ * forma permanente o fim da tela — medido no resumo da sessão, onde
+ * "Ver histórico de sessões" ficava intocável (896px de rolagem caíam
+ * para 839px, zero de excedente). É a armadilha de altura percentual
+ * de `docs/memory/casco-de-altura-fixa-ancora-o-rodape.md`, um nível
+ * abaixo do casco.
+ */
 .swipe-navegacao__conteudo {
   display: flex;
-  min-height: 100%;
   min-width: 0;
-  flex: 1;
+  flex: 1 0 auto;
   flex-direction: column;
 }
 

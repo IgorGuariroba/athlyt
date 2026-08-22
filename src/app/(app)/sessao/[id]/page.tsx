@@ -53,6 +53,7 @@ export default async function SessaoPage({ params, searchParams }: { params: Pro
         sessaoId={sessao.id}
         indiceInicial={indiceAtual}
         concluido={sessao.exercicios.map((item) => item.interrompido || item.series.every((serie) => serie.concluida))}
+        nomes={sessao.exercicios.map((item) => item.nome)}
       >
         {sessao.exercicios.map((exercicio, indice) => {
           const feito = exercicio.series.every((serie) => serie.concluida);

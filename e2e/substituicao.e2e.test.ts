@@ -3,6 +3,7 @@ import { db } from "@/db/client";
 import { plans, profileVersions } from "@/db/schema";
 import type { PlanoGerado } from "@/domain/plano/tipos";
 import { allowEmail, seedAuthenticatedSession } from "./helpers/seed-session";
+import { registrarSerie } from "./helpers/sessao-carrossel";
 
 const plano: PlanoGerado = {
   regraVersao: "motor-plano-v1", modoConservador: false, perfilVersao: 1, dadosUsados: [],
@@ -49,8 +50,7 @@ test("substitui exercício por equipamento indisponível preservando o estímulo
   // herdar uma explicação que o agent produziu para o exercício original.
   await expect(page.getByText("Por que este exercício?")).toHaveCount(0);
 
-  await page.locator('input[name="cargaKg"]:not(:disabled)').first().fill("20");
-  await page.getByLabel("Registrar série 1").click();
+  await registrarSerie(page, 1);
   await page.getByRole("button", { name: "Pular descanso" }).click();
   // Fechar o timer não implica mais que a sincronização terminou. O botão
   // dentro do form reaparece quando o servidor já confirmou a série.
@@ -82,8 +82,7 @@ test("substitui no meio da execução quando a dor aparece durante o exercício"
 
   // O atleta faz a primeira série e só então sente dor — é impossível
   // saber antes de executar.
-  await page.locator('input[name="cargaKg"]:not(:disabled)').first().fill("20");
-  await page.getByLabel("Registrar série 1").click();
+  await registrarSerie(page, 1);
   await page.getByRole("button", { name: "Pular descanso" }).click();
 
   await page.getByRole("link", { name: "Substituir Supino reto com barra" }).click();
@@ -99,11 +98,9 @@ test("substitui no meio da execução quando a dor aparece durante o exercício"
 
   // A série já executada continua contando na sessão.
   await expect(page.getByText("1/3")).toBeVisible();
-  await page.locator('input[name="cargaKg"]:not(:disabled)').first().fill("20");
-  await page.getByLabel("Registrar série 1").click();
+  await registrarSerie(page, 1);
   await page.getByRole("button", { name: "Pular descanso" }).click();
-  await page.locator('input[name="cargaKg"]:not(:disabled)').first().fill("20");
-  await page.getByLabel("Registrar série 2").click();
+  await registrarSerie(page, 2);
   await page.getByRole("button", { name: "Pular descanso" }).click();
   const concluirSincronizado = page.locator("form").getByRole("button", { name: "Concluir treino" });
   await expect(concluirSincronizado).toBeVisible({ timeout: 10_000 });
