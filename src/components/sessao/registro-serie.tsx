@@ -104,7 +104,7 @@ export function RegistroSerie({ exercicioId, numero, repeticoesSugeridas, rirSug
 
   return (
     <>
-      <form onSubmit={registrar} className={`grid grid-cols-[2rem_1fr_1fr_4rem_3rem] items-end gap-2 py-3 ${registrada ? "opacity-60" : ""}`}>
+      <form onSubmit={registrar} className="grid grid-cols-[2rem_1fr_1fr_4rem_3rem] items-end gap-2 py-3">
         <span className="mb-3 flex size-8 items-center justify-center rounded-full bg-surface-container-high text-label-lg font-bold">{registrada ? <Check className="size-4 text-success" /> : numero}</span>
         <input type="hidden" name="exercicioId" value={exercicioId} />
         <input type="hidden" name="numero" value={numero} />
