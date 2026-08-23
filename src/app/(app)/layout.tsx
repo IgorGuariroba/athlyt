@@ -1,7 +1,6 @@
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { BottomNav } from "@/components/navigation/bottom-nav";
-import { SwipeNavigation } from "@/components/navigation/swipe-navigation";
 
 /**
  * Casco autenticado das quatro abas (Início, Diário, Progresso, Mais).
@@ -15,14 +14,17 @@ import { SwipeNavigation } from "@/components/navigation/swipe-navigation";
  *
  * A `BottomNav` fica fixa na viewport; o padding inferior deste `<main>`
  * reserva a faixa tocável e impede que o último conteúdo seja coberto.
- * `relative` estabelece o containing block dos controles absolutos dentro das
- * telas. `tabIndex={0}` deixa o próprio scroll container disponível para
- * PageUp, PageDown e setas quando o foco chega nele por teclado.
+ * `relative` também estabelece o containing block dos controles absolutos
+ * dentro das telas, impedindo que eles criem rolagem no documento raiz.
+ * `tabIndex={0}` deixa o próprio scroll container disponível para PageUp,
+ * PageDown e setas quando o foco chega nele por teclado.
  *
  * O `pt-[var(--safe-top)]` cobre o caso instalado na tela de início. Mesmo
- * com a status bar opaca (`src/app/layout.tsx`), o iPhone reserva o inset
- * superior em paisagem e em modelos com Dynamic Island durante a transição
- * de orientação; sem ele o primeiro título encosta no topo físico.
+ * com a status bar opaca (`src/app/layout.tsx`), o iPhone reserva o
+ * inset superior em paisagem e em modelos com Dynamic Island durante a
+ * transição de orientação; sem ele o primeiro título encosta no topo
+ * físico. Vai no casco, e não no `<main>`, para que o padding não role
+ * junto com o conteúdo.
  */
 export default async function AppLayout({
   children,
@@ -38,9 +40,9 @@ export default async function AppLayout({
     <div className="flex h-dvh flex-col overflow-hidden pt-[var(--safe-top)]">
       <main
         tabIndex={0}
-        className="scrollbar-hidden relative flex min-h-0 flex-1 flex-col overflow-x-clip overflow-y-auto pb-[calc(4rem+var(--safe-bottom))]"
+        className="scrollbar-hidden relative flex min-h-0 flex-1 flex-col overflow-y-auto pb-[calc(4rem+var(--safe-bottom))]"
       >
-        <SwipeNavigation>{children}</SwipeNavigation>
+        {children}
       </main>
       <BottomNav />
     </div>
