@@ -3,7 +3,6 @@ import { db } from "@/db/client";
 import { plans } from "@/db/schema";
 import type { PlanoGerado } from "@/domain/plano/tipos";
 import { allowEmail, seedAuthenticatedSession } from "./helpers/seed-session";
-import { exercicioPorNome } from "./helpers/sessao-carrossel";
 
 const ex = (id: string, nome: string, padrao: string, reps: string) => ({
   exercicioId: id, nome, padrao, series: 2, repeticoes: reps, rir: 3,
@@ -84,31 +83,21 @@ test("a barra de navegação permanece visível nas telas com conteúdo longo", 
     for (let tentativa = 0; tentativa < 10; tentativa += 1) {
       const primeiro = dialogos.first();
       if (!(await primeiro.isVisible().catch(() => false))) return;
-      // O descanso deste plano dura 1 s: o timer pode se fechar sozinho
-      // entre a checagem acima e o clique. Isso é sucesso, não falha —
-      // o objetivo do helper é não haver diálogo aberto.
       await primeiro
         .getByRole("button", { name: "Fechar timer" })
-        .click({ force: true, timeout: 2_000 })
-        .catch(() => undefined);
+        .click({ force: true });
     }
     await expect(dialogos).toHaveCount(0);
   };
 
   for (const nome of ["Supino reto com barra", "Desenvolvimento com halteres", "Elevação lateral com halteres", "Tríceps na polia"]) {
     await fecharTimer();
-    // O atalho do carrossel é um botão que rola até o exercício, e não
-    // mais um link de rota: a sessão inteira vive numa única página.
-    await page.getByRole("button", { name: `Abrir ${nome}` }).click();
+    await page.getByRole("link", { name: `Abrir ${nome}` }).click();
     await expect(page.getByRole("heading", { name: nome, level: 2 })).toBeVisible();
-    // Escopar pelo nome, e não pelo cartão ativo: o `inert` só troca
-    // quando a rolagem suave termina, e até lá o cartão anterior (com as
-    // séries já registradas) ainda responderia.
-    const cartao = exercicioPorNome(page, nome);
     for (const serie of [1, 2]) {
-      const botao = cartao.getByLabel(`Registrar série ${serie}`);
+      const botao = page.getByRole("button", { name: `Registrar série ${serie}` });
       await expect(botao).toBeEnabled({ timeout: 15_000 });
-      await cartao.locator('input[name="cargaKg"]:not(:disabled)').first().fill("20");
+      await page.locator('input[name="cargaKg"]:not(:disabled)').first().fill("20");
       await fecharTimer();
       await botao.click();
       await fecharTimer();

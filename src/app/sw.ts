@@ -25,55 +25,6 @@ declare const self: ServiceWorkerGlobalScope;
  * pior caso não é estar offline (o navegador avisa), é a conexão que
  * aceita a requisição e não responde.
  */
-type DadosPush = {
-  title?: string;
-  body?: string;
-  url?: string;
-};
-
-/**
- * Push é tratado no SW, e não em uma página aberta. Assim o lembrete
- * continua nativo quando a PWA está em segundo plano ou instalada.
- * O backend pode enviar apenas `{ body, url }`; os demais campos têm
- * defaults seguros para mensagens do treino.
- */
-self.addEventListener("push", (event: PushEvent) => {
-  let dados: DadosPush = {};
-  try {
-    dados = event.data?.json() as DadosPush;
-  } catch {
-    dados = { body: event.data?.text() };
-  }
-
-  const url = typeof dados.url === "string" && dados.url.startsWith("/") ? dados.url : "/inicio";
-  event.waitUntil(self.registration.showNotification(dados.title ?? "Athlyt", {
-    body: dados.body ?? "Você tem uma atualização do seu treino.",
-    icon: "/icons/icon-192.png",
-    badge: "/icons/icon-96.png",
-    tag: "athlyt-treino",
-    data: { url },
-  }));
-});
-
-self.addEventListener("notificationclick", (event: NotificationEvent) => {
-  event.notification.close();
-  const url = typeof event.notification.data?.url === "string" && event.notification.data.url.startsWith("/")
-    ? event.notification.data.url
-    : "/inicio";
-
-  event.waitUntil((async () => {
-    const janelas = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
-    const existente = janelas.find((janela) => janela.url.includes(self.registration.scope));
-    if (existente) {
-      await existente.focus();
-      existente.postMessage({ tipo: "athlyt:limpar-badge" });
-      if ("navigate" in existente && !existente.url.endsWith(url)) await existente.navigate(url);
-      return;
-    }
-    await self.clients.openWindow(url);
-  })());
-});
-
 const serwist = new Serwist({
   precacheEntries: self.__SW_MANIFEST,
   skipWaiting: true,

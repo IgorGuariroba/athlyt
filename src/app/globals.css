@@ -9,11 +9,11 @@
 
 /*
  * Tokens derivados de DESIGN.md (MacroFactor Visual System).
- * O tema acompanha a preferência do sistema: escuro por padrão e claro
- * quando `prefers-color-scheme: light` estiver ativo.
+ * O produto é dark-first por decisão de produto ("o preto é estrutural,
+ * não apenas modo escuro") — não há alternância por prefers-color-scheme
+ * nem tema claro nesta fase.
  */
 :root {
-  color-scheme: dark;
   --background: #111111;
   --surface: #171717;
   --surface-container: #1d1d1d;
@@ -70,32 +70,6 @@
   --border: var(--border-color);
   --input: var(--border-color);
   --ring: var(--border-strong);
-}
-
-@media (prefers-color-scheme: light) {
-  :root {
-    color-scheme: light;
-    --background: #ffffff;
-    --surface: #fafafa;
-    --surface-container: #f5f5f5;
-    --surface-container-high: #e5e5e5;
-    --on-surface: #171717;
-    --on-surface-strong: #000000;
-    --muted-color: #525252;
-    --border-color: #d4d4d4;
-    --border-strong: #a3a3a3;
-    --inverse-surface: #111111;
-    --inverse-on-surface: #ffffff;
-    --success: #227a4b;
-    --warning: #8a6500;
-    --error: #b42318;
-    --info: #3658c9;
-    --nutrition-protein: #c45a2c;
-    --nutrition-fat: #8a6500;
-    --nutrition-carbs: #227a4b;
-    --nutrition-calories: #3658c9;
-    --data-violet: #6d3fc0;
-  }
 }
 
 @theme inline {
@@ -187,17 +161,10 @@
 @layer base {
   * {
     @apply border-border outline-ring/50;
-    scrollbar-width: none;
-    -ms-overflow-style: none;
-  }
-
-  *::-webkit-scrollbar {
-    display: none;
   }
 
   body {
     @apply bg-background text-foreground font-sans antialiased;
-    -webkit-overflow-scrolling: touch;
   }
 
   /*
@@ -232,8 +199,8 @@
 /*
  * Rolagem continua nativa; só a representação persistente da barra some.
  * Isso mantém gesto, wheel, teclado e momentum scrolling no iOS, sem
- * transformar o container em `overflow-hidden`. A classe permanece como
- * uma API semântica para containers que deixam a intenção explícita.
+ * transformar o container em `overflow-hidden`. A classe é deliberada:
+ * listas longas e conteúdos pouco óbvios podem manter seus indicadores.
  */
 .scrollbar-hidden {
   scrollbar-width: none;
@@ -243,45 +210,6 @@
 
 .scrollbar-hidden::-webkit-scrollbar {
   display: none;
-}
-
-/**
- * Casco horizontal das quatro abas principais. O gesto é tratado pelo
- * componente para trocar a rota; o CSS mantém a rolagem vertical nativa e
- * impede que uma tentativa de arrastar na horizontal crie uma segunda
- * barra de rolagem.
- */
-/*
- * `flex: 1` encolheria o wrapper até a altura do `<main>` (basis 0 com
- * shrink 1) e o conteúdo transbordaria. Num scroll container, o
- * `padding-bottom` não se aplica à parte transbordada: o fim da tela
- * fica sob a `BottomNav` e vira alvo intocável. Por isso o wrapper
- * cresce com o conteúdo (`flex: 1 0 auto`) em vez de encolher — quem
- * trava a altura é o casco, e quem rola é o `<main>`.
- */
-.swipe-navegacao {
-  display: flex;
-  min-width: 0;
-  flex: 1 0 auto;
-  flex-direction: column;
-  touch-action: pan-y;
-  overscroll-behavior-x: contain;
-}
-
-/*
- * `min-height: 100%` aqui colapsava a rolagem do `<main>`:
- * `scrollHeight` igualava `clientHeight` e a `BarraAcaoFixa` cobria de
- * forma permanente o fim da tela — medido no resumo da sessão, onde
- * "Ver histórico de sessões" ficava intocável (896px de rolagem caíam
- * para 839px, zero de excedente). É a armadilha de altura percentual
- * de `docs/memory/casco-de-altura-fixa-ancora-o-rodape.md`, um nível
- * abaixo do casco.
- */
-.swipe-navegacao__conteudo {
-  display: flex;
-  min-width: 0;
-  flex: 1 0 auto;
-  flex-direction: column;
 }
 
 /**
@@ -313,22 +241,8 @@
   }
 }
 
-/*
- * `both` mantinha o `transform` do keyframe aplicado para sempre depois
- * do fim da animação. Um `transform` diferente de `none` — mesmo a
- * identidade `matrix(1, 0, 0, 1, 0, 0)` — faz o elemento virar
- * containing block de todo descendente `fixed` (CSS Transforms 2, §3).
- * Os overlays da sessão (`Timer de descanso`, `FichaExercicio`) e a
- * `BarraAcaoFixa` vivem dentro deste wrapper: `inset-0` deixava de
- * medir a viewport e o modal era posicionado fora dela — medido em
- * `y=-184` com `994px` de altura numa viewport de `839px`.
- *
- * `backwards` preserva o efeito de entrada (o estado inicial vale antes
- * do primeiro frame) sem reter o `transform` no fim. Regressão coberta
- * pelo E2E `navbar-visivel`.
- */
 .etapa-transicao {
-  animation: etapa-entra-adiante 240ms ease-out backwards;
+  animation: etapa-entra-adiante 240ms ease-out both;
 }
 
 .etapa-transicao[data-direcao="atras"] {
