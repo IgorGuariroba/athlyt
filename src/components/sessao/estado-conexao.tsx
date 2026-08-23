@@ -7,12 +7,12 @@ import Link from "next/link";
 import { assinarOutbox, drenarFila, lerOutbox, lerOutboxServidor, liberarRegistrosConfirmados, recarregarFila, registrarNaFila } from "@/lib/store-outbox";
 import { useOnline } from "@/lib/use-online";
 import type { SerieRegistrada, TipoEventoOutbox } from "@/domain/sessao/outbox";
+import type { GatilhoCopiloto, ResultadoCopiloto } from "@/domain/sessao/copiloto";
 import {
   ESTADO_INICIAL_COPILOTO,
   reduzirEstadoCopiloto,
   type EstadoCopilotoCliente,
 } from "@/domain/sessao/copiloto-cliente";
-import { continuarAposAlertaCautelaAction, solicitarOrientacaoCopilotoAction } from "../actions";
 
 /**
  * Estado de conexão e sincronização (user story 38; telas 042 e 085).
@@ -44,10 +44,21 @@ export function useConexao(): Contexto {
   return contexto;
 }
 
-export function ProvedorConexao({ sessionId, seriesConfirmadas, children }: {
+export function ProvedorConexao({
+  sessionId,
+  seriesConfirmadas,
+  solicitarOrientacao = async () => ({ status: "indisponivel", motivo: "ação não configurada" }),
+  continuarAposAlerta = async () => undefined,
+  estadoForcado,
+  children,
+}: {
   sessionId: string;
   /** Séries que o servidor já tem como registradas, no HTML atual. */
   seriesConfirmadas: Array<{ exercicioId: string; numero: number }>;
+  solicitarOrientacao?: (sessionId: string, gatilho: Omit<GatilhoCopiloto, "origem">) => Promise<ResultadoCopiloto>;
+  continuarAposAlerta?: (sessionId: string, entrada: { exercicioId: string; proximaSerie: number; alerta: string }) => Promise<unknown>;
+  /** Permite demonstrar e testar estados determinísticos sem manipular a rede do navegador. */
+  estadoForcado?: EstadoConexao;
   children: React.ReactNode;
 }) {
   const router = useRouter();
@@ -76,12 +87,13 @@ export function ProvedorConexao({ sessionId, seriesConfirmadas, children }: {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [chaveConfirmadas]);
 
-  const estado: EstadoConexao =
+  const estado: EstadoConexao = estadoForcado ?? (
     outbox.conflitos > 0 ? "conflito"
     : !online ? "offline"
     : outbox.sincronizando ? "sincronizando"
     : outbox.degradado ? "degradado"
-    : "online";
+    : "online"
+  );
 
   return (
     <ContextoConexao.Provider value={{
@@ -92,7 +104,7 @@ export function ProvedorConexao({ sessionId, seriesConfirmadas, children }: {
       copiloto,
       confirmarAlertaCautela: async (exercicioId) => {
         if (copiloto.estado !== "orientacao" || !copiloto.orientacao.alertaCautela) return;
-        await continuarAposAlertaCautelaAction(sessionId, {
+        await continuarAposAlerta(sessionId, {
           exercicioId,
           proximaSerie: copiloto.proximaSerie,
           alerta: copiloto.orientacao.alertaCautela,
@@ -114,7 +126,7 @@ export function ProvedorConexao({ sessionId, seriesConfirmadas, children }: {
         if (aplicou) router.refresh();
         if (tipo !== "serie_registrada" || proximaSerie === undefined || !navigator.onLine) return;
 
-        void solicitarOrientacaoCopilotoAction(sessionId, {
+        void solicitarOrientacao(sessionId, {
           exercicioId: String(dados.exercicioId),
           serieRegistrada: Number(dados.numero),
         }).then((resultado) => {

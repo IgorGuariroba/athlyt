@@ -2,7 +2,7 @@ import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it } from "vitest";
 
 import { lerDescanso, reiniciarDescanso } from "@/lib/store-descanso";
-import { AjusteDescanso } from "../ajuste-descanso";
+import { AjusteDescanso } from "@/components/sessao/ajuste-descanso";
 
 afterEach(() => {
   cleanup();
