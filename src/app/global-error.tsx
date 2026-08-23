@@ -5,6 +5,7 @@ import { RotateCcw } from "lucide-react";
 
 import { EstadoErro } from "@/components/tela";
 import { Button } from "@/components/ui/button";
+import { relatarErroCliente } from "@/observabilidade/erro-cliente";
 import { archivo, dmSans } from "./fonts";
 import "./globals.css";
 
@@ -16,35 +17,7 @@ export default function GlobalError({
   reset: () => void;
 }) {
   useEffect(() => {
-    const corpo = JSON.stringify({
-      name: error.name.slice(0, 80),
-      digest: error.digest?.slice(0, 128),
-    });
-
-    let enviado = false;
-
-    try {
-      enviado =
-        navigator.sendBeacon?.(
-          "/api/observabilidade/erro-cliente",
-          new Blob([corpo], { type: "application/json" }),
-        ) ?? false;
-    } catch {
-      // Se o beacon falhar, a tentativa por fetch abaixo ainda pode funcionar.
-    }
-
-    if (enviado) return;
-
-    try {
-      void fetch("/api/observabilidade/erro-cliente", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: corpo,
-        keepalive: true,
-      }).catch(() => undefined);
-    } catch {
-      // A tela de recuperação não pode falhar ao relatar o erro original.
-    }
+    relatarErroCliente(error);
   }, [error]);
 
   return (
