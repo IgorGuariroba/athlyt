@@ -34,6 +34,12 @@ export { ChipSelecao } from "./chip-selecao";
 export { CartaoSelecaoImagem } from "./cartao-selecao-imagem";
 export { ControleSegmentado } from "./controle-segmentado";
 export { DiagramaMuscular, rotuloVistaDoGrupo } from "./diagrama-muscular";
+export {
+  Esqueleto,
+  EsqueletoCabecalho,
+  EsqueletoLista,
+  EsqueletoTela,
+} from "./esqueleto-tela";
 export { EstadoErro } from "./estado-erro";
 export { EstadoVazio } from "./estado-vazio";
 export { ExplicacaoAgent } from "./explicacao-agent";

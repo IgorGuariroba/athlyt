@@ -52,16 +52,30 @@ export function baseUrl(): string {
  * vez de duplicar a lógica de cookie (que caducaria em silêncio na
  * próxima mudança do adapter), reusa-se `e2e/helpers/seed-session.ts`
  * pelo mesmo caminho que os testes usam.
+ *
+ * O corpo vai dentro de uma função assíncrona porque `tsx --eval`
+ * compila para CJS, formato em que top-level `await` não existe —
+ * escrevê-lo aqui aborta a semeadura antes de qualquer conexão com o
+ * banco, com um erro de build que não se parece em nada com a causa.
  */
 export function semearSessao(cwd: string, email: string) {
   const script = `
     import "./scripts/carregar-env";
     import { seedAuthenticatedSession, allowEmail } from "./e2e/helpers/seed-session";
-    const email = process.argv[2];
-    await allowEmail(email);
-    const { cookie } = await seedAuthenticatedSession(email);
-    console.log("__COOKIE__" + JSON.stringify(cookie));
-    process.exit(0);
+    async function main() {
+      // Sob \`--eval\` não há caminho de script em argv: o primeiro
+      // argumento passado após \`--\` cai em argv[1], e não em argv[2]
+      // como num arquivo executado normalmente.
+      const email = process.argv[1];
+      await allowEmail(email);
+      const { cookie } = await seedAuthenticatedSession(email);
+      console.log("__COOKIE__" + JSON.stringify(cookie));
+      process.exit(0);
+    }
+    main().catch((erro) => {
+      console.error(erro);
+      process.exit(1);
+    });
   `;
 
   const resultado = spawnSync(
