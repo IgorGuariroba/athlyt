@@ -12,6 +12,19 @@ import {
   ListaNavegacao,
   TelaConteudo,
 } from "@/components/tela";
+import {
+  BoasVindasInicio,
+  CabecalhoInicio,
+  CabecalhoPlanoAtivo,
+  CartaoPlanoAtivo,
+  CartaoSessaoDoDia,
+  CartaoSessaoDoDiaAcao,
+  CartaoSessaoDoDiaCorpo,
+  MetaNutricional,
+  MetricasPlanoAtivo,
+  PersonalizacaoInicio,
+  ResumoMacros,
+} from "@/components/inicio/cartoes-inicio";
 import { obterPerfilVigente } from "@/domain/triagem/perfil";
 import { montarResumoTriagem } from "@/domain/triagem/resumo";
 import { obterPlanoAtivo } from "@/domain/plano/repositorio";
@@ -55,7 +68,7 @@ export default async function InicioPage() {
   return (
     <TelaConteudo>
       <div className="flex flex-col gap-6 px-6">
-      <header className="flex items-center justify-between">
+      <CabecalhoInicio>
         <div className="flex items-center gap-2">
           <h1 className="text-headline-md font-bold text-on-surface-strong">
             Início
@@ -66,18 +79,15 @@ export default async function InicioPage() {
             Sair
           </Button>
         </form>
-      </header>
+      </CabecalhoInicio>
 
-      <CartaoLista className="p-4 text-body-md text-muted-foreground">
+      <BoasVindasInicio className="p-4 text-body-md text-muted-foreground">
         Olá, {session?.user?.name ?? session?.user?.email}. Seus cartões de
         prioridade do dia vão aparecer aqui.
-      </CartaoLista>
+      </BoasVindasInicio>
 
       {Object.values(confiancaCorporal).some((estado) => estado !== "confiavel") ? (
-        <section
-          aria-labelledby="personalizacao-titulo"
-          className="overflow-hidden rounded-2xl border border-border bg-surface-container"
-        >
+        <PersonalizacaoInicio>
           <div className="flex gap-3 p-5 pb-4">
             <div className="flex size-11 shrink-0 items-center justify-center rounded-full bg-surface-container-high text-on-surface-strong">
               <Ruler className="size-5" aria-hidden="true" />
@@ -142,14 +152,14 @@ export default async function InicioPage() {
               <ArrowRight className="size-5" aria-hidden="true" />
             </Link>
           </Button>
-        </section>
+        </PersonalizacaoInicio>
       ) : null}
 
       {planoAtivo ? (
         <>
         {treinoDoDia ? (
-        <section className="overflow-hidden rounded-2xl border-2 border-on-surface-strong bg-surface-container">
-          <div className="p-5">
+        <CartaoSessaoDoDia>
+          <CartaoSessaoDoDiaCorpo>
             <p className="mb-2 text-label-md font-semibold tracking-wide text-muted-foreground uppercase">
               {treinoDoDia.estado === "em_andamento" ? "Sessão em andamento" : "Próximo treino"}
             </p>
@@ -160,7 +170,8 @@ export default async function InicioPage() {
             <p className="mt-2 text-body-sm text-muted-foreground">
               {treinoDoDia.concluidasNaSemana} de {planoAtivo.conteudo.bloco.dias.length} treinos concluídos nos últimos 7 dias
             </p>
-          </div>
+          </CartaoSessaoDoDiaCorpo>
+          <CartaoSessaoDoDiaAcao>
           <Button asChild size="lg" className="h-14 w-full rounded-none text-base font-bold">
             {treinoDoDia.estado === "em_andamento" ? (
               <Link href={`/sessao/${treinoDoDia.sessaoId}`}>Retomar treino <ArrowRight className="size-5" /></Link>
@@ -168,13 +179,11 @@ export default async function InicioPage() {
               <Link href={`/sessao/previa/${treinoDoDia.dia.id}`}>Ver treino <ArrowRight className="size-5" /></Link>
             )}
           </Button>
-        </section>
+          </CartaoSessaoDoDiaAcao>
+        </CartaoSessaoDoDia>
         ) : null}
-        <section
-          aria-labelledby="plano-ativo-titulo"
-          className="overflow-hidden rounded-2xl border border-border bg-surface-container"
-        >
-          <div className="flex items-start justify-between p-5 pb-4">
+        <CartaoPlanoAtivo>
+          <CabecalhoPlanoAtivo>
             <div className="flex gap-3">
               <div className="flex size-11 shrink-0 items-center justify-center rounded-full bg-on-surface-strong text-background">
                 <Dumbbell className="size-5" aria-hidden="true" />
@@ -197,7 +206,7 @@ export default async function InicioPage() {
             <span className="text-body-sm text-muted-foreground">
               v{planoAtivo.versao}
             </span>
-          </div>
+          </CabecalhoPlanoAtivo>
 
           <div className="px-5 pb-4">
             <ExplicacaoAgent
@@ -206,7 +215,7 @@ export default async function InicioPage() {
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-px bg-border">
+          <MetricasPlanoAtivo>
             <div className="bg-background p-4">
               <CalendarDays
                 className="mb-3 size-5 text-muted-foreground"
@@ -231,7 +240,7 @@ export default async function InicioPage() {
                 treinos por semana
               </span>
             </div>
-          </div>
+          </MetricasPlanoAtivo>
 
           {treinoDoDia?.estado !== "em_andamento" ? (
             <div className="border-t border-border p-5">
@@ -259,7 +268,8 @@ export default async function InicioPage() {
             </div>
           ) : null}
 
-          <div className="flex flex-col gap-4 border-t border-border p-5">
+          <MetaNutricional>
+          <ResumoMacros>
             <div className="flex items-end justify-between">
               <div>
                 <p className="text-body-sm text-muted-foreground">
@@ -329,8 +339,9 @@ export default async function InicioPage() {
                 <span className="block text-muted-foreground">Gorduras</span>
               </div>
             </div>
-          </div>
-        </section>
+          </ResumoMacros>
+          </MetaNutricional>
+        </CartaoPlanoAtivo>
         </>
       ) : !resumo.modoConservador ? (
         <section
