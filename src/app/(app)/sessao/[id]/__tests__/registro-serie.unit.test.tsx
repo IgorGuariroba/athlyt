@@ -3,7 +3,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 const registrarEvento = vi.fn<() => Promise<void>>();
 
-vi.mock("../estado-conexao", () => ({
+vi.mock("@/components/sessao/estado-conexao", () => ({
   useConexao: () => ({
     registrar: registrarEvento,
     registrosLocais: [],
@@ -12,7 +12,7 @@ vi.mock("../estado-conexao", () => ({
 }));
 
 import { definirRitmoDescanso, reiniciarDescanso } from "@/lib/store-descanso";
-import { RegistroSerie } from "../registro-serie";
+import { RegistroSerie } from "@/components/sessao/registro-serie";
 
 function promessaPendente() {
   let resolver!: () => void;

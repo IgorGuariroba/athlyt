@@ -7,12 +7,20 @@ import { CampoSelecao, ExplicacaoAgent, FichaExercicio, Revelar } from "@/compon
 import { encontrarExercicio, rotuloGrupoMuscular } from "@/domain/plano/exercicios";
 import { midiaDoExercicio } from "@/domain/plano/midia-execucao";
 import { obterSessao } from "@/domain/sessao/repositorio";
-import { abandonarSessaoAction, concluirSessaoAction } from "../actions";
-import { BadgeConexao, ProvedorConexao } from "./estado-conexao";
-import { AjusteDescanso } from "./ajuste-descanso";
-import { PainelCoach } from "./painel-coach";
-import { RegistroSerie } from "./registro-serie";
-import { ConclusaoSessao } from "./conclusao-sessao";
+import {
+  abandonarSessaoAction,
+  concluirSessaoAction,
+  continuarAposAlertaCautelaAction,
+  solicitarOrientacaoCopilotoAction,
+} from "../actions";
+import {
+  AjusteDescanso,
+  BadgeConexao,
+  ConclusaoSessao,
+  PainelCoach,
+  ProvedorConexao,
+  RegistroSerie,
+} from "@/components/sessao";
 
 const MOTIVOS_ABANDONO = [
   { valor: "tempo", rotulo: "Falta de tempo" },
@@ -40,6 +48,8 @@ export default async function SessaoPage({ params, searchParams }: { params: Pro
     <ProvedorConexao
       sessionId={sessao.id}
       seriesConfirmadas={sessao.exercicios.flatMap((item) => item.series.filter((s) => s.concluida).map((s) => ({ exercicioId: item.exercicioId, numero: s.numero })))}
+      solicitarOrientacao={solicitarOrientacaoCopilotoAction}
+      continuarAposAlerta={continuarAposAlertaCautelaAction}
     >
     <div className="flex flex-col gap-5 p-4 pb-28">
       <header className="flex items-center justify-between">
