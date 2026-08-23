@@ -3,6 +3,12 @@ import { db } from "@/db/client";
 import { plans } from "@/db/schema";
 import type { PlanoGerado } from "@/domain/plano/tipos";
 import { allowEmail, seedAuthenticatedSession } from "./helpers/seed-session";
+import {
+  abrirExercicio,
+  concluirTreino,
+  iniciarTreino,
+  registrarSerie,
+} from "./helpers/sessao";
 
 const ex = (id: string, nome: string, padrao: string, reps: string) => ({
   exercicioId: id, nome, padrao, series: 2, repeticoes: reps, rir: 3,
@@ -49,6 +55,7 @@ async function navDentroDaViewport(page: import("@playwright/test").Page, etapa:
 // não cabe nos 30 s padrão do Playwright.
 test.setTimeout(120_000);
 
+
 test("a barra de navegação permanece visível nas telas com conteúdo longo", async ({ page, context }) => {
   const email = `e2e-navbar-${Date.now()}@example.com`;
   await allowEmail(email);
@@ -71,47 +78,16 @@ test("a barra de navegação permanece visível nas telas com conteúdo longo", 
   await navDentroDaViewport(page, "prévia do treino (rolado)");
 
   // 3) Resumo do treino concluído (3ª imagem do relato)
-  await page.getByRole("button", { name: /Iniciar treino/ }).click();
-  await expect(page.getByText("SESSÃO EM ANDAMENTO")).toBeVisible();
-  // Cada cartão de série monta o próprio timer, então pode haver mais de um
-  // diálogo montado ao mesmo tempo; fecha todos antes do próximo clique.
-  const dialogos = page.getByRole("dialog", { name: "Timer de descanso" });
-  const fecharTimer = async () => {
-    // Fechar um diálogo desmonta e recria a lista de cartões. Trabalhar com
-    // uma captura de `all()` deixa as referências seguintes obsoletas; por
-    // isso buscamos novamente o primeiro diálogo a cada iteração.
-    for (let tentativa = 0; tentativa < 10; tentativa += 1) {
-      const primeiro = dialogos.first();
-      if (!(await primeiro.isVisible().catch(() => false))) return;
-      await primeiro
-        .getByRole("button", { name: "Fechar timer" })
-        .click({ force: true });
-    }
-    await expect(dialogos).toHaveCount(0);
-  };
+  await iniciarTreino(page);
 
   for (const nome of ["Supino reto com barra", "Desenvolvimento com halteres", "Elevação lateral com halteres", "Tríceps na polia"]) {
-    await fecharTimer();
-    await page.getByRole("link", { name: `Abrir ${nome}` }).click();
-    await expect(page.getByRole("heading", { name: nome, level: 2 })).toBeVisible();
+    await abrirExercicio(page, nome);
     for (const serie of [1, 2]) {
-      const botao = page.getByRole("button", { name: `Registrar série ${serie}` });
-      await expect(botao).toBeEnabled({ timeout: 15_000 });
-      await page.locator('input[name="cargaKg"]:not(:disabled)').first().fill("20");
-      await fecharTimer();
-      await botao.click();
-      await fecharTimer();
+      await registrarSerie(page, serie);
     }
   }
   await expect(page.getByText("8/8")).toBeVisible();
-  const concluido = page.getByText("TREINO CONCLUÍDO");
-  for (let tentativa = 0; tentativa < 8; tentativa += 1) {
-    await fecharTimer();
-    await page.getByRole("button", { name: "Concluir treino" }).click({ timeout: 5_000 }).catch(() => {});
-    if (await concluido.isVisible().catch(() => false)) break;
-    await page.waitForTimeout(500);
-  }
-  await expect(concluido).toBeVisible({ timeout: 20_000 });
+  await concluirTreino(page, { confirmacao: "TREINO CONCLUÍDO" });
   await navDentroDaViewport(page, "resumo do treino (topo)");
   await page.mouse.wheel(0, 2000);
   await navDentroDaViewport(page, "resumo do treino (rolado)");
