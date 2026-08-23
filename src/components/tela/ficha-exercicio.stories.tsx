@@ -9,13 +9,12 @@ const meta = {
     docs: {
       description: {
         component:
-          "Mídia de Execução (CONTEXT.md): ícone de informação junto ao nome do exercício, separado das ações operacionais. Abre a animação real da ExerciseDB (espelhada no R2 via `/api/midia-execucao/{id}`), com texto e diagrama de músculos-alvo como fallback quando não há mídia mapeada.",
+          "Mídia de Execução (CONTEXT.md): ícone de informação junto ao nome do exercício, separado das ações operacionais. Abre a animação real da ExerciseDB (espelhada no R2 via `/api/midia-execucao/{id}`), com o texto de execução como fallback quando não há mídia mapeada.",
       },
     },
   },
   args: {
     nome: "Supino reto com barra",
-    grupo: "peito",
     grupoMuscular: "Peito",
     comoExecutar:
       "Deitado no banco, retraça as escápulas e mantenha os pés firmes no chão. Desça a barra até tocar levemente o peito, cotovelos a cerca de 45° do tronco, e empurre de volta sem travar bruscamente o cotovelo.",
@@ -35,11 +34,10 @@ export const ComMidia: Story = {
   ),
 };
 
-/** Sem `midiaUrl`, o diagrama de músculos-alvo assume o lugar da animação. */
+/** Sem `midiaUrl`, o texto de execução assume o lugar da animação. */
 export const SemMidia: Story = {
   args: {
     nome: "Prancha isométrica",
-    grupo: "core",
     grupoMuscular: "Core",
     comoExecutar:
       "Apoie antebraços e pontas dos pés no chão, corpo alinhado da cabeça aos calcanhares. Contraia abdômen e glúteos mantendo o quadril na mesma altura dos ombros, sem deixar a lombar ceder.",

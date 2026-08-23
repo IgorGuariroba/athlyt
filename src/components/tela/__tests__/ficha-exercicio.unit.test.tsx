@@ -18,7 +18,6 @@ describe("FichaExercicio", () => {
     render(
       <FichaExercicio
         nome="Supino reto com barra"
-        grupo="peito"
         grupoMuscular="Peito"
         comoExecutar="Deite no banco e empurre a barra."
       />,
@@ -28,11 +27,10 @@ describe("FichaExercicio", () => {
     expect(screen.queryByText("Deite no banco e empurre a barra.")).toBeNull();
   });
 
-  it("abre a ficha do exercício ao tocar no botão de informação, com o diagrama de músculos-alvo", () => {
+  it("abre a ficha do exercício ao tocar no botão de informação", () => {
     render(
       <FichaExercicio
         nome="Supino reto com barra"
-        grupo="peito"
         grupoMuscular="Peito"
         comoExecutar="Deite no banco e empurre a barra."
       />,
@@ -50,7 +48,6 @@ describe("FichaExercicio", () => {
     render(
       <FichaExercicio
         nome="Supino reto com barra"
-        grupo="peito"
         grupoMuscular="Peito"
         comoExecutar="Deite no banco e empurre a barra."
       />,
@@ -66,7 +63,6 @@ describe("FichaExercicio", () => {
     render(
       <FichaExercicio
         nome="Supino reto com barra"
-        grupo="peito"
         grupoMuscular="Peito"
         comoExecutar="Deite no banco e empurre a barra."
         midiaUrl="/api/midia-execucao/supino-barra"
@@ -86,7 +82,6 @@ describe("FichaExercicio", () => {
     render(
       <FichaExercicio
         nome="Supino reto com barra"
-        grupo="peito"
         grupoMuscular="Peito"
         comoExecutar="Deite no banco e empurre a barra."
         midiaUrl="/api/midia-execucao/supino-barra"
@@ -103,11 +98,10 @@ describe("FichaExercicio", () => {
     expect(dialogo.textContent).toContain("Deite no banco e empurre a barra.");
   });
 
-  it("sem midiaUrl, mostra apenas o diagrama de músculos-alvo e o texto", () => {
+  it("sem midiaUrl, mostra apenas o texto de execução", () => {
     render(
       <FichaExercicio
         nome="Supino reto com barra"
-        grupo="peito"
         grupoMuscular="Peito"
         comoExecutar="Deite no banco e empurre a barra."
       />,
@@ -125,7 +119,6 @@ describe("FichaExercicio", () => {
     render(
       <FichaExercicio
         nome="Supino reto com barra"
-        grupo="peito"
         grupoMuscular="Peito"
         comoExecutar="Deite no banco e empurre a barra."
       />,
@@ -154,7 +147,6 @@ describe("FichaExercicio", () => {
     render(
       <FichaExercicio
         nome="Supino reto com barra"
-        grupo="peito"
         grupoMuscular="Peito"
         comoExecutar="Deite no banco e empurre a barra."
       />,

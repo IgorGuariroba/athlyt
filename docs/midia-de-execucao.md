@@ -95,5 +95,5 @@ intocada.
 A rota `/api/midia-execucao/[exercicioId]` devolve 404 sempre que
 `configuracaoR2()` não resolve (variáveis `R2_*` ausentes) — falha
 fechada, nunca 500. `FichaExercicio` trata a falta de `midiaUrl` (ou o
-`onError` da imagem) caindo para `DiagramaMuscular` + texto. É o
+`onError` da imagem) caindo para o texto `comoExecutar`. É o
 caminho normal em desenvolvimento local sem R2 e no CI.

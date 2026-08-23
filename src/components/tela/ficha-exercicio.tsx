@@ -3,8 +3,6 @@
 import { useEffect, useId, useRef, useState } from "react";
 import { Dumbbell, Info, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import type { GrupoMuscular } from "@/domain/plano/exercicios";
-import { DiagramaMuscular } from "./diagrama-muscular";
 
 /**
  * Ponto de entrada para a Mídia de Execução (CONTEXT.md): "Animação/
@@ -30,19 +28,14 @@ import { DiagramaMuscular } from "./diagrama-muscular";
  * porque a tela de sessão já é densa; o atleta abre quando tem a
  * dúvida, não a cada série.
  *
- * `DiagramaMuscular` (silhueta com região marcada) continua presente
- * como informação secundária/menor: a animação ensina o movimento, o
- * diagrama diz onde ele bate — papéis que o `CONTEXT.md` distingue.
  */
 export function FichaExercicio({
   nome,
-  grupo,
   grupoMuscular,
   comoExecutar,
   midiaUrl,
 }: {
   nome: string;
-  grupo: GrupoMuscular;
   grupoMuscular: string;
   comoExecutar: string;
   /** URL same-origin da animação (`/api/midia-execucao/{id}`); ausente = sem mídia mapeada. */
@@ -165,7 +158,6 @@ export function FichaExercicio({
             ) : (
               <div className="mb-4 flex flex-col items-center justify-center gap-2 rounded-xl border border-border bg-surface-container-high py-6">
                 <Dumbbell className="size-10 text-muted-foreground" aria-hidden />
-                <DiagramaMuscular grupo={grupo} className="h-16" />
               </div>
             )}
             <div>

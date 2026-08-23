@@ -31,10 +31,11 @@ via RapidAPI (11.000 exercícios, vídeo MP4, sem marca d'água).
    por hotlink direto ao CDN da ExerciseDB nem por URL assinada.
    Motivo: URL assinada expira em minutos e não cacheia de forma
    estável no service worker — na academia offline a imagem sumiria.
-4. `DiagramaMuscular` (silhueta de músculos-alvo) e o texto
-   `comoExecutar` permanecem. O `CONTEXT.md` cita animação e diagrama
-   como papéis distintos; o texto é o fallback real para mapa ausente,
-   offline sem cache ou falha de carregamento — nunca é removido.
+4. O texto `comoExecutar` permanece como fallback real para mapa
+   ausente, offline sem cache ou falha de carregamento — nunca é
+   removido. O diagrama de músculos-alvo (`DiagramaMuscular`) foi
+   descontinuado: a animação já ensina o movimento e a silhueta
+   estilizada não agregava informação.
 
 ## Licenciamento — risco aceito, não confirmação formal
 

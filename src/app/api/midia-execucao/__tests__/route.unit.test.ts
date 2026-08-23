@@ -55,7 +55,7 @@ describe("GET /api/midia-execucao/[exercicioId]", () => {
   /**
    * O espelhamento é um passo manual fora do deploy, então bucket sem
    * o objeto é o estado normal de um ambiente recém-provisionado —
-   * antes, degradava toda ficha para o diagrama em silêncio.
+   * antes, degradava toda ficha para o fallback em texto, em silêncio.
    */
   it("espelha o GIF de origem e o serve quando o objeto ainda não está no bucket", async () => {
     const gravados: { chave: string; contentType: string }[] = [];

@@ -74,7 +74,7 @@ export function criarHandlerMidiaExecucao(deps: DependenciasHandlerMidia) {
       // Mídia de Execução: o espelhamento é um passo manual
       // (`npm run midia:importar -- --espelhar`) fora do deploy, então
       // um bucket novo — ou populado apontando para o bucket de testes
-      // — degradava toda ficha para o diagrama, sem sinal algum. O
+      // — degradava toda ficha para o fallback em texto, sem sinal algum. O
       // mapa curado já diz qual GIF é o correto para este exercício;
       // buscá-lo aqui é o mesmo trabalho do script, no momento em que
       // a falta é descoberta.

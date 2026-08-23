@@ -79,7 +79,6 @@ export default async function SessaoPage({ params, searchParams }: { params: Pro
                       {definicaoExercicio ? (
                         <FichaExercicio
                           nome={exercicio.nome}
-                          grupo={definicaoExercicio.grupoPrimario}
                           grupoMuscular={rotuloGrupoMuscular(definicaoExercicio.grupoPrimario)}
                           comoExecutar={exercicio.comoExecutar ?? definicaoExercicio.comoExecutar}
                           midiaUrl={midia ? `/api/midia-execucao/${exercicio.exercicioId}` : undefined}
