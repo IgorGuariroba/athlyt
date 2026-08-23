@@ -28,6 +28,7 @@
     "test:int": "vitest run --project integracao",
     "test:watch": "vitest --project unidade",
     "test:e2e": "playwright test",
+    "test:e2e:visivel": "playwright test --headed --project=mobile-chrome",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "ui:verificar": "vitest run --project unidade src/arquitetura/__tests__/governanca-ui.unit.test.ts",

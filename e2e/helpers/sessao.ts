@@ -95,6 +95,9 @@ export async function registrarSerie(
   const campo = page.locator('input[name="cargaKg"]:not(:disabled)').first();
   await expect(campo).toBeEditable({ timeout: 15_000 });
   await campo.fill(carga);
+  // A barra de navegação é fixa no rodapé; centralizar o botão evita que
+  // ela intercepte o clique quando o formulário está perto do fim da tela.
+  await botao.scrollIntoViewIfNeeded();
   await botao.click();
 }
 
