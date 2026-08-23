@@ -6,6 +6,26 @@ import { usePathname, useRouter } from "next/navigation";
 const ABAS = ["/inicio", "/diario", "/progresso", "/mais"] as const;
 const DISTANCIA_MINIMA = 56;
 
+/**
+ * Camadas modais (timer de descanso, ficha do exercício) são `fixed`
+ * mas vivem **dentro** desta árvore — não há `createPortal`. Sem esta
+ * guarda, um arrasto iniciado sobre o modal sobe por bubbling até os
+ * handlers de swipe e troca de aba por baixo dele, tirando o atleta da
+ * tela sem que ele tenha pedido.
+ *
+ * Defesa preventiva: nenhuma falha real foi observada, porque o gesto
+ * exige `pointerType` de toque. Vale mesmo assim, já que o único
+ * cenário não coberto pelos testes é o dedo do usuário.
+ *
+ * O backdrop conta como camada modal mesmo quando o `role="dialog"`
+ * está no filho (`FichaExercicio`): arrastar no escurecido ao redor do
+ * painel ainda é um gesto dentro do modal, não na tela de trás.
+ */
+function dentroDeCamadaModal(alvo: EventTarget | null): boolean {
+  if (!(alvo instanceof Element)) return false;
+  return alvo.closest('[role="dialog"]') !== null || alvo.querySelector('[role="dialog"]') !== null;
+}
+
 type Gesto = {
   inicioX: number;
   inicioY: number;
@@ -35,6 +55,7 @@ export function SwipeNavigation({ children }: { children: React.ReactNode }) {
   function aoIniciar(event: React.PointerEvent<HTMLDivElement>) {
     navegouPorGesto.current = false;
     if (event.pointerType === "mouse") return;
+    if (dentroDeCamadaModal(event.target)) return;
 
     gesto.current = {
       inicioX: event.clientX,
@@ -61,6 +82,10 @@ export function SwipeNavigation({ children }: { children: React.ReactNode }) {
 
     const deslocamentoX = event.clientX - gestoAtual.inicioX;
     if (Math.abs(deslocamentoX) < DISTANCIA_MINIMA) return;
+    // Um modal pode ter aberto durante o gesto (o timer sobe sozinho ao
+    // registrar uma série). Trocar de aba por baixo dele tiraria o
+    // atleta da tela sem que ele tenha pedido.
+    if (document.querySelector('[role="dialog"]')) return;
 
     const indice = indiceAtual();
     const proximoIndice = deslocamentoX < 0 ? indice + 1 : indice - 1;

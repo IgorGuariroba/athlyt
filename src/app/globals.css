@@ -313,8 +313,22 @@
   }
 }
 
+/*
+ * `both` mantinha o `transform` do keyframe aplicado para sempre depois
+ * do fim da animação. Um `transform` diferente de `none` — mesmo a
+ * identidade `matrix(1, 0, 0, 1, 0, 0)` — faz o elemento virar
+ * containing block de todo descendente `fixed` (CSS Transforms 2, §3).
+ * Os overlays da sessão (`Timer de descanso`, `FichaExercicio`) e a
+ * `BarraAcaoFixa` vivem dentro deste wrapper: `inset-0` deixava de
+ * medir a viewport e o modal era posicionado fora dela — medido em
+ * `y=-184` com `994px` de altura numa viewport de `839px`.
+ *
+ * `backwards` preserva o efeito de entrada (o estado inicial vale antes
+ * do primeiro frame) sem reter o `transform` no fim. Regressão coberta
+ * pelo E2E `navbar-visivel`.
+ */
 .etapa-transicao {
-  animation: etapa-entra-adiante 240ms ease-out both;
+  animation: etapa-entra-adiante 240ms ease-out backwards;
 }
 
 .etapa-transicao[data-direcao="atras"] {
