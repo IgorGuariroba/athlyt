@@ -6,23 +6,33 @@
 
 | Job | Portão |
 | --- | --- |
-| `estatica` | `npm run lint` + `npm run typecheck` + governança e render da galeria |
+| `estatica` | `npm run lint` + `npm run typecheck` + governança do design system |
 | `unidade` | `npm run test:unit` — sem infraestrutura |
 | `integracao` | `npm run test:int` — Postgres 16 efêmero + migrations |
 | `build` | `npm run build` (Next em modo produção) |
 | `e2e` | Playwright mobile contra Postgres 16 efêmero; publica vídeo/trace como artefato |
-| `auditoria` | `npm audit --audit-level=high --omit=dev` |
 
-`e2e` depende de `estatica`, `unidade` e `integracao` — falha barata aborta
-antes do runner caro.
+`e2e` depende apenas de `build`, porque só o artefato do build é
+pré-requisito real. Antes ele esperava também `estatica`, `unidade` e
+`integracao`: como `estatica` levava 5,5 min (4 min 16 s só de render das
+stories), o E2E — o único portão que exercita o produto de verdade — começava
+no minuto 6 de uma esteira de 8. Em paralelo, uma falha barata continua
+reprovando o PR; ela apenas não serializa mais a esteira.
 
-A galeria (Storybook) é verificada dentro de `estatica`, e não em job próprio:
-o ruleset da `main` exige exatamente 6 checks **pelo nome**, e um job novo
-entraria como não-exigido — o portão existiria sem proteger nada. São dois
-passos com propósitos distintos: `storybook:build` compila, e
-`storybook:verificar` abre cada story em navegador porque o Storybook desenha
-erro de execução na moldura dele e sai com código 0
-(`docs/memory/galeria-compila-mas-nao-renderiza.md`).
+### Fora do CI de PR
+
+Dois workflows saíram de `ci.yml` porque respondem a coisas que não são o
+commit:
+
+| Workflow | Gatilho | Motivo |
+| --- | --- | --- |
+| `.github/workflows/galeria.yml` | diário, manual e PR que toque `src/components/**`, `globals.css` ou `.storybook/**` | render + a11y das stories custam 4 min 16 s; a galeria é referência visual, não regressão de produto |
+| `.github/workflows/auditoria.yml` | diário, manual e PR que toque `package.json`/`package-lock.json` | `npm audit` muda por publicação de CVE, não por commit — como portão de PR reprovava mudanças sem relação com a vulnerabilidade |
+
+Na galeria continuam os dois passos com propósitos distintos:
+`storybook:build` compila, e `storybook:verificar` abre cada story em
+navegador porque o Storybook desenha erro de execução na moldura dele e sai
+com código 0 (`docs/memory/galeria-compila-mas-nao-renderiza.md`).
 
 ## Níveis de teste
 
@@ -60,7 +70,7 @@ refaça essa varredura antes de qualquer mudança de visibilidade.
 O ruleset `main protegida` (id 20077396) está **ativo** e sem bypass actors —
 nem o dono da conta escapa. Verificado empiricamente: um push direto na `main`
 é recusado com `Changes must be made through a pull request` +
-`6 of 6 required status checks are expected`.
+`5 of 5 required status checks are expected`.
 
 Regras em vigor:
 
@@ -79,7 +89,7 @@ git switch -c minha-mudanca
 # ... commits ...
 git push -u origin minha-mudanca
 gh pr create --fill
-gh pr merge --squash   # só passa com os 6 checks verdes
+gh pr merge --squash   # só passa com os 5 checks verdes
 ```
 
 O hook local `.githooks/pre-push` (ative com `git config core.hooksPath .githooks`)
@@ -99,3 +109,8 @@ uma rodada de CI. A garantia real está no servidor.
 Os `context` precisam bater exatamente com o `name:` de cada job em `ci.yml`.
 Se renomear um job, renomeie aqui — um context que não existe mais deixa de ser
 exigido silenciosamente, e o portão some sem aviso.
+
+Pior que sumir: um context exigido cujo job **não roda** naquele PR deixa o
+merge preso para sempre, esperando um check que nunca vai chegar. Foi por isso
+que `Auditoria de dependências` saiu da lista ao virar condicional por
+`paths` — só entra no ruleset job que roda em todo PR.

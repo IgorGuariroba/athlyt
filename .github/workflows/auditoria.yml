@@ -1,0 +1,31 @@
+name: Auditoria
+
+# `npm audit` muda quando um CVE é publicado, não quando alguém commita.
+# Como portão de PR, ele reprovava mudanças que não tinham relação com a
+# vulnerabilidade; como rotina diária, avisa no mesmo dia sem travar
+# ninguém. Também roda quando o lockfile muda — aí a mudança é a causa.
+on:
+  schedule:
+    - cron: "0 6 * * *"
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - package.json
+      - package-lock.json
+
+concurrency:
+  group: auditoria-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  auditoria:
+    name: Auditoria de dependências
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24.18.0"
+          cache: npm
+      - run: npm ci
+      - run: npm audit --audit-level=high --omit=dev

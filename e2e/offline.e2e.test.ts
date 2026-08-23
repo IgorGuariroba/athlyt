@@ -3,6 +3,12 @@ import { db } from "@/db/client";
 import { plans } from "@/db/schema";
 import type { PlanoGerado } from "@/domain/plano/tipos";
 import { allowEmail, seedAuthenticatedSession } from "./helpers/seed-session";
+import {
+  abrirSessaoEmAndamento,
+  concluirTreino,
+  pularDescanso,
+  registrarSerie,
+} from "./helpers/sessao";
 
 /**
  * Jornada offline da Sessão de Treino (user stories 37–39; telas 042 e 085).
@@ -26,10 +32,7 @@ test("mantém a sessão viva sem rede e sincroniza a fila ao reconectar", async 
   await db.insert(plans).values({ userId: user.id, perfilVersao: 1, versao: 1, estado: "ativo", regraVersao: plano.regraVersao, modoConservador: false, conteudo: plano, activatedAt: new Date() });
   await context.addCookies([cookie]);
 
-  await page.goto("/inicio");
-  await page.getByRole("link", { name: /Ver treino/ }).click();
-  await page.getByRole("button", { name: /Iniciar treino/ }).click();
-  await expect(page.getByText("SESSÃO EM ANDAMENTO")).toBeVisible();
+  await abrirSessaoEmAndamento(page);
 
   // Badge visível já no estado normal — não é um alerta que só aparece
   // quando algo quebra.
@@ -39,9 +42,8 @@ test("mantém a sessão viva sem rede e sincroniza a fila ao reconectar", async 
   // série: ele é contingência, não a experiência principal.
   await expect(page.getByLabel("Orientações do Coach Local")).toHaveCount(0);
 
-  await page.locator('input[name="cargaKg"]:not(:disabled)').first().fill("20");
-  await page.getByLabel("Registrar série 1").click();
-  await page.getByRole("button", { name: "Pular descanso" }).click();
+  await registrarSerie(page, 1);
+  await pularDescanso(page);
 
   // ---- rede cai no meio do treino ----
   await context.setOffline(true);
@@ -52,22 +54,19 @@ test("mantém a sessão viva sem rede e sincroniza a fila ao reconectar", async 
   await expect(coachLocal).toContainText("Sem rede: nenhuma sugestão de IA é gerada aqui.");
 
   // Registro de série continua funcionando, e o timer também.
-  await page.locator('input[name="cargaKg"]:not(:disabled)').first().fill("20");
-  await page.getByLabel("Registrar série 2").click();
+  await registrarSerie(page, 2);
   const timerOffline = page.getByRole("dialog", { name: "Timer de descanso" });
   await expect(timerOffline).toBeVisible();
   await expect(timerOffline).toBeHidden({ timeout: 5_000 });
 
-  await page.locator('input[name="cargaKg"]:not(:disabled)').first().fill("20");
-  await page.getByLabel("Registrar série 3").click();
-  await page.getByRole("button", { name: "Pular descanso" }).click();
+  await registrarSerie(page, 3);
+  await pularDescanso(page);
 
   // A fila é visível no badge: nada foi perdido nem enviado.
   await expect(page.getByLabel(/Estado da conexão: Offline, 2 na fila/)).toBeVisible();
 
   // Concluir offline não trava esperando a rede.
-  await page.getByRole("button", { name: "Concluir treino" }).click();
-  await expect(page.getByText("Treino encerrado neste aparelho")).toBeVisible();
+  await concluirTreino(page, { confirmacao: "Treino encerrado neste aparelho" });
 
   // ---- rede volta ----
   await context.setOffline(false);

@@ -31,25 +31,10 @@ jobs:
       - run: npm run typecheck
       - name: Governança do design system
         run: npm run ui:verificar
-      # A galeria é verificada aqui, e não em job próprio, porque o
-      # ruleset da `main` exige exatamente 6 checks pelo nome: um job
-      # novo entraria como não-exigido e o portão sumiria sem aviso
-      # (ver docs/agents/ci.md).
-      - name: Build da galeria (Storybook)
-        run: npm run storybook:build
-      # `storybook build` compila mas não renderiza: uma story que
-      # quebra em tempo de execução (ex.: `useRouter` sem App Router)
-      # some dentro da moldura do Storybook e o build fica verde.
-      # `python3 -m http.server` em vez de `npx serve`: já existe no
-      # runner e não baixa pacote fora do lockfile.
-      - name: Renderização das stories
-        run: |
-          npx playwright install --with-deps chromium
-          python3 -m http.server 6006 --directory storybook-static &
-          curl --retry 30 --retry-delay 1 --retry-all-errors -sf \
-            http://localhost:6006/index.json > /dev/null
-          STORYBOOK_URL=http://localhost:6006 npm run storybook:verificar
-          STORYBOOK_URL=http://localhost:6006 npm run storybook:a11y
+      # Render e a11y das stories saíram daqui: custavam 4 min 16 s e,
+      # como `e2e` esperava por este job, atrasavam o único portão que
+      # exercita o produto de verdade. Migraram para
+      # `.github/workflows/galeria.yml` (nightly + manual).
 
   # Portão rápido: *.unit.test.ts não toca infraestrutura nenhuma, então
   # este job não provisiona banco de propósito — se algum teste passar a
@@ -128,7 +113,11 @@ jobs:
   e2e:
     name: E2E mobile
     runs-on: ubuntu-latest
-    needs: [estatica, unidade, integracao, build]
+    # Só o artefato de build é pré-requisito real. Antes esperava
+    # também `estatica`/`unidade`/`integracao`, o que empurrava o E2E
+    # para o minuto 6 de uma esteira de 8. Rodando em paralelo, uma
+    # falha barata continua reprovando o PR — apenas não serializa.
+    needs: [build]
     services:
       postgres:
         image: postgres:16
@@ -176,16 +165,6 @@ jobs:
             test-results/
           retention-days: 14
 
-  # Trava regressão de vulnerabilidade: o repo já corrige CVEs via
-  # "overrides" no package.json e não deve perder esse chão.
-  auditoria:
-    name: Auditoria de dependências
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: npm
-      - run: npm ci
-      - run: npm audit --audit-level=high --omit=dev
+  # A auditoria saiu do PR: o resultado de `npm audit` muda por
+  # publicação de CVE, não por commit, então bloquear cada PR com ela
+  # gera falha alheia à mudança. Ver `.github/workflows/auditoria.yml`.

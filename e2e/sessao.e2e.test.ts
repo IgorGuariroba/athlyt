@@ -3,6 +3,13 @@ import { db } from "@/db/client";
 import { plans, profileVersions } from "@/db/schema";
 import type { PlanoGerado } from "@/domain/plano/tipos";
 import { allowEmail, seedAuthenticatedSession } from "./helpers/seed-session";
+import {
+  abrirSessaoEmAndamento,
+  concluirTreino,
+  fecharTimer,
+  iniciarTreino,
+  registrarSerie,
+} from "./helpers/sessao";
 
 const plano: PlanoGerado = {
   regraVersao: "motor-plano-v1", modoConservador: false, perfilVersao: 1, dadosUsados: [],
@@ -58,9 +65,7 @@ test("escolhe o descanso entre séries e a escolha vale para o próximo timer", 
   await db.insert(plans).values({ userId: user.id, perfilVersao: 1, versao: 1, estado: "ativo", regraVersao: planoDescanso.regraVersao, modoConservador: false, conteudo: planoDescanso, activatedAt: new Date() });
   await context.addCookies([cookie]);
 
-  await page.goto("/inicio");
-  await page.getByRole("link", { name: /Ver treino/ }).click();
-  await page.getByRole("button", { name: /Iniciar treino/ }).click();
+  await abrirSessaoEmAndamento(page);
 
   // Três opções derivadas do descanso prescrito (90 s), rótulo em
   // duração e não em adjetivo.
@@ -70,11 +75,10 @@ test("escolhe o descanso entre séries e a escolha vale para o próximo timer", 
   await expect(page.getByRole("radio", { name: "Descanso do plano: 1:30" })).toBeChecked();
 
   await page.getByRole("radio", { name: "Descanso longo: 2:15" }).check();
-  await page.locator('input[name="cargaKg"]:not(:disabled)').first().fill("20");
-  await page.getByLabel("Registrar série 1").click();
+  await registrarSerie(page, 1);
   const timer = page.getByRole("dialog", { name: "Timer de descanso" });
   await expect(timer).toContainText("2:1");
-  await page.getByRole("button", { name: "Fechar timer" }).click();
+  await fecharTimer(page);
 
   // A escolha é do exercício, não do timer aberto: sobrevive a recarregar
   // a página e continua valendo para a série seguinte.
@@ -82,10 +86,9 @@ test("escolhe o descanso entre séries e a escolha vale para o próximo timer", 
   await expect(page.getByRole("radio", { name: "Descanso longo: 2:15" })).toBeChecked();
 
   await page.getByRole("radio", { name: "Descanso curto: 1:00" }).check();
-  await page.locator('input[name="cargaKg"]:not(:disabled)').first().fill("20");
-  await page.getByLabel("Registrar série 2").click();
+  await registrarSerie(page, 2);
   await expect(timer).toContainText("1:0");
-  await page.getByRole("button", { name: "Fechar timer" }).click();
+  await fecharTimer(page);
 });
 
 test("executa o treino do dia, usa o timer e consulta o resumo no histórico", async ({ page, context }) => {
@@ -108,8 +111,7 @@ test("executa o treino do dia, usa o timer e consulta o resumo no histórico", a
   await page.getByText("Por que este exercício?").click();
   await expect(page.getByText(/Halteres poupam seu ombro direito/)).toBeVisible();
 
-  await page.getByRole("button", { name: /Iniciar treino/ }).click();
-  await expect(page.getByText("SESSÃO EM ANDAMENTO")).toBeVisible();
+  await iniciarTreino(page);
   await expect(page.getByRole("button", { name: "Concluir treino" })).toBeEnabled();
 
   // O motivo sobrevive ao congelamento do snapshot e continua ao alcance
@@ -118,14 +120,12 @@ test("executa o treino do dia, usa o timer e consulta o resumo no histórico", a
   await page.getByText("Por que este exercício?").click();
   await expect(page.getByText(/Halteres poupam seu ombro direito/)).toBeVisible();
 
-  await page.locator('input[name="cargaKg"]:not(:disabled)').first().fill("20");
-  await page.getByLabel("Registrar série 1").click();
+  await registrarSerie(page, 1);
   const timer = page.getByRole("dialog", { name: "Timer de descanso" });
   await expect(timer).toBeVisible();
   await expect(timer).toBeHidden({ timeout: 5_000 });
-  await page.getByRole("button", { name: "Concluir treino" }).click();
+  await concluirTreino(page);
 
-  await expect(page.getByText("Treino concluído")).toBeVisible();
   await expect(page.getByText("1", { exact: true }).first()).toBeVisible();
   await page.getByRole("link", { name: "Ver histórico de sessões" }).click();
   await expect(page.getByText("Concluída", { exact: true })).toBeVisible();
@@ -161,9 +161,7 @@ test("mostra orientação assíncrona do Copiloto e cai para o Coach Local ao pe
   });
   await context.addCookies([cookie]);
 
-  await page.goto("/inicio");
-  await page.getByRole("link", { name: /Ver treino/ }).click();
-  await page.getByRole("button", { name: /Iniciar treino/ }).click();
+  await abrirSessaoEmAndamento(page);
 
   // A sincronização alimenta o Copiloto, mas o descanso é relógio do atleta:
   // mesmo com a rede lenta, o modal precisa abrir sem aguardar esse POST.
@@ -171,18 +169,16 @@ test("mostra orientação assíncrona do Copiloto e cai para o Coach Local ao pe
     await new Promise((resolve) => setTimeout(resolve, 2_000));
     await rota.continue();
   }, { times: 1 });
-  await page.locator('input[name="cargaKg"]:not(:disabled)').first().fill("20");
-  await page.getByLabel("Registrar série 1").click();
+  await registrarSerie(page, 1);
   await expect(page.getByRole("dialog", { name: "Timer de descanso" })).toBeVisible({ timeout: 500 });
-  await page.getByRole("button", { name: "Fechar timer" }).click();
+  await fecharTimer(page);
 
   await expect(page.getByRole("region", { name: "Orientação do Copiloto" })).toContainText("Copiloto (IA)");
   await expect(page.getByRole("region", { name: "Orientação do Copiloto" })).toContainText("26 kg · 9 reps · RIR 2");
 
   await context.setOffline(true);
-  await page.locator('input[name="cargaKg"]:not(:disabled)').first().fill("20");
-  await page.getByLabel("Registrar série 2").click();
-  await page.getByRole("button", { name: "Fechar timer" }).click();
+  await registrarSerie(page, 2);
+  await fecharTimer(page);
   await expect(page.getByRole("region", { name: "Orientações do Coach Local" })).toContainText("Coach Local (regra)");
   await expect(page.getByRole("region", { name: "Orientações do Coach Local" })).toContainText("nenhuma sugestão de IA");
 });
@@ -204,13 +200,9 @@ test("usa o Coach Local sem simular IA quando o provedor está indisponível", a
   });
   await context.addCookies([cookie]);
 
-  await page.goto("/inicio");
-  await page.getByRole("link", { name: /Ver treino/ }).click();
-  await page.getByRole("button", { name: /Iniciar treino/ }).click();
-  await page.locator('input[name="cargaKg"]:not(:disabled)').first().fill("13");
-  await page.locator('input[name="cargaKg"]:not(:disabled)').first().fill("13");
-  await page.getByLabel("Registrar série 1").click();
-  await page.getByRole("button", { name: "Fechar timer" }).click();
+  await abrirSessaoEmAndamento(page);
+  await registrarSerie(page, 1, { carga: "13" });
+  await fecharTimer(page);
 
   const local = page.getByRole("region", { name: "Orientações do Coach Local" });
   // O SDK tenta o provedor novamente antes de declarar indisponibilidade;
@@ -220,19 +212,25 @@ test("usa o Coach Local sem simular IA quando o provedor está indisponível", a
 });
 
 test("mostra o fallback em texto da ficha do exercício quando não há Mídia de Execução disponível", async ({ page, context }) => {
-  // Caminho do CI: sem R2 configurado, a rota /api/midia-execucao
-  // devolve 404 (falha fechada) e a ficha precisa continuar útil com
-  // o texto de execução e o diagrama de músculos-alvo, sem depender de
-  // rede externa à ExerciseDB (docs/memory/mudanca-ui-atualiza-e2e.md).
+  // A Mídia de Execução pode faltar por R2 indisponível ou exercício sem
+  // vídeo: a ficha precisa continuar útil com o texto de execução e o
+  // diagrama de músculos-alvo (docs/memory/mudanca-ui-atualiza-e2e.md).
+  //
+  // A ausência é declarada aqui, e não herdada do ambiente. Antes o teste
+  // só passava onde o R2 *acaso* não estivesse configurado: verde no CI,
+  // vermelho em qualquer máquina com `.env` completo — o que faz o teste
+  // parecer quebrado quando quem está diferente é o ambiente.
+  await page.route("**/api/midia-execucao**", (rota) =>
+    rota.fulfill({ status: 404, body: "" }),
+  );
+
   const email = `e2e-ficha-exercicio-${Date.now()}@example.com`;
   await allowEmail(email);
   const { cookie, user } = await seedAuthenticatedSession(email);
   await db.insert(plans).values({ userId: user.id, perfilVersao: 1, versao: 1, estado: "ativo", regraVersao: planoComExercicioDoCatalogo.regraVersao, modoConservador: false, conteudo: planoComExercicioDoCatalogo, activatedAt: new Date() });
   await context.addCookies([cookie]);
 
-  await page.goto("/inicio");
-  await page.getByRole("link", { name: /Ver treino/ }).click();
-  await page.getByRole("button", { name: /Iniciar treino/ }).click();
+  await abrirSessaoEmAndamento(page);
 
   await page.getByRole("button", { name: "Ver como executar Supino reto com halteres" }).click();
   const ficha = page.getByRole("dialog", { name: "Supino reto com halteres" });

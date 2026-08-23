@@ -1,0 +1,53 @@
+name: Galeria
+
+# Render e a11y das 54 stories em navegador: 4 min 16 s, o passo mais
+# caro de toda a esteira. Ficava dentro do job `estatica`, e como `e2e`
+# dependia dele, atrasava em ~4 min o único portão que exercita o
+# produto. A galeria é referência visual, não regressão de produto:
+# roda uma vez por dia e sob demanda.
+on:
+  schedule:
+    - cron: "0 6 * * *"
+  workflow_dispatch:
+  # Um PR que mexe no design system ainda paga o preço — e só ele.
+  pull_request:
+    paths:
+      - "src/components/**"
+      - "src/app/globals.css"
+      - ".storybook/**"
+      - "scripts/verificar-stories.ts"
+      - "scripts/verificar-a11y.ts"
+
+concurrency:
+  group: galeria-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: "24.18.0"
+
+jobs:
+  stories:
+    name: Render e a11y das stories
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+      - run: npm ci
+      - run: npm run storybook:build
+      # `storybook build` compila mas não renderiza: uma story que
+      # quebra em tempo de execução (ex.: `useRouter` sem App Router)
+      # some dentro da moldura do Storybook e o build fica verde
+      # (docs/memory/galeria-compila-mas-nao-renderiza.md).
+      # `python3 -m http.server` em vez de `npx serve`: já existe no
+      # runner e não baixa pacote fora do lockfile.
+      - name: Renderização das stories
+        run: |
+          npx playwright install --with-deps chromium
+          python3 -m http.server 6006 --directory storybook-static &
+          curl --retry 30 --retry-delay 1 --retry-all-errors -sf \
+            http://localhost:6006/index.json > /dev/null
+          STORYBOOK_URL=http://localhost:6006 npm run storybook:verificar
+          STORYBOOK_URL=http://localhost:6006 npm run storybook:a11y

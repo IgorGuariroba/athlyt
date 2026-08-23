@@ -3,6 +3,13 @@ import { db } from "@/db/client";
 import { plans, profileVersions } from "@/db/schema";
 import type { PlanoGerado } from "@/domain/plano/tipos";
 import { allowEmail, seedAuthenticatedSession } from "./helpers/seed-session";
+import {
+  abrirSessaoEmAndamento,
+  concluirTreinoSincronizado,
+  iniciarTreino,
+  pularDescanso,
+  registrarSerie,
+} from "./helpers/sessao";
 
 const plano: PlanoGerado = {
   regraVersao: "motor-plano-v1", modoConservador: false, perfilVersao: 1, dadosUsados: [],
@@ -30,9 +37,7 @@ test("substitui exercício por equipamento indisponível preservando o estímulo
   await db.insert(plans).values({ userId: user.id, perfilVersao: 1, versao: 1, estado: "ativo", regraVersao: plano.regraVersao, modoConservador: false, conteudo: plano, activatedAt: new Date() });
   await context.addCookies([cookie]);
 
-  await page.goto("/inicio");
-  await page.getByRole("link", { name: /Ver treino/ }).click();
-  await page.getByRole("button", { name: /Iniciar treino/ }).click();
+  await abrirSessaoEmAndamento(page);
   await expect(page.getByRole("heading", { name: "Supino reto com barra" })).toBeVisible();
 
   await page.getByRole("link", { name: "Substituir Supino reto com barra" }).click();
@@ -49,23 +54,16 @@ test("substitui exercício por equipamento indisponível preservando o estímulo
   // herdar uma explicação que o agent produziu para o exercício original.
   await expect(page.getByText("Por que este exercício?")).toHaveCount(0);
 
-  await page.locator('input[name="cargaKg"]:not(:disabled)').first().fill("20");
-  await page.getByLabel("Registrar série 1").click();
-  await page.getByRole("button", { name: "Pular descanso" }).click();
-  // Fechar o timer não implica mais que a sincronização terminou. O botão
-  // dentro do form reaparece quando o servidor já confirmou a série.
-  const concluirSincronizado = page.locator("form").getByRole("button", { name: "Concluir treino" });
-  await expect(concluirSincronizado).toBeVisible({ timeout: 10_000 });
-  await concluirSincronizado.click();
-  await expect(page.getByText("Treino concluído")).toBeVisible();
+  await registrarSerie(page, 1);
+  await pularDescanso(page);
+  await concluirTreinoSincronizado(page);
 
   // A troca por equipamento persiste: a próxima sessão do mesmo dia já
   // nasce com o exercício substituído. Como o bloco tem um único dia,
   // concluir a sessão libera imediatamente esse treino outra vez.
   await page.goto("/inicio");
   await expect(page.getByRole("heading", { name: "Superior A" })).toBeVisible();
-  await page.getByRole("link", { name: /Ver treino/ }).click();
-  await page.getByRole("button", { name: /Iniciar treino/ }).click();
+  await abrirSessaoEmAndamento(page);
   await expect(page.getByRole("heading", { name: "Supino reto com halteres" })).toBeVisible();
 });
 
@@ -78,13 +76,12 @@ test("substitui no meio da execução quando a dor aparece durante o exercício"
   await context.addCookies([cookie]);
 
   await page.goto("/sessao/previa/superior-a");
-  await page.getByRole("button", { name: /Iniciar treino/ }).click();
+  await iniciarTreino(page);
 
   // O atleta faz a primeira série e só então sente dor — é impossível
   // saber antes de executar.
-  await page.locator('input[name="cargaKg"]:not(:disabled)').first().fill("20");
-  await page.getByLabel("Registrar série 1").click();
-  await page.getByRole("button", { name: "Pular descanso" }).click();
+  await registrarSerie(page, 1);
+  await pularDescanso(page);
 
   await page.getByRole("link", { name: "Substituir Supino reto com barra" }).click();
   await page.getByRole("link", { name: /Dor ou desconforto/ }).click();
@@ -99,16 +96,11 @@ test("substitui no meio da execução quando a dor aparece durante o exercício"
 
   // A série já executada continua contando na sessão.
   await expect(page.getByText("1/3")).toBeVisible();
-  await page.locator('input[name="cargaKg"]:not(:disabled)').first().fill("20");
-  await page.getByLabel("Registrar série 1").click();
-  await page.getByRole("button", { name: "Pular descanso" }).click();
-  await page.locator('input[name="cargaKg"]:not(:disabled)').first().fill("20");
-  await page.getByLabel("Registrar série 2").click();
-  await page.getByRole("button", { name: "Pular descanso" }).click();
-  const concluirSincronizado = page.locator("form").getByRole("button", { name: "Concluir treino" });
-  await expect(concluirSincronizado).toBeVisible({ timeout: 10_000 });
-  await concluirSincronizado.click();
+  await registrarSerie(page, 1);
+  await pularDescanso(page);
+  await registrarSerie(page, 2);
+  await pularDescanso(page);
+  await concluirTreinoSincronizado(page);
 
-  await expect(page.getByText("Treino concluído")).toBeVisible();
   await expect(page.getByText(/Interrompido após 1 de 3 séries/)).toBeVisible();
 });
