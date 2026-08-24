@@ -37,15 +37,13 @@ test("prescrição, confirmação em 1 toque e edição atualizam os macros rest
   const linha = page.getByRole("list", { name: "Linha do tempo do dia" });
   await expect(linha.getByText("Planejada")).toHaveCount(4);
   const macros = page.getByRole("region", { name: "Macros do dia" });
-  await expect(macros.getByText("0/2400")).toBeVisible();
-  await expect(macros.getByText(/E restam 2400 kcal/)).toBeVisible();
-  await expect(macros.getByText(/P restam 160 g/)).toBeVisible();
+  await expect(macros.getByText(/Energia: 0 de 2400 kcal consumidos, restam 2400 kcal/)).toBeVisible();
+  await expect(macros.getByText(/Proteína: 0 de 160 g consumidos, restam 160 g/)).toBeVisible();
 
   // Confirmar em um toque vira Consumo Confirmado e desconta os macros.
   await page.getByRole("button", { name: "Comi como planejado: Almoço" }).click();
   await expect(linha.getByText("Planejada")).toHaveCount(3);
-  await expect(macros.getByText("840/2400")).toBeVisible();
-  await expect(macros.getByText(/E restam 1560 kcal/)).toBeVisible();
+  await expect(macros.getByText(/Energia: 840 de 2400 kcal consumidos, restam 1560 kcal/)).toBeVisible();
 
   // Editar antes de confirmar registra consumo real distinto do planejado.
   await page.getByRole("link", { name: "Editar Jantar" }).click();
@@ -60,8 +58,7 @@ test("prescrição, confirmação em 1 toque e edição atualizam os macros rest
   await expect(page.getByRole("heading", { name: "Hoje" })).toBeVisible();
   await expect(linha.getByText("Planejada")).toHaveCount(2);
   await expect(page.getByText("300 kcal a menos que o planejado (600 kcal)")).toBeVisible();
-  await expect(macros.getByText("1140/2400")).toBeVisible();
-  await expect(macros.getByText(/E restam 1260 kcal/)).toBeVisible();
+  await expect(macros.getByText(/Energia: 1140 de 2400 kcal consumidos, restam 1260 kcal/)).toBeVisible();
 
   // Persistência visível após voltar por navegação real ao Diário.
   await page.goto("/inicio");

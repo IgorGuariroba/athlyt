@@ -5,11 +5,36 @@ import { describe, expect, it } from "vitest";
 import { lerCatalogo } from "../../../.pi/extensions/ui-componentes/catalogo";
 import { verificarConteudo } from "../../../.pi/extensions/ui-componentes/regras";
 import {
+  CAMADAS_DE_COMPONENTE,
   caminhoDaStory,
   componentesDoArquivo,
+  componentesForaDoCatalogo,
   validarComponenteDeTela,
   validarGaleria,
 } from "../governanca-ui";
+
+/** Todos os `.tsx` de `src/app`, para a checagem de composição das telas. */
+function arquivosDeTela(cwd: string): { caminho: string; fonte: string }[] {
+  const raiz = join(cwd, "src/app");
+  const resultado: { caminho: string; fonte: string }[] = [];
+  const percorrer = (dir: string) => {
+    for (const entrada of readdirSync(dir, { withFileTypes: true })) {
+      const caminho = join(dir, entrada.name);
+      if (entrada.isDirectory()) {
+        percorrer(caminho);
+        continue;
+      }
+      if (!entrada.name.endsWith(".tsx")) continue;
+      if (/\.(test|spec|stories)\.tsx$/.test(entrada.name)) continue;
+      resultado.push({
+        caminho: caminho.slice(cwd.length + 1).split("\\").join("/"),
+        fonte: readFileSync(caminho, "utf8"),
+      });
+    }
+  };
+  percorrer(raiz);
+  return resultado;
+}
 
 describe("governança de composição das telas", () => {
   it("rejeita Card estrutural importado diretamente por uma página", () => {
@@ -95,7 +120,7 @@ describe("governança de composição das telas", () => {
       }
     }
 
-    const fontesTestes = ["tela", "ui", "fotos"].flatMap((camada) => {
+    const fontesTestes = CAMADAS_DE_COMPONENTE.flatMap((camada) => {
       const dir = join(cwd, "src/components", camada, "__tests__");
       if (!existsSync(dir)) return [];
       return readdirSync(dir).map((arquivo) =>
@@ -106,5 +131,31 @@ describe("governança de composição das telas", () => {
     expect(
       validarGaleria({ componentes, stories, fontesTestes }),
     ).toEqual([]);
+  });
+
+  /**
+   * Uma tela é composição, não lugar de definir componente: o que nasce
+   * dentro de `src/app/**` escapa do catálogo, do Storybook e da
+   * cobrança de teste acima.
+   */
+  it("aponta componente definido dentro da pasta de uma rota", () => {
+    expect(
+      componentesForaDoCatalogo([
+        {
+          caminho: "src/app/(app)/diario/painel-macros.tsx",
+          fonte: "export function PainelDeMacros() { return null; }",
+        },
+        {
+          caminho: "src/app/(app)/diario/page.tsx",
+          fonte: "export default function DiarioPage() { return null; }",
+        },
+      ]),
+    ).toEqual([
+      "src/app/(app)/diario/painel-macros.tsx define um componente dentro da rota: mova-o para src/components/** com story e teste",
+    ]);
+  });
+
+  it("mantém as telas como composição de componentes do catálogo", () => {
+    expect(componentesForaDoCatalogo(arquivosDeTela(process.cwd()))).toEqual([]);
   });
 });

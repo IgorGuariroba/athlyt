@@ -70,8 +70,7 @@ test("busca, monta o Prato e registra consumo fora do plano", async ({ page, con
 
   await expect(page.getByRole("heading", { name: "Hoje" })).toBeVisible();
   await expect(page.getByText("Almoço na rua")).toBeVisible();
-  await expect(macros.getByText("656/2400")).toBeVisible();
-  await expect(macros.getByText(/E restam 1744 kcal/)).toBeVisible();
+  await expect(macros.getByText(/Energia: 656 de 2400 kcal consumidos, restam 1744 kcal/)).toBeVisible();
 
   // Registro avulso não consome uma Entrada Planejada.
   const linha = page.getByRole("list", { name: "Linha do tempo do dia" });
