@@ -37,7 +37,24 @@ while read -r _local_ref local_sha remote_ref _remote_sha; do
   arquivos_alterados=$(git diff --name-only "$base_sha" "$local_sha")
   if printf '%s\n' "$arquivos_alterados" | grep -Eq '^(src/app/|src/components/|src/app/globals\.css$)'; then
     echo "pre-push: alteração de UI detectada — executando E2E..."
-    npm run test:e2e
+    # Serve o build em vez de `next dev`, que é o padrão do
+    # playwright.config.ts. Com o Fast Refresh ativo, um clique que cai
+    # na janela de rebuild tem a navegação descartada e o teste falha
+    # esperando uma tela que não vai montar — o arquivo atingido mudava
+    # a cada push com o mesmo commit (`fotos-r2`, depois
+    # `navbar-visivel`), sintoma que imita teste frágil.
+    #
+    # O comando é o servidor standalone, não `next start`: o
+    # `output: "standalone"` do next.config.ts torna `next start`
+    # inválido, e usar o comando do CI aqui derruba a suite inteira com
+    # ERR_CONNECTION_REFUSED. Mesma sequência de scripts/app-local.sh,
+    # incluindo a cópia dos estáticos que o standalone não emite.
+    echo "pre-push: compilando o build de produção para o E2E..."
+    npm run build
+    mkdir -p .next/standalone/.next
+    cp -r .next/static .next/standalone/.next/static
+    cp -r public .next/standalone/public
+    E2E_COMANDO="node .next/standalone/server.js" PORT=3000 npm run test:e2e
   else
     echo "pre-push: nenhuma alteração de UI detectada — E2E não executado."
   fi
