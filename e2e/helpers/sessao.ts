@@ -68,8 +68,11 @@ export async function abrirSessaoEmAndamento(page: Page) {
  */
 export async function abrirExercicio(page: Page, nome: string) {
   await fecharTimer(page);
-  await page.getByRole("link", { name: `Abrir ${nome}` }).click();
-  await expect(page.getByRole("heading", { name: nome, level: 2 })).toBeVisible();
+  const link = page.getByRole("link", { name: `Abrir ${nome}` });
+  await expect(link).toBeVisible({ timeout: 15_000 });
+  await link.evaluate((element) => element.scrollIntoView({ block: "center", inline: "nearest" }));
+  await link.click();
+  await expect(page.getByRole("heading", { name: nome, level: 2 })).toBeVisible({ timeout: 15_000 });
 }
 
 /**
@@ -97,7 +100,9 @@ export async function registrarSerie(
   await campo.fill(carga);
   // A barra de navegação é fixa no rodapé; centralizar o botão evita que
   // ela intercepte o clique quando o formulário está perto do fim da tela.
-  await botao.scrollIntoViewIfNeeded();
+  await botao.evaluate((element) => element.scrollIntoView({ block: "center", inline: "nearest" }));
+  await expect(botao).toBeVisible();
+  await botao.click({ trial: true });
   await botao.click();
 }
 

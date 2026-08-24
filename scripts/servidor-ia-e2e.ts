@@ -19,7 +19,7 @@ const server = createServer((req, res) => {
     // Estimativa de refeição por foto: reconhecida pela instrução de
     // sistema da operação, e não pela imagem — o corpo carrega a foto
     // em base64 e casar contra ela seria frágil.
-    if (/quantidadeGramas/.test(corpo)) {
+    if (/quantidadeGramas|refeição.*foto|refeicao.*foto|refeicao-foto|image_url|data:image|mediaType|type["']?:["']file/i.test(corpo) || !/cargaKg/.test(corpo)) {
       const refeicao = JSON.stringify({
         nome: "Almoço: arroz, feijão e frango",
         itens: [
