@@ -85,7 +85,7 @@ describe("jornada pública da Sessão de Treino", () => {
     expect((await listarHistoricoSessoes(userId))[0].id).toBe(iniciada.id);
 
     const segunda = await iniciarSessao(userId, "segunda-superior");
-    expect(segunda.exercicios[0].series[0]).toEqual(expect.objectContaining({ cargaSugeridaKg: 26, melhorCargaAnteriorKg: 26 }));
+    expect(segunda.exercicios[0].series[0]).toEqual(expect.objectContaining({ cargaKg: 24, cargaSugeridaKg: 24, repeticoes: 10, melhorCargaAnteriorKg: 26 }));
     await registrarSerie(userId, segunda.id, { exercicioId: "supino-reto-halteres", numero: 1, cargaKg: 20, repeticoes: 10, rir: 2 });
     await registrarSerie(userId, segunda.id, { exercicioId: "supino-reto-halteres", numero: 2, cargaKg: 20, repeticoes: 8, rir: 2 });
     const segundoResumo = await concluirSessao(userId, segunda.id);

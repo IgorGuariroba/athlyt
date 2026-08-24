@@ -70,7 +70,13 @@ export interface ResumoSessao extends SessaoTreino {
   recordes: Array<{ exercicioId: string; nome: string; tipo: TipoRecorde; valor: number; rotulo: string }>;
 }
 
-function planejarExercicios(dia: DiaTreino, marcas: Map<string, MarcaExercicio>): ExercicioSessao[] {
+type UltimaSerie = Pick<SerieSessao, "cargaKg" | "repeticoes">;
+
+function chaveSerie(exercicioId: string, numero: number): string {
+  return `${exercicioId}:${numero}`;
+}
+
+function planejarExercicios(dia: DiaTreino, marcas: Map<string, MarcaExercicio>, ultimasSeries: Map<string, UltimaSerie>): ExercicioSessao[] {
   const melhoresCargas = new Map([...marcas].map(([id, marca]) => [id, marca.cargaKg] as const));
   return dia.exercicios.map((exercicio) => ({
     exercicioId: exercicio.exercicioId, nome: exercicio.nome, descansoSeg: exercicio.descansoSeg, protocolo: exercicio.protocolo,
@@ -80,10 +86,12 @@ function planejarExercicios(dia: DiaTreino, marcas: Map<string, MarcaExercicio>)
     // parte do que foi prescrito.
     explicacao: exercicio.explicacao,
     series: Array.from({ length: exercicio.series }, (_, indice) => ({
-      numero: indice + 1, repeticoesSugeridas: exercicio.repeticoes, cargaKg: null,
-      cargaSugeridaKg: melhoresCargas.get(exercicio.exercicioId) ?? 0,
+      numero: indice + 1, repeticoesSugeridas: exercicio.repeticoes,
+      cargaKg: ultimasSeries.get(chaveSerie(exercicio.exercicioId, indice + 1))?.cargaKg ?? null,
+      cargaSugeridaKg: ultimasSeries.get(chaveSerie(exercicio.exercicioId, indice + 1))?.cargaKg ?? 0,
       melhorCargaAnteriorKg: melhoresCargas.get(exercicio.exercicioId) ?? 0,
-      repeticoes: null, rir: exercicio.rir, concluida: false,
+      repeticoes: ultimasSeries.get(chaveSerie(exercicio.exercicioId, indice + 1))?.repeticoes ?? null,
+      rir: exercicio.rir, concluida: false,
     })),
   }));
 }
@@ -104,6 +112,23 @@ async function marcasDoHistorico(userId: string, exceto?: string): Promise<Map<s
     }
   }
   return melhores;
+}
+
+async function ultimasSeriesDoHistorico(userId: string): Promise<Map<string, UltimaSerie>> {
+  const anteriores = await db.select({ exercicios: workoutSessions.exercicios }).from(workoutSessions)
+    .where(and(eq(workoutSessions.userId, userId), eq(workoutSessions.estado, "concluida")))
+    .orderBy(desc(workoutSessions.startedAt));
+  const ultimas = new Map<string, UltimaSerie>();
+  for (const linha of anteriores) {
+    for (const exercicio of linha.exercicios as ExercicioSessao[]) {
+      for (const serie of exercicio.series) {
+        if (serie.concluida && !ultimas.has(chaveSerie(exercicio.exercicioId, serie.numero))) {
+          ultimas.set(chaveSerie(exercicio.exercicioId, serie.numero), { cargaKg: serie.cargaKg, repeticoes: serie.repeticoes });
+        }
+      }
+    }
+  }
+  return ultimas;
 }
 
 async function melhoresCargasDoHistorico(userId: string): Promise<Map<string, number>> {
@@ -131,8 +156,8 @@ export async function iniciarSessao(userId: string, diaId: string): Promise<Sess
   if (!plano) throw new Error("Plano Ativo não encontrado.");
   const dia = (plano.conteudo as PlanoGerado).bloco.dias.find((item) => item.id === diaId);
   if (!dia) throw new Error("Treino não pertence ao Plano Ativo.");
-  const marcas = await marcasDoHistorico(userId);
-  const exercicios = await aplicarSubstituicoesPersistentes(userId, diaId, planejarExercicios(dia, marcas));
+  const [marcas, ultimasSeries] = await Promise.all([marcasDoHistorico(userId), ultimasSeriesDoHistorico(userId)]);
+  const exercicios = await aplicarSubstituicoesPersistentes(userId, diaId, planejarExercicios(dia, marcas, ultimasSeries));
   return db.transaction(async (tx) => {
     const [linha] = await tx.insert(workoutSessions).values({
       userId, planId: plano.id, diaId, nome: dia.nome, estado: "em_andamento", exercicios,
