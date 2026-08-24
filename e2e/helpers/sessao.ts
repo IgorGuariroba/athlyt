@@ -102,7 +102,10 @@ export async function registrarSerie(
   // ela intercepte o clique quando o formulário está perto do fim da tela.
   await botao.evaluate((element) => element.scrollIntoView({ block: "center", inline: "nearest" }));
   await expect(botao).toBeVisible();
-  await botao.click({ trial: true });
+  // O estado offline pode re-renderizar o formulário entre o trial click e o
+  // clique real, destacando o elemento e causando "element was detached".
+  // Como o botão já foi validado como visível e habilitado, um único clique
+  // evita essa janela de corrida.
   await botao.click();
 }
 
