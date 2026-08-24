@@ -7,6 +7,7 @@ import {
   FaixaDados,
   LinhaCartaoLista,
   LinhasCartaoLista,
+  NotaLinha,
 } from "./cartao-lista";
 
 const meta = {
@@ -50,6 +51,31 @@ export const TreinoCompleto: Story = {
           meta="Tríceps · cabo"
           valor="3×12"
         />
+      </LinhasCartaoLista>
+    </CartaoLista>
+  ),
+};
+
+export const ComNotaDeProcedencia: Story = {
+  render: () => (
+    <CartaoLista>
+      <LinhasCartaoLista>
+        <LinhaCartaoLista
+          titulo="Remada curvada"
+          meta="10×60 kg · 9×60 kg"
+        >
+          <NotaLinha>
+            Interrompido após 2 de 4 séries · substituído por dor
+          </NotaLinha>
+        </LinhaCartaoLista>
+        <LinhaCartaoLista
+          titulo="Remada sentada na máquina"
+          meta="12×55 kg · 11×55 kg"
+        >
+          <NotaLinha>
+            Entrou no lugar de Remada curvada · motivo: dor
+          </NotaLinha>
+        </LinhaCartaoLista>
       </LinhasCartaoLista>
     </CartaoLista>
   ),

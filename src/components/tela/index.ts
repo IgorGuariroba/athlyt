@@ -29,6 +29,7 @@ export {
   FaixaDados,
   LinhaCartaoLista,
   LinhasCartaoLista,
+  NotaLinha,
 } from "./cartao-lista";
 export { ChipSelecao } from "./chip-selecao";
 export { CartaoSelecaoImagem } from "./cartao-selecao-imagem";
@@ -72,5 +73,7 @@ export { Metrica, PainelMetricas } from "./painel-metricas";
 export { PainelPendencias, type ItemPendencia } from "./painel-pendencias";
 export { PorQueIsso } from "./por-que-isso";
 export { Revelar } from "./revelar";
+export { SeloConclusao } from "./selo-conclusao";
+export { ValorComSelo } from "./valor-com-selo";
 export { SeletorSegmentado } from "./seletor-segmentado";
 export { NotaTela, SecoesTela, TelaConteudo } from "./tela-conteudo";

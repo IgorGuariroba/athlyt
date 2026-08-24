@@ -117,6 +117,20 @@ export function LinhaCartaoLista({
 }
 
 /**
+ * Observação secundária dentro de uma linha: procedência, ressalva ou
+ * o que mudou naquele item ("entrou no lugar de", "interrompido
+ * após").
+ *
+ * É informação de segunda leitura — quem varre a lista pelo valor não
+ * precisa dela, e quem estranha o item vai buscá-la. Existe como
+ * componente para que essa hierarquia não seja redecidida a cada tela
+ * como um parágrafo solto com classes de tamanho e cor.
+ */
+export function NotaLinha({ children }: { children: React.ReactNode }) {
+  return <p className="text-caption text-muted-foreground">{children}</p>;
+}
+
+/**
  * Faixa de prescrição/dados dentro de uma linha: números tabulares em
  * superfície elevada, com unidade junto do valor (DESIGN.md >
  * Components > Text field: "unidades ficam próximas do valor").

@@ -17,7 +17,15 @@ export const Variantes: Story = {
   render: () => (
     <div className="flex flex-wrap items-center gap-2">
       {(
-        ["default", "secondary", "destructive", "outline", "ghost"] as const
+        [
+          "default",
+          "secondary",
+          "destructive",
+          "outline",
+          "ghost",
+          "success",
+          "warning",
+        ] as const
       ).map((variante) => (
         <Badge key={variante} variant={variante}>
           {variante}

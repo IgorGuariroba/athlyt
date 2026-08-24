@@ -2,7 +2,6 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Award, Clock3, Dumbbell, Layers3 } from "lucide-react";
 import { auth } from "@/auth";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   BarraAcaoFixa,
@@ -12,9 +11,12 @@ import {
   LinhaCartaoLista,
   LinhasCartaoLista,
   Metrica,
+  NotaLinha,
   PainelMetricas,
   SecoesTela,
+  SeloConclusao,
   TelaConteudo,
+  ValorComSelo,
 } from "@/components/tela";
 import { obterResumoSessao, obterSessao } from "@/domain/sessao/repositorio";
 
@@ -31,42 +33,28 @@ export default async function ResumoPage({
   if (!encontrada || encontrada.estado === "em_andamento") notFound();
 
   const resumo = await obterResumoSessao(session!.user!.id!, encontrada);
-  const duracaoMin = Math.max(
-    1,
-    Math.round(
-      ((resumo.endedAt?.getTime() ?? resumo.startedAt.getTime()) -
-        resumo.startedAt.getTime()) /
-        60000,
-    ),
-  );
+  // Ignora pausas longas entre eventos: uma sessão pode ficar aberta
+  // enquanto o atleta se ausenta, mas isso não é duração de treino.
+  const tempos = [resumo.startedAt, ...resumo.eventos.map((evento) => evento.createdAt)]
+    .sort((a, b) => a.getTime() - b.getTime());
+  const minutosAtivos = tempos.slice(1).reduce((total, atual, indice) => {
+    const intervalo = (atual.getTime() - tempos[indice].getTime()) / 60000;
+    return total + (intervalo <= 10 ? intervalo : 0);
+  }, 0);
+  const duracaoMin = Math.max(1, Math.round(minutosAtivos));
   const concluida = resumo.estado === "concluida";
 
   return (
     <TelaConteudo comAcaoFixa>
-      {/* O selo circular é a única marca celebratória do produto e
-          existe só aqui: o fim de uma sessão é o momento em que
-          DESIGN.md > Typography autoriza `display`/destaque
-          ("resultados excepcionais"). */}
-      <header className="flex flex-col items-center gap-2 px-6 pt-10 pb-6 text-center">
-        <div
-          className={`mb-3 flex size-20 items-center justify-center rounded-full ${
-            concluida ? "bg-success/15 text-success" : "bg-warning/15 text-warning"
-          }`}
-        >
-          <Award aria-hidden="true" className="size-10" />
-        </div>
-        <p className="text-label-md font-semibold tracking-wide text-muted-foreground uppercase">
-          {concluida ? "Treino concluído" : "Sessão encerrada"}
-        </p>
-        <h1 className="font-brand text-headline-lg font-bold text-on-surface-strong">
-          {resumo.nome}
-        </h1>
-        {resumo.motivoAbandono ? (
-          <p className="text-body-md text-muted-foreground">
-            Motivo: {resumo.motivoAbandono}
-          </p>
-        ) : null}
-      </header>
+      <SeloConclusao
+        Icone={Award}
+        tom={concluida ? "sucesso" : "atencao"}
+        contexto={concluida ? "Treino concluído" : "Sessão encerrada"}
+        titulo={resumo.nome}
+        descricao={
+          resumo.motivoAbandono ? `Motivo: ${resumo.motivoAbandono}` : undefined
+        }
+      />
 
       <SecoesTela>
         <PainelMetricas>
@@ -107,15 +95,9 @@ export default async function ResumoPage({
                     titulo={recorde.nome}
                     meta="Maior carga registrada"
                     valor={
-                      <span className="flex items-center gap-2">
-                        <Badge
-                          variant="outline"
-                          className="border-warning/40 text-warning"
-                        >
-                          Recorde
-                        </Badge>
+                      <ValorComSelo selo="Recorde">
                         {recorde.valor} kg
-                      </span>
+                      </ValorComSelo>
                     }
                   />
                 ))}
@@ -135,23 +117,28 @@ export default async function ResumoPage({
                   meta={
                     exercicio.series
                       .filter((serie) => serie.concluida)
-                      .map(
-                        (serie) => `${serie.repeticoes}×${serie.cargaKg} kg`,
-                      )
+                      .map((serie) => {
+                        const modalidade = exercicio.protocolo ?? "repeticoes";
+                        if (modalidade === "tempo") return `${serie.repeticoes} s`;
+                        if (modalidade === "distancia") return `${serie.repeticoes} m`;
+                        if (modalidade === "duracao") return `${serie.repeticoes} min`;
+                        if (modalidade === "calorias") return `${serie.repeticoes} kcal`;
+                        return `${serie.repeticoes}×${serie.cargaKg} kg · RIR ${serie.rir}`;
+                      })
                       .join(" · ") || "Sem séries registradas"
                   }
                 >
                   {exercicio.interrompido ? (
-                    <p className="text-caption text-muted-foreground">
+                    <NotaLinha>
                       Interrompido após {exercicio.series.length} de{" "}
                       {exercicio.seriesPlanejadas ?? exercicio.series.length}{" "}
                       séries · substituído por {exercicio.motivoSubstituicao}
-                    </p>
+                    </NotaLinha>
                   ) : exercicio.substituiuNome ? (
-                    <p className="text-caption text-muted-foreground">
+                    <NotaLinha>
                       Entrou no lugar de {exercicio.substituiuNome} · motivo:{" "}
                       {exercicio.motivoSubstituicao}
-                    </p>
+                    </NotaLinha>
                   ) : null}
                 </LinhaCartaoLista>
               ))}
