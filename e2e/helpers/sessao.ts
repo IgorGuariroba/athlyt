@@ -93,19 +93,27 @@ export async function registrarSerie(
   // da consulta e o elemento é desabilitado antes do `fill`, que então
   // repete "element is not enabled" até estourar o timeout.
   await fecharTimer(page);
-  const botao = page.getByRole("button", { name: `Registrar série ${numero}` });
+
+  // O formulário da série é a unidade de escopo. Antes, `cargaKg` era
+  // buscado com `.first()` na página inteira: com várias séries ou
+  // exercícios montados, o teste podia preencher a carga de um
+  // formulário e clicar no botão de outro. O `:not(:disabled)`
+  // mascarava isso, porque a série já registrada tem o campo
+  // desabilitado.
+  const formulario = page.locator("form", {
+    has: page.getByRole("button", { name: `Registrar série ${numero}` }),
+  });
+  const botao = formulario.getByRole("button", { name: `Registrar série ${numero}` });
   await expect(botao).toBeEnabled({ timeout: 15_000 });
-  const campo = page.locator('input[name="cargaKg"]:not(:disabled)').first();
+  const campo = formulario.locator('input[name="cargaKg"]');
   await expect(campo).toBeEditable({ timeout: 15_000 });
   await campo.fill(carga);
   // A barra de navegação é fixa no rodapé; centralizar o botão evita que
-  // ela intercepte o clique quando o formulário está perto do fim da tela.
-  await botao.evaluate((element) => element.scrollIntoView({ block: "center", inline: "nearest" }));
-  await expect(botao).toBeVisible();
-  // O estado offline pode re-renderizar o formulário entre o trial click e o
-  // clique real, destacando o elemento e causando "element was detached".
-  // Como o botão já foi validado como visível e habilitado, um único clique
-  // evita essa janela de corrida.
+  // ela intercepte o clique quando o formulário está perto do fim da
+  // tela. `scrollIntoViewIfNeeded` respeita o timeout do Playwright,
+  // enquanto `evaluate` ficava bloqueado em "waiting for navigation to
+  // finish" quando a navegação não concluía.
+  await botao.scrollIntoViewIfNeeded();
   await botao.click();
 }
 
