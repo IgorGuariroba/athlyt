@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import sharp from "sharp";
+import path from "node:path";
 import { db } from "@/db/client";
 import { plans } from "@/db/schema";
 import type { PlanoGerado } from "@/domain/plano/tipos";
@@ -48,12 +48,11 @@ test("fotografar o prato registra a refeição sem editar item por item", async 
   await page.getByRole("link", { name: /Fotografar refeição/ }).click();
   await expect(page.getByRole("heading", { name: "Fotografe o prato" })).toBeVisible();
 
-  const foto = await sharp({ create: { width: 900, height: 700, channels: 3, background: "#8a6f4b" } })
-    .jpeg()
-    .toBuffer();
-  await page.locator("input[type=file]").first().setInputFiles({
-    name: "prato.jpg", mimeType: "image/jpeg", buffer: foto,
-  });
+  // Fixture realista para validar o upload/preview. O reconhecimento continua
+  // determinístico porque o provedor de IA é mockado pelo servidor E2E.
+  await page.locator("input[type=file]").first().setInputFiles(
+    path.join(process.cwd(), "e2e/fixtures/prato-arroz-feijao-frango.jpg"),
+  );
   await expect(page.getByAltText("Prévia da foto escolhida")).toBeVisible();
 
   await page.getByRole("button", { name: /Estimar calorias e macros/ }).click();
