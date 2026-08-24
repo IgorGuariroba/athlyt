@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useEffect, useReducer, useRef, useSyncExternalStore } from "react";
+import { createContext, useCallback, useContext, useEffect, useReducer, useRef, useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
 import { AlertTriangle, CircleDot, CloudOff, RefreshCw, TriangleAlert } from "lucide-react";
 import Link from "next/link";
@@ -67,14 +67,29 @@ export function ProvedorConexao({
   const [copiloto, despacharCopiloto] = useReducer(reduzirEstadoCopiloto, ESTADO_INICIAL_COPILOTO);
   const sequenciaCopiloto = useRef(0);
 
+  /**
+   * Rebusca o HTML do servidor — nunca sem rede.
+   *
+   * `router.refresh()` offline pede o RSC payload, falha com
+   * `ERR_INTERNET_DISCONNECTED` e o Next cai para navegação do
+   * navegador: sem rede isso troca a sessão em andamento pela página de
+   * erro do Chrome, e o atleta perde a tela no meio do treino. A fila
+   * local já mantém a UI correta até a rede voltar, quando o efeito de
+   * drenagem acima refaz o refresh com o servidor alcançável.
+   */
+  const atualizarDoServidor = useCallback(() => {
+    if (!navigator.onLine) return;
+    router.refresh();
+  }, [router]);
+
   // Drenagem automática: a mudança de `online` reexecuta o efeito, e a
   // fila sai sozinha ao voltar a rede — sem o usuário precisar pedir,
   // que é o requisito da user story 39.
   useEffect(() => {
     void recarregarFila(sessionId);
     if (!online) return;
-    void drenarFila(sessionId).then(({ aplicou }) => { if (aplicou) router.refresh(); });
-  }, [online, sessionId, router]);
+    void drenarFila(sessionId).then(({ aplicou }) => { if (aplicou) atualizarDoServidor(); });
+  }, [online, sessionId, atualizarDoServidor]);
 
   // O HTML mais recente do servidor manda: o que ele já reflete sai do
   // espelho local, evitando que as duas fontes divirjam sem ninguém
@@ -123,7 +138,7 @@ export function ProvedorConexao({
         }
 
         const { aplicou } = await drenarFila(sessionId);
-        if (aplicou) router.refresh();
+        if (aplicou) atualizarDoServidor();
         if (tipo !== "serie_registrada" || proximaSerie === undefined || !navigator.onLine) return;
 
         void solicitarOrientacao(sessionId, {

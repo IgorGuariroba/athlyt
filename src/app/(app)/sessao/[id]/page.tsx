@@ -3,7 +3,7 @@ import { ChevronLeft, Check, Dumbbell, MoreHorizontal, Repeat2 } from "lucide-re
 import Link from "next/link";
 import { auth } from "@/auth";
 import { Button } from "@/components/ui/button";
-import { CampoSelecao, ExplicacaoAgent, FichaExercicio, Revelar } from "@/components/tela";
+import { CampoSelecao, ExplicacaoAgent, FichaExercicio, Revelar, TelaConteudo } from "@/components/tela";
 import { encontrarExercicio, rotuloGrupoMuscular } from "@/domain/plano/exercicios";
 import { midiaDoExercicio } from "@/domain/plano/midia-execucao";
 import { obterSessao } from "@/domain/sessao/repositorio";
@@ -51,7 +51,8 @@ export default async function SessaoPage({ params, searchParams }: { params: Pro
       solicitarOrientacao={solicitarOrientacaoCopilotoAction}
       continuarAposAlerta={continuarAposAlertaCautelaAction}
     >
-    <div className="flex flex-col gap-5 p-4 pb-28">
+    <TelaConteudo className="gap-5 p-4 pb-28">
+    <div className="flex flex-col gap-5">
       <header className="flex items-center justify-between">
         <Button asChild variant="ghost" size="icon"><Link href="/inicio" aria-label="Voltar ao Início"><ChevronLeft /></Link></Button>
         <div className="text-center"><p className="text-label-md text-muted-foreground">SESSÃO EM ANDAMENTO</p><h1 className="text-title font-bold">{sessao.nome}</h1></div>
@@ -151,6 +152,7 @@ export default async function SessaoPage({ params, searchParams }: { params: Pro
         </Revelar>
       </div>
     </div>
+    </TelaConteudo>
     </ProvedorConexao>
   );
 }

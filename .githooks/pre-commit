@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+# Impede commits diretos na branch main.
+# Ative com: git config core.hooksPath .githooks
+set -euo pipefail
+
+branch=$(git symbolic-ref --quiet --short HEAD 2>/dev/null || true)
+
+if [ "$branch" = "main" ]; then
+  echo "pre-commit: commit recusado na branch main." >&2
+  echo "pre-commit: crie uma branch e abra um pull request." >&2
+  echo "pre-commit: para uma emergência consciente, use BYPASS_MAIN_HOOK=1 git commit ..." >&2
+
+  if [ "${BYPASS_MAIN_HOOK:-}" != "1" ]; then
+    exit 1
+  fi
+
+  echo "pre-commit: BYPASS_MAIN_HOOK=1 informado; prosseguindo." >&2
+fi

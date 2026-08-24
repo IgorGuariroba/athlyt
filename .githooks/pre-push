@@ -11,21 +11,56 @@ set -euo pipefail
 BRANCH_PROTEGIDA="refs/heads/main"
 
 while read -r _local_ref local_sha remote_ref _remote_sha; do
-  [ "$remote_ref" = "$BRANCH_PROTEGIDA" ] || continue
+  [ "$remote_ref" = "$BRANCH_PROTEGIDA" ] && {
+    # Deleção de branch
+    if [ "$local_sha" = "0000000000000000000000000000000000000000" ]; then
+      echo "pre-push: recusado — deleção da main." >&2
+      exit 1
+    fi
 
-  # Deleção de branch
-  if [ "$local_sha" = "0000000000000000000000000000000000000000" ]; then
-    echo "pre-push: recusado — deleção da main." >&2
-    exit 1
+    echo "pre-push: push direto para main detectado."
+    echo "pre-push: o fluxo esperado é pull request com CI verde."
+    echo "pre-push: rodando os portões rápidos localmente..."
+
+    npm run lint
+    npm run typecheck
+    npm test
+  }
+
+  # Em um branch novo, compare com main; nos demais, use o SHA remoto que o
+  # Git passa ao hook. Assim o teste cobre todos os commits enviados, não só o último.
+  base_sha="$_remote_sha"
+  if [ "$base_sha" = "0000000000000000000000000000000000000000" ]; then
+    base_sha=$(git merge-base "$local_sha" refs/heads/main 2>/dev/null || git rev-parse "$local_sha^")
   fi
 
-  echo "pre-push: push direto para main detectado."
-  echo "pre-push: o fluxo esperado é pull request com CI verde."
-  echo "pre-push: rodando os portões rápidos localmente..."
+  arquivos_alterados=$(git diff --name-only "$base_sha" "$local_sha")
+  if printf '%s\n' "$arquivos_alterados" | grep -Eq '^(src/app/|src/components/|src/app/globals\.css$)'; then
+    echo "pre-push: alteração de UI detectada — executando E2E..."
+    # Serve o build em vez de `next dev`, que é o padrão do
+    # playwright.config.ts. Com o Fast Refresh ativo, um clique que cai
+    # na janela de rebuild tem a navegação descartada e o teste falha
+    # esperando uma tela que não vai montar — o arquivo atingido mudava
+    # a cada push com o mesmo commit (`fotos-r2`, depois
+    # `navbar-visivel`), sintoma que imita teste frágil.
+    #
+    # O comando é o servidor standalone, não `next start`: o
+    # `output: "standalone"` do next.config.ts torna `next start`
+    # inválido, e usar o comando do CI aqui derruba a suite inteira com
+    # ERR_CONNECTION_REFUSED. Mesma sequência de scripts/app-local.sh,
+    # incluindo a cópia dos estáticos que o standalone não emite.
+    echo "pre-push: compilando o build de produção para o E2E..."
+    npm run build
+    mkdir -p .next/standalone/.next
+    cp -r .next/static .next/standalone/.next/static
+    cp -r public .next/standalone/public
+    E2E_COMANDO="node .next/standalone/server.js" PORT=3000 npm run test:e2e
+  else
+    echo "pre-push: nenhuma alteração de UI detectada — E2E não executado."
+  fi
 
-  npm run lint
-  npm run typecheck
-  npm test
-
-  echo "pre-push: portões locais OK (build e E2E NÃO foram executados)."
 done
+
+if [ "${remote_ref:-}" = "$BRANCH_PROTEGIDA" ]; then
+  echo "pre-push: portões locais OK."
+fi

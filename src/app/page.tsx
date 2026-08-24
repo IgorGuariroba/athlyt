@@ -1,6 +1,6 @@
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
-import { entrarComGoogle } from "./(auth)/actions";
+import { entrarComGoogle, entrarComoUsuarioDev } from "./(auth)/actions";
 import { Button } from "@/components/ui/button";
 
 /**
@@ -34,9 +34,15 @@ export default async function BoasVindasPage() {
             Entrar com Google
           </Button>
         </form>
+        {process.env.NODE_ENV === "development" && (
+          <form action={entrarComoUsuarioDev} className="w-full">
+            <Button type="submit" variant="outline" size="lg" className="h-12 w-full">
+              Entrar como usuário de teste
+            </Button>
+          </form>
+        )}
         <p className="text-body-sm text-muted-foreground">
-          O Athlyt não é um serviço médico, nutricional ou de
-          emergência.
+          O Athlyt não é um serviço médico, nutricional ou de emergência.
         </p>
       </div>
     </main>

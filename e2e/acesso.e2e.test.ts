@@ -10,7 +10,11 @@ import { seedAuthenticatedSession, allowEmail } from "./helpers/seed-session";
  * jornada em navegador real, viewport mobile, com vídeo.
  */
 test.describe("Acesso e casco autenticado", () => {
-  test("boas-vindas mostra o único ponto de entrada", async ({ page }) => {
+  test("boas-vindas mostra o único ponto de entrada", async ({
+    page,
+    context,
+  }) => {
+    await context.clearCookies();
     await page.goto("/");
     await expect(page.getByRole("heading", { name: "Athlyt" })).toBeVisible();
     await expect(

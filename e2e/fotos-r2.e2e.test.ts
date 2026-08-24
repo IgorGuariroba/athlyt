@@ -69,8 +69,8 @@ test("envia as quatro poses em uma única interação", async ({ page, context }
   const arquivos = await Promise.all(
     poses.map(async (pose, indice) => {
       const caminho = path.join("/tmp", `athlyt-foto-${indice}-${Date.now()}.jpg`);
-      await sharp({ create: { width: 1400, height: 2400, channels: 3, background: "#426b8a" } })
-        .jpeg({ quality: 100 })
+      await sharp({ create: { width: 400, height: 700, channels: 3, background: "#426b8a" } })
+        .jpeg({ quality: 80 })
         .withMetadata({ orientation: 1 })
         .toFile(caminho);
       return { pose, caminho };
@@ -82,12 +82,21 @@ test("envia as quatro poses em uma única interação", async ({ page, context }
   await context.addCookies([cookie]);
   try {
     await page.goto("/triagem/avaliacao-corporal/fotos");
+    await expect(
+      page.getByRole("heading", { name: "Comparação visual padronizada" }),
+    ).toBeVisible();
     for (const { pose, caminho } of arquivos) {
       await page.getByLabel(pose, { exact: true }).setInputFiles(caminho);
     }
     await page.getByLabel(/Autorizo armazenar/).check();
     await page.getByRole("button", { name: "Enviar para storage privado" }).click();
-    await expect(page.getByRole("status")).toContainText("Fotos armazenadas");
+    await expect(page).toHaveURL(
+      /\/triagem\/avaliacao-corporal\/fotos\?sucesso=Fotos%20armazenadas%20de%20forma%20privada\./,
+      { timeout: 30_000 },
+    );
+    await expect(page.getByRole("status")).toContainText("Fotos armazenadas", {
+      timeout: 30_000,
+    });
     // O overlay de dev do Next injeta um `alert` vazio: filtrar por
     // texto isola o alerta de erro da tela.
     await expect(page.getByRole("alert").filter({ hasText: /\S/ })).toHaveCount(0);

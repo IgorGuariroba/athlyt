@@ -160,9 +160,28 @@ export async function registrarOverrideAlertaCautela(userId: string, sessionId: 
   });
 }
 
-function metricas(exercicios: ExercicioSessao[]) {
+const EXERCICIOS_PESO_CORPORAL = new Set([
+  "barra-fixa-pronada",
+  "flexao-de-braco",
+  "mergulho-banco",
+]);
+
+/** Volume é carga externa × repetições. Peso corporal e modalidades
+ * sem carga têm trabalho válido, mas não têm quilogramas externos para
+ * entrar nesta métrica. */
+function entraNoVolume(exercicio: ExercicioSessao): boolean {
+  return (exercicio.protocolo ?? "repeticoes") === "repeticoes"
+    && !EXERCICIOS_PESO_CORPORAL.has(exercicio.exercicioId);
+}
+
+export function metricas(exercicios: ExercicioSessao[]) {
   const series = exercicios.flatMap((e) => e.series).filter((s) => s.concluida);
-  return { totalSeries: series.length, volumeKg: series.reduce((total, s) => total + (s.cargaKg ?? 0) * (s.repeticoes ?? 0), 0) };
+  const volumeSeries = exercicios.flatMap((e) => entraNoVolume(e) ? e.series : [])
+    .filter((s) => s.concluida);
+  return {
+    totalSeries: series.length,
+    volumeKg: volumeSeries.reduce((total, s) => total + (s.cargaKg ?? 0) * (s.repeticoes ?? 0), 0),
+  };
 }
 
 export async function concluirSessao(userId: string, sessionId: string): Promise<ResumoSessao> {
@@ -194,7 +213,7 @@ export async function obterResumoSessao(userId: string, sessaoOuId: SessaoTreino
   }
   const recordes = sessao.exercicios.flatMap((exercicio) => {
     const valor = Math.max(0, ...exercicio.series.filter((s) => s.concluida).map((s) => s.cargaKg ?? 0));
-    return valor > (cargasAnteriores.get(exercicio.exercicioId) ?? 0)
+    return entraNoVolume(exercicio) && valor > 0 && valor > (cargasAnteriores.get(exercicio.exercicioId) ?? 0)
       ? [{ exercicioId: exercicio.exercicioId, nome: exercicio.nome, tipo: "maior_carga" as const, valor }]
       : [];
   });

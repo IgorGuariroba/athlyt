@@ -71,7 +71,7 @@ export default defineConfig({
     },
     {
       command: `OPENROUTER_BASE_URL=http://127.0.0.1:4311/v1 OPENROUTER_API_KEY=athlyt-e2e ${comandoServidor}`,
-      url: baseURL,
+      url: `${baseURL}/api/saude`,
       reuseExistingServer: true,
       timeout: 30_000,
     },

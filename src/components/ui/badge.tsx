@@ -18,6 +18,11 @@ const badgeVariants = cva(
           "bg-destructive/10 text-destructive focus-visible:ring-destructive/20 dark:bg-destructive/20 dark:focus-visible:ring-destructive/40 [a]:hover:bg-destructive/20",
         outline:
           "border-border text-foreground [a]:hover:bg-muted [a]:hover:text-muted-foreground",
+        // Conquista/atenção: contorno tonal, sem preenchimento. Vinha
+        // sendo remontado nas telas como `outline` + classes de cor,
+        // o que espalhava a mesma decisão por vários arquivos.
+        success: "border-success/40 text-success",
+        warning: "border-warning/40 text-warning",
         ghost:
           "hover:bg-muted hover:text-muted-foreground dark:hover:bg-muted/50",
         link: "text-primary underline-offset-4 hover:underline",
