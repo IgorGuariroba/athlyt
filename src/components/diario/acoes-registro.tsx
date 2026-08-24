@@ -1,0 +1,45 @@
+import Link from "next/link";
+import { Camera, Plus } from "lucide-react";
+
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+
+/**
+ * Par de ações de registro do Diário: a câmera como caminho padrão e a
+ * busca como caminho preciso.
+ *
+ * A hierarquia é a decisão que este componente guarda: fotografar
+ * ocupa a largura e ganha a legenda que explica o que o agent faz;
+ * registrar item a item fica num alvo quadrado ao lado. Enquanto isso
+ * era JSX de página, o botão maior já apareceu como "Registrar
+ * alimento" — e o caminho frequente virou o mais custoso.
+ */
+export function AcoesRegistro({
+  hrefFoto,
+  hrefBusca,
+  className,
+}: {
+  hrefFoto: string;
+  hrefBusca: string;
+  className?: string;
+}) {
+  return (
+    <div className={cn("flex gap-2", className)}>
+      <Button asChild size="lg" className="h-14 flex-1 flex-col gap-0.5">
+        <Link href={hrefFoto}>
+          <span className="flex items-center gap-2 text-label-lg">
+            <Camera className="size-5" aria-hidden="true" /> Fotografar refeição
+          </span>
+          <span className="text-caption font-normal opacity-80">
+            o agent estima calorias e macros
+          </span>
+        </Link>
+      </Button>
+      <Button asChild size="lg" variant="outline" className="h-14 w-14 shrink-0">
+        <Link href={hrefBusca} aria-label="Registrar buscando alimento">
+          <Plus className="size-5" aria-hidden="true" />
+        </Link>
+      </Button>
+    </div>
+  );
+}

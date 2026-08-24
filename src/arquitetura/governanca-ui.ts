@@ -25,7 +25,25 @@
  * em `ui` por serem primitivos — `RoletaValor`, `ControleFaixa` — têm a
  * lógica testada em arquivo separado (`roleta-valor.logica.ts`).
  */
-const CAMADAS_COM_TESTE_DE_CONTRATO = new Set(["tela", "fotos", "navigation"]);
+const CAMADAS_COM_TESTE_DE_CONTRATO = new Set([
+  "tela",
+  "fotos",
+  "navigation",
+  "inicio",
+  "sessao",
+  "diario",
+]);
+
+/** Camadas de componente varridas em busca de teste de contrato. */
+export const CAMADAS_DE_COMPONENTE = [
+  "tela",
+  "ui",
+  "fotos",
+  "navigation",
+  "inicio",
+  "sessao",
+  "diario",
+];
 
 /**
  * Componentes que ainda não têm teste de contrato dedicado.
@@ -45,7 +63,71 @@ export const COMPONENTES_SEM_TESTE_DE_CONTRATO = new Set([
   "ItemSelecaoFoto", "PontoSerie", "Serie", "GraficoTendencia", "ListaNavegacao",
   "ItemNavegacao", "MedidorScore", "PainelMetricas", "Metrica", "Revelar", "TelaConteudo",
   "SecoesTela", "NotaTela", "ItemPendencia",
+  // Pré-existentes em `inicio`/`sessao`, cobertos por story e por teste
+  // de página, mas ainda sem teste de contrato dedicado.
+  "CabecalhoInicio", "BoasVindasInicio", "PersonalizacaoInicio", "CartaoSessaoDoDia",
+  "CartaoSessaoDoDiaCorpo", "CartaoSessaoDoDiaAcao", "CartaoPlanoAtivo",
+  "CabecalhoPlanoAtivo", "CartaoPlanoAtivoCabecalho", "MetricasPlanoAtivo",
+  "CartaoPlanoAtivoSecao", "ResumoMacros", "MetaNutricional",
+  "AjusteDescanso", "ConclusaoSessao", "EstadoConexao", "ProvedorConexao",
+  "BadgeConexao", "PainelCoach", "RegistroSerie",
 ]);
+
+/**
+ * Arquivos de `src/app/**` que legitimamente não são componentes
+ * reutilizáveis: a convenção de rotas do Next.
+ */
+const ARQUIVOS_DE_ROTA =
+  /(?:^|\/)(page|layout|loading|error|global-error|not-found|template|default)\.tsx$/;
+
+/**
+ * Peças de interface que ainda moram na pasta da rota.
+ *
+ * Uma tela deve ser composição de componentes do catálogo: o que vive
+ * em `src/app/**` fica fora de `ui_catalogo`, fora do Storybook e fora
+ * desta governança — foi assim que o painel de macros e os cartões do
+ * Diário passaram sem demonstração nem teste. A lista não cresce: um
+ * componente novo nasce em `src/components/**` e este conjunto só
+ * encolhe.
+ */
+export const COMPONENTES_DE_TELA_NAO_MIGRADOS = new Set([
+  "src/app/(app)/diario/registrar/atalhos.tsx",
+  "src/app/(app)/diario/registrar/foto/estimativa.tsx",
+  "src/app/(app)/mais/sincronizacao/fila-local.tsx",
+  "src/app/(app)/progresso/enfases-corporais.tsx",
+  "src/app/(app)/progresso/fotos/comparador.tsx",
+  "src/app/(auth)/plano/gerando/transicao-geracao.tsx",
+  "src/app/(auth)/plano/revisao/botao-regenerar-plano.tsx",
+  "src/app/(auth)/triagem/_components/etapa-form.tsx",
+  "src/app/(auth)/triagem/academia-equipamentos/_components/selecao-equipamentos.tsx",
+  "src/app/(auth)/triagem/alimentacao-logistica/_components/seletor-tempo-preparo.tsx",
+  "src/app/(auth)/triagem/altura/_components/seletor-altura.tsx",
+  "src/app/(auth)/triagem/avaliacao-corporal/_components/campo-medida.tsx",
+  "src/app/(auth)/triagem/peso/_components/seletor-peso.tsx",
+  "src/app/(auth)/triagem/resumo/botao-gerar-plano.tsx",
+  "src/app/(auth)/triagem/rotina-sono/_components/seletor-horas-sono.tsx",
+]);
+
+/**
+ * Componentes de interface definidos dentro de `src/app/**` fora dos
+ * arquivos de rota do Next.
+ */
+export function componentesForaDoCatalogo(
+  arquivos: readonly { caminho: string; fonte: string }[],
+): string[] {
+  return arquivos
+    .filter(({ caminho }) => !ARQUIVOS_DE_ROTA.test(caminho))
+    .filter(({ caminho }) => !COMPONENTES_DE_TELA_NAO_MIGRADOS.has(caminho))
+    .filter(({ fonte }) =>
+      [...fonte.matchAll(/export\s+(?:default\s+)?function\s+([A-Za-z0-9_]+)/g)].some(
+        (m) => ehNomeDeComponente(m[1]),
+      ),
+    )
+    .map(
+      ({ caminho }) =>
+        `${caminho} define um componente dentro da rota: mova-o para src/components/** com story e teste`,
+    );
+}
 
 /** Nome que denota um componente React: PascalCase, sem caixa alta de constante. */
 export function ehNomeDeComponente(nome: string): boolean {
