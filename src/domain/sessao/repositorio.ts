@@ -6,6 +6,7 @@ import { alternativasEquivalentes, motivoPersistente, type Alternativa, type Mot
 import { obterPerfilVigente } from "@/domain/triagem/perfil";
 import type { DiaTreino, ExplicacaoDecisao, PlanoGerado } from "@/domain/plano/tipos";
 import type { ModalidadeProtocolo } from "./protocolo-execucao";
+import { MARCA_ZERO, avaliarRecorde, combinarMarcas, melhorMarca, type MarcaExercicio, type TipoRecorde } from "./recorde";
 
 export type MotivoAbandono = "tempo" | "equipamento" | "dor" | "outro";
 export type EstadoSessao = "em_andamento" | "concluida" | "abandonada";
@@ -22,6 +23,12 @@ export interface SerieSessao {
 }
 export interface ExercicioSessao {
   exercicioId: string; nome: string; descansoSeg: number; protocolo?: ModalidadeProtocolo; series: SerieSessao[];
+  /**
+   * Melhor marca histórica deste exercício antes desta sessão — carga,
+   * volume e 1RM estimado. É a referência contra a qual "novo recorde"
+   * é avaliado. Ausente em sessões anteriores a esta fatia.
+   */
+  marcaAnterior?: MarcaExercicio;
   /**
    * Por que este exercício foi prescrito para este atleta, congelada do
    * Plano Ativo no início da sessão. Ausente em sessões anteriores a
@@ -60,12 +67,14 @@ export interface SessaoTreino {
 }
 export interface ResumoSessao extends SessaoTreino {
   totalSeries: number; volumeKg: number;
-  recordes: Array<{ exercicioId: string; nome: string; tipo: "maior_carga"; valor: number }>;
+  recordes: Array<{ exercicioId: string; nome: string; tipo: TipoRecorde; valor: number; rotulo: string }>;
 }
 
-function planejarExercicios(dia: DiaTreino, melhoresCargas: Map<string, number>): ExercicioSessao[] {
+function planejarExercicios(dia: DiaTreino, marcas: Map<string, MarcaExercicio>): ExercicioSessao[] {
+  const melhoresCargas = new Map([...marcas].map(([id, marca]) => [id, marca.cargaKg] as const));
   return dia.exercicios.map((exercicio) => ({
     exercicioId: exercicio.exercicioId, nome: exercicio.nome, descansoSeg: exercicio.descansoSeg, protocolo: exercicio.protocolo,
+    marcaAnterior: marcas.get(exercicio.exercicioId) ?? MARCA_ZERO,
     // Congelada junto da prescrição: o snapshot existe para a sessão
     // continuar reproduzível depois de o plano evoluir, e o motivo faz
     // parte do que foi prescrito.
@@ -79,15 +88,27 @@ function planejarExercicios(dia: DiaTreino, melhoresCargas: Map<string, number>)
   }));
 }
 
-async function melhoresCargasDoHistorico(userId: string): Promise<Map<string, number>> {
-  const anteriores = await db.select({ exercicios: workoutSessions.exercicios }).from(workoutSessions)
+/**
+ * Melhor marca por exercício no histórico concluído do atleta.
+ * `exceto` permite excluir a própria sessão ao avaliar seus recordes.
+ */
+async function marcasDoHistorico(userId: string, exceto?: string): Promise<Map<string, MarcaExercicio>> {
+  const anteriores = await db.select({ id: workoutSessions.id, exercicios: workoutSessions.exercicios }).from(workoutSessions)
     .where(and(eq(workoutSessions.userId, userId), eq(workoutSessions.estado, "concluida")));
-  const melhores = new Map<string, number>();
-  for (const linha of anteriores) for (const exercicio of linha.exercicios as ExercicioSessao[]) {
-    const maior = Math.max(0, ...exercicio.series.filter((serie) => serie.concluida).map((serie) => serie.cargaKg ?? 0));
-    melhores.set(exercicio.exercicioId, Math.max(melhores.get(exercicio.exercicioId) ?? 0, maior));
+  const melhores = new Map<string, MarcaExercicio>();
+  for (const linha of anteriores) {
+    if (exceto && linha.id === exceto) continue;
+    for (const exercicio of linha.exercicios as ExercicioSessao[]) {
+      const marca = melhorMarca(exercicio.series.filter((serie) => serie.concluida));
+      melhores.set(exercicio.exercicioId, combinarMarcas(melhores.get(exercicio.exercicioId) ?? MARCA_ZERO, marca));
+    }
   }
   return melhores;
+}
+
+async function melhoresCargasDoHistorico(userId: string): Promise<Map<string, number>> {
+  const marcas = await marcasDoHistorico(userId);
+  return new Map([...marcas].map(([id, marca]) => [id, marca.cargaKg] as const));
 }
 
 async function eventos(sessionId: string): Promise<EventoSessao[]> {
@@ -110,8 +131,8 @@ export async function iniciarSessao(userId: string, diaId: string): Promise<Sess
   if (!plano) throw new Error("Plano Ativo não encontrado.");
   const dia = (plano.conteudo as PlanoGerado).bloco.dias.find((item) => item.id === diaId);
   if (!dia) throw new Error("Treino não pertence ao Plano Ativo.");
-  const melhoresCargas = await melhoresCargasDoHistorico(userId);
-  const exercicios = await aplicarSubstituicoesPersistentes(userId, diaId, planejarExercicios(dia, melhoresCargas));
+  const marcas = await marcasDoHistorico(userId);
+  const exercicios = await aplicarSubstituicoesPersistentes(userId, diaId, planejarExercicios(dia, marcas));
   return db.transaction(async (tx) => {
     const [linha] = await tx.insert(workoutSessions).values({
       userId, planId: plano.id, diaId, nome: dia.nome, estado: "em_andamento", exercicios,
@@ -194,6 +215,25 @@ export async function concluirSessao(userId: string, sessionId: string): Promise
   return obterResumoSessao(userId, await encerrar(userId, sessionId, "concluida"));
 }
 
+/**
+ * Melhor recorde entre as séries concluídas do exercício. Cada série é
+ * avaliada contra a marca que valia *antes dela* — incluindo as séries
+ * anteriores da própria sessão — para que uma série mais fraca depois
+ * de uma mais forte não volte a marcar recorde.
+ */
+function melhorRecordeDoExercicio(exercicio: ExercicioSessao, anterior: MarcaExercicio) {
+  const prioridade: Record<TipoRecorde, number> = { e1rm: 3, carga: 2, volume: 1 };
+  let referencia = anterior;
+  let melhor: ReturnType<typeof avaliarRecorde> = null;
+  for (const serie of exercicio.series.filter((s) => s.concluida)) {
+    const recorde = avaliarRecorde(serie, referencia);
+    if (recorde && (!melhor || prioridade[recorde.tipo] > prioridade[melhor.tipo]
+      || (prioridade[recorde.tipo] === prioridade[melhor.tipo] && recorde.valor > melhor.valor))) melhor = recorde;
+    referencia = combinarMarcas(referencia, melhorMarca([serie]));
+  }
+  return melhor;
+}
+
 export function resumirSessao(sessao: SessaoTreino): ResumoSessao {
   return { ...sessao, ...metricas(sessao.exercicios), recordes: [] };
 }
@@ -201,20 +241,16 @@ export function resumirSessao(sessao: SessaoTreino): ResumoSessao {
 export async function obterResumoSessao(userId: string, sessaoOuId: SessaoTreino | string): Promise<ResumoSessao> {
   const sessao = typeof sessaoOuId === "string" ? await obterSessao(userId, sessaoOuId) : sessaoOuId;
   if (!sessao) throw new Error("Sessão não encontrada.");
-  const anteriores = await db.select({ id: workoutSessions.id, exercicios: workoutSessions.exercicios }).from(workoutSessions)
-    .where(and(eq(workoutSessions.userId, userId), eq(workoutSessions.estado, "concluida")));
-  const cargasAnteriores = new Map<string, number>();
-  for (const linha of anteriores) {
-    for (const exercicio of linha.exercicios as ExercicioSessao[]) {
-      if (sessao.id === linha.id) continue;
-      const maior = Math.max(0, ...exercicio.series.filter((s) => s.concluida).map((s) => s.cargaKg ?? 0));
-      cargasAnteriores.set(exercicio.exercicioId, Math.max(cargasAnteriores.get(exercicio.exercicioId) ?? 0, maior));
-    }
-  }
+  const marcasAnteriores = await marcasDoHistorico(userId, sessao.id);
+  // A melhor série da sessão é comparada à melhor marca histórica do
+  // mesmo exercício, em intensidade (1RM estimado), carga e volume —
+  // não apenas ao maior peso, que ignora as repetições.
   const recordes = sessao.exercicios.flatMap((exercicio) => {
-    const valor = Math.max(0, ...exercicio.series.filter((s) => s.concluida).map((s) => s.cargaKg ?? 0));
-    return entraNoVolume(exercicio) && valor > 0 && valor > (cargasAnteriores.get(exercicio.exercicioId) ?? 0)
-      ? [{ exercicioId: exercicio.exercicioId, nome: exercicio.nome, tipo: "maior_carga" as const, valor }]
+    if (!entraNoVolume(exercicio)) return [];
+    const anterior = marcasAnteriores.get(exercicio.exercicioId) ?? exercicio.marcaAnterior ?? MARCA_ZERO;
+    const recorde = melhorRecordeDoExercicio(exercicio, anterior);
+    return recorde
+      ? [{ exercicioId: exercicio.exercicioId, nome: exercicio.nome, tipo: recorde.tipo, valor: recorde.valor, rotulo: recorde.rotulo }]
       : [];
   });
   return { ...sessao, ...metricas(sessao.exercicios), recordes };

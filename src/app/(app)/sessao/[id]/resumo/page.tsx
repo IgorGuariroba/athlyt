@@ -93,7 +93,7 @@ export default async function ResumoPage({
                   <LinhaCartaoLista
                     key={recorde.exercicioId}
                     titulo={recorde.nome}
-                    meta="Maior carga registrada"
+                    meta={recorde.rotulo}
                     valor={
                       <ValorComSelo selo="Recorde">
                         {recorde.valor} kg
