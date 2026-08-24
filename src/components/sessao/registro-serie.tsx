@@ -5,14 +5,21 @@ import { Check, ChevronDown, Minus, Plus, TimerReset, Trophy, X } from "lucide-r
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { segundosDeDescanso } from "@/domain/sessao/descanso";
+import { MARCA_ZERO, avaliarRecorde, estimativaRm, type MarcaExercicio } from "@/domain/sessao/recorde";
 import { useRitmoDescanso } from "@/lib/store-descanso";
 import { useConexao } from "./estado-conexao";
 
 const FECHAR_TIMERS_DE_DESCANSO = "athlyt:fechar-timers-de-descanso";
 
-export function RegistroSerie({ exercicioId, numero, repeticoesSugeridas, rirSugerido, descansoSeg, concluida, cargaInicial, cargaSugerida, melhorCargaAnterior, repeticoesIniciais, temProximaSerie, modo }: {
+export function RegistroSerie({ exercicioId, numero, repeticoesSugeridas, rirSugerido, descansoSeg, concluida, cargaInicial, cargaSugerida, melhorCargaAnterior, marcaAnterior, repeticoesIniciais, temProximaSerie, modo }: {
   exercicioId: string; numero: number; repeticoesSugeridas: string; rirSugerido: number;
   descansoSeg: number; concluida: boolean; cargaInicial: number | null; cargaSugerida: number; melhorCargaAnterior: number; repeticoesIniciais: number | null;
+  /**
+   * Melhor marca do mesmo exercício antes desta série — histórico do
+   * atleta mais as séries já feitas hoje. É contra ela que o recorde é
+   * avaliado; sem ela, não há recorde a anunciar.
+   */
+  marcaAnterior?: MarcaExercicio;
   temProximaSerie: boolean;
   modo?: "repeticoes" | "tempo" | "distancia" | "duracao" | "calorias" | "ritmo" | "unilateral" | "circuito";
 }) {
@@ -97,10 +104,16 @@ export function RegistroSerie({ exercicioId, numero, repeticoesSugeridas, rirSug
     }
   }
 
-  const novoRecorde = registrada && (carga ?? 0) > melhorCargaAnterior;
-  const estimativa10Rm = registrada && carga && reps
-    ? Math.round((carga * (1 + reps / 30) / (1 + 10 / 30)) * 10) / 10
-    : null;
+  /**
+   * Recorde compara esta série ao histórico do mesmo exercício em
+   * intensidade, carga e volume. A regra antiga olhava só o peso, e
+   * por isso marcava recorde em toda série com a mesma carga — 60 kg
+   * × 5 aparecia como recorde depois de 60 kg × 9.
+   */
+  const referencia = marcaAnterior
+    ?? (melhorCargaAnterior > 0 ? { ...MARCA_ZERO, cargaKg: melhorCargaAnterior } : MARCA_ZERO);
+  const recorde = registrada ? avaliarRecorde({ cargaKg: carga, repeticoes: reps }, referencia) : null;
+  const estimativa10Rm = registrada && carga && reps ? estimativaRm(carga, reps, 10) : null;
 
   return (
     <>
@@ -124,7 +137,7 @@ export function RegistroSerie({ exercicioId, numero, repeticoesSugeridas, rirSug
         <Button type="submit" size="icon" disabled={enviando || registrada || bloqueadaPorCautela} aria-label={`Registrar série ${numero}`} className="mb-0 size-12 rounded-full">
           <Check className="size-5" />
         </Button>
-        {registrada ? <div className="col-span-5 flex items-center justify-between pl-10 text-caption text-muted-foreground"><span>10RM estimado: {estimativa10Rm ?? "—"} kg</span>{novoRecorde ? <strong className="flex items-center gap-1 text-warning"><Trophy className="size-3" /> Novo recorde</strong> : null}</div> : null}
+        {registrada ? <div className="col-span-5 flex items-center justify-between pl-10 text-caption text-muted-foreground"><span>10RM estimado: {estimativa10Rm ?? "—"} kg</span>{recorde ? <strong className="flex items-center gap-1 text-warning"><Trophy className="size-3" /> {recorde.rotulo}</strong> : null}</div> : null}
       </form>
       {erroRegistro ? <p role="alert" className="pb-3 pl-10 text-body-sm font-semibold text-error">{erroRegistro}</p> : null}
 

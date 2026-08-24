@@ -7,6 +7,7 @@ import { CampoSelecao, ExplicacaoAgent, FichaExercicio, Revelar, TelaConteudo } 
 import { encontrarExercicio, rotuloGrupoMuscular } from "@/domain/plano/exercicios";
 import { midiaDoExercicio } from "@/domain/plano/midia-execucao";
 import { obterSessao } from "@/domain/sessao/repositorio";
+import { MARCA_ZERO, combinarMarcas, marcaDaSerie, type MarcaExercicio } from "@/domain/sessao/recorde";
 import {
   abandonarSessaoAction,
   concluirSessaoAction,
@@ -43,6 +44,18 @@ export default async function SessaoPage({ params, searchParams }: { params: Pro
   const proximoIndice = Math.min(indiceAtual + 1, sessao.exercicios.length - 1);
   const definicaoExercicio = encontrarExercicio(exercicio.exercicioId);
   const midia = midiaDoExercicio(exercicio.exercicioId);
+  // Marca vigente imediatamente antes de cada série: o histórico do
+  // exercício acumulado com as séries já feitas hoje. Sem esse acúmulo,
+  // toda série repetiria o mesmo "novo recorde".
+  const marcasPorSerie: MarcaExercicio[] = [];
+  let marcaCorrente: MarcaExercicio = exercicio.marcaAnterior
+    ?? (exercicio.series[0]?.melhorCargaAnteriorKg
+      ? { ...MARCA_ZERO, cargaKg: exercicio.series[0].melhorCargaAnteriorKg }
+      : MARCA_ZERO);
+  for (const serie of exercicio.series) {
+    marcasPorSerie.push(marcaCorrente);
+    if (serie.concluida) marcaCorrente = combinarMarcas(marcaCorrente, marcaDaSerie(serie));
+  }
 
   return (
     <ProvedorConexao
@@ -131,7 +144,7 @@ export default async function SessaoPage({ params, searchParams }: { params: Pro
         <AjusteDescanso exercicioId={exercicio.exercicioId} descansoPrescritoSeg={exercicio.descansoSeg} />
         <details className="border-b border-border px-4 py-3 text-body-sm"><summary className="cursor-pointer font-semibold">O que é RIR?</summary><p className="mt-2 text-muted-foreground">É quantas repetições você ainda conseguiria fazer com boa técnica ao encerrar a série. Quanto menor o RIR, mais difícil foi a série.</p></details>
         <div className="px-3">
-          {exercicio.series.map((serie, indice) => <RegistroSerie key={serie.numero} exercicioId={exercicio.exercicioId} numero={serie.numero} repeticoesSugeridas={serie.repeticoesSugeridas} rirSugerido={serie.rir} descansoSeg={exercicio.descansoSeg} concluida={serie.concluida} cargaInicial={serie.cargaKg} cargaSugerida={serie.cargaSugeridaKg ?? 0} melhorCargaAnterior={serie.melhorCargaAnteriorKg ?? 0} repeticoesIniciais={serie.repeticoes} temProximaSerie={indice < exercicio.series.length - 1} modo={exercicio.protocolo ?? (definicaoExercicio?.id === "prancha" ? "tempo" : "repeticoes")} />)}
+          {exercicio.series.map((serie, indice) => <RegistroSerie key={serie.numero} exercicioId={exercicio.exercicioId} numero={serie.numero} repeticoesSugeridas={serie.repeticoesSugeridas} rirSugerido={serie.rir} descansoSeg={exercicio.descansoSeg} concluida={serie.concluida} cargaInicial={serie.cargaKg} cargaSugerida={serie.cargaSugeridaKg ?? 0} melhorCargaAnterior={serie.melhorCargaAnteriorKg ?? 0} marcaAnterior={marcasPorSerie[indice]} repeticoesIniciais={serie.repeticoes} temProximaSerie={indice < exercicio.series.length - 1} modo={exercicio.protocolo ?? (definicaoExercicio?.id === "prancha" ? "tempo" : "repeticoes")} />)}
         </div>
       </section>
 

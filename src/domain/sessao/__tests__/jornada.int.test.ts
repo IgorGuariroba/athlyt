@@ -81,7 +81,7 @@ describe("jornada pública da Sessão de Treino", () => {
     expect(resumo.eventos.map((evento) => evento.tipo)).toEqual([
       "sessao_iniciada", "serie_registrada", "serie_registrada", "sessao_concluida",
     ]);
-    expect(resumo.recordes).toContainEqual(expect.objectContaining({ exercicioId: "supino-reto-halteres", tipo: "maior_carga", valor: 26 }));
+    expect(resumo.recordes).toContainEqual(expect.objectContaining({ exercicioId: "supino-reto-halteres", tipo: "e1rm", valor: 32.9 }));
     expect((await listarHistoricoSessoes(userId))[0].id).toBe(iniciada.id);
 
     const segunda = await iniciarSessao(userId, "segunda-superior");
