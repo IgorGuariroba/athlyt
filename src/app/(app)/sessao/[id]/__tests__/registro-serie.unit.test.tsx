@@ -13,6 +13,7 @@ vi.mock("@/components/sessao/estado-conexao", () => ({
 
 import { definirRitmoDescanso, reiniciarDescanso } from "@/lib/store-descanso";
 import { RegistroSerie } from "@/components/sessao/registro-serie";
+import { MARCA_ZERO } from "@/domain/sessao/recorde";
 
 function promessaPendente() {
   let resolver!: () => void;
@@ -89,6 +90,37 @@ describe("RegistroSerie", () => {
 
     expect(registrarEvento).not.toHaveBeenCalled();
     expect(screen.queryByRole("dialog", { name: "Timer de descanso" })).toBeNull();
+  });
+
+  it("mostra o selo de recorde apenas na última série registrada do exercício", () => {
+    registrarEvento.mockResolvedValue();
+    const marcaAnterior = { ...MARCA_ZERO, e1rmKg: 40, cargaKg: 40, volumeKg: 400 };
+
+    render(
+      <>
+        <RegistroSerie
+          {...propriedades}
+          numero={1}
+          concluida
+          cargaInicial={80}
+          repeticoesIniciais={5}
+          marcaAnterior={marcaAnterior}
+          seriesDoExercicio={[{ numero: 1, concluida: true }, { numero: 2, concluida: true }]}
+        />
+        <RegistroSerie
+          {...propriedades}
+          numero={2}
+          concluida
+          cargaInicial={90}
+          repeticoesIniciais={4}
+          marcaAnterior={{ e1rmKg: 93.3, cargaKg: 80, volumeKg: 400 }}
+          seriesDoExercicio={[{ numero: 1, concluida: true }, { numero: 2, concluida: true }]}
+        />
+      </>,
+    );
+
+    expect(screen.queryAllByText("Novo recorde de forca", { exact: false })).toHaveLength(0);
+    expect(screen.getAllByText("Novo recorde de força")).toHaveLength(1);
   });
 
   it("avisa quando nem a persistência local consegue salvar a série", async () => {
