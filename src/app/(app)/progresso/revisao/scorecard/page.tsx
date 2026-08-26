@@ -2,7 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import {
-  BarraAcaoFixa,
+  AcaoTela,
   CabecalhoSecao,
   CabecalhoTela,
   CartaoLista,
@@ -33,7 +33,7 @@ export default async function ScorecardPage() {
   if (!revisao) redirect("/progresso/revisao");
 
   return (
-    <TelaConteudo comAcaoFixa>
+    <TelaConteudo>
       <CabecalhoTela
         contexto="Revisão semanal · 2/4"
         titulo="Scorecard de progresso"
@@ -81,11 +81,11 @@ export default async function ScorecardPage() {
         Metodologia {revisao.scorecard.metodologiaVersao}.
       </NotaTela>
 
-      <BarraAcaoFixa>
-        <Button asChild size="cta">
+      <AcaoTela>
+        <Button asChild size="cta" className="w-full">
           <Link href="/progresso/revisao/evidencias">Ver evidências</Link>
         </Button>
-      </BarraAcaoFixa>
+      </AcaoTela>
     </TelaConteudo>
   );
 }

@@ -8,6 +8,7 @@
  * repetir utilitários; se um caso não couber, ajuste o componente para
  * que a correção alcance todas as telas de uma vez.
  */
+export { AcaoTela } from "./acao-tela";
 export { AvisoAcao } from "./aviso-acao";
 export { BarraAcaoFixa } from "./barra-acao-fixa";
 export { BarraFaixa } from "./barra-faixa";

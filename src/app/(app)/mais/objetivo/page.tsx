@@ -5,8 +5,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { RadioGroup } from "@/components/ui/radio-group";
 import {
+  AcaoTela,
   AvisoAcao,
-  BarraAcaoFixa,
   CabecalhoTela,
   CartaoRadio,
   ExplicacaoAgent,
@@ -43,7 +43,7 @@ export default async function ObjetivoAtualPage({
   if (!perfil?.respostas.objetivoComposicao) redirect("/triagem/objetivo");
 
   return (
-    <TelaConteudo comAcaoFixa>
+    <TelaConteudo>
       <CabecalhoTela
         contexto="Objetivo e estratégia"
         titulo="Qual é o seu objetivo atual?"
@@ -87,11 +87,11 @@ export default async function ObjetivoAtualPage({
           </RadioGroup>
         </SecoesTela>
 
-        <BarraAcaoFixa>
+        <AcaoTela>
           <Button type="submit" size="cta" className="w-full">
             Salvar objetivo
           </Button>
-        </BarraAcaoFixa>
+        </AcaoTela>
       </form>
 
       <NotaTela>
