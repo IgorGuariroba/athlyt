@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
-  BarraAcaoFixa,
+  AcaoTela,
   CabecalhoTela,
   CartaoLista,
   FaixaDados,
@@ -30,7 +30,7 @@ export default async function PropostaPage() {
     revisao.proposta.exigeAprovacao && revisao.estado === "pendente";
 
   return (
-    <TelaConteudo comAcaoFixa>
+    <TelaConteudo>
       <CabecalhoTela
         contexto="Revisão semanal · 4/4"
         titulo={ROTULO[revisao.proposta.tipo]}
@@ -92,11 +92,11 @@ export default async function PropostaPage() {
         explícita.
       </NotaTela>
 
-      <BarraAcaoFixa>
-        <Button asChild size="cta">
+      <AcaoTela>
+        <Button asChild size="cta" className="w-full">
           <Link href="/progresso">Concluir revisão</Link>
         </Button>
-      </BarraAcaoFixa>
+      </AcaoTela>
     </TelaConteudo>
   );
 }

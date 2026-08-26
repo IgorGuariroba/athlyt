@@ -4,7 +4,7 @@ import { auth } from "@/auth";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { AvisoAcao, BarraAcaoFixa, CabecalhoTela, NotaTela, SecoesTela, TelaConteudo } from "@/components/tela";
+import { AcaoTela, AvisoAcao, CabecalhoTela, NotaTela, SecoesTela, TelaConteudo } from "@/components/tela";
 import { obterPerfilVigente } from "@/domain/triagem/perfil";
 import { alterarModoConservador } from "./actions";
 
@@ -15,7 +15,7 @@ export default async function ModoConservadorPage({ searchParams }: { searchPara
   const ativo = perfil?.respostas.modoConservadorManual ?? false;
 
   return (
-    <TelaConteudo comAcaoFixa>
+    <TelaConteudo>
       <CabecalhoTela contexto="Configurações" titulo="Modo conservador" descricao="Escolha se o plano deve priorizar uma progressão mais cautelosa." voltar={{ href: "/mais", rotulo: "Voltar para Mais" }} />
       <form action={alterarModoConservador}>
         <SecoesTela>
@@ -37,7 +37,7 @@ export default async function ModoConservadorPage({ searchParams }: { searchPara
             <Switch name="modoConservador" defaultChecked={ativo} aria-label={`${ativo ? "Desativar" : "Ativar"} modo conservador`} />
           </label>
         </SecoesTela>
-        <BarraAcaoFixa><Button type="submit" size="cta" className="w-full">Salvar preferência</Button></BarraAcaoFixa>
+        <AcaoTela><Button type="submit" size="cta" className="w-full">Salvar preferência</Button></AcaoTela>
       </form>
       <NotaTela>A alteração vale para os próximos planos gerados. O plano ativo atual não é alterado automaticamente.</NotaTela>
     </TelaConteudo>

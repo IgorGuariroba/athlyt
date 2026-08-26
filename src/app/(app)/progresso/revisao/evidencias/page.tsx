@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
-  BarraAcaoFixa,
+  AcaoTela,
   CabecalhoTela,
   CartaoLista,
   EstadoVazio,
@@ -24,7 +24,7 @@ export default async function EvidenciasPage() {
   if (!revisao) redirect("/progresso/revisao");
 
   return (
-    <TelaConteudo comAcaoFixa>
+    <TelaConteudo>
       <CabecalhoTela
         contexto="Revisão semanal · 3/4"
         titulo="Evidências e incertezas"
@@ -89,11 +89,11 @@ export default async function EvidenciasPage() {
         </Button>
       </SecoesTela>
 
-      <BarraAcaoFixa>
-        <Button asChild size="cta">
+      <AcaoTela>
+        <Button asChild size="cta" className="w-full">
           <Link href="/progresso/revisao/proposta">Ver proposta</Link>
         </Button>
-      </BarraAcaoFixa>
+      </AcaoTela>
     </TelaConteudo>
   );
 }

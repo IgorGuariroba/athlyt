@@ -4,7 +4,7 @@ import { Award, Clock3, Dumbbell, Layers3 } from "lucide-react";
 import { auth } from "@/auth";
 import { Button } from "@/components/ui/button";
 import {
-  BarraAcaoFixa,
+  AcaoTela,
   CabecalhoSecao,
   CompartilharResultado,
   CartaoLista,
@@ -45,7 +45,7 @@ export default async function ResumoPage({
   const concluida = resumo.estado === "concluida";
 
   return (
-    <TelaConteudo comAcaoFixa>
+    <TelaConteudo>
       <SeloConclusao
         Icone={Award}
         tom={concluida ? "sucesso" : "atencao"}
@@ -151,11 +151,11 @@ export default async function ResumoPage({
         </Button>
       </SecoesTela>
 
-      <BarraAcaoFixa>
-        <Button asChild size="cta">
+      <AcaoTela>
+        <Button asChild size="cta" className="w-full">
           <Link href="/inicio">Concluído</Link>
         </Button>
-      </BarraAcaoFixa>
+      </AcaoTela>
     </TelaConteudo>
   );
 }

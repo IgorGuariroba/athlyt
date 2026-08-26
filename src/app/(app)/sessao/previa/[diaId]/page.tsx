@@ -3,7 +3,7 @@ import { Dumbbell, Play } from "lucide-react";
 import { auth } from "@/auth";
 import { Button } from "@/components/ui/button";
 import {
-  BarraAcaoFixa,
+  AcaoTela,
   CabecalhoTela,
   CartaoLista,
   ExplicacaoAgent,
@@ -36,7 +36,7 @@ export default async function PreviaSessaoPage({
   );
 
   return (
-    <TelaConteudo comAcaoFixa>
+    <TelaConteudo>
       <CabecalhoTela
         contexto={`${plano.conteudo.bloco.divisao} · bloco v${plano.versao}`}
         titulo={dia.nome}
@@ -88,14 +88,18 @@ export default async function PreviaSessaoPage({
         encontre uma carga confortável que respeite a meta de RIR.
       </NotaTela>
 
-      <BarraAcaoFixa>
+      {/* `AcaoTela`, não `BarraAcaoFixa`: fixo no rodapé, o CTA
+          ficava na mesma faixa da `BottomNav`, e no iPhone (Safari e
+          Chrome) a barra do navegador soma outra camada sobre essa
+          faixa, cobrindo o botão por completo. */}
+      <AcaoTela>
         <form action={iniciarSessaoAction}>
           <input type="hidden" name="diaId" value={dia.id} />
-          <Button size="cta">
+          <Button size="cta" className="w-full">
             <Play aria-hidden="true" className="fill-current" /> Iniciar treino
           </Button>
         </form>
-      </BarraAcaoFixa>
+      </AcaoTela>
     </TelaConteudo>
   );
 }

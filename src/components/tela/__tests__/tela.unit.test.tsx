@@ -2,6 +2,7 @@ import { cleanup, fireEvent, render, screen, within } from "@testing-library/rea
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import {
+  AcaoTela,
   BarraFaixa,
   BarraMacro,
   CabecalhoCartaoLista,
@@ -191,6 +192,22 @@ describe("TelaConteudo", () => {
     const { container } = render(<TelaConteudo>conteúdo</TelaConteudo>);
 
     expect(container.querySelector("main")?.className).toContain("pb-8");
+  });
+});
+
+describe("AcaoTela", () => {
+  it("não fixa o CTA no rodapé", () => {
+    // Diferente de `BarraAcaoFixa`: dentro do casco autenticado, um
+    // CTA `fixed bottom-0` compete com a `BottomNav` pela mesma faixa.
+    // `AcaoTela` mantém o botão no fluxo normal da tela.
+    const { container } = render(
+      <AcaoTela>
+        <button type="button">Continuar</button>
+      </AcaoTela>,
+    );
+
+    expect(container.firstElementChild?.className).not.toContain("fixed");
+    expect(screen.getByRole("button", { name: "Continuar" })).toBeTruthy();
   });
 });
 
