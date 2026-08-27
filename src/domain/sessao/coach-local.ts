@@ -69,7 +69,7 @@ export function sugerirCarga(exercicio: ExercicioSessao, proximaSerie: SerieSess
       { cargaSugeridaKg: arredondar(proximaSerie.cargaSugeridaKg) });
   }
 
-  const alvoRir = proximaSerie.rir;
+  const alvoRir = proximaSerie.rirPrescrito ?? proximaSerie.rir;
   const folga = ultima.rir - alvoRir;
 
   if (folga >= 2) {

@@ -7,12 +7,13 @@ import { Input } from "@/components/ui/input";
 import { segundosDeDescanso } from "@/domain/sessao/descanso";
 import { MARCA_ZERO, avaliarRecorde, estimativaRm, type MarcaExercicio } from "@/domain/sessao/recorde";
 import { useRitmoDescanso } from "@/lib/store-descanso";
+import { atualizarRascunhoSerie, removerRascunhoSerie, useRascunhoSerie } from "@/lib/store-rascunho-serie";
 import { useConexao } from "./estado-conexao";
 
 const FECHAR_TIMERS_DE_DESCANSO = "athlyt:fechar-timers-de-descanso";
 
-export function RegistroSerie({ exercicioId, numero, repeticoesSugeridas, rirSugerido, descansoSeg, concluida, cargaInicial, cargaSugerida, melhorCargaAnterior, marcaAnterior, repeticoesIniciais, temProximaSerie, modo, seriesDoExercicio }: {
-  exercicioId: string; numero: number; repeticoesSugeridas: string; rirSugerido: number;
+export function RegistroSerie({ sessionId, exercicioId, numero, repeticoesSugeridas, rirInicial, rirSugerido, descansoSeg, concluida, cargaInicial, cargaSugerida, melhorCargaAnterior, marcaAnterior, repeticoesIniciais, temProximaSerie, modo, seriesDoExercicio }: {
+  sessionId: string; exercicioId: string; numero: number; repeticoesSugeridas: string; rirInicial: number; rirSugerido: number;
   descansoSeg: number; concluida: boolean; cargaInicial: number | null; cargaSugerida: number; melhorCargaAnterior: number; repeticoesIniciais: number | null;
   /**
    * Melhor marca do mesmo exercício antes desta série — histórico do
@@ -58,6 +59,10 @@ export function RegistroSerie({ exercicioId, numero, repeticoesSugeridas, rirSug
     && !copiloto.alertaConfirmado;
   const carga = local?.cargaKg ?? cargaInicial;
   const reps = local?.repeticoes ?? repeticoesIniciais;
+  const rascunho = useRascunhoSerie(sessionId, exercicioId, numero);
+  const cargaExibida = local ? String(local.cargaKg) : rascunho?.cargaKg ?? (carga === null ? "" : String(carga));
+  const repeticoesExibidas = local ? String(local.repeticoes) : rascunho?.repeticoes ?? String(reps ?? Number.parseInt(repeticoesSugeridas));
+  const rirExibido = local ? String(local.rir) : rascunho?.rir ?? String(rirInicial);
 
   useEffect(() => {
     const fechar = () => setRestante(null);
@@ -110,7 +115,10 @@ export function RegistroSerie({ exercicioId, numero, repeticoesSugeridas, rirSug
       rir: Number(formData.get("rir")),
     }, temProximaSerie ? numero + 1 : undefined);
     void promessa.then(
-      () => setEnviando(false),
+      () => {
+        removerRascunhoSerie(sessionId, exercicioId, numero);
+        setEnviando(false);
+      },
       () => {
         setEnviando(false);
         setErroRegistro("A série não foi salva. Confira os dados e tente novamente.");
@@ -147,14 +155,14 @@ export function RegistroSerie({ exercicioId, numero, repeticoesSugeridas, rirSug
           <input type="hidden" name="cargaKg" value="0" />
         ) : (
           <label className="text-caption text-muted-foreground">KG
-            <Input name="cargaKg" type="number" inputMode="decimal" step="0.5" min="0" defaultValue={carga ?? undefined} placeholder={String(cargaSugerida)} required disabled={registrada} className="mt-1 h-12 text-center text-lg font-bold tabular-nums" />
+            <Input name="cargaKg" type="number" inputMode="decimal" step="0.5" min="0" value={cargaExibida} onChange={(evento) => atualizarRascunhoSerie(sessionId, exercicioId, numero, "cargaKg", evento.target.value)} placeholder={String(cargaSugerida)} required disabled={registrada} className="mt-1 h-12 text-center text-lg font-bold tabular-nums" />
           </label>
         )}
         <label className="text-caption text-muted-foreground">{rotulos[modoEfetivo]} <span className="sr-only">sugeridas {repeticoesSugeridas}</span>
-          <Input name="repeticoes" type="number" inputMode="numeric" min="0" defaultValue={reps ?? Number.parseInt(repeticoesSugeridas)} required disabled={registrada} className="mt-1 h-12 text-center text-lg font-bold tabular-nums" />
+          <Input name="repeticoes" type="number" inputMode="numeric" min="0" value={repeticoesExibidas} onChange={(evento) => atualizarRascunhoSerie(sessionId, exercicioId, numero, "repeticoes", evento.target.value)} required disabled={registrada} className="mt-1 h-12 text-center text-lg font-bold tabular-nums" />
         </label>
-        {modoEfetivo === "repeticoes" || modoEfetivo === "unilateral" ? <label className="text-caption text-muted-foreground">RIR
-          <Input name="rir" type="number" inputMode="numeric" min="0" max="10" defaultValue={local?.rir ?? rirSugerido} required disabled={registrada} className="mt-1 h-12 text-center text-lg font-bold tabular-nums" />
+        {modoEfetivo === "repeticoes" || modoEfetivo === "unilateral" ? <label className="text-caption text-muted-foreground">RIR <span className="sr-only">prescrito {rirSugerido}</span>
+          <Input name="rir" type="number" inputMode="numeric" min="0" max="10" value={rirExibido} onChange={(evento) => atualizarRascunhoSerie(sessionId, exercicioId, numero, "rir", evento.target.value)} required disabled={registrada} className="mt-1 h-12 text-center text-lg font-bold tabular-nums" />
         </label> : <input type="hidden" name="rir" value="0" />}
         <Button type="submit" size="icon" disabled={enviando || registrada || bloqueadaPorCautela} aria-label={`Registrar série ${numero}`} className="mb-0 size-12 rounded-full">
           <Check className="size-5" />

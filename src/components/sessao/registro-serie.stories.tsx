@@ -6,7 +6,7 @@ const meta = {
   title: "Sessão/RegistroSerie",
   component: RegistroSerie,
   args: {
-    exercicioId: "puxada-polia", numero: 1, repeticoesSugeridas: "8", rirSugerido: 3,
+    sessionId: "storybook", exercicioId: "puxada-polia", numero: 1, repeticoesSugeridas: "8", rirInicial: 2, rirSugerido: 3,
     descansoSeg: 120, concluida: false, cargaInicial: null, cargaSugerida: 47.5,
     melhorCargaAnterior: 45, repeticoesIniciais: null, temProximaSerie: true, modo: "repeticoes",
   },

@@ -12,6 +12,7 @@ vi.mock("@/components/sessao/estado-conexao", () => ({
 }));
 
 import { definirRitmoDescanso, reiniciarDescanso } from "@/lib/store-descanso";
+import { reiniciarRascunhosSerie } from "@/lib/store-rascunho-serie";
 import { RegistroSerie } from "@/components/sessao/registro-serie";
 import { MARCA_ZERO } from "@/domain/sessao/recorde";
 
@@ -27,13 +28,16 @@ afterEach(() => {
   cleanup();
   registrarEvento.mockReset();
   reiniciarDescanso();
+  reiniciarRascunhosSerie();
   window.localStorage.clear();
 });
 
 const propriedades = {
+  sessionId: "sessao-teste",
   exercicioId: "supino",
   numero: 1,
   repeticoesSugeridas: "10",
+  rirInicial: 2,
   rirSugerido: 2,
   descansoSeg: 90,
   concluida: false,

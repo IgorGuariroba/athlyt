@@ -1,4 +1,4 @@
-import { and, asc, desc, eq } from "drizzle-orm";
+import { and, asc, desc, eq, inArray } from "drizzle-orm";
 import { db } from "@/db/client";
 import { decisionTrails, exerciseSubstitutions, plans, workoutEvents, workoutSessions } from "@/db/schema";
 import { encontrarExercicio, regioesLesionadas } from "@/domain/plano/exercicios";
@@ -19,6 +19,8 @@ export interface SerieSessao {
   melhorCargaAnteriorKg: number;
   repeticoes: number | null;
   rir: number;
+  /** Meta de esforço congelada da prescrição; `rir` é a referência ou o realizado. */
+  rirPrescrito?: number;
   concluida: boolean;
 }
 export interface ExercicioSessao {
@@ -70,7 +72,7 @@ export interface ResumoSessao extends SessaoTreino {
   recordes: Array<{ exercicioId: string; nome: string; tipo: TipoRecorde; valor: number; rotulo: string }>;
 }
 
-type UltimaSerie = Pick<SerieSessao, "cargaKg" | "repeticoes">;
+type UltimaSerie = Pick<SerieSessao, "cargaKg" | "repeticoes" | "rir">;
 
 function chaveSerie(exercicioId: string, numero: number): string {
   return `${exercicioId}:${numero}`;
@@ -91,7 +93,8 @@ function planejarExercicios(dia: DiaTreino, marcas: Map<string, MarcaExercicio>,
       cargaSugeridaKg: ultimasSeries.get(chaveSerie(exercicio.exercicioId, indice + 1))?.cargaKg ?? 0,
       melhorCargaAnteriorKg: melhoresCargas.get(exercicio.exercicioId) ?? 0,
       repeticoes: ultimasSeries.get(chaveSerie(exercicio.exercicioId, indice + 1))?.repeticoes ?? null,
-      rir: exercicio.rir, concluida: false,
+      rir: ultimasSeries.get(chaveSerie(exercicio.exercicioId, indice + 1))?.rir ?? exercicio.rir,
+      rirPrescrito: exercicio.rir, concluida: false,
     })),
   }));
 }
@@ -116,14 +119,14 @@ async function marcasDoHistorico(userId: string, exceto?: string): Promise<Map<s
 
 async function ultimasSeriesDoHistorico(userId: string): Promise<Map<string, UltimaSerie>> {
   const anteriores = await db.select({ exercicios: workoutSessions.exercicios }).from(workoutSessions)
-    .where(and(eq(workoutSessions.userId, userId), eq(workoutSessions.estado, "concluida")))
+    .where(and(eq(workoutSessions.userId, userId), inArray(workoutSessions.estado, ["concluida", "abandonada"])))
     .orderBy(desc(workoutSessions.startedAt));
   const ultimas = new Map<string, UltimaSerie>();
   for (const linha of anteriores) {
     for (const exercicio of linha.exercicios as ExercicioSessao[]) {
       for (const serie of exercicio.series) {
         if (serie.concluida && !ultimas.has(chaveSerie(exercicio.exercicioId, serie.numero))) {
-          ultimas.set(chaveSerie(exercicio.exercicioId, serie.numero), { cargaKg: serie.cargaKg, repeticoes: serie.repeticoes });
+          ultimas.set(chaveSerie(exercicio.exercicioId, serie.numero), { cargaKg: serie.cargaKg, repeticoes: serie.repeticoes, rir: serie.rir });
         }
       }
     }
@@ -157,7 +160,7 @@ export async function iniciarSessao(userId: string, diaId: string): Promise<Sess
   const dia = (plano.conteudo as PlanoGerado).bloco.dias.find((item) => item.id === diaId);
   if (!dia) throw new Error("Treino não pertence ao Plano Ativo.");
   const [marcas, ultimasSeries] = await Promise.all([marcasDoHistorico(userId), ultimasSeriesDoHistorico(userId)]);
-  const exercicios = await aplicarSubstituicoesPersistentes(userId, diaId, planejarExercicios(dia, marcas, ultimasSeries));
+  const exercicios = await aplicarSubstituicoesPersistentes(userId, diaId, planejarExercicios(dia, marcas, ultimasSeries), ultimasSeries);
   return db.transaction(async (tx) => {
     const [linha] = await tx.insert(workoutSessions).values({
       userId, planId: plano.id, diaId, nome: dia.nome, estado: "em_andamento", exercicios,
@@ -317,18 +320,18 @@ async function substituicoesVigentes(userId: string, diaId: string): Promise<Map
   return vigentes;
 }
 
-async function aplicarSubstituicoesPersistentes(userId: string, diaId: string, exercicios: ExercicioSessao[]): Promise<ExercicioSessao[]> {
+async function aplicarSubstituicoesPersistentes(userId: string, diaId: string, exercicios: ExercicioSessao[], ultimasSeries: Map<string, UltimaSerie>): Promise<ExercicioSessao[]> {
   const vigentes = await substituicoesVigentes(userId, diaId);
   if (vigentes.size === 0) return exercicios;
   const melhores = await melhoresCargasDoHistorico(userId);
   return exercicios.map((exercicio) => {
     const troca = vigentes.get(exercicio.exercicioId);
     const novo = troca ? encontrarExercicio(troca.exercicioNovoId) : undefined;
-    return troca && novo ? trocarNoExercicio(exercicio, novo.id, novo.nome, troca.motivo, melhores.get(novo.id) ?? 0) : exercicio;
+    return troca && novo ? trocarNoExercicio(exercicio, novo.id, novo.nome, troca.motivo, melhores.get(novo.id) ?? 0, ultimasSeries) : exercicio;
   });
 }
 
-function trocarNoExercicio(exercicio: ExercicioSessao, novoId: string, novoNome: string, motivo: MotivoSubstituicao, melhorCarga: number): ExercicioSessao {
+function trocarNoExercicio(exercicio: ExercicioSessao, novoId: string, novoNome: string, motivo: MotivoSubstituicao, melhorCarga: number, ultimasSeries = new Map<string, UltimaSerie>()): ExercicioSessao {
   return {
     ...exercicio, exercicioId: novoId, nome: novoNome,
     // A explicação justificava *aquele* exercício para este atleta. O
@@ -341,7 +344,18 @@ function trocarNoExercicio(exercicio: ExercicioSessao, novoId: string, novoNome:
     // A prescrição (séries, reps, RIR, descanso) permanece: o que muda
     // é o exercício, não o estímulo pretendido. As cargas voltam à
     // referência histórica do novo exercício, que é outra barra.
-    series: exercicio.series.map((serie) => serie.concluida ? serie : { ...serie, cargaSugeridaKg: melhorCarga, melhorCargaAnteriorKg: melhorCarga }),
+    series: exercicio.series.map((serie) => {
+      if (serie.concluida) return serie;
+      const ultima = ultimasSeries.get(chaveSerie(novoId, serie.numero));
+      return {
+        ...serie,
+        cargaKg: ultima?.cargaKg ?? null,
+        cargaSugeridaKg: ultima?.cargaKg ?? 0,
+        melhorCargaAnteriorKg: melhorCarga,
+        repeticoes: ultima?.repeticoes ?? null,
+        rir: ultima?.rir ?? serie.rirPrescrito ?? serie.rir,
+      };
+    }),
   };
 }
 
@@ -357,10 +371,10 @@ function trocarNoExercicio(exercicio: ExercicioSessao, novoId: string, novoNome:
  * somando o mesmo número de séries, e o histórico de carga de cada
  * exercício continua sendo dele.
  */
-function dividirNaSubstituicao(exercicio: ExercicioSessao, novoId: string, novoNome: string, motivo: MotivoSubstituicao, melhorCarga: number): ExercicioSessao[] {
+function dividirNaSubstituicao(exercicio: ExercicioSessao, novoId: string, novoNome: string, motivo: MotivoSubstituicao, melhorCarga: number, ultimasSeries: Map<string, UltimaSerie>): ExercicioSessao[] {
   const feitas = exercicio.series.filter((serie) => serie.concluida);
   const restantes = exercicio.series.filter((serie) => !serie.concluida);
-  if (feitas.length === 0) return [trocarNoExercicio(exercicio, novoId, novoNome, motivo, melhorCarga)];
+  if (feitas.length === 0) return [trocarNoExercicio(exercicio, novoId, novoNome, motivo, melhorCarga, ultimasSeries)];
 
   const interrompido: ExercicioSessao = {
     ...exercicio,
@@ -381,10 +395,19 @@ function dividirNaSubstituicao(exercicio: ExercicioSessao, novoId: string, novoN
     seriesPlanejadas: restantes.length,
     // A numeração recém-começa: as séries do substituto são dele, e
     // `registrarSerie` casa por (exercicioId, numero).
-    series: restantes.map((serie, indice) => ({
-      ...serie, numero: indice + 1, cargaKg: null, repeticoes: null,
-      cargaSugeridaKg: melhorCarga, melhorCargaAnteriorKg: melhorCarga, concluida: false,
-    })),
+    series: restantes.map((serie, indice) => {
+      const numero = indice + 1;
+      const ultima = ultimasSeries.get(chaveSerie(novoId, numero));
+      return {
+        ...serie, numero,
+        cargaKg: ultima?.cargaKg ?? null,
+        repeticoes: ultima?.repeticoes ?? null,
+        rir: ultima?.rir ?? serie.rirPrescrito ?? serie.rir,
+        cargaSugeridaKg: ultima?.cargaKg ?? 0,
+        melhorCargaAnteriorKg: melhorCarga,
+        concluida: false,
+      };
+    }),
   };
   return [interrompido, substituto];
 }
@@ -422,7 +445,10 @@ export async function substituirExercicioNaSessao(userId: string, sessionId: str
   const escolhida = alternativas.find((a) => a.exercicioId === entrada.novoExercicioId);
   if (!escolhida) throw new Error("Alternativa não preserva o estímulo ou não é viável para o seu perfil.");
   const novo = encontrarExercicio(entrada.novoExercicioId)!;
-  const melhores = await melhoresCargasDoHistorico(userId);
+  const [melhores, ultimasSeries] = await Promise.all([
+    melhoresCargasDoHistorico(userId),
+    ultimasSeriesDoHistorico(userId),
+  ]);
   const persistente = motivoPersistente(entrada.motivo);
   const perfilVersao = (await obterPerfilVigente(userId))?.version ?? 0;
 
@@ -435,7 +461,7 @@ export async function substituirExercicioNaSessao(userId: string, sessionId: str
     const original = exercicios[indice];
     if (original.interrompido) throw new Error("Este exercício já foi substituído nesta sessão.");
     const seriesJaFeitas = original.series.filter((serie) => serie.concluida).length;
-    exercicios.splice(indice, 1, ...dividirNaSubstituicao(original, novo.id, novo.nome, entrada.motivo, melhores.get(novo.id) ?? 0));
+    exercicios.splice(indice, 1, ...dividirNaSubstituicao(original, novo.id, novo.nome, entrada.motivo, melhores.get(novo.id) ?? 0, ultimasSeries));
 
     const [atualizada] = await tx.update(workoutSessions).set({ exercicios }).where(eq(workoutSessions.id, sessionId)).returning();
     const dados = { de: entrada.exercicioId, para: entrada.novoExercicioId, motivo: entrada.motivo, preservaEstimulo: escolhida.preservaEstimulo, persistente, observacao: entrada.observacao ?? null, seriesJaFeitas };
