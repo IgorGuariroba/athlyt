@@ -11,9 +11,7 @@ loadEnv({ path: ".env" });
 /**
  * `PLAYWRIGHT_BASE_URL` permite apontar a suíte para um servidor já no
  * ar em outra porta. É o que torna possível validar E2E localmente sem
- * derrubar a instância da porta 3000 — e sem cair na armadilha do
- * `AUTH_URL` descasado (docs/memory/e2e-auth-url-local.md), já que o
- * servidor de teste sobe com o host e a porta que a suíte usa.
+ * derrubar a instância da porta 3000.
  */
 const baseURL = process.env.PLAYWRIGHT_BASE_URL ?? "http://localhost:3000";
 
@@ -37,6 +35,17 @@ const porta = new URL(baseURL).port || "3000";
 const comandoServidor =
   process.env.E2E_COMANDO ?? `npx next dev -p ${porta}`;
 
+/**
+ * O servidor sob teste sobe com `AUTH_URL` derivado do `baseURL`.
+ *
+ * Sem isto, apontar `PLAYWRIGHT_BASE_URL` para outra porta quebrava
+ * todo cenário autenticado: o `AUTH_URL` do `.env` continua na 3000, o
+ * Auth.js redireciona para lá e o teste, que está na 3100, recebe
+ * `chrome-error://chromewebdata/`. A porta muda em um lugar só, então
+ * a origem da autenticação tem que segui-la sozinha
+ * (docs/memory/e2e-auth-url-local.md).
+ */
+
 export default defineConfig({
   testDir: "./e2e",
   /**
@@ -51,6 +60,16 @@ export default defineConfig({
   fullyParallel: Boolean(process.env.E2E_WORKERS),
   workers: Number(process.env.E2E_WORKERS ?? 1),
   reporter: [["list"], ["html", { open: "never" }]],
+  /**
+   * 15 s, não os 5 s padrão. O runner do CI é bem mais lento que a
+   * máquina local: `revisao-corporal` falhou no CI esperando o
+   * scorecard que aqui aparece em 1,4 s, porque a server action que o
+   * gera faz seis consultas e uma escrita antes de redirecionar. Vários
+   * testes já compensavam isso com `{ timeout: 15_000 }` avulso —
+   * sinal de que o padrão é curto demais para esta suíte. Elevar o
+   * padrão trata a causa uma vez em vez de espalhar a exceção.
+   */
+  expect: { timeout: 15_000 },
   use: {
     baseURL,
     trace: "retain-on-failure",
@@ -70,7 +89,7 @@ export default defineConfig({
       timeout: 30_000,
     },
     {
-      command: `OPENROUTER_BASE_URL=http://127.0.0.1:4311/v1 OPENROUTER_API_KEY=athlyt-e2e ${comandoServidor}`,
+      command: `AUTH_URL=${baseURL} OPENROUTER_BASE_URL=http://127.0.0.1:4311/v1 OPENROUTER_API_KEY=athlyt-e2e ${comandoServidor}`,
       url: `${baseURL}/api/saude`,
       reuseExistingServer: true,
       timeout: 30_000,

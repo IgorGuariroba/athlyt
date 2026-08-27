@@ -11,7 +11,7 @@ import { useConexao } from "./estado-conexao";
 
 const FECHAR_TIMERS_DE_DESCANSO = "athlyt:fechar-timers-de-descanso";
 
-export function RegistroSerie({ exercicioId, numero, repeticoesSugeridas, rirSugerido, descansoSeg, concluida, cargaInicial, cargaSugerida, melhorCargaAnterior, marcaAnterior, repeticoesIniciais, temProximaSerie, modo }: {
+export function RegistroSerie({ exercicioId, numero, repeticoesSugeridas, rirSugerido, descansoSeg, concluida, cargaInicial, cargaSugerida, melhorCargaAnterior, marcaAnterior, repeticoesIniciais, temProximaSerie, modo, seriesDoExercicio }: {
   exercicioId: string; numero: number; repeticoesSugeridas: string; rirSugerido: number;
   descansoSeg: number; concluida: boolean; cargaInicial: number | null; cargaSugerida: number; melhorCargaAnterior: number; repeticoesIniciais: number | null;
   /**
@@ -22,6 +22,13 @@ export function RegistroSerie({ exercicioId, numero, repeticoesSugeridas, rirSug
   marcaAnterior?: MarcaExercicio;
   temProximaSerie: boolean;
   modo?: "repeticoes" | "tempo" | "distancia" | "duracao" | "calorias" | "ritmo" | "unilateral" | "circuito";
+  /**
+   * Número e estado (do servidor) de todas as séries do exercício, na
+   * ordem em que aparecem na tela. Usado só para decidir se esta é a
+   * última série já registrada — o selo de recorde não deve conviver
+   * com o de uma série posterior, que é quem de fato vale agora.
+   */
+  seriesDoExercicio?: Array<{ numero: number; concluida: boolean }>;
 }) {
   const modoEfetivo = modo ?? "repeticoes";
   const rotulos = { repeticoes: "REPS", tempo: "TEMPO (S)", distancia: "DISTÂNCIA (M)", duracao: "DURAÇÃO (MIN)", calorias: "CALORIAS", ritmo: "RITMO", unilateral: "LADOS", circuito: "RODADAS" } as const;
@@ -36,6 +43,16 @@ export function RegistroSerie({ exercicioId, numero, repeticoesSugeridas, rirSug
   const descansoEfetivoSeg = segundosDeDescanso(descansoSeg, ritmoDescanso);
   const local = registrosLocais.find((r) => r.exercicioId === exercicioId && r.numero === numero);
   const registrada = concluida || local !== undefined;
+  // Uma série só está "registrada" aqui via `concluida` (vindo do servidor) ou via
+  // `registrosLocais` (recém enviada, ainda não refletida no HTML). Combinar as
+  // duas fontes por número deixa dizer, sem esperar o refresh do servidor, se
+  // existe alguma série posterior já registrada — e por isso o selo desta é
+  // obsoleto.
+  const existeSerieRegistradaDepois = (seriesDoExercicio ?? []).some((serie) => {
+    if (serie.numero <= numero) return false;
+    const registradaLa = serie.concluida || registrosLocais.some((r) => r.exercicioId === exercicioId && r.numero === serie.numero);
+    return registradaLa;
+  });
   const bloqueadaPorCautela = copiloto.estado === "orientacao"
     && copiloto.proximaSerie === numero
     && !copiloto.alertaConfirmado;
@@ -112,7 +129,12 @@ export function RegistroSerie({ exercicioId, numero, repeticoesSugeridas, rirSug
    */
   const referencia = marcaAnterior
     ?? (melhorCargaAnterior > 0 ? { ...MARCA_ZERO, cargaKg: melhorCargaAnterior } : MARCA_ZERO);
-  const recorde = registrada ? avaliarRecorde({ cargaKg: carga, repeticoes: reps }, referencia) : null;
+  // O recorde vale como conquista da sessão — só a marca mais recente
+  // deve ostentar o selo. Senão duas séries mostram "Novo recorde" ao
+  // mesmo tempo, e a mais antiga já foi superada pela própria sessão.
+  const recorde = registrada && !existeSerieRegistradaDepois
+    ? avaliarRecorde({ cargaKg: carga, repeticoes: reps }, referencia)
+    : null;
   const estimativa10Rm = registrada && carga && reps ? estimativaRm(carga, reps, 10) : null;
 
   return (

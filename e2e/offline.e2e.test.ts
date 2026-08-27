@@ -70,7 +70,7 @@ test("mantém a sessão viva sem rede e sincroniza a fila ao reconectar", async 
 
   // ---- rede volta ----
   await context.setOffline(false);
-  await expect(page.getByLabel(/Estado da conexão: Online$/)).toBeVisible({ timeout: 15_000 });
+  await expect(page.getByLabel(/Estado da conexão: Online$/)).toBeVisible();
 
   // A fila drenou: nada pendente e nenhum conflito.
   await page.goto("/mais/sincronizacao");

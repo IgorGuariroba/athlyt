@@ -213,7 +213,7 @@ test("usa o Coach Local sem simular IA quando o provedor está indisponível", a
   const local = page.getByRole("region", { name: "Orientações do Coach Local" });
   // O SDK tenta o provedor novamente antes de declarar indisponibilidade;
   // o fallback precisa cobrir a janela completa dessa política de retry.
-  await expect(local).toContainText("Coach Local (regra)", { timeout: 15_000 });
+  await expect(local).toContainText("Coach Local (regra)");
   await expect(local).toContainText("Copiloto indisponível: nenhuma sugestão de IA");
 });
 

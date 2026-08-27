@@ -1,5 +1,7 @@
 # AGENTS.md
 
+**Implemente a solução mais simples, concisa, legível, semântica, idiomática, coesa e manutenível possível, aplicando KISS, DRY e YAGNI, com responsabilidades claras, baixo acoplamento e abstrações proporcionais à necessidade real.**
+
 ## Desenvolvimento local
 
 Inicie o projeto com `npm run dev`.
