@@ -25,7 +25,9 @@ A falha não vem do código sob teste. Diagnosticar isso pela mensagem do Playwr
 
 # Aplicação futura
 
-Ao rodar E2E autenticado localmente, suba o servidor com `AUTH_URL` casando o host e a porta que o teste acessa:
+A suíte Playwright já não exige esse cuidado: o `webServer` de `playwright.config.ts` sobe o servidor com `AUTH_URL` derivado do `baseURL`, então `PLAYWRIGHT_BASE_URL=http://localhost:3100` leva a autenticação junto. Antes disso, os cenários de `e2e/acesso` falhavam com `chrome-error://chromewebdata/` em qualquer porta diferente da 3000 — o `AUTH_URL` do `.env` apontava para a 3000 enquanto o teste observava a 3100.
+
+Fora do Playwright, ao subir um servidor à mão para E2E autenticado, mantenha `AUTH_URL` casando o host e a porta que o teste acessa:
 
 ```bash
 AUTH_URL=http://localhost:3100 npx next dev -p 3100

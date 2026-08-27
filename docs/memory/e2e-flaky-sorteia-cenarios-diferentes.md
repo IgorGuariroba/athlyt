@@ -80,7 +80,12 @@ lógica quebrada.
   antes de navegar. Corrigir isso é trabalho próprio, em PR separado — não
   se mistura à entrega que apenas foi atingida pelo sintoma.
 - Não "conserte" flakiness com espera cega (`waitForTimeout`) para destravar um
-  merge: isso troca sinal do CI por falso verde.
+  merge: isso troca sinal do CI por falso verde. Elevar o **timeout do
+  `expect`** é outra coisa: a asserção continua valendo e o teste segue assim
+  que a condição ocorre. Foi o que se fez em 2026-08-27, ao levar o padrão de 5 s
+  para 15 s em `playwright.config.ts` — vários testes já carregavam
+  `{ timeout: 15_000 }` avulso, sinal de que o padrão era curto para esta suíte.
+  Reduz a probabilidade do sintoma; não torna a ação lenta mais rápida.
 
 # Evidência
 
