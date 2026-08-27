@@ -6,6 +6,7 @@ import { AlertTriangle, CircleDot, CloudOff, RefreshCw, TriangleAlert } from "lu
 import Link from "next/link";
 import { assinarOutbox, drenarFila, lerOutbox, lerOutboxServidor, liberarRegistrosConfirmados, recarregarFila, registrarNaFila } from "@/lib/store-outbox";
 import { useOnline } from "@/lib/use-online";
+import { useTelaAtiva } from "@/lib/use-tela-ativa";
 import type { SerieRegistrada, TipoEventoOutbox } from "@/domain/sessao/outbox";
 import type { GatilhoCopiloto, ResultadoCopiloto } from "@/domain/sessao/copiloto";
 import {
@@ -63,6 +64,9 @@ export function ProvedorConexao({
 }) {
   const router = useRouter();
   const online = useOnline();
+  // O provedor só existe enquanto a sessão está aberta, então seu ciclo
+  // de vida é exatamente a janela em que a tela deve ficar acesa.
+  useTelaAtiva();
   const outbox = useSyncExternalStore(assinarOutbox, lerOutbox, lerOutboxServidor);
   const [copiloto, despacharCopiloto] = useReducer(reduzirEstadoCopiloto, ESTADO_INICIAL_COPILOTO);
   const sequenciaCopiloto = useRef(0);
