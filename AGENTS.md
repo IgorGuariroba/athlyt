@@ -1,33 +1,42 @@
 # AGENTS.md
 
-**Implemente a solução mais simples, concisa, legível, semântica, idiomática, coesa e manutenível possível, aplicando KISS, DRY e YAGNI, com responsabilidades claras, baixo acoplamento e abstrações proporcionais à necessidade real.**
+**Understand requirements and existing contracts, assess impact and regression risk, then implement the simplest correct, concise, readable, idiomatic, cohesive, and maintainable solution following KISS, DRY, and YAGNI; preserve existing behavior and conventions, minimize coupling and abstractions, verify with relevant tests and checks, and validate acceptance criteria and integrated behavior before completion.**
 
-## Desenvolvimento local
+## Local Development
 
-Inicie o projeto com `npm run dev`.
+Run the project with `npm run dev`.
 
-## Galeria de componentes
+## Component Gallery
 
-A referência visual do design system é o Storybook (`npm run storybook`), não
-uma rota do produto — a antiga `/design` foi descontinuada.
+Storybook (`npm run storybook`) is the visual source of truth for the design system, not a product route. The former `/design` route is deprecated.
 
-Todo componente de `src/components/**` precisa de uma story ao lado dele
-(`*.stories.tsx`) e, fora da camada `ui`, de teste de contrato.
-`npm run ui:verificar` reprova o que faltar, apontando o caminho exato do
-arquivo ausente. `npm run storybook:verificar` confere que cada story de fato
-renderiza — `storybook build` compila mas não renderiza
-(`docs/memory/galeria-compila-mas-nao-renderiza.md`).
+Every component under `src/components/**` must have an adjacent `*.stories.tsx` story. Components outside the `ui` layer must also have a contract test.
 
-## Evidências de testes web
+Run `npm run ui:verificar` to enforce these requirements; failures report the exact missing file.
 
-Ao executar testes E2E com Playwright, grave as evidências em `/home/movida/Downloads/evidencias-e2e/`, para facilitar a inspeção manual. Use nomes descritivos e mantenha os artefatos locais fora do versionamento.
+Run `npm run storybook:verificar` to ensure every story actually renders. `storybook build` verifies compilation but not rendering. See `docs/memory/galeria-compila-mas-nao-renderiza.md`.
 
-## Memória de desenvolvimento
+## Web Test Evidence
 
-Aprendizados importantes e reutilizáveis vivem no bundle OKF em `docs/memory/`.
+When running Playwright E2E tests, save evidence to `/home/movida/Downloads/evidencias-e2e/`.
 
-Ao concluir uma tarefa ou investigar um problema, avalie se surgiu um aprendizado capaz de evitar um erro recorrente ou permitir replicar um acerto relevante. Registre-o apenas quando tiver utilidade duradoura e não estiver evidente no código, nas specs, no `CONTEXT.md` ou nos ADRs. O agente decide quando um registro é necessário; quando o usuário disser “grave isso na memória”, o registro é obrigatório.
+Use descriptive filenames and keep screenshots, videos, traces, and other evidence artifacts local and unversioned.
 
-Não registre ocorrências triviais, detalhes temporários de uma issue, tentativas descartadas sem valor geral ou duplicações da documentação existente. Atualize uma memória existente em vez de criar conteúdo duplicado.
+## Development Memory
 
-Use `docs/templates/memory-okf.md` como referência. Ao criar ou atualizar uma memória, mantenha `docs/memory/index.md` e `docs/memory/log.md` atualizados. Decisões arquiteturais continuam em `docs/adr/`, termos de domínio em `CONTEXT.md` e requisitos em `specs/`.
+Reusable development knowledge belongs in the OKF bundle under `docs/memory/`.
+
+After completing a task or investigation, assess whether a durable insight emerged that can prevent a recurring mistake or reproduce a relevant success. Record it only when it has lasting value and is not already evident in the code, specs, `CONTEXT.md`, or ADRs.
+
+The agent decides when a memory is warranted. If the user says **“grave isso na memória”**, recording it is mandatory.
+
+Do not record trivial occurrences, temporary issue details, discarded attempts without reusable value, or duplicated documentation. Update an existing memory instead of creating a duplicate.
+
+Use `docs/templates/memory-okf.md` as the reference. When creating or updating a memory, also update `docs/memory/index.md` and `docs/memory/log.md`.
+
+Keep knowledge in its canonical location:
+
+* Requirements → `specs/`
+* Domain knowledge → `CONTEXT.md`
+* Architectural decisions → `docs/adr/`
+* Reusable development knowledge → `docs/memory/`
