@@ -146,6 +146,27 @@ describe("substituição de exercício na Sessão de Treino", () => {
     })).rejects.toThrow("já foi substituído");
   });
 
+  it("substituto usa o próprio Último Registro da Série", async () => {
+    const userId = await contexto();
+    const primeira = await iniciarSessao(userId, "superior-a");
+    const substituida = await substituirExercicioNaSessao(userId, primeira.id, {
+      exercicioId: "supino-barra", novoExercicioId: "supino-maquina-peito", motivo: "preferencia",
+    });
+    await registrarSerie(userId, substituida.id, {
+      exercicioId: "supino-maquina-peito", numero: 1, cargaKg: 42, repeticoes: 9, rir: 1,
+    });
+    await concluirSessao(userId, substituida.id);
+
+    const segunda = await iniciarSessao(userId, "superior-a");
+    const novamenteSubstituida = await substituirExercicioNaSessao(userId, segunda.id, {
+      exercicioId: "supino-barra", novoExercicioId: "supino-maquina-peito", motivo: "preferencia",
+    });
+
+    expect(novamenteSubstituida.exercicios[0].series[0]).toEqual(expect.objectContaining({
+      cargaKg: 42, repeticoes: 9, rir: 1,
+    }));
+  });
+
   it("substituir sem nenhuma série feita troca no lugar, sem dividir", async () => {
     const userId = await contexto();
     const sessao = await iniciarSessao(userId, "superior-a");
@@ -160,12 +181,14 @@ describe("substituição de exercício na Sessão de Treino", () => {
     const userId = await contexto();
     const primeira = await iniciarSessao(userId, "superior-a");
     await substituirExercicioNaSessao(userId, primeira.id, { exercicioId: "supino-barra", novoExercicioId: "supino-halteres", motivo: "dor", observacao: "dor no punho ao segurar a barra" });
-    for (const numero of [1, 2, 3]) await registrarSerie(userId, primeira.id, { exercicioId: "supino-halteres", numero, cargaKg: 24, repeticoes: 10, rir: 2 });
+    for (const numero of [1, 2, 3]) await registrarSerie(userId, primeira.id, { exercicioId: "supino-halteres", numero, cargaKg: 24, repeticoes: 10, rir: 1 });
     await concluirSessao(userId, primeira.id);
 
     const segunda = await iniciarSessao(userId, "superior-a");
     expect(segunda.exercicios[0]).toEqual(expect.objectContaining({ exercicioId: "supino-halteres", substituiuExercicioId: "supino-barra" }));
-    expect(segunda.exercicios[0].series[0].melhorCargaAnteriorKg).toBe(24);
+    expect(segunda.exercicios[0].series[0]).toEqual(expect.objectContaining({
+      cargaKg: 24, repeticoes: 10, rir: 1, melhorCargaAnteriorKg: 24,
+    }));
 
     await substituirExercicioNaSessao(userId, segunda.id, { exercicioId: "supino-halteres", novoExercicioId: "supino-maquina-peito", motivo: "preferencia" });
     for (const numero of [1, 2, 3]) await registrarSerie(userId, segunda.id, { exercicioId: "supino-maquina-peito", numero, cargaKg: 40, repeticoes: 10, rir: 2 });

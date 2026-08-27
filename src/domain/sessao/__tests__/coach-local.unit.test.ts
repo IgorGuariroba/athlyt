@@ -37,6 +37,15 @@ describe("Coach Local", () => {
     expect(sugerirCarga(e, e.series[1])).toMatchObject({ regra: "carga-manter", cargaSugeridaKg: 40 });
   });
 
+  it("usa o RIR prescrito como alvo quando a referência histórica diverge", () => {
+    const e = exercicio([
+      serie(1, { concluida: true, cargaKg: 40, repeticoes: 9, rir: 3 }),
+      serie(2, { rir: 1, rirPrescrito: 3 }),
+    ]);
+
+    expect(sugerirCarga(e, e.series[1])).toMatchObject({ regra: "carga-manter", cargaSugeridaKg: 40 });
+  });
+
   it("alerta cautela após duas séries seguidas em falha", () => {
     const e = exercicio([
       serie(1, { concluida: true, cargaKg: 40, repeticoes: 6, rir: 0 }),

@@ -70,7 +70,7 @@ describe("jornada pública da Sessão de Treino", () => {
     ]);
 
     await registrarSerie(userId, iniciada.id, {
-      exercicioId: "supino-reto-halteres", numero: 1, cargaKg: 24, repeticoes: 10, rir: 2,
+      exercicioId: "supino-reto-halteres", numero: 1, cargaKg: 24, repeticoes: 10, rir: 1,
     });
     await registrarSerie(userId, iniciada.id, {
       exercicioId: "supino-reto-halteres", numero: 2, cargaKg: 26, repeticoes: 8, rir: 1,
@@ -85,11 +85,29 @@ describe("jornada pública da Sessão de Treino", () => {
     expect((await listarHistoricoSessoes(userId))[0].id).toBe(iniciada.id);
 
     const segunda = await iniciarSessao(userId, "segunda-superior");
-    expect(segunda.exercicios[0].series[0]).toEqual(expect.objectContaining({ cargaKg: 24, cargaSugeridaKg: 24, repeticoes: 10, melhorCargaAnteriorKg: 26 }));
+    expect(segunda.exercicios[0].series[0]).toEqual(expect.objectContaining({ cargaKg: 24, cargaSugeridaKg: 24, repeticoes: 10, rir: 1, melhorCargaAnteriorKg: 26 }));
     await registrarSerie(userId, segunda.id, { exercicioId: "supino-reto-halteres", numero: 1, cargaKg: 20, repeticoes: 10, rir: 2 });
     await registrarSerie(userId, segunda.id, { exercicioId: "supino-reto-halteres", numero: 2, cargaKg: 20, repeticoes: 8, rir: 2 });
     const segundoResumo = await concluirSessao(userId, segunda.id);
     expect(segundoResumo.recordes).toEqual([]);
+  });
+
+  it("usa série registrada em Sessão de Treino abandonada como referência", async () => {
+    const { userId } = await contexto();
+    const abandonada = await iniciarSessao(userId, "segunda-superior");
+    await registrarSerie(userId, abandonada.id, {
+      exercicioId: "supino-reto-halteres", numero: 1, cargaKg: 22, repeticoes: 9, rir: 1,
+    });
+    await abandonarSessao(userId, abandonada.id, "tempo");
+
+    const seguinte = await iniciarSessao(userId, "segunda-superior");
+
+    expect(seguinte.exercicios[0].series[0]).toEqual(expect.objectContaining({
+      cargaKg: 22, repeticoes: 9, rir: 1,
+    }));
+    expect(seguinte.exercicios[0].series[1]).toEqual(expect.objectContaining({
+      cargaKg: null, repeticoes: null, rir: 2,
+    }));
   });
 
   it("abandona com motivo e mantém o desfecho distinguível no histórico", async () => {

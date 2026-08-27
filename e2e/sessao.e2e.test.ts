@@ -2,8 +2,14 @@ import { expect, test } from "@playwright/test";
 import { db } from "@/db/client";
 import { plans, profileVersions } from "@/db/schema";
 import type { PlanoGerado } from "@/domain/plano/tipos";
+import {
+  concluirSessao as concluirSessaoNoDominio,
+  iniciarSessao as iniciarSessaoNoDominio,
+  registrarSerie as registrarSerieNoDominio,
+} from "@/domain/sessao/repositorio";
 import { allowEmail, seedAuthenticatedSession } from "./helpers/seed-session";
 import {
+  abrirExercicio,
   abrirSessaoEmAndamento,
   concluirTreino,
   fecharTimer,
@@ -57,6 +63,74 @@ const planoDescanso: PlanoGerado = {
     }],
   },
 };
+
+const planoNavegacao: PlanoGerado = {
+  ...plano,
+  bloco: {
+    ...plano.bloco,
+    dias: [{
+      ...plano.bloco.dias[0],
+      exercicios: [
+        { ...plano.bloco.dias[0].exercicios[0], exercicioId: "supino-halteres", nome: "Supino reto com halteres", repeticoes: "8–10", rir: 2 },
+        { ...plano.bloco.dias[0].exercicios[0], exercicioId: "remada-curvada", nome: "Remada curvada com barra", padrao: "puxar-horizontal", repeticoes: "10–12", rir: 2 },
+      ],
+    }],
+  },
+};
+
+test("cada Exercício da Sessão exibe sua própria Referência da Série", async ({ page, context }) => {
+  const email = `e2e-referencia-serie-${Date.now()}@example.com`;
+  await allowEmail(email);
+  const { cookie, user } = await seedAuthenticatedSession(email);
+  await db.insert(plans).values({ userId: user.id, perfilVersao: 1, versao: 1, estado: "ativo", regraVersao: planoNavegacao.regraVersao, modoConservador: false, conteudo: planoNavegacao, activatedAt: new Date() });
+  await context.addCookies([cookie]);
+
+  const anterior = await iniciarSessaoNoDominio(user.id, "superior-a");
+  await registrarSerieNoDominio(user.id, anterior.id, { exercicioId: "supino-halteres", numero: 1, cargaKg: 40, repeticoes: 8, rir: 1 });
+  await registrarSerieNoDominio(user.id, anterior.id, { exercicioId: "remada-curvada", numero: 1, cargaKg: 70, repeticoes: 9, rir: 3 });
+  await concluirSessaoNoDominio(user.id, anterior.id);
+
+  await abrirSessaoEmAndamento(page);
+  const formulario = page.locator("form", { has: page.getByRole("button", { name: "Registrar série 1" }) });
+  await expect(formulario.locator('input[name="cargaKg"]')).toHaveValue("40");
+  await expect(formulario.locator('input[name="repeticoes"]')).toHaveValue("8");
+  await expect(formulario.locator('input[name="rir"]')).toHaveValue("1");
+  await expect(page.getByText(/8–10 reps · RIR 2/)).toBeVisible();
+
+  await abrirExercicio(page, "Remada curvada com barra");
+  await expect(formulario.locator('input[name="cargaKg"]')).toHaveValue("70");
+  await expect(formulario.locator('input[name="repeticoes"]')).toHaveValue("9");
+  await expect(formulario.locator('input[name="rir"]')).toHaveValue("3");
+});
+
+test("Rascunho da Série sobrevive à navegação e é descartado no recarregamento", async ({ page, context }) => {
+  const email = `e2e-rascunho-serie-${Date.now()}@example.com`;
+  await allowEmail(email);
+  const { cookie, user } = await seedAuthenticatedSession(email);
+  await db.insert(plans).values({ userId: user.id, perfilVersao: 1, versao: 1, estado: "ativo", regraVersao: planoNavegacao.regraVersao, modoConservador: false, conteudo: planoNavegacao, activatedAt: new Date() });
+  await context.addCookies([cookie]);
+
+  const anterior = await iniciarSessaoNoDominio(user.id, "superior-a");
+  await registrarSerieNoDominio(user.id, anterior.id, { exercicioId: "supino-halteres", numero: 1, cargaKg: 40, repeticoes: 8, rir: 1 });
+  await concluirSessaoNoDominio(user.id, anterior.id);
+
+  await abrirSessaoEmAndamento(page);
+  const formulario = page.locator("form", { has: page.getByRole("button", { name: "Registrar série 1" }) });
+  await formulario.locator('input[name="cargaKg"]').fill("45");
+  await formulario.locator('input[name="repeticoes"]').fill("10");
+  await formulario.locator('input[name="rir"]').fill("2");
+
+  await abrirExercicio(page, "Remada curvada com barra");
+  await abrirExercicio(page, "Supino reto com halteres");
+  await expect(formulario.locator('input[name="cargaKg"]')).toHaveValue("45");
+  await expect(formulario.locator('input[name="repeticoes"]')).toHaveValue("10");
+  await expect(formulario.locator('input[name="rir"]')).toHaveValue("2");
+
+  await page.reload();
+  await expect(formulario.locator('input[name="cargaKg"]')).toHaveValue("40");
+  await expect(formulario.locator('input[name="repeticoes"]')).toHaveValue("8");
+  await expect(formulario.locator('input[name="rir"]')).toHaveValue("1");
+});
 
 test("escolhe o descanso entre séries e a escolha vale para o próximo timer", async ({ page, context }) => {
   const email = `e2e-descanso-${Date.now()}@example.com`;
