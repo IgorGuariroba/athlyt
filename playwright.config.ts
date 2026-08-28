@@ -1,5 +1,6 @@
 import { defineConfig, devices } from "@playwright/test";
 import { config as loadEnv } from "dotenv";
+import { existsSync } from "node:fs";
 
 loadEnv({ path: ".env" });
 
@@ -25,15 +26,38 @@ const porta = new URL(baseURL).port || "3000";
 /**
  * `E2E_COMANDO` troca o servidor sob teste sem editar este arquivo.
  *
- * O padrão é `next dev` porque localmente o ciclo de escrever teste e
- * rodar de novo não deve exigir build a cada alteração. O CI passa
- * `npx next start`, servindo o build que o job `build` já produziu: em
- * dev cada rota compila na primeira visita com o cronômetro do teste
- * correndo, e a suíte inteira caiu de 2,0 min para 52 s ao trocar
- * apenas isto (scripts/medir-e2e.sh).
+ * O padrão é `next start`, igual ao CI, servindo um build pronto. Já era
+ * o padrão de fato lá; localmente era `next dev`, e a diferença cobrava
+ * caro duas vezes. No tempo: cada rota compila na primeira visita com o
+ * cronômetro do teste correndo, e a suíte caiu de 2,0 min para 52 s ao
+ * trocar apenas isto (scripts/medir-e2e.sh). Na memória: a suíte varre
+ * dezenas das 55+ rotas em minutos, que é o pior caso para o dev server
+ * — foi assim que o `next dev` chegou a 4,4 GB e levou a máquina ao swap
+ * (docs/memory/servidor-de-dev-sem-teto-de-heap.md).
+ *
+ * Rodar contra o mesmo modo do CI também elimina uma classe de
+ * divergência dev/CI ao investigar teste intermitente
+ * (docs/memory/e2e-flaky-sorteia-cenarios-diferentes.md).
+ *
+ * Para iterar em teste novo sem rebuildar, use
+ * `E2E_COMANDO="npx next dev -p 3000"`.
  */
 const comandoServidor =
-  process.env.E2E_COMANDO ?? `npx next dev -p ${porta}`;
+  process.env.E2E_COMANDO ?? `npx next start -p ${porta}`;
+
+/**
+ * `next start` sem build falha com erro que não diz o que fazer, e o
+ * sintoma chega como timeout de 30 s no health check do webServer
+ * (docs/memory/e2e-trava-no-health-check-do-webserver.md). Buildar aqui
+ * não serve: o build passa de um minuto e estouraria o mesmo timeout.
+ * Então falhamos cedo, dizendo o comando exato.
+ */
+if (!process.env.E2E_COMANDO && !existsSync(".next/BUILD_ID")) {
+  throw new Error(
+    "E2E roda contra um build de produção, mas .next/BUILD_ID não existe.\n" +
+      "Rode `npm run build` antes, ou use `E2E_COMANDO=\"npx next dev -p 3000\"`.",
+  );
+}
 
 /**
  * O servidor sob teste sobe com `AUTH_URL` derivado do `baseURL`.
