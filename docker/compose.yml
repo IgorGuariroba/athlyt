@@ -25,7 +25,11 @@ services:
       interval: 2s
       timeout: 3s
       retries: 15
-    restart: unless-stopped
+    # Banco de desenvolvimento não é serviço permanente: sobe com
+    # `npm run db:up` e cai com `npm run db:down`. Com
+    # `unless-stopped`, o Docker religava o container a cada start do
+    # daemon, deixando o Postgres no ar mesmo sem o projeto rodando.
+    restart: "no"
 
 volumes:
   # Volume gerenciado pelo próprio compose. Já foi `external` apontando
