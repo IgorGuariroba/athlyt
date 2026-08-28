@@ -13,5 +13,6 @@ export {
   CartaoSessaoDiario,
 } from "./cartoes-diario";
 export { LinhaDoTempoDiario } from "./linha-do-tempo";
+export { LinhaDoTempoDia, contarItensDoDia } from "./linha-do-tempo-dia";
 export { NavegacaoDia } from "./navegacao-dia";
 export { PainelMacrosDia } from "./painel-macros-dia";

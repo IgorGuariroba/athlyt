@@ -1,21 +1,18 @@
 import Link from "next/link";
-import { Camera, Check, Undo2, UtensilsCrossed } from "lucide-react";
+import { Camera, UtensilsCrossed } from "lucide-react";
 import { auth } from "@/auth";
 import { Button } from "@/components/ui/button";
 import {
   AcoesRegistro,
-  CartaoConsumo,
-  CartaoRefeicaoPlanejada,
-  CartaoSessaoDiario,
-  LinhaDoTempoDiario,
+  LinhaDoTempoDia,
   NavegacaoDia,
   PainelMacrosDia,
 } from "@/components/diario";
 import { EstadoVazio, TelaConteudo } from "@/components/tela";
 import { FUSO_PADRAO, diaVizinho } from "@/domain/diario/dia-alimentar";
 import { hojeDoUsuario, montarDiarioDoDia } from "@/domain/diario/repositorio";
-import type { ItemLinhaDoTempo } from "@/domain/diario/tipos";
 import { confirmarRefeicaoAction, desfazerConfirmacaoAction } from "./actions";
+import { rotuloDoDia } from "./rotulo-do-dia";
 
 /**
  * Aba Diário (telas 045–048): linha do tempo unificada do dia com
@@ -36,14 +33,6 @@ import { confirmarRefeicaoAction, desfazerConfirmacaoAction } from "./actions";
  * A tela é só composição: cada peça visual vive em
  * `@/components/diario`, com story e teste de contrato.
  */
-function rotuloDoDia(dia: string, hoje: string, fuso: string): string {
-  if (dia === hoje) return "Hoje";
-  if (dia === diaVizinho(hoje, -1, fuso)) return "Ontem";
-  const [ano, mes, diaMes] = dia.split("-").map(Number);
-  return new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "short", timeZone: "UTC" })
-    .format(new Date(Date.UTC(ano, mes - 1, diaMes)));
-}
-
 export default async function DiarioPage({
   searchParams,
 }: {
@@ -82,12 +71,12 @@ export default async function DiarioPage({
         />
 
         {diario && diario.linhaDoTempo.length > 0 ? (
-          <LinhaDoTempoDiario
-            itens={diario.linhaDoTempo.map((item) => ({
-              id: chave(item),
-              horaLocal: item.horaLocal,
-              conteudo: cartao(item, dia, fuso),
-            }))}
+          <LinhaDoTempoDia
+            itens={diario.linhaDoTempo}
+            dia={dia}
+            fuso={fuso}
+            confirmar={confirmarRefeicaoAction}
+            desfazer={desfazerConfirmacaoAction}
           />
         ) : (
           <EstadoVazio
@@ -111,83 +100,5 @@ export default async function DiarioPage({
         )}
       </section>
     </TelaConteudo>
-  );
-}
-
-function chave(item: ItemLinhaDoTempo): string {
-  if (item.tipo === "planejada") return `planejada-${item.entrada.refeicaoRef}`;
-  if (item.tipo === "consumo") return `consumo-${item.consumo.id}`;
-  return `sessao-${item.sessaoId}`;
-}
-
-function cartao(item: ItemLinhaDoTempo, dia: string, fuso: string) {
-  if (item.tipo === "sessao") {
-    return (
-      <CartaoSessaoDiario
-        nome={item.nome}
-        estado={item.estado}
-        href={
-          item.estado === "concluida"
-            ? `/sessao/${item.sessaoId}/resumo`
-            : `/sessao/${item.sessaoId}`
-        }
-      />
-    );
-  }
-
-  if (item.tipo === "consumo") {
-    const { consumo } = item;
-    // Um consumo estimado por foto não pode se parecer com um medido:
-    // a marca fica no próprio cartão para que a revisão do dia saiba
-    // qual número merece desconfiança (user story 59).
-    const estimado = consumo.itens.some(
-      (alimentar) => (alimentar as { origemDado?: string }).origemDado === "estimativa-ia",
-    );
-    return (
-      <CartaoConsumo
-        nome={consumo.nome}
-        macros={consumo.macros}
-        planejado={consumo.planejado}
-        estimadoPorFoto={estimado}
-        acoes={
-          consumo.refeicaoRef ? (
-            <form action={desfazerConfirmacaoAction}>
-              <input type="hidden" name="dia" value={dia} />
-              <input type="hidden" name="fuso" value={fuso} />
-              <input type="hidden" name="refeicaoRef" value={consumo.refeicaoRef} />
-              <Button type="submit" variant="ghost" size="sm">
-                <Undo2 className="size-4" aria-hidden="true" /> Desfazer
-              </Button>
-            </form>
-          ) : undefined
-        }
-      />
-    );
-  }
-
-  const { entrada } = item;
-  return (
-    <CartaoRefeicaoPlanejada
-      nome={entrada.nome}
-      macros={entrada.macros}
-      itens={entrada.itens}
-      explicacao={entrada.explicacao}
-      hrefFoto={`/diario/registrar/foto?dia=${dia}`}
-      hrefAjustar={`/diario/refeicao/${encodeURIComponent(entrada.refeicaoRef)}?dia=${dia}`}
-      confirmacao={
-        <form action={confirmarRefeicaoAction}>
-          <input type="hidden" name="dia" value={dia} />
-          <input type="hidden" name="fuso" value={fuso} />
-          <input type="hidden" name="refeicaoRef" value={entrada.refeicaoRef} />
-          <Button
-            type="submit"
-            className="w-full"
-            aria-label={`Comi como planejado: ${entrada.nome}`}
-          >
-            <Check className="size-4" aria-hidden="true" /> Comi como planejado
-          </Button>
-        </form>
-      }
-    />
   );
 }

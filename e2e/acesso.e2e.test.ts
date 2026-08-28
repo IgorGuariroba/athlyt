@@ -31,7 +31,7 @@ test.describe("Acesso e casco autenticado", () => {
     const { cookie } = await seedAuthenticatedSession(email);
     await context.addCookies([cookie]);
 
-    await page.goto("/inicio");
+    await page.goto("/treino");
     await expect(page).toHaveURL(/\/triagem\/idade$/);
     await expect(
       page.getByRole("heading", { name: "Qual é a sua data de nascimento?" }),
@@ -41,7 +41,7 @@ test.describe("Acesso e casco autenticado", () => {
   test("sem sessão, rota protegida redireciona para boas-vindas", async ({
     page,
   }) => {
-    await page.goto("/inicio");
+    await page.goto("/treino");
     await expect(page).toHaveURL("/");
     await expect(page.getByRole("heading", { name: "Athlyt" })).toBeVisible();
   });
@@ -59,7 +59,7 @@ test.describe("Acesso e casco autenticado", () => {
     await page.getByRole("button", { name: "Sair", exact: true }).click();
 
     await expect(page).toHaveURL("/");
-    await page.goto("/inicio");
+    await page.goto("/treino");
     await expect(page).toHaveURL("/");
   });
 
@@ -90,7 +90,7 @@ test.describe("Acesso e casco autenticado", () => {
       .click();
     await expect(page).toHaveURL("/");
 
-    await outraPagina.goto("/inicio");
+    await outraPagina.goto("/treino");
     await expect(outraPagina).toHaveURL("/");
 
     await outroContexto.close();

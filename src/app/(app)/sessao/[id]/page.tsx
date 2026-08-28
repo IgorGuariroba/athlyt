@@ -67,7 +67,7 @@ export default async function SessaoPage({ params, searchParams }: { params: Pro
     <TelaConteudo className="gap-5 p-4 pb-28">
     <div className="flex flex-col gap-5">
       <header className="flex items-center justify-between">
-        <Button asChild variant="ghost" size="icon"><Link href="/inicio" aria-label="Voltar ao Início"><ChevronLeft /></Link></Button>
+        <Button asChild variant="ghost" size="icon"><Link href="/treino" aria-label="Voltar ao Treino"><ChevronLeft /></Link></Button>
         <div className="text-center"><p className="text-label-md text-muted-foreground">SESSÃO EM ANDAMENTO</p><h1 className="text-title font-bold">{sessao.nome}</h1></div>
         <Button variant="ghost" size="icon" aria-label="Opções da sessão"><MoreHorizontal /></Button>
       </header>

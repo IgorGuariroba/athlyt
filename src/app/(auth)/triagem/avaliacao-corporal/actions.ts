@@ -54,7 +54,7 @@ export async function salvarMedidaDaRegiao(
 }
 
 function invalidarLeitores() {
-  revalidatePath("/inicio");
+  revalidatePath("/treino");
   revalidatePath("/progresso");
   // As próprias etapas repõem os campos a partir do banco: sem
   // invalidá-las, voltar reapresenta o payload RSC anterior à gravação

@@ -41,7 +41,7 @@ export default async function PreviaSessaoPage({
         contexto={`${plano.conteudo.bloco.divisao} · bloco v${plano.versao}`}
         titulo={dia.nome}
         descricao={`${dia.exercicios.length} exercícios · ${totalSeries} séries`}
-        voltar={{ href: "/inicio", rotulo: "Voltar ao Início" }}
+        voltar={{ href: "/treino", rotulo: "Voltar ao Treino" }}
       />
 
       <SecoesTela>

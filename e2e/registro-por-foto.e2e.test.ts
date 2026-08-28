@@ -82,7 +82,7 @@ test("fotografar o prato registra a refeição sem editar item por item", async 
   await expect(linha.getByText("Estimado por foto")).toBeVisible();
 
   // Persistência visível depois de navegação real.
-  await page.goto("/inicio");
-  await page.getByRole("link", { name: "Diário" }).click();
+  await page.goto("/treino");
+  await page.getByRole("link", { name: "Dieta" }).click();
   await expect(macros.getByText("392/2400")).toBeVisible();
 });

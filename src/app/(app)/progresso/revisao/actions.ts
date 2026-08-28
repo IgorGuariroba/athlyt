@@ -97,13 +97,13 @@ export async function iniciarExperimento(fd: FormData) {
   const session = await auth(); if (!session?.user?.id) redirect("/");
   const variaveis = fd.getAll("variaveis").map(String);
   await ativarExperimentoPlano(session.user.id, { planoId: String(fd.get("planoId")), reavaliacaoId: String(fd.get("reavaliacaoId") ?? "") || undefined, hipotese: String(fd.get("hipotese") ?? ""), variaveis, criterioSucesso: String(fd.get("criterioSucesso") ?? ""), criterioInterrupcao: String(fd.get("criterioInterrupcao") ?? ""), janelaMinimaSemanas: Number(fd.get("janelaMinimaSemanas") ?? 2) });
-  revalidatePath("/inicio"); revalidatePath("/progresso"); redirect("/progresso/revisao/experimento");
+  revalidatePath("/treino"); revalidatePath("/progresso"); redirect("/progresso/revisao/experimento");
 }
 
 export async function executarRollback(fd: FormData) {
   const session = await auth(); if (!session?.user?.id) redirect("/");
   await reverterAoPlanoEstavel(session.user.id, String(fd.get("experimentId")));
-  revalidatePath("/inicio"); revalidatePath("/progresso"); redirect("/progresso/revisao/experimento?sucesso=Plano Estável restaurado como nova versão.");
+  revalidatePath("/treino"); revalidatePath("/progresso"); redirect("/progresso/revisao/experimento?sucesso=Plano Estável restaurado como nova versão.");
 }
 
 export async function desfazerRevisao(fd: FormData) {

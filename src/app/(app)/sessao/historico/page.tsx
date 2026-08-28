@@ -36,7 +36,7 @@ export default async function HistoricoPage() {
       <CabecalhoTela
         contexto="Sessão de treino"
         titulo="Histórico"
-        voltar={{ href: "/inicio", rotulo: "Voltar ao Início" }}
+        voltar={{ href: "/treino", rotulo: "Voltar ao Treino" }}
       />
 
       <SecoesTela>
@@ -47,7 +47,7 @@ export default async function HistoricoPage() {
             descricao="Sessões concluídas ou abandonadas aparecem aqui, com séries e volume."
             acao={
               <Button asChild variant="outline" size="sm">
-                <Link href="/inicio">Ver treino de hoje</Link>
+                <Link href="/treino">Ver treino de hoje</Link>
               </Button>
             }
           />

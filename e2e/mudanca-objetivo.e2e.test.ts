@@ -35,7 +35,7 @@ test("muda o objetivo sem substituir o Plano Ativo antes da Revisão Semanal", a
 
   await expect(page.getByText("Objetivo atualizado.")).toBeVisible();
   await expect(page.getByText("Reavaliação pendente")).toBeVisible();
-  await page.goto("/inicio");
+  await page.goto("/treino");
   await expect(page.getByText("v1", { exact: true })).toBeVisible();
   await page.goto("/progresso");
   await expect(page.getByText("Seu objetivo mudou.")).toBeVisible();
@@ -49,6 +49,6 @@ test("muda o objetivo sem substituir o Plano Ativo antes da Revisão Semanal", a
   await expect(page.getByText("Recomposição corporal", { exact: true })).toBeVisible();
   await page.getByRole("button", { name: "Ativar Experimento de Plano" }).click();
   await expect(page.getByText("Experimento ativo")).toBeVisible();
-  await page.goto("/inicio");
+  await page.goto("/treino");
   await expect(page.getByText("v2", { exact: true })).toBeVisible();
 });

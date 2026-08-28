@@ -18,12 +18,12 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const Inicio: Story = {
-  parameters: { nextjs: { navigation: { pathname: "/inicio" } } },
+export const Dieta: Story = {
+  parameters: { nextjs: { navigation: { pathname: "/dieta" } } },
 };
 
-export const Diario: Story = {
-  parameters: { nextjs: { navigation: { pathname: "/diario" } } },
+export const Treino: Story = {
+  parameters: { nextjs: { navigation: { pathname: "/treino" } } },
 };
 
 /** Rota aninhada: a aba ativa é decidida por prefixo, não por igualdade. */

@@ -61,7 +61,7 @@ test("substitui exercício por equipamento indisponível preservando o estímulo
   // A troca por equipamento persiste: a próxima sessão do mesmo dia já
   // nasce com o exercício substituído. Como o bloco tem um único dia,
   // concluir a sessão libera imediatamente esse treino outra vez.
-  await page.goto("/inicio");
+  await page.goto("/treino");
   await expect(page.getByRole("heading", { name: "Superior A" })).toBeVisible();
   await abrirSessaoEmAndamento(page);
   await expect(page.getByRole("heading", { name: "Supino reto com halteres" })).toBeVisible();

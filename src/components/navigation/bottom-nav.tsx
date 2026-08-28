@@ -1,13 +1,17 @@
 "use client";
 
-import { BookOpen, ChartLine, Ellipsis, House } from "lucide-react";
+import { ChartLine, Dumbbell, Ellipsis, UtensilsCrossed } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 
 /**
- * Navegação de topo em 4 abas — Início, Diário, Progresso, Mais —
- * fixada como bottom navigation (DESIGN.md > Components > Bottom
+ * Navegação de topo em 4 abas — Dieta, Treino, Progresso, Mais —
+ * fixada como bottom navigation.
+ *
+ * Dieta vem primeiro por frequência de uso: é a aba tocada várias
+ * vezes por dia. Diário (o extrato cronológico completo do dia) e as
+ * demais configurações vivem sob Mais (DESIGN.md > Components > Bottom
  * navigation; specs/workflow.md > Decisões estruturais).
  *
  * Fica `fixed` na viewport para não depender do tamanho calculado pelo
@@ -25,8 +29,8 @@ import { cn } from "@/lib/utils";
  * 44pt de DESIGN.md > Accessibility.
  */
 const ABAS = [
-  { href: "/inicio", label: "Início", Icone: House },
-  { href: "/diario", label: "Diário", Icone: BookOpen },
+  { href: "/dieta", label: "Dieta", Icone: UtensilsCrossed },
+  { href: "/treino", label: "Treino", Icone: Dumbbell },
   { href: "/progresso", label: "Progresso", Icone: ChartLine },
   { href: "/mais", label: "Mais", Icone: Ellipsis },
 ] as const;
