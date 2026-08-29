@@ -88,12 +88,28 @@ export function itemManual(entrada: EntradaManual): ItemPrato {
   };
 }
 
+/**
+ * De onde o modelo tirou a estimativa. Não é rótulo cosmético: uma
+ * foto erra a porção mas vê o alimento; uma descrição acerta o
+ * alimento e chuta a porção. Guardar a origem é o que permite ao
+ * atleta, meses depois, saber qual desconfiança aplicar ao número.
+ */
+export type OrigemEstimativa = "foto" | "texto" | "audio";
+
+export const FONTE_ESTIMATIVA: Record<OrigemEstimativa, string> = {
+  foto: "Estimativa por foto",
+  texto: "Estimativa por descrição",
+  audio: "Estimativa por áudio descrito",
+};
+
 export interface EntradaEstimada extends Macros {
   descricao: string;
   quantidadeGramas: number;
   confianca: Confianca;
   /** Modelo que produziu a estimativa, para a auditoria do registro. */
   modelo: string;
+  /** Padrão `foto` para não reescrever o registro histórico já gravado. */
+  origemEstimativa?: OrigemEstimativa;
 }
 
 /**
@@ -123,7 +139,7 @@ export function itemEstimado(entrada: EntradaEstimada): ItemPrato {
     quantidade: gramas,
     unidade: "g",
     origemDado: "estimativa-ia",
-    fonte: "Estimativa por foto",
+    fonte: FONTE_ESTIMATIVA[entrada.origemEstimativa ?? "foto"],
     versaoFonte: entrada.modelo,
     confianca: entrada.confianca,
   };
@@ -151,6 +167,20 @@ export function reescalarItem(item: ItemPrato, gramas: number): ItemPrato {
     gordurasG: Math.round(item.gordurasG * fator),
     fibrasG: Math.round(item.fibrasG * fator),
   };
+}
+
+/**
+ * Corrige a descrição mantendo números e proveniência.
+ *
+ * É a operação da revisão de estimativa quando o modelo entendeu o
+ * alimento errado ("frango" onde era peru). Diferente de reescalar,
+ * ela não toca nos macros: quem renomeia está dizendo o que era, não
+ * quanto era — e ajustar os dois de uma vez esconderia do atleta qual
+ * das duas coisas ele acabou de mudar.
+ */
+export function renomearItem(item: ItemPrato, nome: string): ItemPrato {
+  const sufixo = item.unidade === "g" ? ` ${item.quantidade} g` : "";
+  return { ...item, descricao: `${nome.trim()}${sufixo}` };
 }
 
 export function adicionarAoPrato(prato: readonly ItemPrato[], item: ItemPrato): ItemPrato[] {

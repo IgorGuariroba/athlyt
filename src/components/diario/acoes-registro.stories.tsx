@@ -23,3 +23,7 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Padrao: Story = {};
+
+export const ComRegistroRetroativo: Story = {
+  args: { hrefDescricao: "/diario/registrar/descricao?dia=2026-08-19" },
+};

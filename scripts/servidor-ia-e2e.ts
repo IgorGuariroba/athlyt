@@ -16,6 +16,32 @@ const server = createServer((req, res) => {
   let corpo = "";
   req.on("data", (parte) => { corpo += parte; });
   req.on("end", () => {
+    // Transcrição do áudio da refeição: reconhecida pelo campo
+    // `trechosIncertos` do schema, que nenhuma outra operação pede.
+    if (/trechosIncertos/.test(corpo)) {
+      responder(res, "athlyt-refeicao-audio-e2e-v1", {
+        transcricao: "Duas colheres de arroz, um bife médio e um copo de suco.",
+        trechosIncertos: ["um copo de suco"],
+      });
+      return;
+    }
+
+    // Estimativa por descrição: distinguida da foto por `porcaoDescrita`,
+    // que só o schema de `refeicao-texto` declara.
+    if (/porcaoDescrita/.test(corpo)) {
+      responder(res, "athlyt-refeicao-texto-e2e-v1", {
+        nome: "Almoço: arroz, bife e suco",
+        itens: [
+          { descricao: "Arroz branco cozido", porcaoDescrita: "duas colheres", quantidadeGramas: 100, calorias: 128, proteinaG: 2, carboidratosG: 28, gordurasG: 0, fibrasG: 1, confianca: "media" },
+          { descricao: "Bife de alcatra grelhado", porcaoDescrita: "um bife médio", quantidadeGramas: 120, calorias: 250, proteinaG: 32, carboidratosG: 0, gordurasG: 13, fibrasG: 0, confianca: "media" },
+          { descricao: "Suco de laranja", porcaoDescrita: "um copo", quantidadeGramas: 200, calorias: 90, proteinaG: 1, carboidratosG: 21, gordurasG: 0, fibrasG: 0, confianca: "baixa" },
+        ],
+        limitacoes: ["A quantidade de arroz foi assumida como porção usual"],
+        confianca: "media",
+      });
+      return;
+    }
+
     // Estimativa de refeição por foto: reconhecida pela instrução de
     // sistema da operação, e não pela imagem — o corpo carrega a foto
     // em base64 e casar contra ela seria frágil.
@@ -67,6 +93,22 @@ const server = createServer((req, res) => {
     }));
   });
 });
+
+function responder(
+  res: import("node:http").ServerResponse,
+  modelo: string,
+  conteudo: unknown,
+) {
+  res.writeHead(200, { "content-type": "application/json" });
+  res.end(JSON.stringify({
+    id: `chatcmpl-${modelo}`,
+    object: "chat.completion",
+    created: Math.floor(Date.now() / 1000),
+    model: modelo,
+    choices: [{ index: 0, message: { role: "assistant", content: JSON.stringify(conteudo) }, finish_reason: "stop" }],
+    usage: { prompt_tokens: 100, completion_tokens: 80, total_tokens: 180 },
+  }));
+}
 
 server.listen(porta, "127.0.0.1", () => {
   console.log(`Servidor IA E2E em http://127.0.0.1:${porta}`);

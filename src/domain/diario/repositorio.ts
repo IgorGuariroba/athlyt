@@ -195,6 +195,112 @@ export async function confirmarRefeicao(
   return mapear(linha, fuso);
 }
 
+/**
+ * Consumo já registrado para uma refeição planejada no dia, se houver.
+ *
+ * Existe para a tela poder **avisar antes de substituir** (ADR 0002,
+ * decisão 5). O aviso precisa do consumo em si, e não de um booleano:
+ * “você já registrou 620 kcal nesta refeição” é o que permite ao
+ * atleta decidir se cancela, enquanto “já existe um registro” o obriga
+ * a sair da tela para descobrir qual.
+ */
+export async function obterConsumoDaRefeicao(
+  userId: string,
+  entrada: { refeicaoRef: string; dia: string; fuso?: string },
+): Promise<ConsumoConfirmado | null> {
+  const fuso = entrada.fuso ?? FUSO_PADRAO;
+  const [linha] = await db
+    .select()
+    .from(foodEntries)
+    .where(
+      and(
+        eq(foodEntries.userId, userId),
+        eq(foodEntries.diaAlimentar, entrada.dia),
+        eq(foodEntries.refeicaoRef, entrada.refeicaoRef),
+      ),
+    )
+    .limit(1);
+  return linha ? mapear(linha, fuso) : null;
+}
+
+/**
+ * Grava o Consumo Real de um Registro Retroativo (CONTEXT.md >
+ * Registro Retroativo).
+ *
+ * Distingue-se de `confirmarRefeicao` em três pontos que a ADR 0002
+ * exige e que aquela não cobre: o nome e o horário são escolhidos
+ * pelo atleta (não herdados da prescrição), e a refeição pode não
+ * ter planejamento nenhum. E de `registrarPrato` por preservar o
+ * vínculo com a Refeição Planejada: com `refeicaoRef`, confirmar
+ * **substitui** o consumo daquela refeição em vez de somar um segundo
+ * evento ao dia — o atleta almoçou uma vez.
+ *
+ * O planejado continua gravado como referência (`planejado`), nunca
+ * mutado: o desvio só é legível se a prescrição original sobreviver
+ * ao consumo que a substituiu.
+ */
+export async function registrarConsumoReal(
+  userId: string,
+  entrada: {
+    refeicaoRef?: string | null;
+    nome: string;
+    itens: ItemAlimentar[];
+    dia: string;
+    horaLocal: string;
+    fuso?: string;
+  },
+): Promise<ConsumoConfirmado> {
+  if (entrada.itens.length === 0) {
+    throw new Error("Um registro precisa de ao menos um item no Prato.");
+  }
+  const fuso = entrada.fuso ?? FUSO_PADRAO;
+  const plano = await obterPlanoAtivo(userId);
+  const planejada = plano
+    ? entradasPlanejadas(plano.conteudo.nutricao).find(
+        (e) => e.refeicaoRef === entrada.refeicaoRef,
+      ) ?? null
+    : null;
+  const macros = somarMacros(entrada.itens);
+  // O horário vem do atleta e ancora o registro dentro do dia
+  // mostrado: registrar ontem às 20h não pode cair em “agora”, senão a
+  // refeição sumiria da linha do tempo que a exibe.
+  const consumidoEm = instanteDeHoraLocal(entrada.dia, entrada.horaLocal, fuso);
+  const valores = {
+    userId,
+    planId: plano?.id ?? null,
+    refeicaoRef: entrada.refeicaoRef ?? null,
+    diaAlimentar: entrada.dia,
+    nome: entrada.nome.trim() || planejada?.nome || "Registro retroativo",
+    origem: (entrada.refeicaoRef ? "editado" : "avulso") as "editado" | "avulso",
+    itens: entrada.itens,
+    macros,
+    planejado: planejada?.macros ?? null,
+    consumidoEm,
+  };
+
+  // Sem `refeicaoRef` o índice único não se aplica (dois lanches no
+  // mesmo dia são dois eventos), então o upsert seria inócuo — e o
+  // Postgres não casa NULL no target do conflito de qualquer forma.
+  const [linha] = entrada.refeicaoRef
+    ? await db
+        .insert(foodEntries)
+        .values(valores)
+        .onConflictDoUpdate({
+          target: [foodEntries.userId, foodEntries.diaAlimentar, foodEntries.refeicaoRef],
+          set: {
+            nome: valores.nome,
+            itens: valores.itens,
+            macros,
+            origem: valores.origem,
+            consumidoEm,
+          },
+        })
+        .returning()
+    : await db.insert(foodEntries).values(valores).returning();
+
+  return mapear(linha, fuso);
+}
+
 /** Desfazer a confirmação (tela 047): a refeição volta a planejada. */
 export async function desfazerConfirmacao(
   userId: string,

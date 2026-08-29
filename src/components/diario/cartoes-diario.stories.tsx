@@ -39,7 +39,7 @@ const meta = {
       porque: "Concentra proteína no início do dia para atingir a meta diária sem depender do jantar.",
       dadosUsados: [],
     },
-    hrefFoto: "/diario/registrar/foto?dia=2026-08-19",
+    hrefDivergencia: "/diario/registrar/descricao?dia=2026-08-19",
     hrefAjustar: "/diario/refeicao/cafe?dia=2026-08-19",
     confirmacao: (
       <Button className="w-full" aria-label="Comi como planejado: Café da manhã">
@@ -66,6 +66,18 @@ export const ConsumoEstimadoPorFoto: Story = {
           <Undo2 className="size-4" aria-hidden="true" /> Desfazer
         </Button>
       }
+    />
+  ),
+};
+
+export const ConsumoEstimadoPorDescricao: Story = {
+  render: () => (
+    <CartaoConsumo
+      nome="Almoço na casa da mãe"
+      estimadoPorFoto
+      origemEstimativa="audio"
+      macros={{ calorias: 720, proteinaG: 38, carboidratosG: 74, gordurasG: 28, fibrasG: 8 }}
+      planejado={MACROS_PLANEJADOS}
     />
   ),
 };

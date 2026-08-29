@@ -179,6 +179,25 @@ export const RECORTES: Record<OperacaoIA, RecorteDeclarado> = {
     ],
   },
 
+  /**
+   * Transcrição do áudio, separada de `refeicao-texto` porque o dado
+   * enviado é outro: aí vai um texto que o atleta escreveu, aqui vai
+   * a gravacão da voz dele. Consentir uma coisa não é consentir a
+   * outra, e a voz é sensível (ADR 0006, invariante 3).
+   */
+  "refeicao-audio": {
+    operacao: "refeicao-audio",
+    versao: 1,
+    finalidade: "Transcrever o áudio em que você descreve a refeição",
+    campos: [
+      {
+        id: "audio-refeicao",
+        descricao: "A gravação da sua voz enviada ao provedor de IA, descartada após a transcrição",
+        sensivel: true,
+      },
+    ],
+  },
+
   "refeicao-foto": {
     operacao: "refeicao-foto",
     versao: 1,

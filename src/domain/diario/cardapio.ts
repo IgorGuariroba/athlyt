@@ -71,6 +71,23 @@ export function horarioSugerido(nome: string, indice: number): string {
 }
 
 /**
+ * Categorias oferecidas ao nomear um Registro Retroativo (user story
+ * 24). Derivadas das mesmas âncoras acima para que uma refeição sem
+ * planejamento caia no mesmo vocabulário das planejadas — e, por
+ * consequência, no mesmo horário de referência na linha do tempo.
+ *
+ * São sugestão, não lista fechada: a user story 25 exige que o atleta
+ * possa dar um nome próprio à refeição.
+ */
+export const CATEGORIAS_DE_REFEICAO: readonly string[] = [
+  "Café da manhã",
+  "Almoço",
+  "Lanche",
+  "Jantar",
+  "Ceia",
+];
+
+/**
  * Materializa o Cardápio Diário como Entradas Planejadas.
  *
  * O gerador prescreve macros por refeição e itens como texto; os

@@ -1,6 +1,6 @@
 # Athlyt
 
-Vocabulário de domínio usado para prescrever, executar e acompanhar treinos.
+Vocabulário de domínio usado para prescrever, executar e acompanhar treinos e alimentação.
 
 ## Sessão de Treino
 
@@ -38,3 +38,20 @@ Execução sem nenhum registro histórico do mesmo exercício. A carga começa v
 **Rascunho da Série**:
 Carga, repetições e RIR digitados, mas ainda não confirmados. Permanece associado exclusivamente à série e ao exercício atuais durante a navegação da Sessão de Treino, mas é descartado ao recarregar ou fechar a página e não integra o histórico.
 _Avoid_: Registro da série
+
+## Alimentação
+
+**Refeição Planejada**:
+Prescrição de uma refeição para um dia e horário. Continua preservada como referência mesmo quando o consumo real diverge.
+
+**Consumo Real**:
+O que o atleta declara ter comido, confirmado no diário. Pode substituir o consumo anteriormente registrado para a refeição planejada.
+
+**Registro Retroativo**:
+Consumo real informado após o horário da refeição ou em data anterior, por texto ou áudio, sem exigir fotografia feita no momento.
+
+**Estimativa por Descrição**:
+Composição aproximada de alimentos, porções, calorias e macros inferida pela IA a partir de texto escrito ou transcrição de áudio. Nunca é apresentada como medição.
+
+**Divergência da Refeição Planejada**:
+Consumo real diferente da Refeição Planejada. Ao substituir um consumo existente, o sistema deve avisar antes da confirmação.

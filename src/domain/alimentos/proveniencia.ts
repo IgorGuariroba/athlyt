@@ -195,6 +195,22 @@ export const ROTULO_CONFIANCA_ESTIMATIVA: Record<Confianca, string> = {
 };
 
 /**
+ * Confiança de um valor estimado **a partir da descrição** do atleta,
+ * escrita ou ditada (CONTEXT.md > Estimativa por Descrição).
+ *
+ * Não reusa os rótulos de foto porque a incerteza tem outra origem:
+ * quem descreve sabe o que comeu e erra a porção, enquanto a foto
+ * pode errar o próprio alimento. Dizer "pouco visível na foto" sobre
+ * um prato que ninguém fotografou seria falso justo no ponto que a
+ * user story 9 protege.
+ */
+export const ROTULO_CONFIANCA_DESCRICAO: Record<Confianca, string> = {
+  alta: "Estimativa — porção descrita com clareza",
+  media: "Estimativa — porção aproximada",
+  baixa: "Estimativa — porção não informada, assumida como usual",
+};
+
+/**
  * Rótulo de confiança adequado à origem do dado.
  *
  * A origem é dita junto porque "quanto isto é confiável?" e "de onde
@@ -205,8 +221,13 @@ export const ROTULO_CONFIANCA_ESTIMATIVA: Record<Confianca, string> = {
 export function rotuloDeConfianca(
   confianca: Confianca,
   origem: "base" | "usuario" | "estimativa-ia",
+  estimativa: "foto" | "texto" | "audio" = "foto",
 ): string {
-  if (origem === "estimativa-ia") return ROTULO_CONFIANCA_ESTIMATIVA[confianca];
+  if (origem === "estimativa-ia") {
+    return estimativa === "foto"
+      ? ROTULO_CONFIANCA_ESTIMATIVA[confianca]
+      : ROTULO_CONFIANCA_DESCRICAO[confianca];
+  }
   if (origem === "usuario") return "Estimativa sua — informada por você";
   return ROTULO_CONFIANCA[confianca];
 }
