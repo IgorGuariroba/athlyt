@@ -259,6 +259,11 @@ test.describe("Triagem em cascata", () => {
     await page.getByText("Masculino").click();
     await page.getByRole("button", { name: "Continuar" }).click();
 
+    // Ancora a navegação da server action antes de sair: sem isso, o goto
+    // pode disparar enquanto a gravação do sexo ainda corre, e a cascata
+    // ainda aponta para a etapa anterior (corrida, não regressão).
+    await expect(page).toHaveURL("/triagem/altura");
+
     // Abandona a cascata aqui. A aba Treino retoma automaticamente a etapa
     // pendente, sem criar um segundo fluxo de "completar perfil".
     await page.goto("/treino");
