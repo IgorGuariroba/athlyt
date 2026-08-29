@@ -18,6 +18,12 @@ describe("fronteira do áudio da refeição", () => {
     expect(audio.mediaType).toBe("audio/webm");
   });
 
+  it("recusa MP4, que o endpoint de arquivo do provedor não aceita", () => {
+    expect(() =>
+      validarAudioRefeicao({ bytes: new Uint8Array([1]), contentType: "audio/mp4" }),
+    ).toThrow(/Formato de áudio/);
+  });
+
   it("recusa formato fora da lista antes de qualquer chamada externa", () => {
     expect(() =>
       validarAudioRefeicao({ bytes: new Uint8Array([1]), contentType: "application/pdf" }),
