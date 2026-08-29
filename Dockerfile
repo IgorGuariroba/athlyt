@@ -46,6 +46,9 @@ ENV PORT=3000
 # Traefik do Dokploy não alcança o container.
 ENV HOSTNAME=0.0.0.0
 
+# FFmpeg converte o MP4 produzido pelo Safari para OGG/Opus antes da IA.
+RUN apk add --no-cache ffmpeg
+
 # Processo sem privilégios de root.
 RUN addgroup --system --gid 1001 nodejs \
   && adduser --system --uid 1001 nextjs
