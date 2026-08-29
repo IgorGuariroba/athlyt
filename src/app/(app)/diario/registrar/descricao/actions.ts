@@ -1,6 +1,11 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { execFile } from "node:child_process";
+import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { promisify } from "node:util";
 import { auth } from "@/auth";
 import {
   LIMITE_AUDIO_REFEICAO_BYTES,
@@ -40,6 +45,21 @@ export type ResultadoTranscricao =
   | { ok: true; transcricao: string; trechosIncertos: string[] }
   | { ok: false; erro: string };
 
+const execFileAsync = promisify(execFile);
+
+async function converterAudioParaOgg(bytes: Uint8Array) {
+  const pasta = await mkdtemp(join(tmpdir(), "athlyt-audio-"));
+  const entrada = join(pasta, "entrada.mp4");
+  const saida = join(pasta, "saida.ogg");
+  try {
+    await writeFile(entrada, bytes);
+    await execFileAsync("ffmpeg", ["-y", "-i", entrada, "-vn", "-ac", "1", "-c:a", "libopus", "-b:a", "32k", saida], { timeout: 30_000 });
+    return { bytes: new Uint8Array(await readFile(saida)), contentType: "audio/ogg" };
+  } finally {
+    await rm(pasta, { recursive: true, force: true });
+  }
+}
+
 async function contextoDoAtleta(userId: string) {
   const perfil = await obterPerfilVigente(userId);
   return montarNucleo({
@@ -77,9 +97,13 @@ export async function transcreverAudioAction(fd: FormData): Promise<ResultadoTra
 
   let audio;
   try {
+    const bytes = new Uint8Array(await arquivo.arrayBuffer());
+    const convertido = arquivo.type.split(";")[0].trim().toLowerCase() === "audio/mp4"
+      ? await converterAudioParaOgg(bytes)
+      : { bytes, contentType: arquivo.type };
     audio = validarAudioRefeicao({
-      bytes: new Uint8Array(await arquivo.arrayBuffer()),
-      contentType: arquivo.type,
+      bytes: convertido.bytes,
+      contentType: convertido.contentType,
     });
   } catch (erro) {
     return { ok: false, erro: erro instanceof Error ? erro.message : "Áudio inválido." };
