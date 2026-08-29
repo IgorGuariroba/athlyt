@@ -24,6 +24,6 @@ export async function registrarCheckinCorporal(fd: FormData) {
   }
   const gordura = n(fd, "gordura");
   if (Number.isFinite(gordura)) await registrarGorduraCorporal(userId, { percentual: gordura, metodo: String(fd.get("metodo") ?? "outro"), protocolo: String(fd.get("protocolo") ?? "") || undefined });
-  revalidatePath("/inicio"); revalidatePath("/progresso"); revalidatePath("/diario");
+  revalidatePath("/treino"); revalidatePath("/progresso"); revalidatePath("/diario"); revalidatePath("/dieta");
   redirect("/progresso");
 }

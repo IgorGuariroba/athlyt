@@ -1,4 +1,5 @@
 import {
+  BookOpen,
   Dumbbell,
   FlaskConical,
   GitBranch,
@@ -44,6 +45,23 @@ export default async function MaisPage() {
           detalhe={session?.user?.name ? email : "Sua conta Athlyt"}
           imagem={session?.user?.image}
         />
+
+        {/* Primeiro grupo, acima das configurações: o Diário é conteúdo
+            de consulta, não ajuste de conta. Ele saiu da barra quando
+            Dieta e Treino ganharam abas próprias, mas continua sendo o
+            único lugar que mostra alimentação e treino no mesmo eixo do
+            tempo. */}
+        <section aria-labelledby="mais-registros" className="flex flex-col gap-3">
+          <CabecalhoSecao id="mais-registros" titulo="Registros" />
+          <ListaNavegacao>
+            <ItemNavegacao
+              href="/diario"
+              Icone={BookOpen}
+              rotulo="Diário do dia"
+              descricao="Alimentação e treino na mesma linha do tempo"
+            />
+          </ListaNavegacao>
+        </section>
 
         <section aria-labelledby="mais-plano" className="flex flex-col gap-3">
           <CabecalhoSecao id="mais-plano" titulo="Plano e estratégia" />

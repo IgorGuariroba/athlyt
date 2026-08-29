@@ -100,7 +100,7 @@ test.describe("Avaliação Corporal Inicial", () => {
     await page.getByLabel("Cintura").blur();
     await expect(page.getByLabel("Medida salva")).toBeVisible();
 
-    await page.goto("/inicio");
+    await page.goto("/treino");
     await page.goto("/triagem/avaliacao-corporal/essenciais");
     await expect(page.getByLabel("Cintura")).toHaveValue("86.5");
     await expect(page.getByLabel("Pescoço")).toHaveValue("");

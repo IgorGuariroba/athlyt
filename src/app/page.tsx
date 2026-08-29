@@ -6,12 +6,12 @@ import { Button } from "@/components/ui/button";
 /**
  * Tela 001 — Boas-vindas (specs/workflow/telas/001-boas-vindas.md).
  * Única forma de acesso: conta Google. Sessão já ativa pula direto
- * para o Início.
+ * para a aba Dieta.
  */
 export default async function BoasVindasPage() {
   const session = await auth();
   if (session?.user) {
-    redirect("/inicio");
+    redirect("/dieta");
   }
 
   return (

@@ -146,6 +146,6 @@ export async function substituirExercicioAction(formData: FormData) {
 export async function ativarPlanoAction(formData: FormData) {
   const { userId } = await contexto();
   await ativarPlano(userId, String(formData.get("planoId")));
-  revalidatePath("/inicio");
-  redirect("/inicio");
+  revalidatePath("/treino");
+  redirect("/treino");
 }

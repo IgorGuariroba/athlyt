@@ -8,7 +8,7 @@ import { obterOuGerarRascunho } from "@/domain/plano/repositorio";
  * 5, 6, 14, 15; Testing Decisions > "perfil insuficiente ativa Modo
  * Conservador; completar dados habilita capacidades"). Cobre a
  * cascata completa até o resumo, retomada após abandono e a
- * fronteira Conservador/completo observada no Início.
+ * fronteira Conservador/completo observada na aba Treino.
  */
 test.describe("Triagem em cascata", () => {
   async function autenticar(page: import("@playwright/test").Page, context: import("@playwright/test").BrowserContext) {
@@ -239,13 +239,13 @@ test.describe("Triagem em cascata", () => {
     await expect(page.getByRole("heading", { name: "Estratégia nutricional" })).toBeVisible();
     await page.getByRole("button", { name: "Ativar plano" }).click();
 
-    await expect(page).toHaveURL("/inicio");
+    await expect(page).toHaveURL("/treino");
     await expect(page.getByText("Plano Ativo", { exact: true })).toBeVisible();
     await expect(page.getByText("v1", { exact: true })).toBeVisible();
     await expect(page.getByText("Modo Conservador")).not.toBeVisible();
   });
 
-  test("abandonar no meio da cascata retoma a próxima etapa antes do Início", async ({
+  test("abandonar no meio da cascata retoma a próxima etapa antes das abas", async ({
     page,
     context,
   }) => {
@@ -259,9 +259,9 @@ test.describe("Triagem em cascata", () => {
     await page.getByText("Masculino").click();
     await page.getByRole("button", { name: "Continuar" }).click();
 
-    // Abandona a cascata aqui. O Início retoma automaticamente a etapa
+    // Abandona a cascata aqui. A aba Treino retoma automaticamente a etapa
     // pendente, sem criar um segundo fluxo de "completar perfil".
-    await page.goto("/inicio");
+    await page.goto("/treino");
     await expect(page).toHaveURL("/triagem/altura");
     await expect(
       page.getByRole("heading", { name: "Qual é a sua altura?" }),

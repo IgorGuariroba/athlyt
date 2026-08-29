@@ -153,7 +153,7 @@ export default async function ResumoPage({
 
       <AcaoTela>
         <Button asChild size="cta" className="w-full">
-          <Link href="/inicio">Concluído</Link>
+          <Link href="/treino">Concluído</Link>
         </Button>
       </AcaoTela>
     </TelaConteudo>

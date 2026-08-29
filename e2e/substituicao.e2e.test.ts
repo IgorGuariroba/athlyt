@@ -61,7 +61,7 @@ test("substitui exercício por equipamento indisponível preservando o estímulo
   // A troca por equipamento persiste: a próxima sessão do mesmo dia já
   // nasce com o exercício substituído. Como o bloco tem um único dia,
   // concluir a sessão libera imediatamente esse treino outra vez.
-  await page.goto("/inicio");
+  await page.goto("/treino");
   await expect(page.getByRole("heading", { name: "Superior A" })).toBeVisible();
   await abrirSessaoEmAndamento(page);
   await expect(page.getByRole("heading", { name: "Supino reto com halteres" })).toBeVisible();
@@ -87,6 +87,10 @@ test("substitui no meio da execução quando a dor aparece durante o exercício"
   await page.getByRole("link", { name: /Dor ou desconforto/ }).click();
   await page.getByLabel("Onde dói?").fill("ombro");
   await page.getByRole("button", { name: "Filtrar sugestões" }).click();
+  // "Filtrar sugestões" é server action com redirect: sem âncora, o
+  // clique seguinte disputa com a navegação e a falha aparece longe
+  // daqui (docs/memory/e2e-flaky-sorteia-cenarios-diferentes.md).
+  await expect(page.getByRole("button", { name: "Substituir por Supino na máquina" })).toBeVisible();
   await page.getByRole("button", { name: "Substituir por Supino na máquina" }).click();
 
   // O substituto assume apenas as séries que faltavam.

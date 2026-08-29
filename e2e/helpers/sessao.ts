@@ -44,9 +44,9 @@ export async function pularDescanso(page: Page) {
   await page.getByRole("button", { name: "Pular descanso" }).click();
 }
 
-/** Do Início até a prévia do treino prescrito para hoje. */
+/** Da aba Treino até a prévia do treino prescrito para hoje. */
 export async function abrirTreinoDoDia(page: Page) {
-  await page.goto("/inicio");
+  await page.goto("/treino");
   await page.getByRole("link", { name: /Ver treino/ }).click();
 }
 

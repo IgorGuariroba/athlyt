@@ -25,7 +25,7 @@ export async function alterarObjetivoAtual(formData: FormData) {
 
   revalidatePath("/mais/objetivo");
   revalidatePath("/progresso");
-  revalidatePath("/inicio");
+  revalidatePath("/treino");
   const mensagem = resultado.planoJaAlinhado
     ? "Objetivo atualizado. Seu Plano Ativo já está alinhado a essa escolha."
     : "Objetivo atualizado. Seu Plano Ativo será reavaliado na próxima Revisão Semanal.";

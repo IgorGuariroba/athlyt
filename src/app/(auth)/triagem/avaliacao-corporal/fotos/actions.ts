@@ -25,7 +25,7 @@ export async function excluirFotoCorporal(fd: FormData) {
   if (!foto) redirect("/triagem/avaliacao-corporal/fotos?erro=Foto não encontrada.");
   await criarStorageR2().excluir(foto.objectKey);
   await excluirFotoProgresso(session.user.id, foto.id);
-  revalidatePath("/triagem/avaliacao-corporal/fotos"); revalidatePath("/progresso"); revalidatePath("/inicio");
+  revalidatePath("/triagem/avaliacao-corporal/fotos"); revalidatePath("/progresso"); revalidatePath("/treino");
   redirect("/triagem/avaliacao-corporal/fotos?sucesso=Foto excluída do storage privado.");
 }
 
@@ -122,6 +122,6 @@ export async function enviarFotoCorporal(
 
   revalidatePath("/triagem/avaliacao-corporal/fotos");
   revalidatePath("/progresso");
-  revalidatePath("/inicio");
+  revalidatePath("/treino");
   return { ok: true };
 }

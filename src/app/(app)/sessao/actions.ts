@@ -15,7 +15,7 @@ async function usuario() {
 
 export async function iniciarSessaoAction(formData: FormData) {
   const sessao = await iniciarSessao(await usuario(), String(formData.get("diaId")));
-  revalidatePath("/inicio");
+  revalidatePath("/treino");
   redirect(`/sessao/${sessao.id}`);
 }
 
@@ -67,12 +67,12 @@ export async function concluirSessaoAction(sessionId: string) {
   // O card "Treino do dia" do Início deriva do histórico de sessões:
   // sem revalidar, o usuário volta e vê o treino que acabou de fazer
   // como se nada tivesse acontecido.
-  revalidatePath("/inicio");
+  revalidatePath("/treino");
   redirect(`/sessao/${sessionId}/resumo`);
 }
 
 export async function abandonarSessaoAction(sessionId: string, formData: FormData) {
   await abandonarSessao(await usuario(), sessionId, String(formData.get("motivo")) as MotivoAbandono);
-  revalidatePath("/inicio");
+  revalidatePath("/treino");
   redirect(`/sessao/${sessionId}/resumo`);
 }
