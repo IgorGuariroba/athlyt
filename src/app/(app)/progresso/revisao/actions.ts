@@ -111,7 +111,7 @@ export async function iniciarExperimento(fd: FormData) {
   const session = await auth(); if (!session?.user?.id) redirect("/");
   const variaveis = fd.getAll("variaveis").map(String);
   await ativarExperimentoPlano(session.user.id, { planoId: String(fd.get("planoId")), reavaliacaoId: String(fd.get("reavaliacaoId") ?? "") || undefined, hipotese: String(fd.get("hipotese") ?? ""), variaveis, criterioSucesso: String(fd.get("criterioSucesso") ?? ""), criterioInterrupcao: String(fd.get("criterioInterrupcao") ?? ""), janelaMinimaSemanas: Number(fd.get("janelaMinimaSemanas") ?? 2) });
-  revalidatePath("/treino"); revalidatePath("/progresso"); revalidarRevisao(); redirect("/progresso/revisao/experimento");
+  revalidatePath("/treino"); revalidatePath("/progresso"); revalidatePath("/progresso/revisao/experimento"); revalidarRevisao(); redirect("/progresso/revisao/experimento");
 }
 
 export async function executarRollback(fd: FormData) {

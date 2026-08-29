@@ -113,7 +113,7 @@ describe("CartaoRefeicaoPlanejada", () => {
         nome="Café da manhã"
         macros={MACROS}
         itens={[{ descricao: "4 claras + 2 ovos", calorias: 220, proteinaG: 28, carboidratosG: 2, gordurasG: 11, fibrasG: 0 }]}
-        hrefFoto="/diario/registrar/foto"
+        hrefDivergencia="/diario/registrar/descricao"
         hrefAjustar="/diario/refeicao/cafe"
         confirmacao={<button type="submit">Comi como planejado</button>}
       />,
@@ -133,7 +133,7 @@ describe("CartaoRefeicaoPlanejada", () => {
         macros={MACROS}
         itens={[]}
         explicacao={{ porque: "Concentra proteína no início do dia.", dadosUsados: [] }}
-        hrefFoto="/f"
+        hrefDivergencia="/f"
         hrefAjustar="/a"
         confirmacao={null}
       />,

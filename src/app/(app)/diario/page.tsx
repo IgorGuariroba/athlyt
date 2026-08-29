@@ -68,6 +68,7 @@ export default async function DiarioPage({
         <AcoesRegistro
           hrefFoto={`/diario/registrar/foto?dia=${dia}`}
           hrefBusca={`/diario/registrar?dia=${dia}`}
+          hrefDescricao={`/diario/registrar/descricao?dia=${dia}`}
         />
 
         {diario && diario.linhaDoTempo.length > 0 ? (

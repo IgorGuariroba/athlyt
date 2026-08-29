@@ -47,6 +47,7 @@ export type OperacaoIA =
   | "plano-treino"
   | "plano-nutricao"
   | "refeicao-texto"
+  | "refeicao-audio"
   | "refeicao-foto"
   | "avaliacao-visual"
   | "importacao-historico";

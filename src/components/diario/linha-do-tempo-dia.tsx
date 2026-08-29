@@ -1,6 +1,7 @@
 import { Check, Undo2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { FONTE_ESTIMATIVA } from "@/domain/alimentos/prato";
 import type { ItemLinhaDoTempo } from "@/domain/diario/tipos";
 import {
   CartaoConsumo,
@@ -94,18 +95,23 @@ function cartao(
 
   if (item.tipo === "consumo") {
     const { consumo } = item;
-    // Um consumo estimado por foto não pode se parecer com um medido:
-    // a marca fica no próprio cartão para que a revisão do dia saiba
-    // qual número merece desconfiança (user story 59).
-    const estimado = consumo.itens.some(
+    // Um consumo estimado não pode se parecer com um medido: a marca
+    // fica no próprio cartão para que a revisão do dia saiba qual
+    // número merece desconfiança (user story 59).
+    //
+    // A origem sai do próprio item gravado, e não da rota que o criou:
+    // é o registro que precisa continuar auto-explicativo meses depois
+    // (user story 30).
+    const estimados = consumo.itens.filter(
       (alimentar) => (alimentar as { origemDado?: string }).origemDado === "estimativa-ia",
-    );
+    ) as { fonte?: string }[];
     return (
       <CartaoConsumo
         nome={consumo.nome}
         macros={consumo.macros}
         planejado={consumo.planejado}
-        estimadoPorFoto={estimado}
+        estimadoPorFoto={estimados.length > 0}
+        origemEstimativa={origemDaEstimativa(estimados)}
         acoes={
           consumo.refeicaoRef ? (
             <form action={desfazer}>
@@ -127,7 +133,7 @@ function cartao(
       macros={entrada.macros}
       itens={entrada.itens}
       explicacao={entrada.explicacao}
-      hrefFoto={`/diario/registrar/foto?dia=${dia}`}
+      hrefDivergencia={`/diario/registrar/descricao?dia=${dia}&refeicao=${encodeURIComponent(entrada.refeicaoRef)}`}
       hrefAjustar={`/diario/refeicao/${encodeURIComponent(entrada.refeicaoRef)}?dia=${dia}`}
       confirmacao={
         <form action={confirmar}>
@@ -143,6 +149,16 @@ function cartao(
       }
     />
   );
+}
+
+/** Origem declarada na proveniência dos itens estimados. */
+function origemDaEstimativa(
+  estimados: readonly { fonte?: string }[],
+): "foto" | "texto" | "audio" | undefined {
+  if (estimados.length === 0) return undefined;
+  if (estimados.some((item) => item.fonte === FONTE_ESTIMATIVA.audio)) return "audio";
+  if (estimados.some((item) => item.fonte === FONTE_ESTIMATIVA.texto)) return "texto";
+  return "foto";
 }
 
 function CamposContexto({

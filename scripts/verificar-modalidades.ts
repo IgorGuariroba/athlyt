@@ -16,6 +16,9 @@ import type { OperacaoIA } from "../src/domain/ia/contexto/tipos";
 /** Campos de recorte que carregam imagem ao provedor. */
 const CAMPOS_IMAGEM = ["fotos-corporais", "foto-refeicao"];
 
+/** Campos de recorte que carregam áudio ao provedor. */
+const CAMPOS_AUDIO = ["audio-refeicao"];
+
 async function catalogo() {
   const chave = process.env.OPENROUTER_API_KEY;
   if (!chave) throw new Error("OPENROUTER_API_KEY não definida");
@@ -46,6 +49,9 @@ async function main() {
       const enviaImagem = obterRecorte(operacao).campos.some((c) =>
         CAMPOS_IMAGEM.includes(c.id),
       );
+      const enviaAudio = obterRecorte(operacao).campos.some((c) =>
+        CAMPOS_AUDIO.includes(c.id),
+      );
 
       if (!modelo) {
         console.log(`  FALHA ${operacao} — ${id} fora do catálogo`);
@@ -55,12 +61,14 @@ async function main() {
 
       const modalidades = modelo.architecture?.input_modalities ?? [];
       const temVisao = modalidades.includes("image");
+      const temAudio = modalidades.includes("audio");
       const estruturado = (modelo.supported_parameters ?? []).includes(
         "structured_outputs",
       );
 
       const problemas: string[] = [];
       if (enviaImagem && !temVisao) problemas.push("recorte envia imagem, modelo é só texto");
+      if (enviaAudio && !temAudio) problemas.push("recorte envia áudio, modelo não aceita áudio");
       if (!estruturado) problemas.push("sem structured_outputs");
 
       const marca = problemas.length === 0 ? "ok  " : "FALHA";

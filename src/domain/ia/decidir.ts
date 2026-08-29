@@ -57,6 +57,8 @@ export interface EntradaDecisao<T> {
   ferramentas?: ToolSet;
   /** Imagens pertinentes à operação; só são aceitas quando o Recorte e o consentimento as declaram. */
   imagens?: readonly { dados: Uint8Array; mediaType: string }[];
+  /** Áudios pertinentes à operação; mesma regra das imagens. */
+  audios?: readonly { dados: Uint8Array; mediaType: string }[];
   /** Teto de passos quando há Ferramentas de Leitura em jogo. */
   maxPassos?: number;
   origem?: {
@@ -134,10 +136,16 @@ async function decidirInternamente<T>(
     if (entrada.imagens?.length && !("fotos-corporais" in contexto.recorte || "foto-refeicao" in contexto.recorte)) {
       throw new Error("Imagens omitidas por falta de consentimento para esta operação.");
     }
+    if (entrada.audios?.length && !("audio-refeicao" in contexto.recorte)) {
+      throw new Error("Áudios omitidos por falta de consentimento para esta operação.");
+    }
     const conteudo = renderizarContexto(contexto);
     const registroBase = { ...base, promptEnviado: conteudo };
-    const mensagem = entrada.imagens?.length
-      ? { messages: [{ role: "user" as const, content: [{ type: "text" as const, text: conteudo }, ...entrada.imagens.map((imagem) => ({ type: "file" as const, data: imagem.dados, mediaType: imagem.mediaType }))] }] }
+    // Imagem e áudio viajam pela mesma parte `file` do protocolo: o
+    // que os distingue para o provedor é o `mediaType`, não a chave.
+    const anexos = [...(entrada.imagens ?? []), ...(entrada.audios ?? [])];
+    const mensagem = anexos.length
+      ? { messages: [{ role: "user" as const, content: [{ type: "text" as const, text: conteudo }, ...anexos.map((anexo) => ({ type: "file" as const, data: anexo.dados, mediaType: anexo.mediaType }))] }] }
       : { prompt: conteudo };
     const gerar = (promptCorrecao?: string) => executarComTimeout((signal) => generateText({
       model: openrouter().chatModel(modeloSolicitado),

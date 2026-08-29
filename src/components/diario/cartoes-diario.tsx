@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Camera, Check, Dumbbell, Pencil, Sparkles, UtensilsCrossed } from "lucide-react";
+import { Check, Dumbbell, Pencil, Sparkles, UtensilsCrossed } from "lucide-react";
 
 import { ExplicacaoAgent } from "@/components/tela/explicacao-agent";
 import { Button } from "@/components/ui/button";
@@ -21,6 +21,12 @@ import { cn } from "@/lib/utils";
  * As ações entram por slot (`acoes`): a página é quem conhece as
  * server actions, o cartão é quem conhece a forma.
  */
+
+const ROTULO_ESTIMATIVA = {
+  foto: "Estimado por foto",
+  texto: "Estimado pela sua descrição",
+  audio: "Estimado pelo áudio que você gravou",
+} as const;
 
 function macrosEmLinha(macros: Macros): string {
   return `${macros.calorias} kcal · ${macros.proteinaG}P · ${macros.carboidratosG}C · ${macros.gordurasG}G`;
@@ -61,6 +67,7 @@ export function CartaoConsumo({
   macros,
   planejado,
   estimadoPorFoto = false,
+  origemEstimativa,
   acoes,
 }: {
   nome: string;
@@ -68,6 +75,12 @@ export function CartaoConsumo({
   /** Snapshot da prescrição, quando o consumo veio de uma refeição planejada. */
   planejado?: Macros | null;
   estimadoPorFoto?: boolean;
+  /**
+   * Como a estimativa nasceu. Um número vindo de foto e um vindo de
+   * memória descrita merecem desconfianças diferentes, e a revisão do
+   * dia é onde essa distinção é usada (user story 30).
+   */
+  origemEstimativa?: "foto" | "texto" | "audio";
   acoes?: React.ReactNode;
 }) {
   const delta = planejado ? macros.calorias - planejado.calorias : 0;
@@ -80,7 +93,8 @@ export function CartaoConsumo({
           <p className="truncate text-title font-bold text-on-surface-strong">{nome}</p>
           {estimadoPorFoto ? (
             <p className="flex items-center gap-1 text-caption text-muted-foreground">
-              <Sparkles className="size-3" aria-hidden="true" /> Estimado por foto
+              <Sparkles className="size-3" aria-hidden="true" />{" "}
+              {ROTULO_ESTIMATIVA[origemEstimativa ?? "foto"]}
             </p>
           ) : null}
           <p className="text-body-sm tabular-nums text-muted-foreground">
@@ -107,7 +121,7 @@ export function CartaoRefeicaoPlanejada({
   macros,
   itens,
   explicacao,
-  hrefFoto,
+  hrefDivergencia,
   hrefAjustar,
   confirmacao,
   className,
@@ -116,7 +130,8 @@ export function CartaoRefeicaoPlanejada({
   macros: Macros;
   itens: readonly ItemAlimentar[];
   explicacao?: ExplicacaoDecisao;
-  hrefFoto: string;
+  /** "Comi outra coisa": foto, texto ou áudio, escolhidos na próxima tela. */
+  hrefDivergencia: string;
   hrefAjustar: string;
   /** Form da server action de confirmação, ocupando a linha inteira. */
   confirmacao: React.ReactNode;
@@ -157,10 +172,16 @@ export function CartaoRefeicaoPlanejada({
         </div>
       </div>
       {/* Três saídas diante do prato, na ordem do esforço que exigem:
-          comi como planejado (um toque), comi outra coisa (foto) e
-          ajustar porções (edição item a item). Antes só as duas pontas
-          existiam, e quem comeu algo diferente do plano — o caso mais
-          comum — caía na edição manual por falta de alternativa.
+          comi como planejado (um toque), comi outra coisa (descrever
+          ou fotografar) e ajustar porções (edição item a item). Antes
+          só as duas pontas existiam, e quem comeu algo diferente do
+          plano — o caso mais comum — caía na edição manual por falta
+          de alternativa.
+
+          O ícone deixou de ser a câmera quando texto e áudio entraram
+          (ADR 0002): anunciar a divergência com uma câmera dizia que
+          registrar exigia estar com o prato na frente, que é o atrito
+          que o Registro Retroativo existe para remover.
 
           Empilhadas, e não numa linha: três rótulos lado a lado não
           cabem na largura de um celular — o primeiro botão vazava para
@@ -170,8 +191,8 @@ export function CartaoRefeicaoPlanejada({
         {confirmacao}
         <div className="flex gap-2">
           <Button asChild variant="ghost" size="sm" className="flex-1">
-            <Link href={hrefFoto} aria-label={`Comi outra coisa no lugar de ${nome}`}>
-              <Camera className="size-4" aria-hidden="true" /> Comi outra coisa
+            <Link href={hrefDivergencia} aria-label={`Comi outra coisa no lugar de ${nome}`}>
+              <UtensilsCrossed className="size-4" aria-hidden="true" /> Comi outra coisa
             </Link>
           </Button>
           <Button asChild variant="ghost" size="sm" className="flex-1">

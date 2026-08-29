@@ -7,6 +7,9 @@
  * da linha do tempo passaram meses sem demonstração nem teste.
  */
 export { AcoesRegistro } from "./acoes-registro";
+export { CapturaAudio } from "./captura-audio";
+export { RegistroPorDescricao } from "./registro-por-descricao";
+export { RevisaoEstimativa } from "./revisao-estimativa";
 export {
   CartaoConsumo,
   CartaoRefeicaoPlanejada,
