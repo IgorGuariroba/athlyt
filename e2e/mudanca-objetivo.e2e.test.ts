@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { aguardarHidratacao } from "./helpers/hidratacao";
 import { seedAuthenticatedSession } from "./helpers/seed-session";
 import { registrarRespostas } from "@/domain/triagem/perfil";
 import { ativarPlano, obterOuGerarRascunho } from "@/domain/plano/repositorio";
@@ -29,6 +30,7 @@ test("muda o objetivo sem substituir o Plano Ativo antes da Revisão Semanal", a
   await context.addCookies([cookie]);
 
   await page.goto("/mais");
+  await aguardarHidratacao(page);
   await page.getByRole("link", { name: /Objetivo e estratégia/ }).click();
   await page.getByLabel("Recomposição corporal").check();
   await page.getByRole("button", { name: "Salvar objetivo" }).click();
@@ -40,6 +42,7 @@ test("muda o objetivo sem substituir o Plano Ativo antes da Revisão Semanal", a
   await page.goto("/progresso");
   await expect(page.getByText("Seu objetivo mudou.")).toBeVisible();
   await page.getByRole("link", { name: "Iniciar ou revisar" }).click();
+  await aguardarHidratacao(page);
   await page.getByRole("button", { name: "Iniciar revisão" }).click();
   // `gerarRevisaoSemanal` faz seis consultas e uma escrita antes de
   // redirecionar para o scorecard. Sem esta âncora, o clique seguinte
