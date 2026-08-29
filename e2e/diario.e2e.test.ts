@@ -60,9 +60,11 @@ test("prescrição, confirmação em 1 toque e edição atualizam os macros rest
   await expect(page.getByText("300 kcal a menos que o planejado (600 kcal)")).toBeVisible();
   await expect(macros.getByText(/Energia: 1140 de 2400 kcal consumidos, restam 1260 kcal/)).toBeVisible();
 
-  // Persistência visível após voltar por navegação real ao Diário.
-  await page.goto("/inicio");
-  await page.getByRole("link", { name: "Diário" }).click();
+  // Persistência visível após voltar por navegação real ao Diário, que
+  // desde a separação das abas é alcançado por Mais.
+  await page.goto("/treino");
+  await page.getByRole("link", { name: "Mais" }).click();
+  await page.getByRole("link", { name: "Diário do dia" }).click();
   await expect(macros.getByText("1140/2400")).toBeVisible();
 
   // Navegar um dia para trás e voltar tem de aterrissar no mesmo dia:

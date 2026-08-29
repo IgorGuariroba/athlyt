@@ -63,12 +63,12 @@ test("a barra de navegação permanece visível nas telas com conteúdo longo", 
   await db.insert(plans).values({ userId: user.id, perfilVersao: 1, versao: 1, estado: "ativo", regraVersao: plano.regraVersao, modoConservador: false, conteudo: plano, activatedAt: new Date() });
   await context.addCookies([cookie]);
 
-  // 1) Início com plano ativo (2ª imagem do relato)
-  await page.goto("/inicio");
+  // 1) Treino com plano ativo (2ª imagem do relato)
+  await page.goto("/treino");
   await expect(page.getByRole("heading", { name: "Empurrar", exact: true })).toBeVisible({ timeout: 30_000 });
-  await navDentroDaViewport(page, "início (topo)");
+  await navDentroDaViewport(page, "treino (topo)");
   await page.mouse.wheel(0, 2000);
-  await navDentroDaViewport(page, "início (rolado)");
+  await navDentroDaViewport(page, "treino (rolado)");
 
   // 2) Prévia do treino do dia (1ª imagem do relato)
   await page.getByRole("link", { name: /Ver treino/ }).click();

@@ -11,6 +11,9 @@ sources:
   - id: pr-145-diario-2026-08-24
     resource: "PR #145, runs 32766573773 (3 tentativas do job E2E mobile), e2e/triagem.e2e.test.ts:248"
     title: "Extração da tela do Diário: E2E vermelho em cenários fora do escopo da mudança"
+  - id: mudanca-objetivo-arvore-suja-2026-08-29
+    resource: "e2e/mudanca-objetivo.e2e.test.ts:51 (stack do CI) vs. árvore local, git status"
+    title: "CI reprova em teste já corrigido, porque a correção nunca foi commitada"
 ---
 
 # Contexto
@@ -75,6 +78,13 @@ lógica quebrada.
   modo de servidor** (`E2E_COMANDO='npx next start -p 3000'` espelha o CI, que
   serve o build de produção).
 - Use `--repeat-each=3` no cenário suspeito antes de concluir qualquer coisa.
+- **Antes de investigar, confirme que o CI rodou o código que você está lendo.**
+  Se o stack trace do CI aponta linha ou rota que não existe mais na árvore
+  local, o commit sob teste é outro: `git status --porcelain` e comparar o
+  remoto do branch resolve em um comando. Em 2026-08-29 a falha em
+  `Experimento ativo` foi diagnosticada até a server action antes de aparecer
+  que a correção — inclusive a âncora do scorecard — estava apenas como
+  modificação local não commitada.[^mudanca-objetivo-arvore-suja-2026-08-29]
 - Um `page.goto` logo após ação que dispara server action é o formato que
   produz esse tipo de corrida: espere a URL ou um efeito visível da escrita
   antes de navegar. Corrigir isso é trabalho próprio, em PR separado — não
@@ -98,3 +108,10 @@ passaram nas três tentativas. `e2e/triagem.e2e.test.ts` tem como último commit
 `90006af`, de outra entrega.[^pr-145-diario-2026-08-24]
 
 [^pr-145-diario-2026-08-24]: PR #145, run 32766573773, jobs 97557748439 / 97560092364 / 97561087546.
+
+[^mudanca-objetivo-arvore-suja-2026-08-29]: O stack do CI mostrava
+`page.goto("/inicio")` na linha 52 de `e2e/mudanca-objetivo.e2e.test.ts`; na
+árvore local a rota já era `/treino` (a página `/inicio` fora removida na
+mesma entrega) e a âncora `Scorecard de progresso` já existia. `git status`
+listava o arquivo como ` M`, e o remoto do branch estava em `2f06a46`. Com
+servidor e banco no ar, o cenário passou 3/3 e depois 5/5 em ~3,8 s.

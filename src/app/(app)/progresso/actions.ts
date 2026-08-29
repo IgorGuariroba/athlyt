@@ -9,5 +9,5 @@ export async function atualizarEnfasesCorporais(fd: FormData) {
   if (!session?.user?.id) redirect("/");
   await recalcularMetasProporcao(session.user.id, fd.getAll("enfases").map(String));
   revalidatePath("/progresso");
-  revalidatePath("/inicio");
+  revalidatePath("/treino");
 }

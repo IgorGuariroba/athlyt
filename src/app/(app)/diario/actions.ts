@@ -32,14 +32,16 @@ export async function confirmarRefeicaoAction(formData: FormData) {
   const { dia, fuso, refeicaoRef } = contexto(formData);
   await confirmarRefeicao(await usuario(), { refeicaoRef, dia, fuso });
   revalidatePath("/diario");
-  revalidatePath("/inicio");
+  revalidatePath("/dieta");
+  revalidatePath("/treino");
 }
 
 export async function desfazerConfirmacaoAction(formData: FormData) {
   const { dia, fuso, refeicaoRef } = contexto(formData);
   await desfazerConfirmacao(await usuario(), { refeicaoRef, dia, fuso });
   revalidatePath("/diario");
-  revalidatePath("/inicio");
+  revalidatePath("/dieta");
+  revalidatePath("/treino");
 }
 
 /**
@@ -66,7 +68,8 @@ export async function confirmarRefeicaoEditadaAction(formData: FormData) {
 
   await confirmarRefeicao(userId, { refeicaoRef, itens, dia, fuso });
   revalidatePath("/diario");
-  revalidatePath("/inicio");
+  revalidatePath("/dieta");
+  revalidatePath("/treino");
   redirect(`/diario?dia=${dia}`);
 }
 
@@ -114,7 +117,8 @@ export async function registrarPratoAction(formData: FormData) {
 
   await registrarPrato(await usuario(), { nome: nome || "Registro avulso", itens, dia, fuso });
   revalidatePath("/diario");
-  revalidatePath("/inicio");
+  revalidatePath("/dieta");
+  revalidatePath("/treino");
   redirect(`/diario?dia=${dia}`);
 }
 

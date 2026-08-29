@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { aguardarHidratacao } from "./helpers/hidratacao";
 import { seedAuthenticatedSession } from "./helpers/seed-session";
 import { registrarRespostas } from "@/domain/triagem/perfil";
 import { ativarPlano, obterOuGerarRascunho } from "@/domain/plano/repositorio";
@@ -29,19 +30,29 @@ test("muda o objetivo sem substituir o Plano Ativo antes da Revisão Semanal", a
   await context.addCookies([cookie]);
 
   await page.goto("/mais");
+  await aguardarHidratacao(page);
   await page.getByRole("link", { name: /Objetivo e estratégia/ }).click();
   await page.getByLabel("Recomposição corporal").check();
   await page.getByRole("button", { name: "Salvar objetivo" }).click();
 
   await expect(page.getByText("Objetivo atualizado.")).toBeVisible();
   await expect(page.getByText("Reavaliação pendente")).toBeVisible();
-  await page.goto("/inicio");
+  await page.goto("/treino");
   await expect(page.getByText("v1", { exact: true })).toBeVisible();
   await page.goto("/progresso");
   await expect(page.getByText("Seu objetivo mudou.")).toBeVisible();
   await page.getByRole("link", { name: "Iniciar ou revisar" }).click();
+  await aguardarHidratacao(page);
   await page.getByRole("button", { name: "Iniciar revisão" }).click();
+  // `gerarRevisaoSemanal` faz seis consultas e uma escrita antes de
+  // redirecionar para o scorecard. Sem esta âncora, o clique seguinte
+  // disputava com a navegação: quando a action era lenta, ele acertava
+  // a página anterior e o fluxo seguia fora de ordem, falhando lá na
+  // frente em "Experimento ativo" — longe da causa
+  // (docs/memory/e2e-flaky-sorteia-cenarios-diferentes.md).
+  await expect(page.getByRole("heading", { name: "Scorecard de progresso" })).toBeVisible();
   await page.getByRole("link", { name: "Ver evidências" }).click();
+  await expect(page.getByRole("heading", { name: "Evidências e incertezas" })).toBeVisible();
   await page.getByRole("link", { name: "Ver proposta" }).click();
   await expect(page.getByRole("heading", { name: "Proposta estrutural" })).toBeVisible();
   await page.getByRole("button", { name: "Criar rascunho" }).click();
@@ -49,6 +60,6 @@ test("muda o objetivo sem substituir o Plano Ativo antes da Revisão Semanal", a
   await expect(page.getByText("Recomposição corporal", { exact: true })).toBeVisible();
   await page.getByRole("button", { name: "Ativar Experimento de Plano" }).click();
   await expect(page.getByText("Experimento ativo")).toBeVisible();
-  await page.goto("/inicio");
+  await page.goto("/treino");
   await expect(page.getByText("v2", { exact: true })).toBeVisible();
 });

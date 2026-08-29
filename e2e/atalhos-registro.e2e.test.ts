@@ -77,8 +77,8 @@ test("busca, monta o Prato e registra consumo fora do plano", async ({ page, con
   await expect(linha.getByText("Planejada")).toHaveCount(4);
 
   // Persistência visível após voltar por navegação real.
-  await page.goto("/inicio");
-  await page.getByRole("link", { name: "Diário" }).click();
+  await page.goto("/treino");
+  await page.getByRole("link", { name: "Dieta" }).click();
   await expect(macros.getByText("656/2400")).toBeVisible();
   await expect(page.getByText("Almoço na rua")).toBeVisible();
 });

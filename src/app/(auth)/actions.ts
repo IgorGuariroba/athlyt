@@ -13,7 +13,7 @@ const DEV_SESSION_EMAIL = "dev@athlyt.local";
 
 /** Tela 001 — Entrada real via Google. */
 export async function entrarComGoogle() {
-  await signIn("google", { redirectTo: "/inicio" });
+  await signIn("google", { redirectTo: "/dieta" });
 }
 
 /** Login local exclusivo do ambiente de desenvolvimento. */
@@ -41,7 +41,7 @@ export async function entrarComoUsuarioDev() {
     path: "/",
     expires: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
   });
-  redirect("/inicio");
+  redirect("/dieta");
 }
 
 /** Encerra a sessão atual e volta à tela de boas-vindas. */

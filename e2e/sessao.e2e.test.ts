@@ -178,7 +178,7 @@ test("executa o treino do dia, usa o timer e consulta o resumo no histórico", a
   await db.insert(plans).values({ userId: user.id, perfilVersao: 1, versao: 1, estado: "ativo", regraVersao: plano.regraVersao, modoConservador: false, conteudo: plano, activatedAt: new Date() });
   await context.addCookies([cookie]);
 
-  await page.goto("/inicio");
+  await page.goto("/treino");
   await expect(page.getByRole("heading", { name: "Superior A" })).toBeVisible();
   await expect(page.getByRole("link", { name: /Superior A/ })).toBeVisible();
   await expect(page.getByRole("link", { name: /Inferior A/ })).toBeVisible();
@@ -212,7 +212,7 @@ test("executa o treino do dia, usa o timer e consulta o resumo no histórico", a
 
   // Concluir hoje não bloqueia a sequência até amanhã: o próximo dia
   // do bloco fica disponível imediatamente, e os demais seguem livres.
-  await page.goto("/inicio");
+  await page.goto("/treino");
   await expect(page.getByText("Próximo treino")).toBeVisible();
   await expect(page.getByRole("heading", { name: "Inferior A" })).toBeVisible();
   await expect(page.getByText("1 de 2 treinos concluídos nos últimos 7 dias")).toBeVisible();
