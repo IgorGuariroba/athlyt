@@ -1,7 +1,7 @@
 /// <reference lib="webworker" />
 
 import { defaultCache } from "@serwist/next/worker";
-import { CacheFirst, ExpirationPlugin, NetworkFirst, Serwist } from "serwist";
+import { CacheFirst, ExpirationPlugin, NetworkFirst, NetworkOnly, Serwist } from "serwist";
 import type { PrecacheEntry, SerwistGlobalConfig } from "serwist";
 
 declare global {
@@ -38,6 +38,29 @@ const serwist = new Serwist({
         networkTimeoutSeconds: 3,
         plugins: [new ExpirationPlugin({ maxEntries: 16, maxAgeSeconds: 60 * 60 * 24 })],
       }),
+    },
+    /**
+     * Prefetch de RSC nunca é servido do cache do Service Worker.
+     *
+     * O `defaultCache` do @serwist/next guarda prefetch em
+     * `pages-rsc-prefetch` por 24 h. A regra assume telas equivalentes
+     * para todo mundo; aqui quase toda tela deriva do usuário e muda a
+     * cada Server Action. O `<Link>` do Next prefetcha as etapas da
+     * Revisão Semanal enquanto a anterior está na tela, então a resposta
+     * gravada é anterior à escrita — e ao navegar o Router mostra o
+     * estado velho: proposta ainda "pendente" depois de criar o
+     * rascunho, formulário de Experimento depois de ativá-lo. O usuário
+     * lê isso como dado perdido e repete a ação.
+     *
+     * Só o prefetch vira `NetworkOnly`. A navegação de verdade continua
+     * no `NetworkFirst` do `defaultCache`, que é o que sustenta a volta
+     * ao app sem rede; recusar o cache também nela deixava a navegação
+     * offline pendurada e quebrava a Sessão de Treino.
+     */
+    {
+      matcher: ({ request, sameOrigin }) =>
+        sameOrigin && request.headers.get("Next-Router-Prefetch") === "1",
+      handler: new NetworkOnly(),
     },
     /**
      * Mídia de Execução (CONTEXT.md): GIF espelhado no R2 e servido por

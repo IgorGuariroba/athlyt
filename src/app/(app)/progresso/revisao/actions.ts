@@ -16,6 +16,20 @@ import { obterPerfilVigente } from "@/domain/triagem/perfil";
 
 const limitar = (valor: number) => Math.max(0, Math.min(100, Math.round(valor)));
 
+/**
+ * Invalida a Revisão Semanal inteira, não só a etapa de origem.
+ *
+ * As telas do fluxo (revisão, scorecard, evidências, proposta e
+ * experimento) leem o mesmo registro, e cada action redireciona para
+ * uma etapa **diferente** da que revalidava. Como o Router serve a
+ * etapa de destino do cache do cliente, a escrita acabava invisível:
+ * ativar o Experimento voltava para a tela do formulário, e aprovar a
+ * proposta reexibia "pendente" — o usuário lê isso como dado perdido e
+ * repete a ação. O segundo argumento "layout" alcança o subtree, então
+ * a etapa de destino também é invalidada.
+ */
+const revalidarRevisao = () => revalidatePath("/progresso/revisao", "layout");
+
 export async function gerarRevisaoSemanal(fd: FormData) {
   const session = await auth(); if (!session?.user?.id) redirect("/");
   const fim = new Date(); const inicio = new Date(fim.getTime() - 7 * 86_400_000);
@@ -77,7 +91,7 @@ export async function gerarRevisaoSemanal(fd: FormData) {
     const ajuste = await aplicarReducaoVolumeAutomatica(session.user.id, linha.id);
     if (ajuste) await vincularAjusteAutomatico(session.user.id, linha.id, ajuste);
   }
-  revalidatePath("/progresso/revisao"); redirect("/progresso/revisao/scorecard");
+  revalidarRevisao(); redirect("/progresso/revisao/scorecard");
 }
 
 export async function decidirPropostaRevisao(fd: FormData) {
@@ -86,24 +100,24 @@ export async function decidirPropostaRevisao(fd: FormData) {
   if (decisao === "aprovar") {
     const perfil = await obterPerfilVigente(session.user.id); if (!perfil) redirect("/triagem");
     await obterOuGerarRascunho(session.user.id, perfil);
-    revalidatePath("/plano/revisao"); redirect("/progresso/revisao/experimento");
+    revalidatePath("/plano/revisao"); revalidarRevisao(); redirect("/progresso/revisao/experimento");
   }
   await atualizarEstadoRevisaoCorporal(session.user.id, reviewId, "rejeitada");
   await rejeitarReavaliacaoDaRevisao(session.user.id, reviewId);
-  revalidatePath("/progresso/revisao"); redirect("/progresso/revisao/proposta");
+  revalidarRevisao(); redirect("/progresso/revisao/proposta");
 }
 
 export async function iniciarExperimento(fd: FormData) {
   const session = await auth(); if (!session?.user?.id) redirect("/");
   const variaveis = fd.getAll("variaveis").map(String);
   await ativarExperimentoPlano(session.user.id, { planoId: String(fd.get("planoId")), reavaliacaoId: String(fd.get("reavaliacaoId") ?? "") || undefined, hipotese: String(fd.get("hipotese") ?? ""), variaveis, criterioSucesso: String(fd.get("criterioSucesso") ?? ""), criterioInterrupcao: String(fd.get("criterioInterrupcao") ?? ""), janelaMinimaSemanas: Number(fd.get("janelaMinimaSemanas") ?? 2) });
-  revalidatePath("/treino"); revalidatePath("/progresso"); redirect("/progresso/revisao/experimento");
+  revalidatePath("/treino"); revalidatePath("/progresso"); revalidarRevisao(); redirect("/progresso/revisao/experimento");
 }
 
 export async function executarRollback(fd: FormData) {
   const session = await auth(); if (!session?.user?.id) redirect("/");
   await reverterAoPlanoEstavel(session.user.id, String(fd.get("experimentId")));
-  revalidatePath("/treino"); revalidatePath("/progresso"); redirect("/progresso/revisao/experimento?sucesso=Plano Estável restaurado como nova versão.");
+  revalidatePath("/treino"); revalidatePath("/progresso"); revalidarRevisao(); redirect("/progresso/revisao/experimento?sucesso=Plano Estável restaurado como nova versão.");
 }
 
 export async function desfazerRevisao(fd: FormData) {
@@ -114,5 +128,5 @@ export async function desfazerRevisao(fd: FormData) {
     const rollback = await desfazerAjusteAutomatico(session.user.id, { reviewId, baselinePlanId: revisao.baselinePlanId });
     await atualizarEstadoRevisaoCorporal(session.user.id, reviewId, "desfeita", rollback.id);
   } else await atualizarEstadoRevisaoCorporal(session.user.id, reviewId, "desfeita");
-  revalidatePath("/progresso/revisao"); redirect("/progresso/revisao/proposta");
+  revalidarRevisao(); redirect("/progresso/revisao/proposta");
 }
