@@ -33,7 +33,8 @@ vi.mock("../provedor", () => ({
 
 const { decidir } = await import("../decidir");
 const { montarNucleo } = await import("../contexto/nucleo");
-const { NoObjectGeneratedError, TypeValidationError } = await import("ai");
+const { NoObjectGeneratedError, NoOutputGeneratedError, TypeValidationError } =
+  await import("ai");
 
 const schema = z.object({ carga: z.number() });
 
@@ -149,6 +150,41 @@ describe("decidir", () => {
     expect(resultado.status).toBe("ok");
     expect(gerar).toHaveBeenCalledTimes(2);
     expect(decisoesGravadas).toHaveLength(1);
+  });
+
+  it("repete uma vez quando o provedor devolve resposta vazia", async () => {
+    // Observado em produção com `refeicao-texto`: o provedor responde
+    // sem conteúdo algum e a tela termina indisponível, embora a mesma
+    // descrição funcione segundos depois. Sem `output` não há o que
+    // corrigir no prompt — a mesma pergunta é refeita.
+    gerar
+      .mockRejectedValueOnce(
+        new NoOutputGeneratedError({ message: "No output generated." }),
+      )
+      .mockResolvedValueOnce({
+        output: { carga: 60 },
+        response: { modelId: "openai/gpt-5-mini-2026-01" },
+        steps: [],
+      });
+
+    const resultado = await chamar();
+
+    expect(resultado.status).toBe("ok");
+    expect(gerar).toHaveBeenCalledTimes(2);
+    // Uma decisão na Trilha, e não duas: a repetição é da mesma
+    // pergunta, não uma segunda decisão do agent.
+    expect(decisoesGravadas).toHaveLength(1);
+  });
+
+  it("desiste quando a resposta vazia se repete, em vez de insistir", async () => {
+    gerar.mockRejectedValue(
+      new NoOutputGeneratedError({ message: "No output generated." }),
+    );
+
+    const resultado = await chamar();
+
+    expect(resultado.status).toBe("indisponivel");
+    expect(gerar).toHaveBeenCalledTimes(2);
   });
 
   it("corrige uma vez a saída JSON que viola o schema", async () => {

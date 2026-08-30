@@ -1,6 +1,7 @@
 import {
   generateText,
   NoObjectGeneratedError,
+  NoOutputGeneratedError,
   Output,
   stepCountIs,
   TypeValidationError,
@@ -193,6 +194,19 @@ ${violacoes}
 
 SAÍDA ANTERIOR:
 ${erro.text}`);
+      } else if (NoOutputGeneratedError.isInstance(erro)) {
+        // Resposta sem conteúdo algum — nem objeto inválido, nem JSON
+        // quebrado: o provedor devolveu vazio. Diferente dos outros
+        // dois ramos, aqui não há o que corrigir no prompt, porque não
+        // veio texto nenhum de volta; a mesma pergunta feita de novo
+        // costuma ser respondida.
+        //
+        // Observado em produção com `refeicao-texto`: a tela ficou em
+        // "Estimando…" e terminou indisponível, enquanto a mesma
+        // descrição respondia normalmente segundos depois. Sem este
+        // ramo a falha transitória virava erro na cara do atleta, e o
+        // custo de repetir é uma chamada.
+        resposta = await gerar();
       } else {
         if (!/invalid json response/i.test(motivo)) throw erro;
         resposta = await gerar();
