@@ -180,6 +180,27 @@ export const RECORTES: Record<OperacaoIA, RecorteDeclarado> = {
   },
 
   /**
+   * Recálculo de um item corrigido na revisão da estimativa.
+   *
+   * Recorte mínimo de propósito: vai o alimento e a gramagem, e nada
+   * mais. Não há descrição da refeição, metas do dia nem os outros
+   * itens do prato — recalcular uma linha não justifica reenviar o
+   * contexto inteiro da refeição (ADR 0006, invariante 2).
+   */
+  "alimento-macros": {
+    operacao: "alimento-macros",
+    versao: 1,
+    finalidade: "Recalcular energia e macros de um alimento que você corrigiu",
+    campos: [
+      {
+        id: "alimento-corrigido",
+        descricao: "O nome do alimento que você corrigiu e a quantidade em gramas",
+        sensivel: false,
+      },
+    ],
+  },
+
+  /**
    * Transcrição do áudio, separada de `refeicao-texto` porque o dado
    * enviado é outro: aí vai um texto que o atleta escreveu, aqui vai
    * a gravacão da voz dele. Consentir uma coisa não é consentir a

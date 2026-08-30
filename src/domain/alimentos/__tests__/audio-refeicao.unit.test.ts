@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   LIMITE_AUDIO_REFEICAO_BYTES,
   LIMITE_DESCRICAO,
+  precisaConverterAudio,
   validarAudioRefeicao,
   validarDescricaoRefeicao,
 } from "../audio-refeicao";
@@ -18,10 +19,15 @@ describe("fronteira do áudio da refeição", () => {
     expect(audio.mediaType).toBe("audio/webm");
   });
 
-  it("recusa MP4, que o endpoint de arquivo do provedor não aceita", () => {
-    expect(() =>
-      validarAudioRefeicao({ bytes: new Uint8Array([1]), contentType: "audio/mp4" }),
-    ).toThrow(/Formato de áudio/);
+  it("aceita o MP4 que o Safari grava: ele é convertido, não recusado", () => {
+    // Recusar aqui devolvia ao usuário de iPhone um erro por algo que o
+    // servidor sabe resolver — a conversão é responsabilidade da action.
+    const audio = validarAudioRefeicao({
+      bytes: new Uint8Array([1]),
+      contentType: "audio/mp4",
+    });
+    expect(audio.mediaType).toBe("audio/mp4");
+    expect(precisaConverterAudio(audio.mediaType)).toBe(true);
   });
 
   it("recusa formato fora da lista antes de qualquer chamada externa", () => {
@@ -100,5 +106,13 @@ describe("item estimado por descrição", () => {
     expect(corrigido.calorias).toBe(item.calorias);
     expect(corrigido.origemDado).toBe("estimativa-ia");
     expect(corrigido.confianca).toBe("media");
+  });
+
+  it("preserva o espaço em digitação, que é estado intermível e não texto final", () => {
+    // Um campo controlado chama isto a cada tecla: aparar a ponta faz o
+    // espaço sumir no momento em que é digitado, e nenhum nome composto
+    // pode ser escrito ("Coca cola zero" virava "Cocacolazero").
+    expect(renomearItem(item, "Coca ").descricao).toBe("Coca  50 g");
+    expect(renomearItem(item, "Coca cola zero").descricao).toBe("Coca cola zero 50 g");
   });
 });

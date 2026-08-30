@@ -26,6 +26,18 @@ const server = createServer((req, res) => {
       return;
     }
 
+    // Recálculo de um item corrigido na revisão: reconhecido pelo campo
+    // `alimento-corrigido` do Recorte, que só esta operação envia.
+    // Responde como a versão zero do refrigerante, que é o caso que
+    // motivou a operação: mesmo nome, composição inteiramente outra.
+    if (/alimento-corrigido/.test(corpo)) {
+      responder(res, "athlyt-alimento-macros-e2e-v1", {
+        calorias: 0, proteinaG: 0, carboidratosG: 0, gordurasG: 0, fibrasG: 0,
+        confianca: "alta",
+      });
+      return;
+    }
+
     // Estimativa por descrição: distinguida da foto por `porcaoDescrita`,
     // que só o schema de `refeicao-texto` declara.
     if (/porcaoDescrita/.test(corpo)) {

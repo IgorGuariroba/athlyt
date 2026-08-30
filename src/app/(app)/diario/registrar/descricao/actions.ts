@@ -9,6 +9,8 @@ import { promisify } from "node:util";
 import { auth } from "@/auth";
 import {
   LIMITE_AUDIO_REFEICAO_BYTES,
+  precisaConverterAudio,
+  TIPO_AUDIO_CONVERTIDO,
   validarAudioRefeicao,
   validarDescricaoRefeicao,
 } from "@/domain/alimentos/audio-refeicao";
@@ -21,6 +23,7 @@ import {
 } from "@/domain/diario/repositorio";
 import { conceder } from "@/domain/ia/consentimento";
 import { montarNucleo } from "@/domain/ia/contexto/nucleo";
+import { estimarMacrosDoAlimento } from "@/domain/ia/operacoes/alimento-macros";
 import { transcreverAudioDaRefeicao } from "@/domain/ia/operacoes/refeicao-audio";
 import { estimarRefeicaoPorDescricao } from "@/domain/ia/operacoes/refeicao-texto";
 import { NOME_PROVEDOR } from "@/domain/ia/provedor";
@@ -47,14 +50,28 @@ export type ResultadoTranscricao =
 
 const execFileAsync = promisify(execFile);
 
-async function converterAudioParaOgg(bytes: Uint8Array) {
+/**
+ * Transcodifica a gravação para o único formato que atravessa o
+ * cliente do provedor (ver `TIPOS_AUDIO_PROVEDOR`).
+ *
+ * O FFmpeg detecta o container pelo conteúdo, então a mesma chamada
+ * serve para o WebM do Chrome e o MP4 do Safari; a extensão de entrada
+ * não é declarada de propósito, para não mentir sobre o que chegou.
+ * Mono e 32 kbit/s porque o destino é reconhecimento de fala, e isso
+ * mantém um minuto de áudio na casa das centenas de KB.
+ */
+async function converterAudioParaProvedor(bytes: Uint8Array) {
   const pasta = await mkdtemp(join(tmpdir(), "athlyt-audio-"));
-  const entrada = join(pasta, "entrada.mp4");
-  const saida = join(pasta, "saida.ogg");
+  const entrada = join(pasta, "entrada");
+  const saida = join(pasta, "saida.mp3");
   try {
     await writeFile(entrada, bytes);
-    await execFileAsync("ffmpeg", ["-y", "-i", entrada, "-vn", "-ac", "1", "-c:a", "libopus", "-b:a", "32k", saida], { timeout: 30_000 });
-    return { bytes: new Uint8Array(await readFile(saida)), contentType: "audio/ogg" };
+    await execFileAsync(
+      "ffmpeg",
+      ["-y", "-i", entrada, "-vn", "-ac", "1", "-ar", "16000", "-c:a", "libmp3lame", "-b:a", "32k", saida],
+      { timeout: 30_000 },
+    );
+    return { bytes: new Uint8Array(await readFile(saida)), contentType: TIPO_AUDIO_CONVERTIDO };
   } finally {
     await rm(pasta, { recursive: true, force: true });
   }
@@ -97,14 +114,15 @@ export async function transcreverAudioAction(fd: FormData): Promise<ResultadoTra
 
   let audio;
   try {
-    const bytes = new Uint8Array(await arquivo.arrayBuffer());
-    const convertido = arquivo.type.split(";")[0].trim().toLowerCase() === "audio/mp4"
-      ? await converterAudioParaOgg(bytes)
-      : { bytes, contentType: arquivo.type };
-    audio = validarAudioRefeicao({
-      bytes: convertido.bytes,
-      contentType: convertido.contentType,
+    // Validar antes de converter mantém barato o caso ruim: um arquivo
+    // que não é áudio nunca chega a ligar o FFmpeg.
+    const recebido = validarAudioRefeicao({
+      bytes: new Uint8Array(await arquivo.arrayBuffer()),
+      contentType: arquivo.type,
     });
+    audio = precisaConverterAudio(recebido.mediaType)
+      ? validarAudioRefeicao(await converterAudioParaProvedor(recebido.dados))
+      : recebido;
   } catch (erro) {
     return { ok: false, erro: erro instanceof Error ? erro.message : "Áudio inválido." };
   }
@@ -193,6 +211,68 @@ export async function estimarPorDescricaoAction(fd: FormData): Promise<Resultado
       origem,
     },
   };
+}
+
+export type ResultadoMacrosItem =
+  | { ok: true; macros: MacrosRecalculados }
+  | { ok: false; erro: string };
+
+export interface MacrosRecalculados {
+  calorias: number;
+  proteinaG: number;
+  carboidratosG: number;
+  gordurasG: number;
+  fibrasG: number;
+  confianca: "alta" | "media" | "baixa";
+  modelo: string;
+}
+
+/**
+ * Recalcula energia e macros de **um** alimento corrigido na revisão.
+ *
+ * Chamada por item e sob comando explícito do atleta, nunca durante a
+ * digitação: renomear é tecla a tecla, e reestimar a cada tecla
+ * gastaria uma chamada por letra e sobrescreveria em silêncio um
+ * número que o próprio atleta talvez tenha ajustado à mão.
+ *
+ * Como toda operação desta tela, devolve proposta e não grava nada: o
+ * item só muda na tela, e o registro continua dependendo da
+ * confirmação final.
+ */
+export async function recalcularMacrosDoItemAction(fd: FormData): Promise<ResultadoMacrosItem> {
+  const session = await auth();
+  if (!session?.user?.id) return { ok: false, erro: "Sessão expirada. Entre novamente." };
+  const userId = session.user.id;
+
+  const alimento = String(fd.get("alimento") ?? "").trim();
+  if (alimento.length === 0 || alimento.length > 80) {
+    return { ok: false, erro: "Escreva o nome do alimento para recalcular." };
+  }
+
+  const gramas = Number(String(fd.get("gramas") ?? "").replace(",", "."));
+  if (!Number.isFinite(gramas) || gramas <= 0 || gramas > 3000) {
+    return { ok: false, erro: "Quantidade fora do intervalo aceito (1 a 3000 g)." };
+  }
+
+  const nucleo = await contextoDoAtleta(userId);
+
+  await conceder(userId, "alimento-macros", ["alimento-corrigido"], NOME_PROVEDOR);
+
+  const resultado = await estimarMacrosDoAlimento({
+    userId,
+    nucleo,
+    alimento,
+    quantidadeGramas: Math.round(gramas),
+  });
+
+  if (resultado.status !== "ok") {
+    return {
+      ok: false,
+      erro: "Não consegui recalcular agora. Os números continuam como estavam — tente de novo ou ajuste à mão.",
+    };
+  }
+
+  return { ok: true, macros: { ...resultado.valor, modelo: resultado.modeloResolvido } };
 }
 
 export type ResultadoRegistro = { ok: true } | { ok: false; erro: string };

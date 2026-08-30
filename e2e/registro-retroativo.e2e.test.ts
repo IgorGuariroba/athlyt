@@ -103,6 +103,44 @@ test("descrever o que comeu registra a refeição sem foto e sem editar item a i
   await expect(macros.getByText("378/2400")).toBeVisible();
 });
 
+test("corrigir o alimento avisa que os macros são de outro, e recalcular só aquele item", async ({
+  page,
+  context,
+}) => {
+  await context.addCookies([await atletaComPlano("recalculo")]);
+
+  await page.goto("/diario/registrar/descricao");
+  await page
+    .getByLabel("Descrição da refeição")
+    .fill("Duas colheres de arroz, um bife médio e um copo de suco.");
+  await page.getByRole("button", { name: /Estimar calorias e macros/ }).click();
+  await expect(page.getByRole("heading", { name: "Confira antes de registrar" })).toBeVisible();
+
+  const total = page.getByText("Total estimado").locator("..");
+  await expect(total.getByText("468 kcal", { exact: false })).toBeVisible();
+  // Enquanto o alimento é o estimado, nada de aviso: corrigir a porção
+  // ou o nome não pode virar cerimônia no caminho comum.
+  await expect(page.getByRole("button", { name: /Recalcular/ })).toHaveCount(0);
+
+  // "suco de laranja" → "suco de laranja zero açúcar" troca o alimento,
+  // e não só o rótulo: os 90 kcal deixam de descrever o que foi bebido.
+  await page.getByLabel("Alimento 3").fill("Suco de laranja zero açúcar");
+  await expect(page.getByText(/Estes números são de/)).toBeVisible();
+  await expect(page.getByText(/Suco de laranja”/)).toBeVisible();
+
+  // O recálculo é explicitamente pedido, e atinge apenas aquela linha.
+  await page.getByRole("button", { name: /Recalcular/ }).click();
+  await expect(total.getByText("378 kcal", { exact: false })).toBeVisible();
+  await expect(page.getByText(/Estes números são de/)).toHaveCount(0);
+
+  await page.getByRole("button", { name: /Registrar no Diário/ }).click();
+  await expect(page.getByRole("heading", { name: "Hoje" })).toBeVisible();
+
+  // O Diário recebe o nome corrigido com os números correspondentes.
+  const macros = page.getByRole("region", { name: "Macros do dia" });
+  await expect(macros.getByText("378/2400")).toBeVisible();
+});
+
 test("substituir um consumo já registrado exige aviso, e cancelar preserva o registro", async ({
   page,
   context,

@@ -49,6 +49,7 @@ export type OperacaoIA =
   | "refeicao-texto"
   | "refeicao-audio"
   | "refeicao-foto"
+  | "alimento-macros"
   | "avaliacao-visual"
   | "importacao-historico";
 

@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { LIMITE_DESCRICAO } from "@/domain/alimentos/audio-refeicao";
-import type { ItemPrato } from "@/domain/alimentos/prato";
+import { nomeDoItem, reestimarMacros, type ItemPrato } from "@/domain/alimentos/prato";
 import type { Macros } from "@/domain/diario/tipos";
 import { CapturaAudio } from "./captura-audio";
 import { RevisaoEstimativa } from "./revisao-estimativa";
@@ -37,6 +37,20 @@ export type ResultadoEstimativa =
 
 export type ResultadoTranscricao =
   | { ok: true; transcricao: string; trechosIncertos: string[] }
+  | { ok: false; erro: string };
+
+export interface MacrosRecalculados {
+  calorias: number;
+  proteinaG: number;
+  carboidratosG: number;
+  gordurasG: number;
+  fibrasG: number;
+  confianca: "alta" | "media" | "baixa";
+  modelo: string;
+}
+
+export type ResultadoMacrosItem =
+  | { ok: true; macros: MacrosRecalculados }
   | { ok: false; erro: string };
 
 export type ResultadoRegistro = { ok: true } | { ok: false; erro: string };
@@ -68,6 +82,7 @@ export function RegistroPorDescricao({
   estimar,
   transcrever,
   registrar,
+  recalcularItem,
   rotaDoDiario = "/diario",
   className,
 }: {
@@ -82,6 +97,8 @@ export function RegistroPorDescricao({
   estimar: (fd: FormData) => Promise<ResultadoEstimativa>;
   transcrever: (fd: FormData) => Promise<ResultadoTranscricao>;
   registrar: (fd: FormData) => Promise<ResultadoRegistro>;
+  /** Recalcula os macros de um item cujo alimento o atleta corrigiu. */
+  recalcularItem?: (fd: FormData) => Promise<ResultadoMacrosItem>;
   /** Para onde voltar depois de gravar; o dia escolhido entra na query. */
   rotaDoDiario?: string;
   className?: string;
@@ -94,6 +111,13 @@ export function RegistroPorDescricao({
   const [trechosIncertos, setTrechosIncertos] = useState<string[]>([]);
   const [estimativa, setEstimativa] = useState<EstimativaDescrita | null>(null);
   const [itens, setItens] = useState<ItemPrato[]>([]);
+  /**
+   * Nome de cada item no momento em que seus macros foram estimados.
+   * Guardado à parte porque a lista é editada livremente: é a
+   * comparação entre os dois que revela um alimento trocado sem os
+   * números correspondentes.
+   */
+  const [nomesEstimados, setNomesEstimados] = useState<string[]>([]);
   const [nome, setNome] = useState(nomeInicial);
   const [diaEscolhido, setDiaEscolhido] = useState(dia);
   const [hora, setHora] = useState(horaInicial);
@@ -141,11 +165,57 @@ export function RegistroPorDescricao({
       }
       setEstimativa(resultado.estimativa);
       setItens(resultado.estimativa.itens);
+      setNomesEstimados(resultado.estimativa.itens.map(nomeDoItem));
       setNome(resultado.estimativa.nome);
     } catch {
       setErro("Falha de conexão durante a estimativa. Sua descrição continua aqui.");
     } finally {
       setOcupado(false);
+    }
+  }
+
+  /**
+   * A lista de nomes estimados acompanha a de itens por posição, e a
+   * revisão permite remover e acrescentar. Realinhar aqui, num único
+   * ponto, evita a classe de bug em que o aviso passa a apontar para o
+   * item vizinho depois de uma remoção.
+   *
+   * Item acrescentado à mão entra com o próprio nome: ele nunca está
+   * defasado, porque quem informou os macros foi o atleta.
+   */
+  function aoMudarItens(novos: ItemPrato[]) {
+    if (novos.length !== itens.length) {
+      const anteriores = new Map(itens.map((item, indice) => [item, nomesEstimados[indice]]));
+      setNomesEstimados(novos.map((item) => anteriores.get(item) ?? nomeDoItem(item)));
+    }
+    setItens(novos);
+  }
+
+  async function recalcular(indice: number) {
+    if (!recalcularItem) return;
+    const item = itens[indice];
+    if (!item) return;
+    setErro(null);
+
+    const corpo = new FormData();
+    corpo.set("alimento", nomeDoItem(item));
+    corpo.set("gramas", String(item.quantidade));
+    try {
+      const resultado = await recalcularItem(corpo);
+      if (!resultado.ok) {
+        setErro(resultado.erro);
+        return;
+      }
+      // Os números passam a valer para o nome atual, então o aviso desta
+      // linha some — e só o desta.
+      setItens((atuais) =>
+        atuais.map((alvo, i) => (i === indice ? reestimarMacros(alvo, resultado.macros) : alvo)),
+      );
+      setNomesEstimados((atuais) =>
+        atuais.map((alvo, i) => (i === indice ? nomeDoItem(item) : alvo)),
+      );
+    } catch {
+      setErro("Falha de conexão ao recalcular. Os números continuam como estavam.");
     }
   }
 
@@ -309,8 +379,10 @@ export function RegistroPorDescricao({
         ) : (
           <RevisaoEstimativa
             itens={itens}
-            aoMudar={setItens}
+            aoMudar={aoMudarItens}
             porcoesDescritas={estimativa.porcoesDescritas}
+            nomesEstimados={nomesEstimados}
+            aoRecalcularItem={recalcularItem ? recalcular : undefined}
             limitacoes={estimativa.limitacoes}
             confianca={estimativa.confianca}
             origemEstimativa={estimativa.origem}

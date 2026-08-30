@@ -177,10 +177,77 @@ export function reescalarItem(item: ItemPrato, gramas: number): ItemPrato {
  * ela não toca nos macros: quem renomeia está dizendo o que era, não
  * quanto era — e ajustar os dois de uma vez esconderia do atleta qual
  * das duas coisas ele acabou de mudar.
+ *
+ * O nome é gravado como veio, **sem `trim`**. A função é chamada a
+ * cada tecla por um campo controlado, então aparar a ponta aqui apaga
+ * o espaço no instante em que ele é digitado: "Coca cola zero" chega
+ * como "Cocacolazero" e o atleta não consegue escrever nome nenhum
+ * com mais de uma palavra. Normalizar é trabalho da fronteira que
+ * persiste (`registrarConsumoRealAction`), que já faz isso — não do
+ * meio da digitação.
  */
 export function renomearItem(item: ItemPrato, nome: string): ItemPrato {
   const sufixo = item.unidade === "g" ? ` ${item.quantidade} g` : "";
-  return { ...item, descricao: `${nome.trim()}${sufixo}` };
+  return { ...item, descricao: `${nome}${sufixo}` };
+}
+
+/**
+ * O nome do item deixou de corresponder aos macros que ele carrega.
+ *
+ * Renomear preserva os números de propósito — dizer o que era não é
+ * dizer quanto era —, mas há correções que mudam o alimento, e não
+ * apenas o rótulo: "cola" para "cola zero", "leite" para "leite
+ * desnatado", "pão" para "pão integral". Nesses casos os macros
+ * antigos descrevem outra comida, e o total mente sem nada na tela
+ * dizendo por quê.
+ *
+ * A função não decide se a diferença importa nutricionalmente — isso
+ * exigiria saber de nutrição, que é justamente o que se pede à IA.
+ * Ela responde algo verificável: o nome atual ainda é aquele para o
+ * qual estes números foram estimados?
+ */
+export function macrosDesatualizados(item: ItemPrato, nomeEstimado: string): boolean {
+  if (item.origemDado !== "estimativa-ia") return false;
+  // A comparação normaliza; `nomeDoItem` não, porque alimenta um campo
+  // de texto. Um espaço recém-digitado não é uma correção de alimento.
+  return nomeDoItem(item).trim().toLowerCase() !== nomeEstimado.trim().toLowerCase();
+}
+
+/**
+ * Descrição sem o sufixo de gramas que `itemEstimado` acrescenta.
+ *
+ * **Não apara as pontas**: o retorno alimenta o `value` do campo de
+ * correção do alimento, e aparar ali apaga o espaço no keystroke em que
+ * ele é digitado — "Coca cola zero" vira "Cocacolazero". Quem precisa
+ * comparar normaliza no ponto da comparação.
+ */
+export function nomeDoItem(item: ItemPrato): string {
+  return item.descricao.replace(/\s\d+\s?g$/, "");
+}
+
+/**
+ * Substitui energia e macros de um item mantendo identidade e
+ * proveniência.
+ *
+ * É o retorno da reestimativa por item: o alimento e a quantidade já
+ * são os que o atleta corrigiu, o que faltava eram os números. A
+ * origem continua `estimativa-ia` porque continua sendo palpite de
+ * modelo — mais recente, não mais confiável.
+ */
+export function reestimarMacros(
+  item: ItemPrato,
+  macros: Macros & { confianca: Confianca; modelo: string },
+): ItemPrato {
+  return {
+    ...item,
+    calorias: Math.round(macros.calorias),
+    proteinaG: Math.round(macros.proteinaG),
+    carboidratosG: Math.round(macros.carboidratosG),
+    gordurasG: Math.round(macros.gordurasG),
+    fibrasG: Math.round(macros.fibrasG),
+    confianca: macros.confianca,
+    versaoFonte: macros.modelo,
+  };
 }
 
 export function adicionarAoPrato(prato: readonly ItemPrato[], item: ItemPrato): ItemPrato[] {

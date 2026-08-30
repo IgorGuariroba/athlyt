@@ -46,7 +46,9 @@ ENV PORT=3000
 # Traefik do Dokploy não alcança o container.
 ENV HOSTNAME=0.0.0.0
 
-# FFmpeg converte o MP4 produzido pelo Safari para OGG/Opus antes da IA.
+# FFmpeg converte a gravação do navegador (WebM no Chrome/Firefox, MP4
+# no Safari) para MP3 antes da IA: o cliente OpenAI-compatible só monta
+# anexo de áudio a partir de audio/mpeg ou audio/wav.
 RUN apk add --no-cache ffmpeg
 
 # Processo sem privilégios de root.

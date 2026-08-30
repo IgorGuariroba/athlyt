@@ -1,13 +1,15 @@
 "use client";
 
 import { useState } from "react";
-import { Plus, Trash2, TriangleAlert } from "lucide-react";
+import { Plus, RefreshCw, Trash2, TriangleAlert } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
   adicionarAoPrato,
   itemManual,
+  macrosDesatualizados,
+  nomeDoItem,
   reescalarItem,
   removerDoPrato,
   renomearItem,
@@ -39,6 +41,16 @@ import { cn } from "@/lib/utils";
  * - o total recalcula a cada edição e fica visível antes do botão de
  *   confirmar, nunca depois (user story 16).
  *
+ * Corrigir o nome não mexe nos macros sozinho, mas há correções que
+ * trocam o alimento e não só o rótulo ("cola" → "cola zero"). Quando
+ * o nome deixa de ser aquele para o qual os números foram estimados, a
+ * linha diz isso e oferece o recálculo daquele item. O botão é
+ * explícito de propósito: reestimar durante a digitação gastaria uma
+ * chamada por tecla e sobrescreveria em silêncio um valor que o atleta
+ * pode ter ajustado à mão. Ignorar o aviso também é uma escolha válida
+ * — desde que seja uma escolha, e não um número errado que passou
+ * despercebido.
+ *
  * O item acrescentado à mão entra como entrada do atleta
  * (`origemDado: "usuario"`), não como estimativa da IA: atribuir ao
  * modelo um alimento que ele nunca propôs falsificaria a auditoria na
@@ -51,6 +63,8 @@ export function RevisaoEstimativa({
   itens,
   aoMudar,
   porcoesDescritas,
+  nomesEstimados,
+  aoRecalcularItem,
   limitacoes,
   confianca,
   origemEstimativa,
@@ -60,12 +74,23 @@ export function RevisaoEstimativa({
   aoMudar: (itens: ItemPrato[]) => void;
   /** Porção em linguagem comum, por item, na ordem da estimativa original. */
   porcoesDescritas?: readonly string[];
+  /**
+   * Nome para o qual os macros de cada item foram estimados. Difere do
+   * nome atual exatamente quando o atleta corrigiu o alimento.
+   */
+  nomesEstimados?: readonly string[];
+  /**
+   * Recalcula um item. Ausente, a linha apenas avisa da defasagem — o
+   * aviso é verdade mesmo onde não há IA disponível para resolvê-la.
+   */
+  aoRecalcularItem?: (indice: number) => Promise<void>;
   limitacoes: readonly string[];
   confianca: Confianca;
   origemEstimativa: OrigemEstimativa;
   className?: string;
 }) {
   const [adicionando, setAdicionando] = useState(false);
+  const [recalculando, setRecalculando] = useState<number | null>(null);
   const subtotal = subtotalDoPrato(itens);
 
   return (
@@ -94,8 +119,11 @@ export function RevisaoEstimativa({
 
       <ul className="flex flex-col gap-2">
         {itens.map((item, indice) => {
-          const nome = item.descricao.replace(/\s\d+\s?g$/, "");
+          const nome = nomeDoItem(item);
           const porcao = porcoesDescritas?.[indice];
+          const nomeEstimado = nomesEstimados?.[indice];
+          const defasado =
+            nomeEstimado !== undefined && macrosDesatualizados(item, nomeEstimado);
           return (
             <li
               key={`item-${indice}`}
@@ -148,6 +176,39 @@ export function RevisaoEstimativa({
                 {item.gordurasG}G ·{" "}
                 {rotuloDeConfianca(item.confianca, item.origemDado, origemEstimativa)}
               </p>
+
+              {/* O aviso nomeia o alimento a que os números se referem:
+                  "macros desatualizados" sozinho não diz ao atleta o
+                  que ele está prestes a gravar. */}
+              {defasado ? (
+                <div className="flex flex-wrap items-center gap-2">
+                  <p className="text-caption text-warning">
+                    Estes números são de “{nomeEstimado}”.
+                  </p>
+                  {aoRecalcularItem ? (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="xs"
+                      disabled={recalculando !== null}
+                      onClick={async () => {
+                        setRecalculando(indice);
+                        try {
+                          await aoRecalcularItem(indice);
+                        } finally {
+                          setRecalculando(null);
+                        }
+                      }}
+                    >
+                      <RefreshCw
+                        className={cn("size-3.5", recalculando === indice && "animate-spin")}
+                        aria-hidden="true"
+                      />
+                      {recalculando === indice ? "Recalculando…" : `Recalcular ${nome}`}
+                    </Button>
+                  ) : null}
+                </div>
+              ) : null}
             </li>
           );
         })}

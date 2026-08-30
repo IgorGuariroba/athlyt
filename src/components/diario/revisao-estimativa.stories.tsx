@@ -1,7 +1,12 @@
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import { useState } from "react";
 
-import { itemEstimado, type ItemPrato } from "@/domain/alimentos/prato";
+import {
+  itemEstimado,
+  reestimarMacros,
+  renomearItem,
+  type ItemPrato,
+} from "@/domain/alimentos/prato";
 import { RevisaoEstimativa } from "./revisao-estimativa";
 
 const ITENS: ItemPrato[] = [
@@ -30,6 +35,15 @@ const ITENS: ItemPrato[] = [
     origemEstimativa: "texto",
   }),
 ];
+
+const REFRIGERANTE = itemEstimado({
+  descricao: "Refrigerante de cola",
+  quantidadeGramas: 250,
+  calorias: 105, proteinaG: 0, carboidratosG: 27, gordurasG: 0, fibrasG: 0,
+  confianca: "media",
+  modelo: "google/gemini-2.5-flash-lite",
+  origemEstimativa: "texto",
+});
 
 function Interativo(args: Omit<React.ComponentProps<typeof RevisaoEstimativa>, "itens" | "aoMudar">) {
   const [itens, setItens] = useState<ItemPrato[]>(ITENS);
@@ -83,4 +97,43 @@ export const PorAudio: Story = {
 
 export const SemLimitacoes: Story = {
   render: () => <Interativo limitacoes={[]} confianca="alta" origemEstimativa="foto" />,
+};
+
+/**
+ * O atleta corrigiu "Refrigerante de cola" para a versão zero, mas os
+ * macros continuam sendo os do refrigerante comum. A linha diz de que
+ * alimento os números são e oferece o recálculo daquele item — nunca
+ * durante a digitação, que gastaria uma chamada por tecla.
+ */
+export const AlimentoCorrigidoSemRecalculo: Story = {
+  render: function Render() {
+    const [itens, setItens] = useState<ItemPrato[]>([
+      renomearItem(REFRIGERANTE, "Refrigerante de cola zero"),
+      ITENS[1],
+    ]);
+    return (
+      <RevisaoEstimativa
+        itens={itens}
+        aoMudar={setItens}
+        porcoesDescritas={["um copo", "um bife médio"]}
+        nomesEstimados={["Refrigerante de cola", "Bife de alcatra grelhado"]}
+        aoRecalcularItem={async (indice) => {
+          await new Promise((resolver) => setTimeout(resolver, 900));
+          setItens((atuais) =>
+            atuais.map((item, i) =>
+              i === indice
+                ? reestimarMacros(item, {
+                    calorias: 0, proteinaG: 0, carboidratosG: 0, gordurasG: 0, fibrasG: 0,
+                    confianca: "alta", modelo: "google/gemini-2.5-flash-lite",
+                  })
+                : item,
+            ),
+          );
+        }}
+        limitacoes={[]}
+        confianca="media"
+        origemEstimativa="texto"
+      />
+    );
+  },
 };
