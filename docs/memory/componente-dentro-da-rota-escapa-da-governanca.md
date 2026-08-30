@@ -9,7 +9,7 @@ generated:
   at: 2026-08-24T15:35:00-03:00
 sources:
   - id: extracao-diario-2026-08-24
-    resource: "src/components/diario/, src/app/(app)/diario/page.tsx, src/arquitetura/governanca-ui.ts, .pi/extensions/ui-componentes/catalogo.ts"
+    resource: "src/components/diario/, src/app/(app)/diario/page.tsx, src/arquitetura/governanca-ui.ts, src/arquitetura/catalogo-ui.ts"
     title: "Extração da aba Diário para a camada de componentes compartilhados"
 ---
 
