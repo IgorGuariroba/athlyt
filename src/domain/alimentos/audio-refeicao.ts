@@ -1,12 +1,12 @@
 /**
  * Áudio da descrição da refeição, antes de ir ao provedor de IA.
  *
- * Diferente da foto do prato, o áudio **não é reprocessado**. A fronteira
- * aceita apenas os formatos de arquivo que o endpoint multimodal usado
- * pelo provedor realmente suporta; o formato é validado no servidor antes
- * de qualquer chamada externa. MP4 é deliberadamente recusado: embora
- * alguns navegadores o usem no MediaRecorder, o endpoint responde que
- * `audio/mp4` não é uma funcionalidade suportada.
+ * Há duas listas aqui porque são duas perguntas diferentes: o que o
+ * navegador consegue gravar, e o que o cliente do provedor consegue
+ * enviar. Elas quase não se sobrepõem — o MediaRecorder produz WebM
+ * (Chrome/Firefox) ou MP4 (Safari), e nenhum dos dois vira anexo de
+ * áudio no protocolo OpenAI-compatible. Por isso a conversão no
+ * servidor é o caminho normal, não a exceção.
  *
  * Os bytes são efêmeros por decisão de produto (ADR 0002): existem
  * durante a transcrição e são descartados. O que sobrevive é a
@@ -15,13 +15,37 @@
 
 export const LIMITE_AUDIO_REFEICAO_BYTES = 8 * 1024 * 1024;
 
-/** Um minuto de fala descrevendo um prato cabe folgado em qualquer um destes. */
+/**
+ * Containers que aceitamos receber do navegador. Um minuto de fala
+ * descrevendo um prato cabe folgado em qualquer um deles.
+ */
 export const TIPOS_AUDIO_REFEICAO = new Set([
   "audio/webm",
   "audio/ogg",
+  "audio/mp4",
   "audio/mpeg",
   "audio/wav",
 ]);
+
+/**
+ * O que o cliente OpenAI-compatible sabe transformar em `input_audio`.
+ *
+ * A lista é curta porque quem a define não somos nós: o conversor de
+ * mensagens do `@ai-sdk/openai-compatible` mapeia apenas `audio/wav` e
+ * `audio/mpeg`, e lança `UnsupportedFunctionalityError` para qualquer
+ * outro **antes de a requisição sair da máquina**. Foi essa falha que
+ * apareceu em produção como "não consegui transcrever o áudio" — sem
+ * nenhuma chamada ter sido feita ao modelo. `audio-provedor.unit.test.ts`
+ * trava esta lista contra o conversor real do SDK.
+ */
+export const TIPOS_AUDIO_PROVEDOR = new Set(["audio/mpeg", "audio/wav"]);
+
+/** Formato aceito pelo provedor e produzível por qualquer entrada. */
+export const TIPO_AUDIO_CONVERTIDO = "audio/mpeg";
+
+export function precisaConverterAudio(mediaType: string): boolean {
+  return !TIPOS_AUDIO_PROVEDOR.has(mediaType);
+}
 
 export function validarAudioRefeicao(entrada: {
   bytes: Uint8Array;
@@ -29,8 +53,7 @@ export function validarAudioRefeicao(entrada: {
 }): { dados: Uint8Array; mediaType: string } {
   // O navegador anexa codec ao tipo ("audio/webm;codecs=opus"); a
   // decisão é sobre o container, então o parâmetro é descartado antes
-  // da comparação em vez de multiplicar entradas na lista. MP4 fica
-  // fora porque o endpoint de arquivo do provedor o rejeita.
+  // da comparação em vez de multiplicar entradas na lista.
   const mediaType = entrada.contentType.split(";")[0].trim().toLowerCase();
   if (!TIPOS_AUDIO_REFEICAO.has(mediaType)) {
     throw new Error("Formato de áudio não permitido. Grave de novo ou escreva a descrição.");

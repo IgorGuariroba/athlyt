@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   LIMITE_AUDIO_REFEICAO_BYTES,
   LIMITE_DESCRICAO,
+  precisaConverterAudio,
   validarAudioRefeicao,
   validarDescricaoRefeicao,
 } from "../audio-refeicao";
@@ -18,10 +19,15 @@ describe("fronteira do áudio da refeição", () => {
     expect(audio.mediaType).toBe("audio/webm");
   });
 
-  it("recusa MP4, que o endpoint de arquivo do provedor não aceita", () => {
-    expect(() =>
-      validarAudioRefeicao({ bytes: new Uint8Array([1]), contentType: "audio/mp4" }),
-    ).toThrow(/Formato de áudio/);
+  it("aceita o MP4 que o Safari grava: ele é convertido, não recusado", () => {
+    // Recusar aqui devolvia ao usuário de iPhone um erro por algo que o
+    // servidor sabe resolver — a conversão é responsabilidade da action.
+    const audio = validarAudioRefeicao({
+      bytes: new Uint8Array([1]),
+      contentType: "audio/mp4",
+    });
+    expect(audio.mediaType).toBe("audio/mp4");
+    expect(precisaConverterAudio(audio.mediaType)).toBe(true);
   });
 
   it("recusa formato fora da lista antes de qualquer chamada externa", () => {

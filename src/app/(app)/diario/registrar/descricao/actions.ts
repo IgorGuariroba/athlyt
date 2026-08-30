@@ -9,6 +9,8 @@ import { promisify } from "node:util";
 import { auth } from "@/auth";
 import {
   LIMITE_AUDIO_REFEICAO_BYTES,
+  precisaConverterAudio,
+  TIPO_AUDIO_CONVERTIDO,
   validarAudioRefeicao,
   validarDescricaoRefeicao,
 } from "@/domain/alimentos/audio-refeicao";
@@ -47,14 +49,28 @@ export type ResultadoTranscricao =
 
 const execFileAsync = promisify(execFile);
 
-async function converterAudioParaOgg(bytes: Uint8Array) {
+/**
+ * Transcodifica a gravação para o único formato que atravessa o
+ * cliente do provedor (ver `TIPOS_AUDIO_PROVEDOR`).
+ *
+ * O FFmpeg detecta o container pelo conteúdo, então a mesma chamada
+ * serve para o WebM do Chrome e o MP4 do Safari; a extensão de entrada
+ * não é declarada de propósito, para não mentir sobre o que chegou.
+ * Mono e 32 kbit/s porque o destino é reconhecimento de fala, e isso
+ * mantém um minuto de áudio na casa das centenas de KB.
+ */
+async function converterAudioParaProvedor(bytes: Uint8Array) {
   const pasta = await mkdtemp(join(tmpdir(), "athlyt-audio-"));
-  const entrada = join(pasta, "entrada.mp4");
-  const saida = join(pasta, "saida.ogg");
+  const entrada = join(pasta, "entrada");
+  const saida = join(pasta, "saida.mp3");
   try {
     await writeFile(entrada, bytes);
-    await execFileAsync("ffmpeg", ["-y", "-i", entrada, "-vn", "-ac", "1", "-c:a", "libopus", "-b:a", "32k", saida], { timeout: 30_000 });
-    return { bytes: new Uint8Array(await readFile(saida)), contentType: "audio/ogg" };
+    await execFileAsync(
+      "ffmpeg",
+      ["-y", "-i", entrada, "-vn", "-ac", "1", "-ar", "16000", "-c:a", "libmp3lame", "-b:a", "32k", saida],
+      { timeout: 30_000 },
+    );
+    return { bytes: new Uint8Array(await readFile(saida)), contentType: TIPO_AUDIO_CONVERTIDO };
   } finally {
     await rm(pasta, { recursive: true, force: true });
   }
@@ -97,14 +113,15 @@ export async function transcreverAudioAction(fd: FormData): Promise<ResultadoTra
 
   let audio;
   try {
-    const bytes = new Uint8Array(await arquivo.arrayBuffer());
-    const convertido = arquivo.type.split(";")[0].trim().toLowerCase() === "audio/mp4"
-      ? await converterAudioParaOgg(bytes)
-      : { bytes, contentType: arquivo.type };
-    audio = validarAudioRefeicao({
-      bytes: convertido.bytes,
-      contentType: convertido.contentType,
+    // Validar antes de converter mantém barato o caso ruim: um arquivo
+    // que não é áudio nunca chega a ligar o FFmpeg.
+    const recebido = validarAudioRefeicao({
+      bytes: new Uint8Array(await arquivo.arrayBuffer()),
+      contentType: arquivo.type,
     });
+    audio = precisaConverterAudio(recebido.mediaType)
+      ? validarAudioRefeicao(await converterAudioParaProvedor(recebido.dados))
+      : recebido;
   } catch (erro) {
     return { ok: false, erro: erro instanceof Error ? erro.message : "Áudio inválido." };
   }
