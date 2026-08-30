@@ -2,11 +2,13 @@ import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { RegistroPorDescricao } from "@/components/diario";
 import { CabecalhoTela, NotaTela, SecoesTela, TelaConteudo } from "@/components/tela";
+import type { ItemPrato } from "@/domain/alimentos/prato";
 import { CATEGORIAS_DE_REFEICAO } from "@/domain/diario/cardapio";
 import { FUSO_PADRAO, horaLocal } from "@/domain/diario/dia-alimentar";
 import {
   hojeDoUsuario,
   obterConsumoDaRefeicao,
+  obterConsumoPorId,
   obterEntradaPlanejada,
 } from "@/domain/diario/repositorio";
 import {
@@ -31,21 +33,20 @@ import {
 export default async function RegistrarPorDescricaoPage({
   searchParams,
 }: {
-  searchParams: Promise<{ dia?: string; refeicao?: string }>;
+  searchParams: Promise<{ dia?: string; refeicao?: string; metodo?: string; consumo?: string }>;
 }) {
   const session = await auth();
   if (!session?.user?.id) redirect("/");
   const userId = session.user.id;
 
-  const { dia: diaParam, refeicao } = await searchParams;
+  const { dia: diaParam, refeicao, metodo, consumo: consumoId } = await searchParams;
   const fuso = FUSO_PADRAO;
   const dia = diaParam ?? hojeDoUsuario(fuso);
   const refeicaoRef = refeicao ? decodeURIComponent(refeicao) : null;
 
   const planejada = refeicaoRef ? await obterEntradaPlanejada(userId, refeicaoRef) : null;
-  const existente = refeicaoRef
-    ? await obterConsumoDaRefeicao(userId, { refeicaoRef, dia, fuso })
-    : null;
+  const consumoParaEditar = consumoId ? await obterConsumoPorId(userId, consumoId, fuso) : null;
+  const existente = refeicaoRef ? await obterConsumoDaRefeicao(userId, { refeicaoRef, dia, fuso }) : null;
 
   return (
     <TelaConteudo>
@@ -59,9 +60,12 @@ export default async function RegistrarPorDescricaoPage({
       <SecoesTela>
         <RegistroPorDescricao
           dia={dia}
-          horaInicial={planejada?.horaLocal ?? horaLocal(new Date(), fuso)}
-          nomeInicial={planejada?.nome ?? ""}
-          refeicaoRef={refeicaoRef}
+          horaInicial={consumoParaEditar?.horaLocal ?? planejada?.horaLocal ?? horaLocal(new Date(), fuso)}
+          modoInicial={metodo === "audio" ? "audio" : "texto"}
+          nomeInicial={consumoParaEditar?.nome ?? planejada?.nome ?? ""}
+          refeicaoRef={consumoParaEditar?.refeicaoRef ?? refeicaoRef}
+          consumoId={consumoParaEditar?.id}
+          itensIniciais={(consumoParaEditar?.itens ?? []) as ItemPrato[]}
           consumoExistente={
             existente ? { nome: existente.nome, macros: existente.macros } : null
           }

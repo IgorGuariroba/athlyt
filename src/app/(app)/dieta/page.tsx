@@ -1,13 +1,8 @@
-import Link from "next/link";
-import { Camera, UtensilsCrossed } from "lucide-react";
 import { auth } from "@/auth";
-import { Button } from "@/components/ui/button";
 import {
-  AcoesRegistro,
   LinhaDoTempoDia,
   NavegacaoDia,
   PainelMacrosDia,
-  contarItensDoDia,
 } from "@/components/diario";
 import { EstadoVazio, ExplicacaoAgent, TelaConteudo } from "@/components/tela";
 import { obterPlanoAtivo } from "@/domain/plano/repositorio";
@@ -16,6 +11,7 @@ import { hojeDoUsuario, montarDiarioDoDia } from "@/domain/diario/repositorio";
 import {
   confirmarRefeicaoAction,
   desfazerConfirmacaoAction,
+  excluirConsumoAction,
 } from "../diario/actions";
 import { rotuloDoDia } from "../diario/rotulo-do-dia";
 
@@ -55,8 +51,6 @@ export default async function DietaPage({
         obterPlanoAtivo(userId),
       ])
     : [null, null];
-  const refeicoes = diario ? contarItensDoDia(diario.linhaDoTempo, true) : 0;
-
   return (
     <TelaConteudo>
       <section aria-label="Dieta" className="flex flex-col gap-4 px-6">
@@ -82,41 +76,18 @@ export default async function DietaPage({
           />
         ) : null}
 
-        {/* Registro em um toque, acima da lista: quem abre a Dieta com o
-            prato na frente não precisa rolar até o fim para começar. */}
-        <AcoesRegistro
-          hrefFoto={`/diario/registrar/foto?dia=${dia}`}
-          hrefBusca={`/diario/registrar?dia=${dia}`}
-        />
-
-        {diario && refeicoes > 0 ? (
+        {diario ? (
           <LinhaDoTempoDia
             itens={diario.linhaDoTempo}
             dia={dia}
             fuso={fuso}
             confirmar={confirmarRefeicaoAction}
             desfazer={desfazerConfirmacaoAction}
+            excluir={excluirConsumoAction}
             apenasAlimentar
           />
         ) : (
-          <EstadoVazio
-            Icone={UtensilsCrossed}
-            titulo={diario ? "O dia começa vazio" : "Dieta indisponível"}
-            descricao={
-              diario
-                ? "Fotografe o que você comeu — o agent identifica os alimentos e estima energia e macros."
-                : "Entre na sua conta para ver e registrar sua dieta."
-            }
-            acao={
-              diario ? (
-                <Button asChild>
-                  <Link href={`/diario/registrar/foto?dia=${dia}`}>
-                    <Camera className="size-4" aria-hidden="true" /> Fotografar refeição
-                  </Link>
-                </Button>
-              ) : undefined
-            }
-          />
+          <EstadoVazio titulo="Dieta indisponível" descricao="Entre na sua conta para ver e registrar sua dieta." />
         )}
       </section>
     </TelaConteudo>

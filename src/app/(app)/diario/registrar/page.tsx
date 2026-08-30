@@ -2,8 +2,8 @@ import Link from "next/link";
 import { ArrowLeft, Camera, ChevronRight } from "lucide-react";
 import { auth } from "@/auth";
 import { Button } from "@/components/ui/button";
-import { FUSO_PADRAO } from "@/domain/diario/dia-alimentar";
-import { hojeDoUsuario } from "@/domain/diario/repositorio";
+import { FUSO_PADRAO, horaLocal } from "@/domain/diario/dia-alimentar";
+import { hojeDoUsuario, obterEntradaPlanejada } from "@/domain/diario/repositorio";
 import { listarFavoritos, listarRecorrentes } from "@/domain/alimentos/repositorio";
 import { favoritarAction, registrarPratoAction, salvarAlimentoProprioAction } from "../actions";
 import { Atalhos } from "./atalhos";
@@ -16,16 +16,17 @@ import { Atalhos } from "./atalhos";
 export default async function RegistrarPage({
   searchParams,
 }: {
-  searchParams: Promise<{ dia?: string }>;
+  searchParams: Promise<{ dia?: string; refeicao?: string }>;
 }) {
-  const { dia: diaParam } = await searchParams;
+  const { dia: diaParam, refeicao } = await searchParams;
   const session = await auth();
   const userId = session?.user?.id;
   const fuso = FUSO_PADRAO;
   const dia = diaParam ?? hojeDoUsuario(fuso);
-  const [favoritos, recorrentes] = userId
-    ? await Promise.all([listarFavoritos(userId), listarRecorrentes(userId)])
-    : [[], []];
+  const refeicaoRef = refeicao ? decodeURIComponent(refeicao) : null;
+  const [favoritos, recorrentes, planejada] = userId
+    ? await Promise.all([listarFavoritos(userId), listarRecorrentes(userId), refeicaoRef ? obterEntradaPlanejada(userId, refeicaoRef) : null])
+    : [[], [], null];
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
@@ -67,6 +68,9 @@ export default async function RegistrarPage({
         fuso={fuso}
         favoritos={favoritos}
         recorrentes={recorrentes}
+        refeicaoRef={refeicaoRef}
+        horaInicial={planejada?.horaLocal ?? horaLocal(new Date(), fuso)}
+        nomeInicial={planejada?.nome}
         registrar={registrarPratoAction}
         favoritar={favoritarAction}
         salvarProprio={salvarAlimentoProprioAction}

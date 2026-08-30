@@ -1,4 +1,4 @@
-import { cleanup, render, screen, within } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { afterEach, describe, expect, it } from "vitest";
 
 import { AcoesRegistro } from "../acoes-registro";
@@ -8,6 +8,8 @@ import {
   CartaoSessaoDiario,
 } from "../cartoes-diario";
 import { LinhaDoTempoDiario } from "../linha-do-tempo";
+import { LinhaDoTempoDia } from "../linha-do-tempo-dia";
+import { SeletorMetodoRegistro } from "../seletor-metodo-registro";
 import { NavegacaoDia } from "../navegacao-dia";
 import { PainelMacrosDia } from "../painel-macros-dia";
 
@@ -133,6 +135,7 @@ describe("CartaoRefeicaoPlanejada", () => {
         macros={MACROS}
         itens={[]}
         explicacao={{ porque: "Concentra proteína no início do dia.", dadosUsados: [] }}
+        expandido
         hrefDivergencia="/f"
         hrefAjustar="/a"
         confirmacao={null}
@@ -168,6 +171,7 @@ describe("CartaoConsumo", () => {
         nome="Café da manhã"
         macros={{ calorias: 264, proteinaG: 14, carboidratosG: 19, gordurasG: 15, fibrasG: 3 }}
         planejado={MACROS}
+        expandido
       />,
     );
 
@@ -187,6 +191,36 @@ describe("CartaoSessaoDiario", () => {
 
     rerender(<CartaoSessaoDiario nome="Push B" estado="em_andamento" href="/sessao/2" />);
     expect(screen.getByText("Sessão de Treino em andamento")).toBeTruthy();
+  });
+});
+
+describe("SeletorMetodoRegistro", () => {
+  it("oferece os quatro métodos preservando dia e refeição planejada", () => {
+    render(<SeletorMetodoRegistro dia="2026-08-30" refeicaoRef="almoco" />);
+    for (const nome of ["foto", "texto", "áudio", "busca manual"]) {
+      const link = screen.getByRole("link", { name: `Registrar por ${nome}` });
+      expect(link.getAttribute("href")).toContain("dia=2026-08-30");
+      expect(link.getAttribute("href")).toContain("refeicao=almoco");
+    }
+  });
+});
+
+describe("LinhaDoTempoDia", () => {
+  it("mantém o cartão de Refeição extra no horário atual mesmo sem eventos", () => {
+    render(<LinhaDoTempoDia itens={[]} dia="2026-08-30" fuso="America/Sao_Paulo" agora={new Date("2026-08-30T15:25:00Z")} confirmar={() => undefined} desfazer={() => undefined} />);
+    expect(screen.getByRole("link", { name: "Adicionar refeição extra" })).toBeTruthy();
+    expect(screen.getByText("12:25")).toBeTruthy();
+  });
+
+  it("mantém somente uma refeição expandida", () => {
+    const itens = ["Café", "Almoço"].map((nome, indice) => ({ tipo: "planejada" as const, horaLocal: `${8 + indice}:00`, entrada: { refeicaoRef: nome, nome, horaLocal: `${8 + indice}:00`, itens: [{ descricao: `${nome} item`, ...MACROS }], macros: MACROS } }));
+    render(<LinhaDoTempoDia itens={itens} dia="2026-08-30" fuso="America/Sao_Paulo" confirmar={() => undefined} desfazer={() => undefined} />);
+    const botoes = screen.getAllByRole("button", { name: /Ver mais/ });
+    fireEvent.click(botoes[0]);
+    expect(botoes[0].getAttribute("aria-expanded")).toBe("true");
+    fireEvent.click(botoes[1]);
+    expect(botoes[0].getAttribute("aria-expanded")).toBe("false");
+    expect(botoes[1].getAttribute("aria-expanded")).toBe("true");
   });
 });
 

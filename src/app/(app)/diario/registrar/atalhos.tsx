@@ -45,6 +45,9 @@ export function Atalhos({
   fuso,
   favoritos,
   recorrentes,
+  refeicaoRef,
+  horaInicial,
+  nomeInicial,
   registrar,
   favoritar,
   salvarProprio,
@@ -53,6 +56,9 @@ export function Atalhos({
   fuso: string;
   favoritos: readonly ItemBiblioteca[];
   recorrentes: readonly Recorrente[];
+  refeicaoRef?: string | null;
+  horaInicial: string;
+  nomeInicial?: string;
   registrar: (formData: FormData) => Promise<void>;
   favoritar: (formData: FormData) => Promise<void>;
   salvarProprio: (formData: FormData) => Promise<void>;
@@ -237,6 +243,9 @@ export function Atalhos({
         subtotal={subtotal}
         dia={dia}
         fuso={fuso}
+        refeicaoRef={refeicaoRef}
+        horaInicial={horaInicial}
+        nomeInicial={nomeInicial}
         registrar={registrar}
         onRemover={(indice) => setPrato((atual) => removerDoPrato(atual, indice))}
       />
@@ -496,6 +505,9 @@ function PratoRodape({
   subtotal,
   dia,
   fuso,
+  refeicaoRef,
+  horaInicial,
+  nomeInicial,
   registrar,
   onRemover,
 }: {
@@ -503,6 +515,9 @@ function PratoRodape({
   subtotal: ReturnType<typeof subtotalDoPrato>;
   dia: string;
   fuso: string;
+  refeicaoRef?: string | null;
+  horaInicial: string;
+  nomeInicial?: string;
   registrar: (formData: FormData) => Promise<void>;
   onRemover: (indice: number) => void;
 }) {
@@ -554,11 +569,13 @@ function PratoRodape({
         </ul>
       )}
 
-      <form action={registrar} className="flex gap-2">
+      <form action={registrar} className="flex flex-wrap gap-2">
         <input type="hidden" name="dia" value={dia} />
         <input type="hidden" name="fuso" value={fuso} />
         <input type="hidden" name="itens" value={JSON.stringify(prato)} />
-        <Input name="nome" placeholder="Nome da refeição" aria-label="Nome da refeição" className="h-12 flex-1" />
+        <input type="hidden" name="refeicaoRef" value={refeicaoRef ?? ""} />
+        <Input type="time" name="hora" defaultValue={horaInicial} aria-label="Horário da refeição" className="h-12 w-28" />
+        <Input name="nome" defaultValue={nomeInicial} placeholder="Nome da refeição" aria-label="Nome da refeição" className="h-12 min-w-40 flex-1" />
         <Button type="submit" size="lg" disabled={prato.length === 0} className="h-12">
           <Check className="size-4" aria-hidden="true" /> Registrar
         </Button>

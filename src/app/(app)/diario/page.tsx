@@ -1,9 +1,5 @@
-import Link from "next/link";
-import { Camera, UtensilsCrossed } from "lucide-react";
 import { auth } from "@/auth";
-import { Button } from "@/components/ui/button";
 import {
-  AcoesRegistro,
   LinhaDoTempoDia,
   NavegacaoDia,
   PainelMacrosDia,
@@ -11,7 +7,7 @@ import {
 import { EstadoVazio, TelaConteudo } from "@/components/tela";
 import { FUSO_PADRAO, diaVizinho } from "@/domain/diario/dia-alimentar";
 import { hojeDoUsuario, montarDiarioDoDia } from "@/domain/diario/repositorio";
-import { confirmarRefeicaoAction, desfazerConfirmacaoAction } from "./actions";
+import { confirmarRefeicaoAction, desfazerConfirmacaoAction, excluirConsumoAction } from "./actions";
 import { rotuloDoDia } from "./rotulo-do-dia";
 
 /**
@@ -62,42 +58,17 @@ export default async function DiarioPage({
 
         {diario ? <PainelMacrosDia painel={diario.painel} /> : null}
 
-        {/* Registro em um toque, acima da linha do tempo: quem abre o
-            Diário com o prato na frente não precisa rolar até o fim para
-            começar. */}
-        <AcoesRegistro
-          hrefFoto={`/diario/registrar/foto?dia=${dia}`}
-          hrefBusca={`/diario/registrar?dia=${dia}`}
-          hrefDescricao={`/diario/registrar/descricao?dia=${dia}`}
-        />
-
-        {diario && diario.linhaDoTempo.length > 0 ? (
+        {diario ? (
           <LinhaDoTempoDia
             itens={diario.linhaDoTempo}
             dia={dia}
             fuso={fuso}
             confirmar={confirmarRefeicaoAction}
             desfazer={desfazerConfirmacaoAction}
+            excluir={excluirConsumoAction}
           />
         ) : (
-          <EstadoVazio
-            Icone={UtensilsCrossed}
-            titulo={diario ? "O dia começa vazio" : "Diário indisponível"}
-            descricao={
-              diario
-                ? "Fotografe o que você comeu — o agent identifica os alimentos e estima energia e macros."
-                : "Entre na sua conta para ver e registrar seu Diário."
-            }
-            acao={
-              diario ? (
-                <Button asChild>
-                  <Link href={`/diario/registrar/foto?dia=${dia}`}>
-                    <Camera className="size-4" aria-hidden="true" /> Fotografar refeição
-                  </Link>
-                </Button>
-              ) : undefined
-            }
-          />
+          <EstadoVazio titulo="Diário indisponível" descricao="Entre na sua conta para ver e registrar seu Diário." />
         )}
       </section>
     </TelaConteudo>

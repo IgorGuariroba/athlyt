@@ -75,9 +75,12 @@ export type ResultadoRegistro = { ok: true } | { ok: false; erro: string };
 export function RegistroPorDescricao({
   dia,
   horaInicial,
+  modoInicial = "texto",
   nomeInicial,
   refeicaoRef,
   consumoExistente,
+  consumoId,
+  itensIniciais = [],
   categorias,
   estimar,
   transcrever,
@@ -88,11 +91,14 @@ export function RegistroPorDescricao({
 }: {
   dia: string;
   horaInicial: string;
+  modoInicial?: OrigemDescricao;
   nomeInicial: string;
   /** Refeição Planejada de origem, quando o fluxo veio do cartão dela. */
   refeicaoRef?: string | null;
   /** Consumo já registrado para esta refeição; presença dispara o aviso. */
   consumoExistente?: ConsumoExistente | null;
+  consumoId?: string | null;
+  itensIniciais?: ItemPrato[];
   categorias: readonly string[];
   estimar: (fd: FormData) => Promise<ResultadoEstimativa>;
   transcrever: (fd: FormData) => Promise<ResultadoTranscricao>;
@@ -104,20 +110,21 @@ export function RegistroPorDescricao({
   className?: string;
 }) {
   const router = useRouter();
-  const [modo, setModo] = useState<OrigemDescricao>("texto");
+  const [modo, setModo] = useState<OrigemDescricao>(modoInicial);
   const [descricao, setDescricao] = useState("");
   const [audio, setAudio] = useState<File | null>(null);
   const [transcrito, setTranscrito] = useState(false);
   const [trechosIncertos, setTrechosIncertos] = useState<string[]>([]);
-  const [estimativa, setEstimativa] = useState<EstimativaDescrita | null>(null);
-  const [itens, setItens] = useState<ItemPrato[]>([]);
+  const estimativaExistente: EstimativaDescrita | null = itensIniciais.length ? { nome: nomeInicial, itens: itensIniciais, porcoesDescritas: itensIniciais.map(() => ""), limitacoes: [], confianca: "baixa", descricaoUsada: "Consumo registrado anteriormente", origem: modoInicial } : null;
+  const [estimativa, setEstimativa] = useState<EstimativaDescrita | null>(estimativaExistente);
+  const [itens, setItens] = useState<ItemPrato[]>(itensIniciais);
   /**
    * Nome de cada item no momento em que seus macros foram estimados.
    * Guardado à parte porque a lista é editada livremente: é a
    * comparação entre os dois que revela um alimento trocado sem os
    * números correspondentes.
    */
-  const [nomesEstimados, setNomesEstimados] = useState<string[]>([]);
+  const [nomesEstimados, setNomesEstimados] = useState<string[]>(itensIniciais.map(nomeDoItem));
   const [nome, setNome] = useState(nomeInicial);
   const [diaEscolhido, setDiaEscolhido] = useState(dia);
   const [hora, setHora] = useState(horaInicial);
@@ -231,6 +238,7 @@ export function RegistroPorDescricao({
     // gravar com o mesmo `refeicaoRef` no mesmo dia. Mandar um sinal
     // à parte criaria uma segunda verdade sobre o mesmo fato.
     if (refeicaoRef) corpo.set("refeicaoRef", refeicaoRef);
+    if (consumoId) corpo.set("consumoId", consumoId);
     iniciarRegistro(async () => {
       const resultado = await registrar(corpo);
       if (!resultado.ok) {

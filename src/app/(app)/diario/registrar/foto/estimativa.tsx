@@ -30,11 +30,17 @@ import type { RefeicaoEstimadaNaTela, ResultadoEstimativa } from "./actions";
 export function RegistroPorFoto({
   dia,
   fuso,
+  horaInicial,
+  refeicaoRef,
+  nomeInicial,
   estimar,
   registrar,
 }: {
   dia: string;
   fuso: string;
+  horaInicial: string;
+  refeicaoRef?: string | null;
+  nomeInicial?: string;
   estimar: (fd: FormData) => Promise<ResultadoEstimativa>;
   registrar: (fd: FormData) => Promise<void>;
 }) {
@@ -230,11 +236,13 @@ export function RegistroPorFoto({
       >
         <input type="hidden" name="dia" value={dia} />
         <input type="hidden" name="fuso" value={fuso} />
+        <input type="hidden" name="refeicaoRef" value={refeicaoRef ?? ""} />
+        <label className="flex flex-col gap-2"><span className="text-label-md text-muted-foreground">Horário</span><Input type="time" name="hora" defaultValue={horaInicial} aria-label="Horário da refeição" className="h-12" /></label>
         <label className="flex flex-col gap-2">
           <span className="text-label-md text-muted-foreground">Nome da refeição</span>
           <Input
             name="nome"
-            value={nome}
+            value={nomeInicial && !nome ? nomeInicial : nome}
             onChange={(evento) => setNome(evento.target.value)}
             aria-label="Nome da refeição"
             className="h-12"

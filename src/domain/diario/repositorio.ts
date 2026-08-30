@@ -204,6 +204,11 @@ export async function confirmarRefeicao(
  * atleta decidir se cancela, enquanto “já existe um registro” o obriga
  * a sair da tela para descobrir qual.
  */
+export async function obterConsumoPorId(userId: string, consumoId: string, fuso: string = FUSO_PADRAO): Promise<ConsumoConfirmado | null> {
+  const [linha] = await db.select().from(foodEntries).where(and(eq(foodEntries.userId, userId), eq(foodEntries.id, consumoId))).limit(1);
+  return linha ? mapear(linha, fuso) : null;
+}
+
 export async function obterConsumoDaRefeicao(
   userId: string,
   entrada: { refeicaoRef: string; dia: string; fuso?: string },
@@ -242,6 +247,7 @@ export async function obterConsumoDaRefeicao(
 export async function registrarConsumoReal(
   userId: string,
   entrada: {
+    consumoId?: string | null;
     refeicaoRef?: string | null;
     nome: string;
     itens: ItemAlimentar[];
@@ -270,7 +276,7 @@ export async function registrarConsumoReal(
     planId: plano?.id ?? null,
     refeicaoRef: entrada.refeicaoRef ?? null,
     diaAlimentar: entrada.dia,
-    nome: entrada.nome.trim() || planejada?.nome || "Registro retroativo",
+    nome: planejada?.nome ?? (entrada.nome.trim() || "Registro retroativo"),
     origem: (entrada.refeicaoRef ? "editado" : "avulso") as "editado" | "avulso",
     itens: entrada.itens,
     macros,
@@ -281,6 +287,12 @@ export async function registrarConsumoReal(
   // Sem `refeicaoRef` o índice único não se aplica (dois lanches no
   // mesmo dia são dois eventos), então o upsert seria inócuo — e o
   // Postgres não casa NULL no target do conflito de qualquer forma.
+  if (entrada.consumoId) {
+    const [linha] = await db.update(foodEntries).set({ nome: valores.nome, itens: valores.itens, macros, consumidoEm }).where(and(eq(foodEntries.userId, userId), eq(foodEntries.id, entrada.consumoId))).returning();
+    if (!linha) throw new Error("Consumo registrado não encontrado.");
+    return mapear(linha, fuso);
+  }
+
   const [linha] = entrada.refeicaoRef
     ? await db
         .insert(foodEntries)
@@ -299,6 +311,11 @@ export async function registrarConsumoReal(
     : await db.insert(foodEntries).values(valores).returning();
 
   return mapear(linha, fuso);
+}
+
+/** Exclui qualquer Consumo registrado pertencente ao usuário. */
+export async function excluirConsumo(userId: string, consumoId: string): Promise<void> {
+  await db.delete(foodEntries).where(and(eq(foodEntries.userId, userId), eq(foodEntries.id, consumoId)));
 }
 
 /** Desfazer a confirmação (tela 047): a refeição volta a planejada. */

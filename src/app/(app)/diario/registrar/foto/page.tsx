@@ -1,8 +1,8 @@
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { CabecalhoTela, NotaTela, SecoesTela, TelaConteudo } from "@/components/tela";
-import { FUSO_PADRAO } from "@/domain/diario/dia-alimentar";
-import { hojeDoUsuario } from "@/domain/diario/repositorio";
+import { FUSO_PADRAO, horaLocal } from "@/domain/diario/dia-alimentar";
+import { hojeDoUsuario, obterEntradaPlanejada } from "@/domain/diario/repositorio";
 import { registrarPratoAction } from "../../actions";
 import { estimarRefeicaoAction } from "./actions";
 import { RegistroPorFoto } from "./estimativa";
@@ -20,14 +20,16 @@ import { RegistroPorFoto } from "./estimativa";
 export default async function RegistrarPorFotoPage({
   searchParams,
 }: {
-  searchParams: Promise<{ dia?: string }>;
+  searchParams: Promise<{ dia?: string; refeicao?: string }>;
 }) {
   const session = await auth();
   if (!session?.user?.id) redirect("/");
 
-  const { dia: diaParam } = await searchParams;
+  const { dia: diaParam, refeicao } = await searchParams;
   const fuso = FUSO_PADRAO;
   const dia = diaParam ?? hojeDoUsuario(fuso);
+  const refeicaoRef = refeicao ? decodeURIComponent(refeicao) : null;
+  const planejada = refeicaoRef ? await obterEntradaPlanejada(session.user.id, refeicaoRef) : null;
 
   return (
     <TelaConteudo>
@@ -42,6 +44,9 @@ export default async function RegistrarPorFotoPage({
         <RegistroPorFoto
           dia={dia}
           fuso={fuso}
+          horaInicial={planejada?.horaLocal ?? horaLocal(new Date(), fuso)}
+          refeicaoRef={refeicaoRef}
+          nomeInicial={planejada?.nome}
           estimar={estimarRefeicaoAction}
           registrar={registrarPratoAction}
         />
