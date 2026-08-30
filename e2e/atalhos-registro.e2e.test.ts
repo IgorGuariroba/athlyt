@@ -33,8 +33,9 @@ test("busca, monta o Prato e registra consumo fora do plano", async ({ page, con
   const macros = page.getByRole("region", { name: "Macros do dia" });
   await expect(macros.getByText("0/2400")).toBeVisible();
 
-  // Botão + abre o painel de Atalhos de Registro (tela 050).
-  await page.getByRole("link", { name: "Registrar buscando alimento" }).click();
+  // A refeição extra permite escolher a busca manual antes de abrir os atalhos.
+  await page.getByRole("link", { name: "Adicionar refeição extra" }).click();
+  await page.getByRole("link", { name: "Registrar por busca manual" }).click();
   await expect(page.getByRole("navigation", { name: "Atalhos de Registro" })).toBeVisible();
 
   // Busca na base com proveniência visível por alimento (tela 051).
@@ -114,7 +115,8 @@ test("favorito salvo reaparece na aba Favoritos e recorrente vira atalho", async
   await prato.getByLabel("Nome da refeição").fill("Lanche");
   await prato.getByRole("button", { name: "Registrar" }).click();
 
-  await page.getByRole("link", { name: "Registrar buscando alimento" }).click();
+  await page.getByRole("link", { name: "Adicionar refeição extra" }).click();
+  await page.getByRole("link", { name: "Registrar por busca manual" }).click();
   await expect(page.getByRole("region", { name: "Recorrentes" })).toBeVisible();
   await expect(page.getByText(/1× nos últimos registros/)).toBeVisible();
 });
