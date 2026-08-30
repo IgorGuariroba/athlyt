@@ -89,6 +89,14 @@ para o usuário ver a tela precisa da porta livre para validar por E2E.
 Tratar "subir para inspeção" e "rodar a suíte" como estados mutuamente
 exclusivos evita interpretar como regressão o que é ambiente.
 
+E a transição tem duas metades. Derrubar o app para rodar a suíte **exige
+subi-lo de volta ao terminar**: o usuário usa a porta 3000 como ambiente
+real, e um servidor ausente não se anuncia como ausente — aparece como
+"Não foi possível carregar esta tela", que é o error boundary da
+aplicação fazendo seu trabalho e parecendo defeito do produto. O ciclo
+completo é `app:down && db:up` → suíte → `app:up`, e a última etapa não
+é opcional só porque a validação terminou.
+
 Ao bisseccionar com `git stash` para separar regressão de falha pré-existente, lembre que o resultado só é válido se ambas as execuções usaram o mesmo servidor. Nesta investigação, `registro-por-foto` foi classificado como "pré-existente" justamente porque as duas rodadas da bissecção usaram o dev server — e ele passa normalmente em produção.
 
 # Evidência
@@ -113,3 +121,10 @@ $ tr '\0' '\n' < /proc/35034/environ | grep -E "OPENROUTER_BASE_URL|AUTH_URL"
 Liberada a porta e mantido o banco de pé, os mesmos 3 cenários passaram
 em 6,3 s, e a suíte completa fechou 43/43 sem nenhuma alteração de
 código.
+
+A outra metade do custo apareceu logo depois: com a suíte verde, o app
+ficou fora do ar e o usuário encontrou o error boundary ao abrir
+`/dieta`. O diagnóstico levou três comandos e nenhuma leitura de
+código — `ss -ltnp | grep :3000` vazio, `curl /api/saude` devolvendo
+`000` (exit 7, connection refused) e `docker ps` mostrando apenas o
+banco —, mas o tempo perdido foi de quem tentava usar o produto.
