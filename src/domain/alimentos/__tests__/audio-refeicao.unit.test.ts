@@ -107,4 +107,12 @@ describe("item estimado por descrição", () => {
     expect(corrigido.origemDado).toBe("estimativa-ia");
     expect(corrigido.confianca).toBe("media");
   });
+
+  it("preserva o espaço em digitação, que é estado intermível e não texto final", () => {
+    // Um campo controlado chama isto a cada tecla: aparar a ponta faz o
+    // espaço sumir no momento em que é digitado, e nenhum nome composto
+    // pode ser escrito ("Coca cola zero" virava "Cocacolazero").
+    expect(renomearItem(item, "Coca ").descricao).toBe("Coca  50 g");
+    expect(renomearItem(item, "Coca cola zero").descricao).toBe("Coca cola zero 50 g");
+  });
 });

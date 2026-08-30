@@ -114,6 +114,35 @@ describe("RevisaoEstimativa", () => {
     expect(itens[0].calorias).toBe(ARROZ.calorias);
   });
 
+  it("aceita nome composto digitado tecla a tecla", async () => {
+    // Regressão: o campo é controlado pela descrição do item, então um
+    // `trim` no caminho de renomear apagava cada espaço no keystroke em
+    // que ele era digitado — "Coca cola zero" virava "Cocacolazero" e
+    // nenhum alimento de mais de uma palavra podia ser corrigido.
+    // Só digitação real reproduz: um único `fireEvent.change` com o
+    // texto pronto passa mesmo com o defeito presente.
+    let itens: ItemPrato[] = [ARROZ];
+    const aoMudar = vi.fn((novos: ItemPrato[]) => {
+      itens = novos;
+      exibir();
+    });
+    const props = {
+      aoMudar,
+      limitacoes: [],
+      confianca: "media" as const,
+      origemEstimativa: "texto" as const,
+    };
+    const { rerender } = render(<RevisaoEstimativa itens={itens} {...props} />);
+    const exibir = () => rerender(<RevisaoEstimativa itens={itens} {...props} />);
+
+    const campo = screen.getByLabelText("Alimento 1");
+    await userEvent.clear(campo);
+    await userEvent.type(campo, "Coca cola zero");
+
+    expect((campo as HTMLInputElement).value).toBe("Coca cola zero");
+    expect(itens[0].descricao).toBe("Coca cola zero 100 g");
+  });
+
   it("remover um item tira-o do conjunto que será gravado", async () => {
     const aoMudar = montar();
 

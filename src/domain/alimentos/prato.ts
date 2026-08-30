@@ -177,10 +177,18 @@ export function reescalarItem(item: ItemPrato, gramas: number): ItemPrato {
  * ela não toca nos macros: quem renomeia está dizendo o que era, não
  * quanto era — e ajustar os dois de uma vez esconderia do atleta qual
  * das duas coisas ele acabou de mudar.
+ *
+ * O nome é gravado como veio, **sem `trim`**. A função é chamada a
+ * cada tecla por um campo controlado, então aparar a ponta aqui apaga
+ * o espaço no instante em que ele é digitado: "Coca cola zero" chega
+ * como "Cocacolazero" e o atleta não consegue escrever nome nenhum
+ * com mais de uma palavra. Normalizar é trabalho da fronteira que
+ * persiste (`registrarConsumoRealAction`), que já faz isso — não do
+ * meio da digitação.
  */
 export function renomearItem(item: ItemPrato, nome: string): ItemPrato {
   const sufixo = item.unidade === "g" ? ` ${item.quantidade} g` : "";
-  return { ...item, descricao: `${nome.trim()}${sufixo}` };
+  return { ...item, descricao: `${nome}${sufixo}` };
 }
 
 export function adicionarAoPrato(prato: readonly ItemPrato[], item: ItemPrato): ItemPrato[] {
