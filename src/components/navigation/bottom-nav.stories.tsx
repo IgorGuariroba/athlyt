@@ -9,7 +9,7 @@ const meta = {
     docs: {
       description: {
         component:
-          "As 4 abas do casco autenticado. A altura soma `--safe-bottom` em vez de ser fixa: com `border-box`, altura fixa mais `padding-bottom` não empurra a barra para cima — no iPhone, os 34pt do indicador de home reduziam a faixa tocada de 64pt para 30pt, abaixo do mínimo de 44pt.",
+          "As 4 áreas do casco autenticado em uma bolha flutuante acima de `--safe-bottom`. As abas ocupam colunas iguais, mantendo a largura estável entre rotas. Só a área ativa revela o rótulo; as demais mantêm nome acessível e alvo de toque mínimo de 44px.",
       },
     },
   },

@@ -12,8 +12,9 @@ import { BottomNav } from "@/components/navigation/bottom-nav";
  * altura percentual resolve contra a viewport grande. `min-h-0` no `<main>`
  * é obrigatório, senão o item flex não encolhe abaixo do conteúdo.
  *
- * A `BottomNav` fica fixa na viewport; o padding inferior deste `<main>`
- * reserva a faixa tocável e impede que o último conteúdo seja coberto.
+ * A `BottomNav` fica fixa e flutua acima da safe area; o padding inferior
+ * deste `<main>` reserva a bolha e seu afastamento para impedir que ela
+ * cubra o último conteúdo.
  * `relative` também estabelece o containing block dos controles absolutos
  * dentro das telas, impedindo que eles criem rolagem no documento raiz.
  * `tabIndex={0}` deixa o próprio scroll container disponível para PageUp,
@@ -40,7 +41,7 @@ export default async function AppLayout({
     <div className="flex h-dvh flex-col overflow-hidden pt-[var(--safe-top)]">
       <main
         tabIndex={0}
-        className="scrollbar-hidden relative flex min-h-0 flex-1 flex-col overflow-y-auto pb-[calc(4rem+var(--safe-bottom))]"
+        className="scrollbar-hidden relative flex min-h-0 flex-1 flex-col overflow-y-auto pb-[calc(4.75rem+var(--safe-bottom))]"
       >
         {children}
       </main>

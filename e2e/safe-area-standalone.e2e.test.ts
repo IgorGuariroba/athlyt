@@ -6,14 +6,14 @@ import { allowEmail, seedAuthenticatedSession } from "./helpers/seed-session";
  *
  * Sintoma relatado (iPhone 16 Pro Max, "Adicionar à Tela de Início"): o
  * título de cada aba aparecia atrás do relógio e da Dynamic Island, e
- * sobrava uma faixa morta sob a `BottomNav`. Os dois lados são o mesmo
- * defeito — `statusBarStyle: "black-translucent"` cedia a área da
+ * o inset inferior encolhia os alvos da `BottomNav`. Os dois lados são o
+ * mesmo defeito — `statusBarStyle: "black-translucent"` cedia a área da
  * status bar ao app sem que nenhuma tela consumisse o inset superior.
  *
  * Este arquivo não simula `display: standalone` (Playwright não instala
  * PWA). Ele cobre a parte verificável e que de fato regrediu: com
- * insets de sistema presentes, o casco recua do topo, a nav termina na
- * borda da viewport e o alvo tocável não encolhe.
+ * insets de sistema presentes, o casco recua do topo, a nav flutuante
+ * preserva sua distância do indicador de início e o alvo não encolhe.
  */
 
 /**
@@ -78,12 +78,12 @@ test("o casco respeita as safe areas do iPhone instalado na tela de início", as
     "o título não recuou pelo inset superior",
   ).toBeCloseTo(INSET_TOP, 0);
 
-  // 2) A nav continua terminando na borda da viewport: o inset é
-  //    absorvido por ela, e não convertido em faixa morta embaixo.
+  // 2) A bolha flutua 16px acima da safe area, sem disputar espaço com
+  //    o indicador de início do aparelho.
   expect(
-    comInsets.navFim,
-    "sobrou faixa vazia sob a barra de navegação",
-  ).toBeCloseTo(comInsets.innerHeight, 0);
+    comInsets.innerHeight - comInsets.navFim,
+    "a barra não respeitou o afastamento da safe area",
+  ).toBeCloseTo(INSET_BOTTOM + 16, 0);
 
   // 3) O inset engorda a nav em vez de comer o alvo tocável. Com
   //    `h-16` fixa e `border-box`, o padding do indicador de home era
