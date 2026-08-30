@@ -46,6 +46,7 @@ const MODELOS_PRODUCAO: Record<OperacaoIA, string> = {
   "plano-nutricao": MODELO_PLANO,
   "refeicao-texto": MODELO_BASE,
   "refeicao-audio": MODELO_BASE,
+  "alimento-macros": MODELO_BASE,
   "refeicao-foto": MODELO_BASE,
   "avaliacao-visual": MODELO_BASE,
   "importacao-historico": MODELO_BASE,

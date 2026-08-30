@@ -23,6 +23,7 @@ import {
 } from "@/domain/diario/repositorio";
 import { conceder } from "@/domain/ia/consentimento";
 import { montarNucleo } from "@/domain/ia/contexto/nucleo";
+import { estimarMacrosDoAlimento } from "@/domain/ia/operacoes/alimento-macros";
 import { transcreverAudioDaRefeicao } from "@/domain/ia/operacoes/refeicao-audio";
 import { estimarRefeicaoPorDescricao } from "@/domain/ia/operacoes/refeicao-texto";
 import { NOME_PROVEDOR } from "@/domain/ia/provedor";
@@ -210,6 +211,68 @@ export async function estimarPorDescricaoAction(fd: FormData): Promise<Resultado
       origem,
     },
   };
+}
+
+export type ResultadoMacrosItem =
+  | { ok: true; macros: MacrosRecalculados }
+  | { ok: false; erro: string };
+
+export interface MacrosRecalculados {
+  calorias: number;
+  proteinaG: number;
+  carboidratosG: number;
+  gordurasG: number;
+  fibrasG: number;
+  confianca: "alta" | "media" | "baixa";
+  modelo: string;
+}
+
+/**
+ * Recalcula energia e macros de **um** alimento corrigido na revisão.
+ *
+ * Chamada por item e sob comando explícito do atleta, nunca durante a
+ * digitação: renomear é tecla a tecla, e reestimar a cada tecla
+ * gastaria uma chamada por letra e sobrescreveria em silêncio um
+ * número que o próprio atleta talvez tenha ajustado à mão.
+ *
+ * Como toda operação desta tela, devolve proposta e não grava nada: o
+ * item só muda na tela, e o registro continua dependendo da
+ * confirmação final.
+ */
+export async function recalcularMacrosDoItemAction(fd: FormData): Promise<ResultadoMacrosItem> {
+  const session = await auth();
+  if (!session?.user?.id) return { ok: false, erro: "Sessão expirada. Entre novamente." };
+  const userId = session.user.id;
+
+  const alimento = String(fd.get("alimento") ?? "").trim();
+  if (alimento.length === 0 || alimento.length > 80) {
+    return { ok: false, erro: "Escreva o nome do alimento para recalcular." };
+  }
+
+  const gramas = Number(String(fd.get("gramas") ?? "").replace(",", "."));
+  if (!Number.isFinite(gramas) || gramas <= 0 || gramas > 3000) {
+    return { ok: false, erro: "Quantidade fora do intervalo aceito (1 a 3000 g)." };
+  }
+
+  const nucleo = await contextoDoAtleta(userId);
+
+  await conceder(userId, "alimento-macros", ["alimento-corrigido"], NOME_PROVEDOR);
+
+  const resultado = await estimarMacrosDoAlimento({
+    userId,
+    nucleo,
+    alimento,
+    quantidadeGramas: Math.round(gramas),
+  });
+
+  if (resultado.status !== "ok") {
+    return {
+      ok: false,
+      erro: "Não consegui recalcular agora. Os números continuam como estavam — tente de novo ou ajuste à mão.",
+    };
+  }
+
+  return { ok: true, macros: { ...resultado.valor, modelo: resultado.modeloResolvido } };
 }
 
 export type ResultadoRegistro = { ok: true } | { ok: false; erro: string };

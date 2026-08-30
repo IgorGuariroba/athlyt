@@ -2,12 +2,13 @@ import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-li
 import { userEvent } from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { itemEstimado, type ItemPrato } from "@/domain/alimentos/prato";
+import { itemEstimado, renomearItem, type ItemPrato } from "@/domain/alimentos/prato";
 import { CapturaAudio } from "../captura-audio";
 import {
   RegistroPorDescricao,
   type EstimativaDescrita,
   type ResultadoEstimativa,
+  type ResultadoMacrosItem,
   type ResultadoRegistro,
   type ResultadoTranscricao,
 } from "../registro-por-descricao";
@@ -53,7 +54,7 @@ const ESTIMATIVA: EstimativaDescrita = {
  * explícito antes de substituir um Consumo Real existente.
  */
 describe("RevisaoEstimativa", () => {
-  function montar(itens: ItemPrato[] = [ARROZ, BIFE], props = {}) {
+  function montar(itens: readonly ItemPrato[] = [ARROZ, BIFE], props = {}) {
     const aoMudar = vi.fn();
     render(
       <RevisaoEstimativa
@@ -164,6 +165,73 @@ describe("RevisaoEstimativa", () => {
     expect(itens[2].origemDado).toBe("usuario");
     expect(itens[2].calorias).toBe(180);
   });
+
+  it("avisa quando o alimento corrigido não corresponde mais aos macros exibidos", () => {
+    // "cola" → "cola zero" troca o alimento, não só o rótulo: manter 105
+    // kcal faria o total mentir sem nada na tela dizendo por quê.
+    const editado = renomearItem(ARROZ, "Arroz integral cozido");
+    render(
+      <RevisaoEstimativa
+        itens={[editado]}
+        aoMudar={vi.fn()}
+        nomesEstimados={["Arroz branco cozido"]}
+        limitacoes={[]}
+        confianca="media"
+        origemEstimativa="texto"
+      />,
+    );
+
+    expect(screen.getByText(/Estes números são de/)).toBeTruthy();
+    expect(screen.getByText(/Arroz branco cozido/)).toBeTruthy();
+  });
+
+  it("não avisa enquanto o alimento continua sendo o que foi estimado", () => {
+    montar([ARROZ], { nomesEstimados: ["Arroz branco cozido"] });
+
+    expect(screen.queryByText(/Estes números são de/)).toBeNull();
+    expect(screen.queryByRole("button", { name: /Recalcular/ })).toBeNull();
+  });
+
+  it("recalcular é por item e sob comando: nunca durante a digitação", async () => {
+    const aoRecalcularItem = vi.fn(async () => {});
+    const editado = renomearItem(ARROZ, "Arroz integral cozido");
+    render(
+      <RevisaoEstimativa
+        itens={[editado, BIFE]}
+        aoMudar={vi.fn()}
+        nomesEstimados={["Arroz branco cozido", "Bife grelhado"]}
+        aoRecalcularItem={aoRecalcularItem}
+        limitacoes={[]}
+        confianca="media"
+        origemEstimativa="texto"
+      />,
+    );
+
+    // Só o item defasado oferece o recálculo.
+    const botoes = screen.getAllByRole("button", { name: /Recalcular/ });
+    expect(botoes).toHaveLength(1);
+
+    await userEvent.click(botoes[0]);
+    expect(aoRecalcularItem).toHaveBeenCalledWith(0);
+  });
+
+  it("sem ação de recálculo disponível, o aviso continua sendo dito", () => {
+    // A defasagem é verdade sobre o dado, não sobre a IA estar por perto.
+    const editado = renomearItem(ARROZ, "Arroz integral cozido");
+    render(
+      <RevisaoEstimativa
+        itens={[editado]}
+        aoMudar={vi.fn()}
+        nomesEstimados={["Arroz branco cozido"]}
+        limitacoes={[]}
+        confianca="media"
+        origemEstimativa="texto"
+      />,
+    );
+
+    expect(screen.getByText(/Estes números são de/)).toBeTruthy();
+    expect(screen.queryByRole("button", { name: /Recalcular/ })).toBeNull();
+  });
 });
 
 describe("RegistroPorDescricao", () => {
@@ -255,6 +323,93 @@ describe("RegistroPorDescricao", () => {
 
     await screen.findByRole("heading", { name: "Confira antes de registrar" });
     expect(screen.getByText("Duas colheres de arroz e um bife médio.")).toBeTruthy();
+  });
+
+  it("recalcular o item corrigido leva os novos macros ao total e ao registro", async () => {
+    // O caso que originou a funcionalidade: "cola" → "cola zero" zera 105
+    // kcal e 27 g de carboidrato, e sem recálculo o Diário recebia o
+    // número do refrigerante comum sob o nome do zero.
+    const fns = {
+      ...acoes(),
+      recalcularItem: vi.fn<(fd: FormData) => Promise<ResultadoMacrosItem>>(async () => ({
+        ok: true,
+        macros: {
+          calorias: 0, proteinaG: 0, carboidratosG: 0, gordurasG: 0, fibrasG: 0,
+          confianca: "alta" as const, modelo: "modelo-y",
+        },
+      })),
+    };
+    render(
+      <RegistroPorDescricao
+        dia="2026-05-20" horaInicial="12:30" nomeInicial="Almoço"
+        categorias={["Almoço"]} {...fns}
+      />,
+    );
+
+    await userEvent.type(screen.getByLabelText("Descrição da refeição"), "arroz e bife");
+    await userEvent.click(screen.getByRole("button", { name: /Estimar calorias e macros/ }));
+    await screen.findByRole("heading", { name: "Confira antes de registrar" });
+
+    // Total original: 128 + 250 = 378 kcal.
+    expect(screen.getByText(/378 kcal/)).toBeTruthy();
+    expect(screen.queryByRole("button", { name: /Recalcular/ })).toBeNull();
+
+    fireEvent.change(screen.getByLabelText("Alimento 1"), {
+      target: { value: "Arroz integral cozido" },
+    });
+
+    const recalcular = await screen.findByRole("button", { name: /Recalcular/ });
+    await userEvent.click(recalcular);
+
+    // O total cai de 378 para 250: o item recalculado zerou e o outro
+    // permaneceu intacto.
+    const total = screen.getByText("Total estimado").parentElement!;
+    await waitFor(() => expect(within(total).getByText(/250 kcal/)).toBeTruthy());
+    const enviado = fns.recalcularItem.mock.calls[0][0];
+    expect(enviado.get("alimento")).toBe("Arroz integral cozido");
+    expect(enviado.get("gramas")).toBe("100");
+
+    // Resolvido o aviso, ele desaparece — e só o daquela linha existia.
+    await waitFor(() => expect(screen.queryByText(/Estes números são de/)).toBeNull());
+
+    await userEvent.click(screen.getByRole("button", { name: /Registrar no Diário/ }));
+    await waitFor(() => expect(fns.registrar).toHaveBeenCalledOnce());
+    const gravados = JSON.parse(
+      String(fns.registrar.mock.calls[0][0].get("itens")),
+    ) as ItemPrato[];
+    expect(gravados[0].descricao).toBe("Arroz integral cozido 100 g");
+    expect(gravados[0].calorias).toBe(0);
+    expect(gravados[1].calorias).toBe(BIFE.calorias);
+  });
+
+  it("falha ao recalcular preserva os números que estavam na tela", async () => {
+    const fns = {
+      ...acoes(),
+      recalcularItem: vi.fn<(fd: FormData) => Promise<ResultadoMacrosItem>>(async () => ({
+        ok: false,
+        erro: "Não consegui recalcular agora.",
+      })),
+    };
+    render(
+      <RegistroPorDescricao
+        dia="2026-05-20" horaInicial="12:30" nomeInicial="Almoço"
+        categorias={["Almoço"]} {...fns}
+      />,
+    );
+
+    await userEvent.type(screen.getByLabelText("Descrição da refeição"), "arroz e bife");
+    await userEvent.click(screen.getByRole("button", { name: /Estimar calorias e macros/ }));
+    await screen.findByRole("heading", { name: "Confira antes de registrar" });
+
+    fireEvent.change(screen.getByLabelText("Alimento 1"), {
+      target: { value: "Arroz integral cozido" },
+    });
+    await userEvent.click(await screen.findByRole("button", { name: /Recalcular/ }));
+
+    await screen.findByText("Não consegui recalcular agora.");
+    // O total não se move, e o aviso permanece porque a defasagem segue real.
+    expect(screen.getByText(/378 kcal/)).toBeTruthy();
+    expect(screen.getByText(/Estes números são de/)).toBeTruthy();
   });
 
   it("permite corrigir nome, dia e horário antes de confirmar", async () => {

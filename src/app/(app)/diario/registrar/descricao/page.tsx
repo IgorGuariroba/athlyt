@@ -11,6 +11,7 @@ import {
 } from "@/domain/diario/repositorio";
 import {
   estimarPorDescricaoAction,
+  recalcularMacrosDoItemAction,
   registrarConsumoRealAction,
   transcreverAudioAction,
 } from "./actions";
@@ -68,6 +69,7 @@ export default async function RegistrarPorDescricaoPage({
           estimar={estimarPorDescricaoAction}
           transcrever={transcreverAudioAction}
           registrar={registrarConsumoRealAction}
+          recalcularItem={recalcularMacrosDoItemAction}
         />
       </SecoesTela>
 
