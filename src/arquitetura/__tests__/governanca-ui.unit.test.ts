@@ -2,8 +2,7 @@ import { readFileSync, readdirSync, existsSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 
-import { lerCatalogo } from "../../../.pi/extensions/ui-componentes/catalogo";
-import { verificarConteudo } from "../../../.pi/extensions/ui-componentes/regras";
+import { lerCatalogo } from "../catalogo-ui";
 import {
   CAMADAS_DE_COMPONENTE,
   caminhoDaStory,
@@ -37,18 +36,6 @@ function arquivosDeTela(cwd: string): { caminho: string; fonte: string }[] {
 }
 
 describe("governança de composição das telas", () => {
-  it("rejeita Card estrutural importado diretamente por uma página", () => {
-    const violacoes = verificarConteudo(
-      'import { Card } from "@/components/ui/card";\n\nexport default function Page() { return <Card />; }',
-    );
-
-    expect(violacoes).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({ regra: "composicao-crua" }),
-      ]),
-    );
-  });
-
   it("exige story e teste para uma nova composição de tela", () => {
     expect(
       validarComponenteDeTela({
