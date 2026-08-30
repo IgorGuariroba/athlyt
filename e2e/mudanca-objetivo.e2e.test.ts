@@ -21,6 +21,7 @@ const respostas: RespostasTriagem = {
 };
 
 test("muda o objetivo sem substituir o Plano Ativo antes da Revisão Semanal", async ({ page, context }) => {
+  test.setTimeout(60_000);
   const { user, cookie } = await seedAuthenticatedSession(
     `e2e-objetivo-${Date.now()}@example.com`,
   );
@@ -50,16 +51,22 @@ test("muda o objetivo sem substituir o Plano Ativo antes da Revisão Semanal", a
   // a página anterior e o fluxo seguia fora de ordem, falhando lá na
   // frente em "Experimento ativo" — longe da causa
   // (docs/memory/e2e-flaky-sorteia-cenarios-diferentes.md).
-  await expect(page.getByRole("heading", { name: "Scorecard de progresso" })).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Scorecard de progresso" }),
+  ).toBeVisible({ timeout: 30_000 });
   await page.getByRole("link", { name: "Ver evidências" }).click();
   await expect(page.getByRole("heading", { name: "Evidências e incertezas" })).toBeVisible();
   await page.getByRole("link", { name: "Ver proposta" }).click();
   await expect(page.getByRole("heading", { name: "Proposta estrutural" })).toBeVisible();
+  await aguardarHidratacao(page);
   await page.getByRole("button", { name: "Criar rascunho" }).click();
   await expect(page.getByText("Comparação do plano")).toBeVisible();
   await expect(page.getByText("Recomposição corporal", { exact: true })).toBeVisible();
+  await aguardarHidratacao(page);
   await page.getByRole("button", { name: "Ativar Experimento de Plano" }).click();
-  await expect(page.getByText("Experimento ativo")).toBeVisible();
+  await expect(page.getByText("Experimento ativo")).toBeVisible({
+    timeout: 30_000,
+  });
   await page.goto("/treino");
   await expect(page.getByText("v2", { exact: true })).toBeVisible();
 });
