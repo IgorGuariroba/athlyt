@@ -14,19 +14,14 @@ import { cn } from "@/lib/utils";
  * demais configurações vivem sob Mais (DESIGN.md > Components > Bottom
  * navigation; specs/workflow.md > Decisões estruturais).
  *
- * Fica `fixed` na viewport para não depender do tamanho calculado pelo
- * casco quando uma tela longa cresce. O `<main>` reserva a mesma altura
- * no padding inferior, então a barra não cobre o último conteúdo.
+ * Flutua acima de `--safe-bottom`, mantendo distância do indicador de
+ * início do aparelho. O casco reserva sua altura mais esse afastamento
+ * para que a bolha não cubra o fim do conteúdo.
  *
- * O padding inferior sai do token `--safe-bottom` (globals.css) em vez
- * de `env()` inline: assim o E2E consegue injetar insets reais, já que
- * navegador de teste resolve `env(safe-area-inset-*)` sempre como `0px`.
- *
- * A altura soma o inset em vez de ser `h-16` fixa. Com `border-box`,
- * altura fixa mais `padding-bottom` não empurra a barra para cima: o
- * padding é descontado por dentro. No iPhone, os 34pt do indicador de
- * home reduziam a faixa tocada de 64pt para 30pt — abaixo do mínimo de
- * 44pt de DESIGN.md > Accessibility.
+ * Apenas a aba ativa revela o rótulo. As quatro abas ocupam colunas de
+ * mesma largura, reservando o espaço da seleção e evitando que a bolha
+ * mude de tamanho entre rotas. As demais conservam seu nome acessível e
+ * todas mantêm alvo de toque mínimo de 44px.
  */
 const ABAS = [
   { href: "/dieta", label: "Dieta", Icone: UtensilsCrossed },
@@ -41,25 +36,37 @@ export function BottomNav() {
   return (
     <nav
       aria-label="Navegação principal"
-      className="fixed inset-x-0 bottom-0 z-10 flex h-[calc(4rem+var(--safe-bottom))] items-stretch border-t border-border bg-surface pb-[var(--safe-bottom)]"
+      className="pointer-events-none fixed inset-x-0 bottom-[calc(1rem+var(--safe-bottom))] z-10 flex justify-center px-2"
     >
-      {ABAS.map((aba) => {
-        const ativo = pathname.startsWith(aba.href);
-        return (
-          <Link
-            key={aba.href}
-            href={aba.href}
-            aria-current={ativo ? "page" : undefined}
-            className={cn(
-              "flex flex-1 flex-col items-center justify-center gap-1 text-label-md",
-              ativo ? "text-on-surface-strong" : "text-muted-foreground",
-            )}
-          >
-            <aba.Icone aria-hidden="true" className="size-5" />
-            {aba.label}
-          </Link>
-        );
-      })}
+      <div className="pointer-events-auto grid w-full max-w-md grid-cols-4 gap-1 rounded-2xl border border-border bg-surface/80 p-1.5 shadow-xl backdrop-blur-xl">
+        {ABAS.map((aba) => {
+          const ativo = pathname.startsWith(aba.href);
+          return (
+            <Link
+              key={aba.href}
+              href={aba.href}
+              aria-current={ativo ? "page" : undefined}
+              aria-label={ativo ? undefined : aba.label}
+              className={cn(
+                "flex min-h-11 min-w-0 items-center justify-center gap-1 rounded-xl px-1 text-caption transition-colors duration-300 motion-reduce:transition-none",
+                ativo
+                  ? "bg-primary text-primary-foreground shadow-md"
+                  : "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
+              )}
+            >
+              <aba.Icone
+                aria-hidden="true"
+                className={cn(
+                  "size-5 transition-transform duration-300 motion-reduce:transition-none",
+                  ativo && "scale-105",
+                )}
+                strokeWidth={ativo ? 2.5 : 2}
+              />
+              {ativo && <span className="whitespace-nowrap">{aba.label}</span>}
+            </Link>
+          );
+        })}
+      </div>
     </nav>
   );
 }
