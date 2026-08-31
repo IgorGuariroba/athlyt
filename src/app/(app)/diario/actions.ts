@@ -9,7 +9,9 @@ import { itemDeAlimento, itemEstimado, itemManual, type ItemPrato } from "@/doma
 import {
   confirmarRefeicao,
   desfazerConfirmacao,
+  excluirConsumo,
   obterEntradaPlanejada,
+  registrarConsumoReal,
 } from "@/domain/diario/repositorio";
 import type { ItemAlimentar } from "@/domain/diario/tipos";
 
@@ -31,6 +33,13 @@ function contexto(formData: FormData) {
 export async function confirmarRefeicaoAction(formData: FormData) {
   const { dia, fuso, refeicaoRef } = contexto(formData);
   await confirmarRefeicao(await usuario(), { refeicaoRef, dia, fuso });
+  revalidatePath("/diario");
+  revalidatePath("/dieta");
+  revalidatePath("/treino");
+}
+
+export async function excluirConsumoAction(formData: FormData) {
+  await excluirConsumo(await usuario(), String(formData.get("consumoId")));
   revalidatePath("/diario");
   revalidatePath("/dieta");
   revalidatePath("/treino");
@@ -115,7 +124,14 @@ export async function registrarPratoAction(formData: FormData) {
     });
   });
 
-  await registrarPrato(await usuario(), { nome: nome || "Registro avulso", itens, dia, fuso });
+  const userId = await usuario();
+  const hora = String(formData.get("hora") ?? "");
+  const refeicaoRef = String(formData.get("refeicaoRef") ?? "").trim() || null;
+  if (/^([01]\d|2[0-3]):[0-5]\d$/.test(hora)) {
+    await registrarConsumoReal(userId, { nome: nome || "Refeição extra", itens, dia, fuso, horaLocal: hora, refeicaoRef });
+  } else {
+    await registrarPrato(userId, { nome: nome || "Registro avulso", itens, dia, fuso });
+  }
   revalidatePath("/diario");
   revalidatePath("/dieta");
   revalidatePath("/treino");

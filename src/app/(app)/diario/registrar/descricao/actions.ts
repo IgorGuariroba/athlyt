@@ -300,16 +300,13 @@ export async function registrarConsumoRealAction(fd: FormData): Promise<Resultad
   if (!HORA.test(hora)) {
     return { ok: false, erro: "Informe o horário da refeição no formato HH:MM." };
   }
-  if (dia > hojeDoUsuario(fuso)) {
-    return { ok: false, erro: "Não dá para registrar uma refeição em um dia que ainda não chegou." };
-  }
-
   const nome = String(fd.get("nome") ?? "").trim();
   if (nome.length === 0 || nome.length > 60) {
     return { ok: false, erro: "Dê à refeição um nome de até 60 caracteres." };
   }
 
   const refeicaoRef = String(fd.get("refeicaoRef") ?? "").trim() || null;
+  const consumoId = String(fd.get("consumoId") ?? "").trim() || null;
   const origem = (fd.get("origem") === "audio" ? "audio" : "texto") as OrigemEstimativa;
 
   let bruto: unknown;
@@ -349,6 +346,7 @@ export async function registrarConsumoRealAction(fd: FormData): Promise<Resultad
   }
 
   await registrarConsumoReal(userId, {
+    consumoId,
     refeicaoRef,
     nome,
     itens,

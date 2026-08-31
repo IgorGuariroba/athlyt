@@ -41,6 +41,7 @@ const meta = {
     },
     hrefDivergencia: "/diario/registrar/descricao?dia=2026-08-19",
     hrefAjustar: "/diario/refeicao/cafe?dia=2026-08-19",
+    aoAlternarExpansao: () => undefined,
     confirmacao: (
       <Button className="w-full" aria-label="Comi como planejado: Café da manhã">
         <Check className="size-4" aria-hidden="true" /> Comi como planejado

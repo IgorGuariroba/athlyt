@@ -82,7 +82,7 @@ describe("Registro Retroativo de uma Refeição Planejada", () => {
     expect(diario.painel.consumido.calorias).toBe(700);
   });
 
-  it("preserva a Refeição Planejada como referência do desvio", async () => {
+  it("preserva o nome e os macros da Refeição Planejada como referência do desvio", async () => {
     const userId = await usuarioComPlano();
     const consumo = await registrarConsumoReal(userId, {
       refeicaoRef: REF_ALMOCO,
@@ -94,9 +94,9 @@ describe("Registro Retroativo de uma Refeição Planejada", () => {
     });
 
     // A prescrição original sobrevive ao consumo que a substituiu:
-    // sem ela, o desvio deixaria de ser legível.
+    // o nome identifica o momento alimentar; os itens são os efetivamente registrados.
     expect(consumo.planejado?.calorias).toBe(840);
-    expect(consumo.nome).toBe("Almoço na rua");
+    expect(consumo.nome).toBe("Almoço");
   });
 
   it("não grava nada enquanto o atleta não confirma: consultar o existente é leitura pura", async () => {

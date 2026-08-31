@@ -43,9 +43,9 @@ test("fotografar o prato registra a refeição sem editar item por item", async 
   const macros = page.getByRole("region", { name: "Macros do dia" });
   await expect(macros.getByText("0/2400")).toBeVisible();
 
-  // A câmera é a ação principal do Diário, e não um item escondido
-  // dentro do painel de atalhos.
-  await page.getByRole("link", { name: /Fotografar refeição/ }).click();
+  // A refeição extra oferece a foto entre os métodos de registro.
+  await page.getByRole("link", { name: "Adicionar refeição extra" }).click();
+  await page.getByRole("link", { name: "Registrar por foto" }).click();
   await expect(page.getByRole("heading", { name: "Fotografe o prato" })).toBeVisible();
 
   // Fixture realista para validar o upload/preview. O reconhecimento continua
