@@ -208,7 +208,8 @@ describe("SeletorMetodoRegistro", () => {
 describe("LinhaDoTempoDia", () => {
   it("mantém o cartão de Refeição extra no horário atual mesmo sem eventos", () => {
     render(<LinhaDoTempoDia itens={[]} dia="2026-08-30" fuso="America/Sao_Paulo" agora={new Date("2026-08-30T15:25:00Z")} confirmar={() => undefined} desfazer={() => undefined} />);
-    expect(screen.getByRole("link", { name: "Adicionar refeição extra" })).toBeTruthy();
+    const adicionarRefeicao = screen.getByRole("link", { name: "Adicionar refeição extra" });
+    expect(adicionarRefeicao.parentElement?.className).toContain("h-72");
     expect(screen.getByText("12:25")).toBeTruthy();
   });
 

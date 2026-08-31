@@ -15,7 +15,7 @@ export function LinhaDoTempoDia({ itens, dia, fuso, confirmar, desfazer, excluir
   const visiveis = apenasAlimentar ? itens.filter((item) => item.tipo !== "sessao") : itens;
   const eventos = [...visiveis.map((item) => ({ id: chave(item), horaLocal: item.horaLocal, conteudo: cartao(item, dia, fuso, confirmar, desfazer, excluir, expandido, setExpandido) })), {
     id: "adicionar-refeicao-extra", horaLocal: horaAtual,
-    conteudo: <div className="flex h-52 items-center rounded-xl border border-dashed border-border bg-surface-container/50 p-4"><Button asChild variant="ghost" className="h-auto w-full justify-start whitespace-normal"><Link href={`/diario/registrar/metodo?dia=${dia}`} aria-label="Adicionar refeição extra"><Plus className="size-5" aria-hidden="true" /><span><strong className="block">Adicionar refeição extra</strong><small className="text-muted-foreground">Foto, texto, áudio ou busca manual</small></span></Link></Button></div>
+    conteudo: <div className="flex h-72 items-center rounded-xl border border-dashed border-border bg-surface-container/50 p-4"><Button asChild variant="ghost" className="h-auto w-full justify-start whitespace-normal"><Link href={`/diario/registrar/metodo?dia=${dia}`} aria-label="Adicionar refeição extra"><Plus className="size-5" aria-hidden="true" /><span><strong className="block">Adicionar refeição extra</strong><small className="text-muted-foreground">Foto, texto, áudio ou busca manual</small></span></Link></Button></div>
   }].sort((a, b) => a.horaLocal.localeCompare(b.horaLocal));
   return <LinhaDoTempoDiario itens={eventos} />;
 }
