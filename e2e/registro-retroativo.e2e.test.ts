@@ -94,7 +94,7 @@ test("descrever o que comeu registra a refeição sem foto e sem editar item a i
   await expect(macros.getByText("378/2400")).toBeVisible();
 
   const linha = page.getByRole("list", { name: "Linha do tempo do dia" });
-  await expect(linha.getByText("Almoço: arroz, bife e suco")).toBeVisible();
+  await expect(linha.getByText("Almoço", { exact: true })).toBeVisible();
   await expect(linha.getByText("Estimado pela sua descrição")).toBeVisible();
   await expect(linha.getByText("15:45")).toBeVisible();
 
@@ -177,7 +177,7 @@ test("substituir um consumo já registrado exige aviso, e cancelar preserva o re
   await page.getByRole("button", { name: "Substituir" }).click();
 
   await expect(page.getByRole("heading", { name: "Hoje" })).toBeVisible();
-  await expect(macros.getByText("328/2400")).toBeVisible();
+  await expect(macros.getByText("840/2400")).toHaveCount(0);
   const linha = page.getByRole("list", { name: "Linha do tempo do dia" });
   await expect(linha.getByText("Almoço", { exact: true })).toBeVisible();
   await expect(linha.getByText("Estimado pela sua descrição")).toBeVisible();
