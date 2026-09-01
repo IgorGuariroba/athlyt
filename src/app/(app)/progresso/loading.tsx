@@ -4,10 +4,13 @@ import {
   EsqueletoTela,
 } from "@/components/tela";
 
-/** Boletim corporal: agrega medições e tendências antes de renderizar. */
+/**
+ * Fallback de suspense do segmento `/progresso` — vale também para as
+ * subrotas de revisão, que não têm `loading.tsx` próprio.
+ */
 export default function CarregandoProgresso() {
   return (
-    <EsqueletoTela rotulo="Carregando o boletim corporal">
+    <EsqueletoTela rotulo="Carregando progresso">
       <EsqueletoCabecalho />
       <EsqueletoLista itens={3} />
     </EsqueletoTela>

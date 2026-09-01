@@ -1,13 +1,30 @@
 "use server";
+
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { auth } from "@/auth";
-import { recalcularMetasProporcao } from "@/domain/medicoes/repositorio";
 
-export async function atualizarEnfasesCorporais(fd: FormData) {
+import { auth } from "@/auth";
+import type { EstadoRegistroPeso } from "@/components/progresso/painel-peso";
+import { registrarPesoEMeta } from "@/domain/medicoes/repositorio";
+
+export async function salvarPesoEMeta(
+  _estado: EstadoRegistroPeso,
+  dados: FormData,
+): Promise<EstadoRegistroPeso> {
   const session = await auth();
   if (!session?.user?.id) redirect("/");
-  await recalcularMetasProporcao(session.user.id, fd.getAll("enfases").map(String));
-  revalidatePath("/progresso");
-  revalidatePath("/treino");
+
+  const pesoAtualKg = Number(dados.get("pesoAtualKg"));
+  const pesoMetaKg = Number(dados.get("pesoMetaKg"));
+  if (![pesoAtualKg, pesoMetaKg].every((peso) => Number.isFinite(peso) && peso >= 30 && peso <= 300)) {
+    return { erro: "Informe os pesos entre 30 e 300 kg." };
+  }
+
+  try {
+    await registrarPesoEMeta(session.user.id, { pesoAtualKg, pesoMetaKg });
+    revalidatePath("/progresso");
+    return { sucesso: "Peso atual e nova meta salvos." };
+  } catch {
+    return { erro: "Não foi possível salvar os pesos." };
+  }
 }

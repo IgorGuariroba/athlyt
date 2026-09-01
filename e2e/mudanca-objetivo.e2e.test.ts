@@ -40,9 +40,9 @@ test("muda o objetivo sem substituir o Plano Ativo antes da Revisão Semanal", a
   await expect(page.getByText("Reavaliação pendente")).toBeVisible();
   await page.goto("/treino");
   await expect(page.getByText("v1", { exact: true })).toBeVisible();
-  await page.goto("/progresso");
-  await expect(page.getByText("Seu objetivo mudou.")).toBeVisible();
-  await page.getByRole("link", { name: "Iniciar ou revisar" }).click();
+  // A aba /progresso está em branco enquanto seus componentes são
+  // repensados; o fluxo entra direto na Revisão Semanal.
+  await page.goto("/progresso/revisao");
   await aguardarHidratacao(page);
   await page.getByRole("button", { name: "Iniciar revisão" }).click();
   // `gerarRevisaoSemanal` faz seis consultas e uma escrita antes de

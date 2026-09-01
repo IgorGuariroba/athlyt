@@ -1,6 +1,6 @@
 import { and, desc, eq, inArray, lt } from "drizzle-orm";
 import { db } from "@/db/client";
-import { bodyAssessments, bodyFatMeasurements, bodyMeasurements, bodyProportionGoals, bodyVisualAnalyses, decisionTrails, progressPhotos, weeklyBodyReviews, weightMeasurements } from "@/db/schema";
+import { bodyAssessments, bodyFatMeasurements, bodyMeasurements, bodyProportionGoals, bodyVisualAnalyses, decisionTrails, progressPhotos, weeklyBodyReviews, weightGoals, weightMeasurements } from "@/db/schema";
 import { consolidarCircunferencia, gerarMetasProporcao, PROTOCOLO_CIRCUNFERENCIAS_VERSAO, type LadoCorporal, type MedicaoCorporal, type RegiaoCorporal } from "./index";
 import type { CriteriosVisuais } from "./avaliacao-visual";
 import type { produzirRevisaoCorporal } from "./revisao-corporal";
@@ -100,6 +100,35 @@ export async function registrarPeso(userId: string, pesoKg: number) {
   if (!Number.isFinite(pesoKg) || pesoKg < 30 || pesoKg > 300) throw new Error("Peso inválido.");
   const [linha] = await db.insert(weightMeasurements).values({ userId, pesoGramas: Math.round(pesoKg * 1000) }).returning();
   return linha;
+}
+
+export async function registrarPesoEMeta(userId: string, entrada: { pesoAtualKg: number; pesoMetaKg: number }) {
+  if (![entrada.pesoAtualKg, entrada.pesoMetaKg].every((peso) => Number.isFinite(peso) && peso >= 30 && peso <= 300)) {
+    throw new Error("Informe os pesos entre 30 e 300 kg.");
+  }
+
+  return db.transaction(async (tx) => {
+    const [medicao] = await tx.insert(weightMeasurements).values({
+      userId,
+      pesoGramas: Math.round(entrada.pesoAtualKg * 1000),
+    }).returning();
+    const [meta] = await tx.insert(weightGoals).values({
+      userId,
+      pesoGramas: Math.round(entrada.pesoMetaKg * 1000),
+    }).returning();
+    return { medicao, meta };
+  });
+}
+
+export async function obterPesoEMetaAtuais(userId: string) {
+  const [[pesoAtual], [pesoMeta]] = await Promise.all([
+    db.select().from(weightMeasurements).where(eq(weightMeasurements.userId, userId)).orderBy(desc(weightMeasurements.observadoEm)).limit(1),
+    db.select().from(weightGoals).where(eq(weightGoals.userId, userId)).orderBy(desc(weightGoals.createdAt)).limit(1),
+  ]);
+  return {
+    pesoAtualKg: pesoAtual ? pesoAtual.pesoGramas / 1000 : undefined,
+    pesoMetaKg: pesoMeta ? pesoMeta.pesoGramas / 1000 : undefined,
+  };
 }
 
 export async function obterGorduraDaAvaliacaoInicial(userId: string) {

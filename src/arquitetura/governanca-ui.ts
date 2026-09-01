@@ -32,6 +32,7 @@ const CAMADAS_COM_TESTE_DE_CONTRATO = new Set([
   "inicio",
   "sessao",
   "diario",
+  "progresso",
 ]);
 
 /** Camadas de componente varridas em busca de teste de contrato. */
@@ -43,6 +44,7 @@ export const CAMADAS_DE_COMPONENTE = [
   "inicio",
   "sessao",
   "diario",
+  "progresso",
 ];
 
 /**
@@ -94,7 +96,6 @@ export const COMPONENTES_DE_TELA_NAO_MIGRADOS = new Set([
   "src/app/(app)/diario/registrar/atalhos.tsx",
   "src/app/(app)/diario/registrar/foto/estimativa.tsx",
   "src/app/(app)/mais/sincronizacao/fila-local.tsx",
-  "src/app/(app)/progresso/enfases-corporais.tsx",
   "src/app/(app)/progresso/fotos/comparador.tsx",
   "src/app/(auth)/plano/gerando/transicao-geracao.tsx",
   "src/app/(auth)/plano/revisao/botao-regenerar-plano.tsx",

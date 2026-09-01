@@ -52,13 +52,6 @@ export {
   type Serie,
 } from "./grafico-tendencia";
 export {
-  calcularDeltaTendencia,
-  LinhaTempoProgresso,
-  SeloVariacao,
-  suavizarTendencia,
-  SparklineTendencia,
-} from "./indicadores-tendencia";
-export {
   GradeSelecaoFoto,
   ItemSelecaoFoto,
 } from "./grade-selecao-foto";
