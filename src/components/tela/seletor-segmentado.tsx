@@ -3,8 +3,7 @@
 import { cn } from "@/lib/utils";
 
 /**
- * Segmented control de estado local (DESIGN.md > Components >
- * Segmented control, tabs e chips), irmão de `ControleSegmentado`.
+ * Segmented control de estado local, irmão de `ControleSegmentado`.
  *
  * A diferença entre os dois é de onde vive o estado, e ela não é
  * cosmética: `ControleSegmentado` navega por `Link` porque o que ele
@@ -20,9 +19,9 @@ import { cn } from "@/lib/utils";
  * o valor viaja no `FormData` quando o seletor estiver dentro de um
  * formulário.
  *
- * Cada segmento mantém 44px de altura mínima (DESIGN.md >
- * Accessibility), acima dos 32–36px da referência visual, porque este
- * controle é tocado com a mão suada entre séries.
+ * Cada segmento mantém 44px de altura mínima, acima dos 32–36px da
+ * referência visual, porque este controle é tocado com a mão suada
+ * entre séries.
  *
  * O `input` é esticado sobre o segmento (`absolute inset-0 opacity-0`)
  * em vez de `sr-only`: escondido, ele vira uma caixa de 1px que não

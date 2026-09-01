@@ -15,9 +15,8 @@ import {
 import { listarHistoricoSessoes, resumirSessao } from "@/domain/sessao/repositorio";
 
 /**
- * Histórico de sessões: uma lista de itens homogêneos, portanto um
- * cartão com divisores em vez de um cartão por sessão (DESIGN.md >
- * Components > Card).
+ * Histórico de sessões: itens homogêneos formam um único cartão com
+ * divisores, em vez de um cartão separado por sessão.
  */
 const APRESENTACAO = {
   concluida: { rotulo: "Concluída", Icone: CheckCircle2, cor: "text-success" },

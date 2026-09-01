@@ -13,9 +13,9 @@ import {
 
 /**
  * O catálogo é a fronteira entre o que o usuário declara ter e o que a
- * IA pode prescrever (specs/workflow/telas/018). Os invariantes abaixo
- * protegem essa fronteira: id duplicado silenciaria um equipamento na
- * seleção, e categoria órfã o esconderia da tela inteira.
+ * IA pode prescrever. Os invariantes abaixo protegem essa fronteira:
+ * id duplicado silenciaria um equipamento na seleção, e categoria
+ * órfã o esconderia da tela inteira.
  */
 describe("catálogo de equipamentos", () => {
   it("não repete o mesmo equipamento com nomes externos diferentes", () => {

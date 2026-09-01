@@ -3,10 +3,8 @@ import { ChevronLeft, Ruler, Scale, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 /**
- * Tela 008a — oferta da Avaliação Corporal Inicial
- * (specs/workflow/telas/008a-avaliacao-corporal-oferta.md).
- *
- * Segue a moldura visual da cascata (`_components/cascata-shell.tsx`):
+ * A oferta da Avaliação Corporal Inicial segue a moldura visual da
+ * cascata (`@/components/tela/cascata-shell.tsx`):
  * fundo `background`, margens de 24px, voltar circular no topo e CTA
  * principal ao pé da tela. Os benefícios usam o cartão com divisores
  * de 1px do sistema, e não cartões soltos, porque pertencem à mesma

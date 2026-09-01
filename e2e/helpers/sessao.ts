@@ -6,9 +6,8 @@ import { expect, type Page } from "@playwright/test";
  * Antes destes helpers, o fluxo "iniciar treino → registrar série →
  * concluir" estava copiado em 5 arquivos, e o seletor
  * `input[name="cargaKg"]:not(:disabled)` aparecia 13 vezes. Uma
- * mudança de UI quebrava o E2E em cinco lugares — foi o que aconteceu
- * no PR #38 (docs/memory/mudanca-ui-atualiza-e2e.md). Aqui o contrato
- * com a tela existe uma vez só: renomear um campo é uma correção.
+ * mudança de UI quebrava o E2E em cinco lugares. Aqui o contrato com a
+ * tela existe uma vez só: renomear um campo é uma correção.
  *
  * Os seletores são de papel/nome acessível de propósito. É o que o
  * atleta enxerga, então o teste quebra quando a experiência muda de

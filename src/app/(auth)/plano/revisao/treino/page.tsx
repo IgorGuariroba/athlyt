@@ -29,8 +29,8 @@ import { substituirExercicioAction } from "../../actions";
 
 /**
  * Descanso legível sem fração de minuto: abaixo de dois minutos a
- * unidade natural é o segundo ("75 s"), acima disso o minuto redondo
- * (DESIGN.md > Content & Voice: unidade junto do valor).
+ * unidade natural é o segundo ("75 s"), acima disso o minuto redondo.
+ * A unidade permanece sempre junto do valor.
  */
 function descanso(descansoSeg: number): string {
   if (descansoSeg < 120) return `${descansoSeg} s`;

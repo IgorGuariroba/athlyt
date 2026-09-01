@@ -83,7 +83,7 @@ async function gerarOutroPlano({
 
   // Regenerar com o recorte mais novo que o consentimento produziria um plano
   // cego (só o Núcleo) sem o usuário entender por quê. Manda reconfirmar em
-  // vez de degradar em silêncio — ADR 0006, invariante 5.
+  // vez de degradar em silêncio.
   if (estados.some((estado) => estado.precisaReconsentir)) {
     redirect(
       `/triagem/resumo?erro=${encodeURIComponent(

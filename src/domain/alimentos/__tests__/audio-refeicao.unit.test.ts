@@ -71,7 +71,7 @@ describe("fronteira da descrição da refeição", () => {
 describe("item estimado por descrição", () => {
   const item = itemEstimado({
     descricao: "Arroz branco cozido",
-    quantidadeGramas: 50,
+    quantidade: 50,
     calorias: 64, proteinaG: 1, carboidratosG: 14, gordurasG: 0, fibrasG: 1,
     confianca: "media",
     modelo: "google/gemini-2.5-flash-lite",
@@ -80,14 +80,14 @@ describe("item estimado por descrição", () => {
 
   it("guarda a origem da estimativa para o registro continuar auditável", () => {
     // Um número vindo de descrição e um vindo de foto merecem
-    // desconfianças diferentes na revisão do dia (user story 30).
+    // desconfianças diferentes na revisão do dia.
     expect(item.origemDado).toBe("estimativa-ia");
     expect(item.fonte).toBe("Estimativa por descrição");
   });
 
   it("estimativa por foto continua sendo o padrão dos registros já gravados", () => {
     const porFoto = itemEstimado({
-      descricao: "Arroz", quantidadeGramas: 50,
+      descricao: "Arroz", quantidade: 50,
       calorias: 64, proteinaG: 1, carboidratosG: 14, gordurasG: 0, fibrasG: 1,
       confianca: "media", modelo: "m",
     });

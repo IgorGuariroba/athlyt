@@ -8,7 +8,7 @@ import {
 } from "../base";
 
 describe("base nutricional auditável", () => {
-  it("todo alimento carrega fonte, versão/data e confiança (user story 57)", () => {
+  it("todo alimento carrega fonte, versão/data e confiança", () => {
     for (const alimento of BASE_ALIMENTOS) {
       expect(alimento.proveniencia.fonte).toBeTruthy();
       expect(alimento.proveniencia.versao).toBeTruthy();

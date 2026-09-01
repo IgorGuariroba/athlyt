@@ -15,10 +15,9 @@ import { resolverConflitoAction } from "./actions";
 import { FilaLocal } from "./fila-local";
 
 /**
- * Tela 085 — Sincronização e conflitos.
- *
- * Duas metades com donos diferentes: a fila pendente só existe no
- * dispositivo (por isso é um componente cliente), e os conflitos já
+ * Sincronização e conflitos têm duas metades com donos diferentes: a
+ * fila pendente só existe no dispositivo (por isso é um componente
+ * cliente), e os conflitos já
  * estão materializados no servidor aguardando decisão humana. Nenhuma
  * das duas some sozinha — é o que garante que nada seja descartado
  * silenciosamente.

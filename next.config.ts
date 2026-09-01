@@ -52,7 +52,7 @@ const nextConfig: NextConfig = {
 };
 
 /**
- * @serwist/next ainda não suporta Turbopack (ADR — ver comentário em
+ * @serwist/next ainda não suporta Turbopack (ver comentário em
  * src/app/sw.ts). Desativado em dev; o build de produção roda com
  * `next build --webpack` (ver script "build" em package.json) para
  * que o service worker seja de fato gerado.

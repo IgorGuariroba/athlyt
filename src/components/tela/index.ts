@@ -2,8 +2,8 @@
  * Kit de composição de telas — a camada entre os primitivos de
  * `components/ui` (shadcn) e as páginas.
  *
- * Cada componente aqui carrega uma decisão de DESIGN.md que, se ficasse
- * em classes soltas na página, seria reinventada (e divergida) a cada
+ * Cada componente aqui carrega uma decisão visual que, se ficasse em
+ * classes soltas na página, seria reinventada (e divergida) a cada
  * tela nova. Ao construir uma tela, componha a partir daqui em vez de
  * repetir utilitários; se um caso não couber, ajuste o componente para
  * que a correção alcance todas as telas de uma vez.

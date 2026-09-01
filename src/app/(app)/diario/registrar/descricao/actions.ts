@@ -14,7 +14,18 @@ import {
   validarAudioRefeicao,
   validarDescricaoRefeicao,
 } from "@/domain/alimentos/audio-refeicao";
-import { itemEstimado, type ItemPrato, type OrigemEstimativa } from "@/domain/alimentos/prato";
+import {
+  descricaoSemQuantidade,
+  itemEstimado,
+  type ItemPrato,
+  type OrigemEstimativa,
+  type UnidadeEstimada,
+} from "@/domain/alimentos/prato";
+import {
+  recalcularMacrosDoItem,
+  type MacrosRecalculados,
+  type ResultadoMacrosItem,
+} from "../recalculo-de-item";
 import { FUSO_PADRAO } from "@/domain/diario/dia-alimentar";
 import {
   hojeDoUsuario,
@@ -23,7 +34,6 @@ import {
 } from "@/domain/diario/repositorio";
 import { conceder } from "@/domain/ia/consentimento";
 import { montarNucleo } from "@/domain/ia/contexto/nucleo";
-import { estimarMacrosDoAlimento } from "@/domain/ia/operacoes/alimento-macros";
 import { transcreverAudioDaRefeicao } from "@/domain/ia/operacoes/refeicao-audio";
 import { estimarRefeicaoPorDescricao } from "@/domain/ia/operacoes/refeicao-texto";
 import { NOME_PROVEDOR } from "@/domain/ia/provedor";
@@ -90,8 +100,8 @@ async function contextoDoAtleta(userId: string) {
 /**
  * Transcreve o áudio e devolve o texto **sem estimar nada**.
  *
- * A parada aqui é a decisão da ADR 0002: reconhecimento de fala erra
- * palavras, e uma palavra errada vira macro errado. Separar transcrever
+ * O reconhecimento de fala erra palavras, e uma palavra errada vira
+ * macro errado. Separar transcrever
  * de estimar dá ao atleta a chance de corrigir a frase enquanto ela
  * ainda é frase.
  *
@@ -154,7 +164,7 @@ const CAMPOS_TEXTO = ["descricao-livre", "metas-restantes", "restricoes"];
  *
  * Mesma separação do registro por foto: a IA propõe, o atleta
  * confirma. Falhar aqui não custa a descrição digitada — ela continua
- * na tela, porque nada dela vive no servidor (user story 32).
+ * na tela, porque nada dela vive no servidor.
  */
 export async function estimarPorDescricaoAction(fd: FormData): Promise<ResultadoDescricao> {
   const session = await auth();
@@ -213,66 +223,20 @@ export async function estimarPorDescricaoAction(fd: FormData): Promise<Resultado
   };
 }
 
-export type ResultadoMacrosItem =
-  | { ok: true; macros: MacrosRecalculados }
-  | { ok: false; erro: string };
-
-export interface MacrosRecalculados {
-  calorias: number;
-  proteinaG: number;
-  carboidratosG: number;
-  gordurasG: number;
-  fibrasG: number;
-  confianca: "alta" | "media" | "baixa";
-  modelo: string;
-}
+export type { MacrosRecalculados, ResultadoMacrosItem };
 
 /**
  * Recalcula energia e macros de **um** alimento corrigido na revisão.
  *
- * Chamada por item e sob comando explícito do atleta, nunca durante a
- * digitação: renomear é tecla a tecla, e reestimar a cada tecla
- * gastaria uma chamada por letra e sobrescreveria em silêncio um
- * número que o próprio atleta talvez tenha ajustado à mão.
- *
- * Como toda operação desta tela, devolve proposta e não grava nada: o
- * item só muda na tela, e o registro continua dependendo da
- * confirmação final.
+ * A lógica é compartilhada com a tela de foto; o que esta action
+ * acrescenta é a tela de origem, que entra na Trilha de Decisão.
  */
 export async function recalcularMacrosDoItemAction(fd: FormData): Promise<ResultadoMacrosItem> {
-  const session = await auth();
-  if (!session?.user?.id) return { ok: false, erro: "Sessão expirada. Entre novamente." };
-  const userId = session.user.id;
-
-  const alimento = String(fd.get("alimento") ?? "").trim();
-  if (alimento.length === 0 || alimento.length > 80) {
-    return { ok: false, erro: "Escreva o nome do alimento para recalcular." };
-  }
-
-  const gramas = Number(String(fd.get("gramas") ?? "").replace(",", "."));
-  if (!Number.isFinite(gramas) || gramas <= 0 || gramas > 3000) {
-    return { ok: false, erro: "Quantidade fora do intervalo aceito (1 a 3000 g)." };
-  }
-
-  const nucleo = await contextoDoAtleta(userId);
-
-  await conceder(userId, "alimento-macros", ["alimento-corrigido"], NOME_PROVEDOR);
-
-  const resultado = await estimarMacrosDoAlimento({
-    userId,
-    nucleo,
-    alimento,
-    quantidadeGramas: Math.round(gramas),
+  return recalcularMacrosDoItem(fd, {
+    tela: "Registrar por descrição",
+    rota: "/diario/registrar/descricao",
+    gatilho: "recalculo-de-macros-do-item",
   });
-
-  if (resultado.status !== "ok") {
-    return {
-      ok: false,
-      erro: "Não consegui recalcular agora. Os números continuam como estavam — tente de novo ou ajuste à mão.",
-    };
-  }
-
-  return { ok: true, macros: { ...resultado.valor, modelo: resultado.modeloResolvido } };
 }
 
 export type ResultadoRegistro = { ok: true } | { ok: false; erro: string };
@@ -322,15 +286,17 @@ export async function registrarConsumoRealAction(fd: FormData): Promise<Resultad
   let itens: ItemPrato[];
   try {
     itens = (bruto as ItemPrato[]).map((item) => {
-      const gramas = Number(item.quantidade);
-      if (!Number.isFinite(gramas) || gramas <= 0 || gramas > 3000) {
-        throw new Error("Quantidade fora do intervalo aceito (1 a 3000 g).");
+      const quantidade = Number(item.quantidade);
+      const unidade: UnidadeEstimada = item.unidade === "ml" ? "ml" : "g";
+      if (!Number.isFinite(quantidade) || quantidade <= 0 || quantidade > 3000) {
+        throw new Error(`Quantidade fora do intervalo aceito (1 a 3000 ${unidade}).`);
       }
-      const descricao = String(item.descricao ?? "").replace(/\s\d+\s?g$/, "").trim();
+      const descricao = descricaoSemQuantidade(String(item.descricao ?? "")).trim();
       if (descricao.length === 0) throw new Error("Todo item precisa de uma descrição.");
       return itemEstimado({
         descricao,
-        quantidadeGramas: gramas,
+        quantidade,
+        unidade,
         calorias: numero(item.calorias, 5000),
         proteinaG: numero(item.proteinaG, 400),
         carboidratosG: numero(item.carboidratosG, 700),

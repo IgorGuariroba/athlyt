@@ -4,8 +4,8 @@ import { midiaDoExercicio as midiaDoExercicioPadrao } from "@/domain/plano/midia
 import { baixarGifDaExerciseDB, criarHandlerMidiaExecucao } from "./handler";
 
 /**
- * Serve o GIF espelhado no R2 da Mídia de Execução (CONTEXT.md), por
- * uma rota same-origin — não por URL assinada — para caber de forma
+ * Serve o GIF espelhado no R2 da Mídia de Execução por uma rota
+ * same-origin — não por URL assinada — para caber de forma
  * estável no cache do service worker (ver `src/app/sw.ts`).
  *
  * Falha fechada em qualquer ausência (sem mapeamento, sem R2, origem

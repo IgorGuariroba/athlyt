@@ -2,21 +2,20 @@ import { z } from "zod";
 import { RECORTES } from "../contexto/recortes";
 
 /**
- * Explicação de uma decisão do plano (user story 20: todo item
- * prescrito diz por que existe *para este atleta*).
+ * Todo item prescrito do plano explica por que existe *para este atleta*.
  *
  * O schema é o único mecanismo que torna isso confiável: a instrução
  * pede a explicação, mas só a validação impede que o agent devolva um
  * genérico de catálogo ("ótimo para peito"). `dadosUsados` obriga a
  * ancorar cada decisão em pelo menos um dado realmente enviado no
  * Contexto do Atleta — mesma filosofia do executor `decidir()`:
- * invariantes mecânicas em vez de disciplina (ADR 0006).
+ * invariantes mecânicas em vez de disciplina.
  *
  * Compartilhado pelas duas operações do plano: treino e nutrição
  * explicam decisões diferentes, mas com a mesma invariante.
  */
 export const CAMPOS_EXPLICAVEIS: readonly string[] = [
-  // Núcleo do Contexto do Atleta (ADR 0006) — presente em toda chamada.
+  // Núcleo do Contexto do Atleta — presente em toda chamada.
   "modoConservador",
   "idadeAnos",
   "sexoBiologico",

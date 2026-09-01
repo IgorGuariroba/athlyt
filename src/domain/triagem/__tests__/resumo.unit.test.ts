@@ -3,8 +3,8 @@ import { montarResumoTriagem } from "../resumo";
 import type { RespostasTriagem } from "../etapas";
 
 /**
- * Seam: montagem do resumo apresentável (tela 024 — o que foi
- * preenchido, o que falta, o que cada dado destrava) a partir das
+ * Seam: montagem do resumo apresentável — o que foi preenchido, o que
+ * falta e o que cada dado destrava — a partir das
  * respostas puras — sem I/O, para ser reutilizado tanto pela página
  * de resumo quanto pelo cartão "completar perfil" do Início.
  */

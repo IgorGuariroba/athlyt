@@ -12,7 +12,7 @@ type EstadoForm = { erro: string } | null;
  * Form client-side comum a toda etapa da cascata: liga os campos
  * (passados como children) à server action, mostra erro de validação
  * inline sem perder o valor digitado, e mantém "Continuar" como única
- * ação principal por tela (DESIGN.md > Primary button).
+ * ação principal por tela para preservar a hierarquia.
  */
 export function EtapaForm({
   etapaAtual,

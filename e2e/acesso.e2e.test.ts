@@ -2,9 +2,8 @@ import { test, expect } from "@playwright/test";
 import { seedAuthenticatedSession, allowEmail } from "./helpers/seed-session";
 
 /**
- * Jornada completa da fronteira de acesso (specs/mvp-vertical.md,
- * user stories 1–4; Testing Decisions > autenticação testada pela
- * fronteira de acesso). Login real via Google fica fora do E2E
+ * Jornada completa da fronteira de acesso. A autenticação é testada
+ * por essa fronteira. Login real via Google fica fora do E2E
  * automatizado — simulamos a sessão de banco diretamente
  * (ver e2e/helpers/seed-session.ts) e exercitamos o restante da
  * jornada em navegador real, viewport mobile, com vídeo.

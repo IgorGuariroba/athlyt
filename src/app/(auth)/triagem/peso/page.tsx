@@ -4,9 +4,6 @@ import { carregarRespostasTriagem } from "../_lib/carregar-respostas";
 import { EtapaForm } from "../_components/etapa-form";
 import { SeletorPeso } from "./_components/seletor-peso";
 
-/**
- * Tela 008 — Peso atual (specs/workflow/telas/008-dados-peso.md).
- */
 export default async function PesoPage() {
   const respostas = await carregarRespostasTriagem();
   const { indice, total } = posicaoNaCascata("peso");

@@ -3,19 +3,22 @@ import type { NucleoContexto } from "../contexto/nucleo";
 import { decidir, type ResultadoDecisao } from "../decidir";
 
 /**
- * Estimativa de refeição a partir da foto do prato (Recorte
- * `refeicao-foto`; CONTEXT.md > Atalhos de Registro: "foto via IA").
+ * Estimativa de refeição a partir da foto do prato.
  *
  * O schema é deliberadamente conservador em dois pontos:
  *
- * - cada item declara `quantidadeGramas` estimada **e** a confiança
+ * - cada item declara a `quantidade` estimada **e** a confiança
  *   daquele item. Uma foto identifica bem *o que* está no prato e mal
  *   *quanto* — separar as duas coisas permite a tela pedir ajuste só
  *   da porção, que é o que costuma estar errado;
+ * - a `unidade` é decidida pelo modelo, não por nós: ele é quem sabe
+ *   que um copo de refrigerante se mede em mililitros e um bife em
+ *   gramas. Uma lista nossa de líquidos teria de decidir sozinha o
+ *   que é molho, iogurte ou sopa, e erraria calada;
  * - `limitacoes` não é enfeite: ângulo, oclusão (arroz debaixo do
  *   bife), molho invisível e ausência de referência de escala mudam
- *   materialmente a estimativa, e a user story 59 proíbe estimativa
- *   que se passe por medição.
+ *   materialmente a estimativa; por isso, ela nunca pode se passar
+ *   por medição.
  *
  * O resultado nunca é gravado direto: ele vira Prato editável, e o
  * atleta confirma. A IA propõe, o atleta registra.
@@ -26,7 +29,8 @@ export const refeicaoFotoSchema = z.object({
     .array(
       z.object({
         descricao: z.string().min(1).max(80),
-        quantidadeGramas: z.number().min(1).max(3000),
+        quantidade: z.number().min(1).max(3000),
+        unidade: z.enum(["g", "ml"]),
         calorias: z.number().min(0).max(5000),
         proteinaG: z.number().min(0).max(400),
         carboidratosG: z.number().min(0).max(700),
@@ -47,7 +51,10 @@ export type RefeicaoEstimada = z.infer<typeof refeicaoFotoSchema>;
 const INSTRUCAO = `Você estima a composição de uma refeição a partir de uma foto do prato, para um atleta que registra alimentação.
 Regras obrigatórias:
 - Liste apenas alimentos que você realmente vê. Não complete a refeição com o que "costuma" acompanhar.
-- Estime a massa de cada alimento em gramas usando referências de escala visíveis (prato, talher, mão). Sem referência de escala, declare isso em limitações e reduza a confiança.
+- Estime a quantidade de cada alimento usando referências de escala visíveis (prato, talher, copo, lata, mão). Sem referência de escala, declare isso em limitações e reduza a confiança.
+- Meça bebidas e alimentos líquidos em ml (refrigerante, suco, café, leite, sopa, iogurte de beber) e todo o resto em g. Nunca converta volume em massa: responda na unidade em que você mediu.
+- Refrigerantes, sucos e cervejas vêm em volumes comerciais conhecidos (lata 350 ml, copo 200 a 300 ml, garrafa 600 ml). Use-os como referência quando a embalagem ou o copo aparecerem.
+- Só nomeie uma bebida ou alimento como zero, diet, light ou sem açúcar quando o rótulo estiver legível na foto. Na dúvida, nomeie a versão tradicional e registre em limitações que o rótulo não estava legível.
 - Óleo, manteiga e molho usados no preparo costumam ser invisíveis: quando o preparo os sugerir, inclua-os como item próprio com confiança baixa, em vez de ignorá-los.
 - A confiança de cada item reflete a incerteza da porção, não só a identificação do alimento.
 - A confiança do conjunto nunca é melhor que a do item que mais pesa em energia.

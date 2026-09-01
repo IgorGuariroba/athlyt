@@ -11,7 +11,7 @@ import {
 } from "./helpers/sessao";
 
 /**
- * Jornada offline da Sessão de Treino (user stories 37–39; telas 042 e 085).
+ * Jornada offline da Sessão de Treino.
  *
  * A rede é derrubada no meio da sessão, e não antes: o caso que
  * importa é o atleta que já começou o treino e perde o sinal, não o

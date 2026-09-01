@@ -8,7 +8,7 @@
  * áudio no protocolo OpenAI-compatible. Por isso a conversão no
  * servidor é o caminho normal, não a exceção.
  *
- * Os bytes são efêmeros por decisão de produto (ADR 0002): existem
+ * Os bytes são efêmeros por decisão de produto: existem
  * durante a transcrição e são descartados. O que sobrevive é a
  * transcrição revisada pelo atleta, não a gravação.
  */

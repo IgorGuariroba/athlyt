@@ -3,8 +3,8 @@ import { ACCESS_DENIED_ROUTE, buildAuthConfig } from "../config";
 
 /**
  * Seam: o callback signIn do Auth.js, isolado da allowlist real via
- * injeção de `loadAllowlist`. Confirma a fronteira de acesso descrita
- * em specs/mvp-vertical.md — user stories 2 e 3 — sem tocar o banco:
+ * injeção de `loadAllowlist`. Confirma a fronteira de acesso sem tocar
+ * o banco:
  * e-mail permitido entra, e-mail fora da allowlist é redirecionado
  * para a tela de acesso restrito sem qualquer persistência.
  */

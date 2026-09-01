@@ -3,8 +3,8 @@ import { ChevronDown, type LucideIcon } from "lucide-react";
 /**
  * Disclosure padrão do produto: rótulo `muted` com chevron que gira ao
  * abrir. Existe porque o marcador nativo do `<details>` é um triângulo
- * do sistema operacional — mistura família de ícones e quebra o peso
- * uniforme exigido em DESIGN.md > Iconography.
+ * do sistema operacional — mistura a família de ícones e quebra o peso
+ * visual uniforme do produto.
  *
  * `Icone` troca o chevron quando a ação, e não o conteúdo, é o assunto
  * do disclosure (ex.: "Trocar exercício"); nesse caso não há rotação,

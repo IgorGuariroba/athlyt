@@ -20,13 +20,13 @@ describe("catálogo de exercícios", () => {
     expect(new Set(ids).size).toBe(ids.length);
   });
 
-  it("todo exercício tem justificativa não vazia (user story 20)", () => {
+  it("todo exercício tem justificativa não vazia", () => {
     for (const exercicio of EXERCICIOS) {
       expect(exercicio.justificativa.length).toBeGreaterThan(20);
     }
   });
 
-  it("todo exercício tem instrução de execução não vazia (Mídia de Execução, CONTEXT.md)", () => {
+  it("todo exercício tem instrução de execução não vazia para fallback da mídia", () => {
     for (const exercicio of EXERCICIOS) {
       expect(exercicio.comoExecutar.length).toBeGreaterThan(20);
     }

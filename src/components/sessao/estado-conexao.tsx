@@ -16,9 +16,8 @@ import {
 } from "@/domain/sessao/copiloto-cliente";
 
 /**
- * Estado de conexão e sincronização (user story 38; telas 042 e 085).
- *
- * Os cinco estados da spec são distintos de propósito e nenhum deles
+ * Os cinco estados de conexão e sincronização são distintos de
+ * propósito e nenhum deles
  * pode ficar implícito: "offline" e "degradado" descrevem capacidades
  * diferentes — no primeiro o aparelho sabe que não há rede, no segundo
  * há rede mas o servidor não coopera — e "com conflito" é o único que
@@ -87,8 +86,7 @@ export function ProvedorConexao({
   }, [router]);
 
   // Drenagem automática: a mudança de `online` reexecuta o efeito, e a
-  // fila sai sozinha ao voltar a rede — sem o usuário precisar pedir,
-  // que é o requisito da user story 39.
+  // fila sai sozinha ao voltar a rede, sem o usuário precisar pedir.
   useEffect(() => {
     void recarregarFila(sessionId);
     if (!online) return;

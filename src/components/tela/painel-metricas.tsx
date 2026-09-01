@@ -45,7 +45,7 @@ export function Metrica({
 }: {
   Icone?: LucideIcon;
   valor: React.ReactNode;
-  /** Unidade junto do valor, em escala menor (DESIGN.md > Typography). */
+  /** Unidade junto do valor, em escala menor. */
   unidade?: string;
   rotulo: string;
 }) {

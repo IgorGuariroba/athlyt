@@ -1,7 +1,7 @@
 /**
  * Identidade e Acesso — autorização por allowlist, separada da
- * autenticação (specs/mvp-vertical.md, "Implementation Decisions").
- * Um e-mail autenticado com sucesso pelo Google só ganha acesso ao
+ * autenticação. Um e-mail autenticado com sucesso pelo Google só
+ * ganha acesso ao
  * produto se também estiver na allowlist.
  */
 

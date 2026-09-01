@@ -16,7 +16,8 @@ const estimativaValida = {
     {
       descricao: "Arroz branco cozido",
       porcaoDescrita: "duas colheres de sopa",
-      quantidadeGramas: 50,
+      quantidade: 50,
+      unidade: "g" as const,
       calorias: 64, proteinaG: 1, carboidratosG: 14, gordurasG: 0, fibrasG: 1,
       confianca: "media" as const,
     },
@@ -92,8 +93,8 @@ describe("estimarRefeicaoPorDescricao", () => {
       metasRestantes: { calorias: 900 },
     });
 
-    // User story 36: as metas calibram porções plausíveis; forçar o
-    // resultado a fechar a meta descreveria o plano, não a refeição.
+    // As metas calibram porções plausíveis; forçar o resultado a
+    // fechar a meta descreveria o plano, não a refeição.
     const { instrucao } = decidir.mock.calls[0][0] as { instrucao: string };
     expect(instrucao).toMatch(/Nunca ajuste a estimativa para fechar a meta/i);
   });
@@ -113,13 +114,33 @@ describe("estimarRefeicaoPorDescricao", () => {
     expect(refeicaoTextoSchema.safeParse(estimativaValida).success).toBe(true);
   });
 
+  it("aceita líquido declarado em mililitros", () => {
+    // Quem diz "tomei uma lata" descreve volume. Forçar gramas obrigava
+    // o modelo a inventar densidade e a não dizer que inventou.
+    const comBebida = {
+      ...estimativaValida,
+      itens: [
+        { ...estimativaValida.itens[0], descricao: "Coca-Cola Zero", unidade: "ml", quantidade: 350 },
+      ],
+    };
+    expect(refeicaoTextoSchema.safeParse(comBebida).success).toBe(true);
+  });
+
+  it("recusa unidade fora de g e ml: o Prato não sabe reescalar o resto", () => {
+    const emColheres = {
+      ...estimativaValida,
+      itens: [{ ...estimativaValida.itens[0], unidade: "colher" }],
+    };
+    expect(refeicaoTextoSchema.safeParse(emColheres).success).toBe(false);
+  });
+
   it("recusa item sem a porção que o atleta descreveu", () => {
     const semPorcao = {
       ...estimativaValida,
       itens: [{ ...estimativaValida.itens[0], porcaoDescrita: undefined }],
     };
     // Sem ela o atleta revisa gramas que ele nunca disse, e o número
-    // deixa de ser reconhecível como a própria memória (user story 17).
+    // deixa de ser reconhecível como a própria memória.
     expect(refeicaoTextoSchema.safeParse(semPorcao).success).toBe(false);
   });
 

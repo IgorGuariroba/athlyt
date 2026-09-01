@@ -13,7 +13,7 @@ declare global {
 declare const self: ServiceWorkerGlobalScope;
 
 /**
- * Precache do shell da PWA (ADR 0001).
+ * Precache do shell da PWA.
  *
  * A página da Sessão de Treino recebe uma estratégia própria: rede
  * primeiro, com timeout curto e queda para o cache. É o único ponto
@@ -63,7 +63,7 @@ const serwist = new Serwist({
       handler: new NetworkOnly(),
     },
     /**
-     * Mídia de Execução (CONTEXT.md): GIF espelhado no R2 e servido por
+     * A Mídia de Execução é um GIF espelhado no R2 e servido por
      * `/api/midia-execucao/{id}` com chave estável e conteúdo imutável.
      * O catch-all de `defaultCache` para `/api/*` usa `NetworkFirst` com
      * só 16 entradas — certo para dados que mudam, errado para mídia que

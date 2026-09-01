@@ -8,10 +8,6 @@ import { carregarRespostasTriagem } from "../_lib/carregar-respostas";
 import { EtapaForm } from "../_components/etapa-form";
 import { CartaoCheckbox } from "@/components/tela/opcao-cartao";
 
-/**
- * Tela 021 — Preferências e restrições alimentares
- * (specs/workflow/telas/021-alimentacao-restricoes.md).
- */
 export default async function AlimentacaoRestricoesPage() {
   const respostas = await carregarRespostasTriagem();
   const { indice, total } = posicaoNaCascata("alimentacao-restricoes");

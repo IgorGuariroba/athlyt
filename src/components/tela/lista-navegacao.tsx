@@ -7,21 +7,18 @@ import { cn } from "@/lib/utils";
  * Lista de destinos: ícone, rótulo e chevron, agrupados em um cartão
  * com divisores de 1px.
  *
- * É o padrão de navegação secundária do MacroFactor — ver
- * `workflow-imagens-references/macrofactor/147-mais-configuracoes.JPG`,
- * onde "Dashboard / Food Log / Shortcuts / Expenditure…" formam um
- * único cartão de linhas, não uma pilha de cartões.
+ * A navegação secundária forma um único cartão de linhas, não uma
+ * pilha de cartões.
  *
  * Existe porque a tela "Mais" vinha montando um cartão por destino,
- * cada um com descrição e um `Button` dentro. Isso triplica a altura,
- * repete a superfície elevada para relações idênticas — o que DESIGN.md
- * > Layout proíbe explicitamente ("nunca use simultaneamente divisor
- * forte, grande gap e superfície contrastante para separar a mesma
- * relação") — e transforma navegação em ação, quando o destino é só
- * outra tela.
+ * cada um com descrição e um `Button` dentro. Isso triplica a altura e
+ * repete a superfície elevada para relações idênticas. Divisor forte,
+ * grande gap e superfície contrastante nunca devem separar
+ * simultaneamente a mesma relação. Além disso, essa estrutura
+ * transforma navegação em ação, quando o destino é só outra tela.
  *
- * A linha inteira é o alvo de toque (52px mínimo, acima dos 44px de
- * DESIGN.md > Accessibility), e não um botão dentro do cartão.
+ * A linha inteira é o alvo de toque, com 52px mínimos — acima do mínimo
+ * acessível de 44px —, e não um botão dentro do cartão.
  */
 export function ListaNavegacao({
   className,

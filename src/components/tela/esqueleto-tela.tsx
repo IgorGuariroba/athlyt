@@ -1,8 +1,7 @@
 import { cn } from "@/lib/utils";
 
 /**
- * Bloco de carregamento para dados remotos (DESIGN.md > Empty, loading
- * e locked states: "skeleton é necessário para dados remotos").
+ * Bloco de carregamento necessário para dados remotos.
  *
  * O esqueleto existe para reservar espaço, não para entreter: usa a
  * superfície de container e um pulso único, sem shimmer em gradiente.

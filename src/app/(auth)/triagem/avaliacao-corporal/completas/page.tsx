@@ -8,13 +8,9 @@ import { salvarMedidasCompletas } from "../actions";
 import { CampoMedida } from "../_components/campo-medida";
 
 /**
- * Tela 008c — proporções e simetria
- * (specs/workflow/telas/008c-avaliacao-circunferencias.md).
- *
- * Uma medida por região (`fita-v2`,
- * docs/adr/0007-uma-leitura-por-circunferencia.md). Lados direito e
- * esquerdo ficam lado a lado porque a comparação bilateral é o que a
- * tela existe para permitir.
+ * Proporções e simetria usam uma medida por região. Lados direito e
+ * esquerdo ficam lado a lado porque a comparação bilateral depende
+ * dessa proximidade.
  */
 
 /**

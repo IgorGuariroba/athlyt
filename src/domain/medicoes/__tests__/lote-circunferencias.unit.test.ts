@@ -5,8 +5,8 @@ import {
 } from "../lote-circunferencias";
 
 /**
- * Uma leitura por região (`fita-v2`, ADR 0007). O lote existe para que
- * a tela saiba de uma só vez quais regiões falharam, em vez de revelar
+ * O protocolo `fita-v2` usa uma leitura por região. O lote existe para
+ * que a tela saiba de uma só vez quais regiões falharam, em vez de revelar
  * um problema por submissão.
  */
 describe("lote de circunferências", () => {

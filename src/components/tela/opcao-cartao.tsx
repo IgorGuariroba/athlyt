@@ -4,10 +4,9 @@ import { Label } from "@/components/ui/label";
 import { RadioGroupItem } from "@/components/ui/radio-group";
 
 /**
- * Cartão de opção padrão da cascata (referência-âncora
- * `workflow-imagens-references/macrofactor/011-sexo-masculino.JPG`):
- * cartão alto, borda espessa que reforça na seleção, ícone opcional à
- * esquerda e controle circular grande à direita.
+ * Cartão de opção padrão da cascata: alto, com borda espessa que
+ * reforça na seleção, ícone opcional à esquerda e controle circular
+ * grande à direita.
  */
 const BASE_CARTAO =
   "flex min-h-20 cursor-pointer items-center gap-4 rounded-xl border-2 border-border-strong bg-surface px-4 py-4 transition-colors hover:bg-surface-container has-data-checked:border-on-surface-strong";

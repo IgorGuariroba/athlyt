@@ -51,7 +51,7 @@ function frase(
 }
 
 /**
- * Painel do dia (tela 045), no padrão compacto do MacroFactor
+ * Painel do dia, no padrão compacto do MacroFactor
  * (referências 139–140): `consumido / meta` com barra fina abaixo. A
  * linha do tempo é o conteúdo da tela — o painel é cabeçalho e não
  * pode empurrar as refeições para fora da dobra.
@@ -63,7 +63,7 @@ function frase(
  * mesma linha, kcal e fibras disputavam a atenção com a proteína e
  * cada coluna ficava estreita demais para mostrar a meta inteira.
  *
- * Ultrapassar a meta não vira alerta vermelho: a spec proíbe linguagem
+ * Ultrapassar a meta não vira alerta vermelho, para evitar linguagem
  * punitiva. O excesso aparece como barra cheia e restante negativo,
  * que é informação, não repreensão.
  */

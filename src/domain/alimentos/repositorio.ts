@@ -17,8 +17,7 @@ export interface ItemBiblioteca {
 }
 
 /**
- * Registra o Prato inteiro como um único Consumo Confirmado avulso
- * (telas 050–053, 058; user story 49d).
+ * Registra o Prato inteiro como um único Consumo Confirmado avulso.
  *
  * Avulso é deliberadamente distinto de `planejado`/`editado`: ele não
  * consome uma Entrada Planejada e por isso não participa do índice
@@ -71,7 +70,7 @@ export async function registrarPrato(
   };
 }
 
-/** Alterna o favorito de um alimento do catálogo (tela 053). */
+/** Alterna o favorito de um alimento do catálogo. */
 export async function alternarFavorito(userId: string, alimentoId: string): Promise<boolean> {
   const [existente] = await db
     .select()
@@ -87,7 +86,7 @@ export async function alternarFavorito(userId: string, alimentoId: string): Prom
 }
 
 /**
- * Alimento criado na entrada manual (tela 052), reutilizável depois.
+ * Alimento criado na entrada manual, reutilizável depois.
  * Fica na mesma biblioteca dos favoritos porque a pergunta da tela é
  * a mesma: o que este atleta reusa?
  */
@@ -146,7 +145,7 @@ export interface Recorrente {
 }
 
 /**
- * Recorrentes derivados do histórico real (user story 49).
+ * Recorrentes derivados do histórico real.
  *
  * Não há tabela própria de propósito: a frequência já está em
  * `food_entry`, e mantê-la em dois lugares criaria duas verdades sobre

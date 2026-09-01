@@ -3,12 +3,11 @@ import { decidir, type ResultadoDecisao } from "../decidir";
 import type { NucleoContexto } from "../contexto/nucleo";
 
 /**
- * Copiloto de Sessão — orientação entre séries (CONTEXT.md;
- * specs/mvp-vertical.md, user stories 26–35).
+ * Copiloto de Sessão — orientação entre séries.
  *
  * Online usa IA; offline o Coach Local aplica regras determinísticas.
  * Este módulo cobre só o caminho online — quando ele degrada, quem
- * chama cai no Coach Local, nunca em simulação de IA (user story 37).
+ * chama cai no Coach Local, nunca em simulação de IA.
  */
 
 export const orientacaoSchema = z.object({

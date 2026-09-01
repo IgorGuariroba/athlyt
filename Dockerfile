@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
 
-# Imagem de produção do app web (Dokploy/Traefik na VPS — ADR 0003).
+# Imagem de produção do app web (Dokploy/Traefik na VPS).
 # Três estágios: dependências, build e runtime enxuto a partir do
 # `output: "standalone"` do Next.
 

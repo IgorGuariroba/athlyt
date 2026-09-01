@@ -13,10 +13,6 @@ const FAIXAS = [
   { value: "90", label: "90 minutos", descricao: "Volume alto, para rotinas flexíveis" },
 ] as const;
 
-/**
- * Tela 017 — Duração possível da sessão
- * (specs/workflow/telas/017-duracao-sessao.md).
- */
 export default async function DuracaoSessaoPage() {
   const respostas = await carregarRespostasTriagem();
   const { indice, total } = posicaoNaCascata("duracao-sessao");

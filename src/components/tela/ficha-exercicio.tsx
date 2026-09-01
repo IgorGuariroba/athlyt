@@ -7,10 +7,9 @@ import type { GrupoMuscular } from "@/domain/plano/exercicios";
 import { DiagramaMuscular } from "./diagrama-muscular";
 
 /**
- * Ponto de entrada para a Mídia de Execução (CONTEXT.md): "Animação/
- * vídeo demonstrativo do exercício vindo de banco aberto/licenciado
- * [...], com fallback de instruções em texto e diagrama de
- * músculos-alvo."
+ * Ponto de entrada para a Mídia de Execução: animação ou vídeo
+ * demonstrativo vindo de banco aberto/licenciado, com fallback de
+ * instruções em texto e diagrama de músculos-alvo.
  *
  * A animação real vem da ExerciseDB, espelhada no R2 e servida por
  * `/api/midia-execucao/{exercicioId}` (ver `midiaDoExercicio` em
@@ -20,19 +19,17 @@ import { DiagramaMuscular } from "./diagrama-muscular";
  * mapeamento, offline sem cache ou erro de carregamento, a ficha cai
  * para ele em vez de virar uma caixa vazia.
  *
- * O ícone de informação junto ao nome do exercício, separado das ações
- * operacionais (substituir, opções da série), segue o padrão do Alpha
- * Progression (workflow-imagens-references/alpha-progression/050 e
- * 062: "Supino reto · Barra ⓘ"): a ficha do exercício não compete com
- * o menu "o que fazer com este exercício".
+ * O ícone de informação fica junto ao nome do exercício e separado das
+ * ações operacionais (substituir, opções da série), para que a ficha
+ * não compita com o menu "o que fazer com este exercício".
  *
  * Fechada por padrão — como o timer de descanso em `RegistroSerie` —
  * porque a tela de sessão já é densa; o atleta abre quando tem a
  * dúvida, não a cada série.
  *
  * `DiagramaMuscular` (silhueta com região marcada) continua presente
- * como informação secundária/menor: a animação ensina o movimento, o
- * diagrama diz onde ele bate — papéis que o `CONTEXT.md` distingue.
+ * como informação secundária/menor: a animação ensina o movimento e o
+ * diagrama mostra a região trabalhada.
  */
 export function FichaExercicio({
   nome,

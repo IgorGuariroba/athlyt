@@ -11,7 +11,7 @@ import { confirmarRefeicaoAction, desfazerConfirmacaoAction, excluirConsumoActio
 import { rotuloDoDia } from "./rotulo-do-dia";
 
 /**
- * Aba Diário (telas 045–048): linha do tempo unificada do dia com
+ * Aba Diário: linha do tempo unificada do dia com
  * Entradas Planejadas, Consumo Confirmado e sessões de treino, sob o
  * painel de macros consumido vs restante.
  *

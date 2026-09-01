@@ -6,8 +6,7 @@ import { TransicaoEtapa } from "./transicao-etapa";
 
 /**
  * Moldura visual comum da cascata: barra de progresso + título +
- * conteúdo da pergunta (specs/workflow/telas 005–023, todas "uma
- * pergunta por tela" com barra de progresso).
+ * conteúdo. Cada etapa apresenta uma pergunta com barra de progresso.
  */
 export function CascataShell({
   titulo,

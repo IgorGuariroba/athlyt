@@ -11,9 +11,6 @@ const OPCOES = [
   { value: "masculino", label: "Masculino", Icone: Mars },
 ] as const;
 
-/**
- * Tela 006 — Sexo biológico (specs/workflow/telas/006-dados-sexo.md).
- */
 export default async function SexoPage() {
   const respostas = await carregarRespostasTriagem();
   const { indice, total } = posicaoNaCascata("sexo");

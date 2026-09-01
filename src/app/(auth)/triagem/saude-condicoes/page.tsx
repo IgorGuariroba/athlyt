@@ -5,10 +5,6 @@ import { CascataShell } from "@/components/tela/cascata-shell";
 import { carregarRespostasTriagem } from "../_lib/carregar-respostas";
 import { EtapaForm } from "../_components/etapa-form";
 
-/**
- * Tela 020 — Condições e medicamentos
- * (specs/workflow/telas/020-saude-condicoes.md).
- */
 export default async function SaudeCondicoesPage() {
   const respostas = await carregarRespostasTriagem();
   const { indice, total } = posicaoNaCascata("saude-condicoes");

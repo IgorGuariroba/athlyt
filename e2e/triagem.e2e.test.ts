@@ -4,10 +4,9 @@ import { obterPerfilVigente } from "@/domain/triagem/perfil";
 import { obterOuGerarRascunho } from "@/domain/plano/repositorio";
 
 /**
- * Jornada da Triagem em cascata (specs/mvp-vertical.md, user stories
- * 5, 6, 14, 15; Testing Decisions > "perfil insuficiente ativa Modo
- * Conservador; completar dados habilita capacidades"). Cobre a
- * cascata completa até o resumo, retomada após abandono e a
+ * Jornada da Triagem em cascata. Um perfil insuficiente ativa o Modo
+ * Conservador; completar os dados habilita capacidades. Cobre a
+ * cascata completa até o resumo, a retomada após abandono e a
  * fronteira Conservador/completo observada na aba Treino.
  */
 test.describe("Triagem em cascata", () => {
@@ -124,7 +123,7 @@ test.describe("Triagem em cascata", () => {
 
     await expect(page).toHaveURL("/triagem/academia-equipamentos");
     // Escolher o local pré-marca os equipamentos plausíveis; a lista só
-    // aparece depois dessa escolha (specs/workflow/telas/018).
+    // aparece depois dessa escolha.
     await page.getByText("Academia completa").click();
     await expect(page.getByRole("checkbox", { name: "Leg press" })).toBeChecked();
     // A revisão manual continua soberana sobre a sugestão.

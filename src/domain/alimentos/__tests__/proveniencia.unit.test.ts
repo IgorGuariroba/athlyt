@@ -7,9 +7,9 @@ import {
 } from "../proveniencia";
 
 /**
- * User story 58: fontes conflitantes ponderadas por credencial, método,
+ * Fontes conflitantes são ponderadas por credencial, método,
  * reprodutibilidade, atualidade, adequação contextual e concordância.
- * User story 97: divergência material não some numa média arbitrária.
+ * Divergência material não some numa média arbitrária.
  */
 
 const tabelaOficial: ValorDeFonte = {
@@ -46,7 +46,7 @@ const colaborativa: ValorDeFonte = {
 };
 
 describe("pontuação de fonte nutricional", () => {
-  it("declara os seis critérios da user story 58", () => {
+  it("declara os seis critérios de ponderação", () => {
     expect(CRITERIOS_FONTE.map((c) => c.id)).toEqual([
       "credencial",
       "metodo",

@@ -49,7 +49,7 @@ function estimados(calorias: number) {
   return [
     itemEstimado({
       descricao: "Marmita da esquina",
-      quantidadeGramas: 400,
+      quantidade: 400,
       calorias, proteinaG: 30, carboidratosG: 60, gordurasG: 20, fibrasG: 5,
       confianca: "baixa",
       modelo: "google/gemini-2.5-flash-lite",

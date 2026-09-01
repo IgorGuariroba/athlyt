@@ -1,8 +1,5 @@
 /**
- * Catálogo de equipamentos da triagem (specs/workflow/telas/018-
- * academia-equipamentos.md; referências-âncora
- * `alpha-progression/020-academia-selecionar-equipamentos.JPG` e
- * `fitbod/011..012-onboarding-revisar-equipamentos-*.JPG`).
+ * Catálogo de equipamentos da triagem.
  *
  * O plano de treino é gerado a partir desta lista: um equipamento
  * ausente aqui é um exercício que a IA não pode prescrever. Por isso o

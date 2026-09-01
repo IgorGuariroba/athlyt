@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { avaliarConfiancaCorporal, calcularPendenciasCadencia, consolidarCircunferencia, detectarAssimetriaSuspeita, gerarMetasProporcao } from "../index";
 
 describe("protocolo de circunferências", () => {
-  // `fita-v2`: uma leitura basta (ADR 0007). Leituras extras continuam
+  // `fita-v2`: uma leitura basta. Leituras extras continuam
   // aceitas para quem quiser conferir.
   it("aceita uma única leitura", () => {
     expect(consolidarCircunferencia([82.3])).toMatchObject({ ok: true, valorMm: 823 });

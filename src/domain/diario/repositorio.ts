@@ -60,7 +60,7 @@ export function hojeDoUsuario(fuso: string = FUSO_PADRAO, agora: Date = new Date
 }
 
 /**
- * Linha do tempo do dia (tela 045): Entradas Planejadas do Cardápio
+ * Linha do tempo do dia: Entradas Planejadas do Cardápio
  * Diário, Consumo Confirmado e sessões de treino no mesmo eixo.
  *
  * Uma refeição já confirmada some do estado planejado — o que a
@@ -135,7 +135,7 @@ export async function obterEntradaPlanejada(
 }
 
 /**
- * Confirma uma Entrada Planejada (telas 046–047).
+ * Confirma uma Entrada Planejada.
  *
  * `itens` ausente = "comi como planejado", em um toque. Quando vem
  * preenchido, o consumo confirmado é o real e o planejado fica ao
@@ -198,8 +198,8 @@ export async function confirmarRefeicao(
 /**
  * Consumo já registrado para uma refeição planejada no dia, se houver.
  *
- * Existe para a tela poder **avisar antes de substituir** (ADR 0002,
- * decisão 5). O aviso precisa do consumo em si, e não de um booleano:
+ * Existe para a tela poder **avisar antes de substituir**. O aviso
+ * precisa do consumo em si, e não de um booleano:
  * “você já registrou 620 kcal nesta refeição” é o que permite ao
  * atleta decidir se cancela, enquanto “já existe um registro” o obriga
  * a sair da tela para descobrir qual.
@@ -229,11 +229,10 @@ export async function obterConsumoDaRefeicao(
 }
 
 /**
- * Grava o Consumo Real de um Registro Retroativo (CONTEXT.md >
- * Registro Retroativo).
+ * Grava o Consumo Real de um Registro Retroativo.
  *
- * Distingue-se de `confirmarRefeicao` em três pontos que a ADR 0002
- * exige e que aquela não cobre: o nome e o horário são escolhidos
+ * Distingue-se de `confirmarRefeicao` em três pontos: o nome e o
+ * horário são escolhidos
  * pelo atleta (não herdados da prescrição), e a refeição pode não
  * ter planejamento nenhum. E de `registrarPrato` por preservar o
  * vínculo com a Refeição Planejada: com `refeicaoRef`, confirmar
@@ -318,7 +317,7 @@ export async function excluirConsumo(userId: string, consumoId: string): Promise
   await db.delete(foodEntries).where(and(eq(foodEntries.userId, userId), eq(foodEntries.id, consumoId)));
 }
 
-/** Desfazer a confirmação (tela 047): a refeição volta a planejada. */
+/** Desfazer a confirmação: a refeição volta a planejada. */
 export async function desfazerConfirmacao(
   userId: string,
   entrada: { refeicaoRef: string; dia?: string; fuso?: string; agora?: Date },

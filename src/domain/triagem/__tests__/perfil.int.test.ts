@@ -11,8 +11,8 @@ import {
 /**
  * Seam: a tabela `profile_version` via Drizzle, contra um Postgres
  * real de desenvolvimento (mesmo padrão de
- * src/domain/acesso/__tests__/sessions.test.ts). Cobre a user story
- * 17 — corrigir e versionar dados do perfil sem apagar histórico.
+ * src/domain/acesso/__tests__/sessions.int.test.ts). Cobre a correção e o
+ * versionamento de dados do perfil sem apagar o histórico.
  */
 describe("registrarRespostas / obterPerfilVigente", () => {
   async function criarUsuario() {

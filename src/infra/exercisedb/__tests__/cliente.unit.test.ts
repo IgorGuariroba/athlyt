@@ -3,7 +3,7 @@ import { criarClienteExerciseDB } from "../index";
 
 /**
  * Cliente da ExerciseDB (AscendAPI, tier V1 OSS) — camada de mídia da
- * Mídia de Execução (CONTEXT.md). `fetch` é injetável para testar sem
+ * Mídia de Execução. `fetch` é injetável para testar sem
  * rede; a base é `https://oss.exercisedb.dev/api/v1`.
  */
 describe("criarClienteExerciseDB", () => {

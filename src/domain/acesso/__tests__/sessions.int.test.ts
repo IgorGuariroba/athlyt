@@ -7,8 +7,8 @@ import { revokeAllSessions } from "../sessions";
 
 /**
  * Seam: a tabela `session` via Drizzle, contra um Postgres real de
- * desenvolvimento (a mesma dependência que o resto do ticket já usa).
- * Cobre a user story 4 — encerrar sessão em todos os dispositivos.
+ * desenvolvimento. Cobre o encerramento da sessão em todos os
+ * dispositivos.
  */
 describe("revokeAllSessions", () => {
   it("apaga todas as sessões do usuário e preserva sessões de outros usuários", async () => {

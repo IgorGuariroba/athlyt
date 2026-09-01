@@ -28,12 +28,10 @@ import { NOME_PROVEDOR } from "@/domain/ia/provedor";
 import { BotaoGerarPlano } from "./botao-gerar-plano";
 
 /**
- * Tela 024 — Resumo da triagem (specs/workflow/telas/024-resumo-
- * triagem.md). Checklist do que foi preenchido, o que falta e o que
- * cada dado destrava; declara o estado do Modo Conservador (user
- * stories 6, 14, 15).
+ * Resumo da triagem: checklist do que foi preenchido, o que falta e o
+ * que cada dado destrava; declara o estado do Modo Conservador.
  *
- * O resumo desemboca na geração do Plano Ativo pelo agent (tela 025).
+ * O resumo desemboca na geração do Plano Ativo pelo agent.
  */
 export default async function ResumoTriagemPage({ searchParams }: { searchParams: Promise<{ erro?: string }> }) {
   const session = await auth();

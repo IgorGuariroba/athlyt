@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { useConexao } from "./estado-conexao";
 
 /**
- * Conclusão da sessão que atravessa a falta de rede (tela 043).
+ * Conclusão da sessão que atravessa a falta de rede.
  *
  * O botão precisa considerar as séries que ainda estão na fila local:
  * offline, o contador que veio do servidor está desatualizado por

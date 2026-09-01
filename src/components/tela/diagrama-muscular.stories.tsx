@@ -23,7 +23,7 @@ const meta = {
     docs: {
       description: {
         component:
-          "Mídia de Execução (CONTEXT.md): diagrama que complementa o fallback em texto, marcando a região trabalhada. A vista (frente ou costas) é derivada do grupo por `rotuloVistaDoGrupo`; a ficha do exercício mostra apenas a vista do grupo primário.",
+          "Mídia de Execução: diagrama que complementa o fallback em texto, marcando a região trabalhada. A vista (frente ou costas) é derivada do grupo por `rotuloVistaDoGrupo`; a ficha do exercício mostra apenas a vista do grupo primário.",
       },
     },
   },

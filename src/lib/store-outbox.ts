@@ -9,9 +9,8 @@ import type { SerieRegistrada } from "@/domain/sessao/outbox";
  *
  * A fila não é estado de React: ela vive em IndexedDB, é compartilhada
  * por todas as abas e sobrevive ao fechamento do app. Espelhá-la em
- * `useState` dentro de `useEffect` produz exatamente a classe de bug
- * que este ticket precisa evitar — um badge que diz "0 na fila" porque
- * o componente ainda não releu o banco.
+ * `useState` dentro de `useEffect` produz um badge que diz "0 na fila"
+ * enquanto o componente ainda não releu o banco.
  *
  * Aqui o React apenas *assina* a fonte da verdade, via
  * `useSyncExternalStore`. Cada mutação notifica os assinantes, e o

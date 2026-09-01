@@ -15,6 +15,13 @@ import { montarNucleo } from "@/domain/ia/contexto/nucleo";
 import { estimarRefeicaoPorFoto } from "@/domain/ia/operacoes/refeicao-foto";
 import { NOME_PROVEDOR } from "@/domain/ia/provedor";
 import { obterPerfilVigente } from "@/domain/triagem/perfil";
+import {
+  recalcularMacrosDoItem,
+  type MacrosRecalculados,
+  type ResultadoMacrosItem,
+} from "../recalculo-de-item";
+
+export type { MacrosRecalculados, ResultadoMacrosItem };
 
 const CAMPOS = ["foto-refeicao", "metas-restantes", "restricoes"];
 
@@ -113,4 +120,23 @@ export async function estimarRefeicaoAction(fd: FormData): Promise<ResultadoEsti
       modelo: resultado.modeloResolvido,
     },
   };
+}
+
+/**
+ * Recalcula um item cujo alimento o atleta corrigiu na revisão da foto.
+ *
+ * É o caso que dá sentido a poder editar o nome aqui: a foto mostra a
+ * garrafa mas não o rótulo, o modelo lê "Coca-Cola", e quem bebeu sabe
+ * que era a zero. Sem o recálculo, corrigir o nome gravaria a bebida
+ * certa com as 105 kcal da errada.
+ *
+ * A lógica é a mesma da tela de descrição; o que muda é a tela de
+ * origem, que entra na Trilha de Decisão.
+ */
+export async function recalcularMacrosDoItemAction(fd: FormData): Promise<ResultadoMacrosItem> {
+  return recalcularMacrosDoItem(fd, {
+    tela: "Registrar por foto",
+    rota: "/diario/registrar/foto",
+    gatilho: "recalculo-de-macros-do-item",
+  });
 }

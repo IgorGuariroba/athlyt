@@ -10,6 +10,7 @@ import {
   itemManual,
   macrosDesatualizados,
   nomeDoItem,
+  origemDaEstimativa,
   reescalarItem,
   removerDoPrato,
   renomearItem,
@@ -21,9 +22,8 @@ import { rotuloDeConfianca, type Confianca } from "@/domain/alimentos/provenienc
 import { cn } from "@/lib/utils";
 
 /**
- * Revisão dos itens que a IA estimou, antes de virarem Consumo Real
- * (ADR 0002, decisão 4: a estimativa é sempre apresentada para
- * revisão).
+ * Revisão dos itens que a IA estimou antes de virarem Consumo Real.
+ * Toda estimativa deve ser apresentada para revisão.
  *
  * Mora no catálogo, e não na rota, porque a mesma revisão serve foto,
  * texto e áudio: o que muda entre os três é como a estimativa nasceu,
@@ -34,12 +34,12 @@ import { cn } from "@/lib/utils";
  *
  * - o rótulo de confiança acompanha **cada item**, com a origem certa:
  *   "pouco visível na foto" seria falso sobre um prato que ninguém
- *   fotografou (user story 9);
+ *   fotografou;
  * - a porção descrita pelo atleta ("uma colher de sopa") fica ao lado
  *   das gramas, porque é ela que ele reconhece ao conferir — o número
  *   em gramas é a tradução do modelo, não a memória dele;
  * - o total recalcula a cada edição e fica visível antes do botão de
- *   confirmar, nunca depois (user story 16).
+ *   confirmar, nunca depois.
  *
  * Corrigir o nome não mexe nos macros sozinho, mas há correções que
  * trocam o alimento e não só o rótulo ("cola" → "cola zero"). Quando
@@ -142,21 +142,26 @@ export function RevisaoEstimativa({
                   }
                   className="h-11 min-w-0 flex-1"
                 />
+                {/* A unidade é a que o modelo declarou, e o rótulo a
+                    repete: pedir "gramas" de um refrigerante convidaria
+                    o atleta a converter volume em massa de cabeça. */}
                 <label className="flex shrink-0 items-center gap-1">
                   <Input
                     value={String(item.quantidade)}
                     inputMode="numeric"
-                    aria-label={`Gramas de ${nome}`}
+                    aria-label={`Quantidade de ${nome} em ${item.unidade}`}
                     onChange={(evento) => {
-                      const gramas = Number(evento.target.value.replace(",", "."));
-                      if (!Number.isFinite(gramas) || gramas <= 0) return;
+                      const quantidade = Number(evento.target.value.replace(",", "."));
+                      if (!Number.isFinite(quantidade) || quantidade <= 0) return;
                       aoMudar(
-                        itens.map((alvo, i) => (i === indice ? reescalarItem(alvo, gramas) : alvo)),
+                        itens.map((alvo, i) =>
+                          i === indice ? reescalarItem(alvo, quantidade) : alvo,
+                        ),
                       );
                     }}
                     className="h-11 w-16 text-center tabular-nums"
                   />
-                  <span className="text-body-sm text-muted-foreground">g</span>
+                  <span className="text-body-sm text-muted-foreground">{item.unidade}</span>
                 </label>
                 <Button
                   type="button"
@@ -174,7 +179,13 @@ export function RevisaoEstimativa({
               <p className="text-caption tabular-nums text-muted-foreground">
                 {item.calorias} kcal · {item.proteinaG}P · {item.carboidratosG}C ·{" "}
                 {item.gordurasG}G ·{" "}
-                {rotuloDeConfianca(item.confianca, item.origemDado, origemEstimativa)}
+                {/* A origem é a do item, não a da tela: uma linha
+                    recalculada pelo nome deixou de vir da foto. */}
+                {rotuloDeConfianca(
+                  item.confianca,
+                  item.origemDado,
+                  origemDaEstimativa(item, origemEstimativa),
+                )}
               </p>
 
               {/* O aviso nomeia o alimento a que os números se referem:
@@ -216,7 +227,7 @@ export function RevisaoEstimativa({
 
       {/* Acrescentar o que a IA não captou é parte da revisão, não um
           fluxo à parte: sem isso, uma omissão obrigaria a recomeçar a
-          descrição inteira (user story 15). */}
+          descrição inteira. */}
       {adicionando ? (
         <FormularioItemFaltante
           aoCancelar={() => setAdicionando(false)}

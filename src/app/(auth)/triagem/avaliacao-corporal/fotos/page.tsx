@@ -14,11 +14,9 @@ import {
 import { EnvioFotos } from "@/components/fotos/envio-fotos";
 
 /**
- * Tela 008f — fotos da Avaliação Corporal Inicial
- * (specs/workflow/telas/008f-avaliacao-fotos.md).
- *
- * Mesma moldura das demais etapas da avaliação: fundo `background`,
- * margens de 24px, voltar circular no topo, cabeçalho rótulo/título/
+ * As fotos seguem a mesma moldura das demais etapas da avaliação:
+ * fundo `background`, margens de 24px, voltar circular no topo,
+ * cabeçalho rótulo/título/
  * apoio e CTA principal ao pé da tela. As quatro poses são um único
  * cartão com divisores de 1px — pertencem à mesma unidade de
  * informação e a comparação depende de serem tratadas como conjunto,

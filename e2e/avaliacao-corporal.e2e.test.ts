@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 import { seedAuthenticatedSession, allowEmail } from "./helpers/seed-session";
 
 /**
- * Avaliação Corporal Inicial (telas 008a–008c).
+ * Avaliação Corporal Inicial.
  *
  * O cenário fecha o ciclo pela navegação real de volta, e não na tela de
  * sucesso: as três causas de "não persistiu" — escrita, invalidação e

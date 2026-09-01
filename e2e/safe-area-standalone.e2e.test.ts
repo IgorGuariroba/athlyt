@@ -88,7 +88,7 @@ test("o casco respeita as safe areas do iPhone instalado na tela de início", as
   // 3) O inset engorda a nav em vez de comer o alvo tocável. Com
   //    `h-16` fixa e `border-box`, o padding do indicador de home era
   //    descontado por dentro e a faixa tocada caía de 64pt para 30pt,
-  //    abaixo do mínimo de 44pt (DESIGN.md > Accessibility).
+  //    abaixo do mínimo acessível de 44pt.
   expect(
     comInsets.alturaAba,
     "o inset inferior encolheu o alvo tocável da aba",

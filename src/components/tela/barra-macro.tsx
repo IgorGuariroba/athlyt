@@ -1,9 +1,8 @@
 import { cn } from "@/lib/utils";
 
 /**
- * Paleta semântica de nutrientes (DESIGN.md > Colors > Paleta de
- * dados): o mesmo nutriente tem a mesma cor em qualquer tela do
- * produto — Início, Diário, revisão do plano.
+ * Paleta semântica de nutrientes: o mesmo nutriente tem a mesma cor em
+ * qualquer tela do produto — Início, Diário, revisão do plano.
  *
  * Fica aqui, e não em cada página, porque "cor com significado" só é
  * verdade se houver uma única definição. Enquanto cada tela declarava
@@ -11,8 +10,8 @@ import { cn } from "@/lib/utils";
  * `--nutrition-protein` valia `#f58a5b`: uma divergência invisível em
  * revisão de código e óbvia lado a lado no aparelho.
  *
- * Fibras não têm token em DESIGN.md; usam `data-violet`, reservado a
- * "tendência secundária", por ser a única série cromática livre.
+ * Fibras usam `data-violet`, reservado a tendência secundária, por ser
+ * a única série cromática livre.
  */
 export const CORES_MACRO = {
   calorias: "bg-nutrition-calories",
@@ -42,9 +41,8 @@ export type MacroEnergetico = keyof typeof MACROS;
  *
  * A largura mínima de 4% é deliberada: uma barra de largura zero
  * comunicaria "sem meta" quando o valor é apenas pequeno. A leitura
- * quantitativa fica no número em gramas ao lado, nunca só na barra
- * (DESIGN.md > Accessibility: "não comunicar seleção, tendência ou
- * erro apenas por cor").
+ * quantitativa fica no número em gramas ao lado, nunca só na barra ou
+ * na cor.
  */
 export function BarraMacro({
   macro,

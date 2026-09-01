@@ -72,9 +72,9 @@ export const verificationTokens = pgTable(
 );
 
 /**
- * Autorização — separada da autenticação (ver specs/mvp-vertical.md,
- * "Implementation Decisions"): só e-mails na allowlist podem
- * criar/acessar perfil, mesmo autenticados com sucesso pelo Google.
+ * Autorização — separada da autenticação: só e-mails na allowlist
+ * podem criar ou acessar perfil, mesmo autenticados com sucesso pelo
+ * Google.
  */
 export const allowedEmails = pgTable("allowed_email", {
   email: text("email").primaryKey(),
@@ -82,8 +82,8 @@ export const allowedEmails = pgTable("allowed_email", {
 });
 
 /**
- * Perfil e Triagem — versionado (specs/mvp-vertical.md, user story
- * 17): cada alteração grava uma linha nova em vez de sobrescrever a
+ * Perfil e Triagem — versionado: cada alteração grava uma linha nova
+ * em vez de sobrescrever a
  * anterior. `respostas` acumula o merge de todas as respostas dadas
  * até aquela versão (snapshot completo, não um diff), o que mantém a
  * leitura da versão vigente em uma única query.
@@ -207,14 +207,13 @@ export const weeklyBodyReviews = pgTable("weekly_body_review", {
 }, (t) => [index("weekly_body_review_user_date_idx").on(t.userId, t.periodoFim)]);
 
 /**
- * Trilha de Decisão (specs/mvp-vertical.md, user stories 91–92, 116;
- * ADR 0006). Registra, por decisão de IA, o Recorte de Contexto
- * efetivamente enviado, as Ferramentas de Leitura consultadas e o
- * modelo resolvido pelo provedor — não o nome lógico solicitado.
+ * Trilha de Decisão. Registra, por decisão de IA, o Recorte de
+ * Contexto efetivamente enviado, as Ferramentas de Leitura consultadas
+ * e o modelo resolvido pelo provedor — não o nome lógico solicitado.
  *
- * `auditavel = false` marca respostas em que o provedor não
- * identificou o modelo resolvido; a ADR 0005 exige tratá-las como
- * não auditáveis.
+ * `auditavel = false` marca respostas em que o provedor não identificou
+ * o modelo resolvido: sem o modelo efetivo, a resposta não pode ser
+ * reproduzida nem auditada.
  */
 export const decisionTrails = pgTable("decision_trail", {
   id: uuid("id").primaryKey().defaultRandom(),
@@ -243,12 +242,12 @@ export const decisionTrails = pgTable("decision_trail", {
 });
 
 /**
- * Consentimento por operação (user stories 105–107). Vinculado ao id
+ * Consentimento por operação. Vinculado ao id
  * de campo declarado no Recorte de Contexto, não a categorias soltas
  * — é o que permite derivar o texto exibido da própria declaração.
  *
  * `revogadoEm` preserva o histórico: revogar afeta usos futuros sem
- * apagar decisões passadas necessárias à auditoria (user story 107).
+ * apagar decisões passadas necessárias à auditoria.
  */
 /**
  * Planos — rascunhos podem receber substituições durante a revisão;
@@ -335,7 +334,7 @@ export const workoutEvents = pgTable("workout_event", {
   dados: jsonb("dados").notNull(),
   createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
   /**
-   * Identificador estável gerado no dispositivo (ADR 0001). É a chave
+   * Identificador estável gerado no dispositivo. É a chave
    * de idempotência do outbox: o índice único abaixo é o que faz o
    * reenvio da fila ser inofensivo mesmo sob corrida entre duas abas
    * ou entre a fila e uma escrita online. Nulo para eventos nascidos
@@ -351,7 +350,7 @@ export const workoutEvents = pgTable("workout_event", {
 ]);
 
 /**
- * Conflitos de sincronização que exigem decisão humana (tela 085).
+ * Conflitos de sincronização que exigem decisão humana.
  *
  * Só chega aqui o que o merge não consegue resolver com segurança —
  * uma série já gravada com valores diferentes, um encerramento sobre
@@ -375,14 +374,13 @@ export const syncConflicts = pgTable("sync_conflict", {
 ]);
 
 /**
- * Substituições de exercício com motivo (user story 23; tela 035).
+ * Substituições de exercício com motivo.
  *
  * A linha é o registro durável do motivo, e não apenas do par
  * trocado: é ele que decide se a troca vale só para a sessão em que
  * aconteceu (preferência) ou se persiste nas próximas sessões do
  * bloco (equipamento indisponível, dor). Sem esse registro, um
- * exercício-chave mudaria de sessão para sessão sem rastro, que é
- * exatamente o que a user story proíbe.
+ * exercício-chave mudaria de sessão para sessão sem rastro.
  */
 export const exerciseSubstitutions = pgTable("exercise_substitution", {
   id: uuid("id").primaryKey().defaultRandom(),
@@ -399,7 +397,7 @@ export const exerciseSubstitutions = pgTable("exercise_substitution", {
 });
 
 /**
- * Consumo Confirmado (CONTEXT.md; user stories 46–52; telas 045–048).
+ * Consumo Confirmado.
  *
  * Entidade distinta da prescrição: a Entrada Planejada continua sendo
  * derivada do Plano Ativo e nunca é gravada aqui. Só o que o atleta
@@ -435,8 +433,8 @@ export const foodEntries = pgTable("food_entry", {
 ]);
 
 /**
- * Alimentos criados pelo atleta na entrada manual (tela 052) e
- * favoritos marcados a partir da base (tela 053).
+ * Alimentos criados pelo atleta na entrada manual e
+ * favoritos marcados a partir da base.
  *
  * Uma única tabela porque a pergunta que o Diário faz é sempre a
  * mesma — "o que este atleta reusa?" — e separar em duas obrigaria a

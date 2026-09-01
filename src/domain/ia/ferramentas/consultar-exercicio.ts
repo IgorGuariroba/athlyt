@@ -1,5 +1,5 @@
 /**
- * Ferramenta de Leitura (ADR 0006) para o agent de planejamento:
+ * Ferramenta de Leitura para o agent de planejamento:
  * consulta a ExerciseDB (AscendAPI, tier V1 OSS) para obter
  * instruções detalhadas, músculos-alvo, músculos secundários e
  * equipamentos de um exercício.

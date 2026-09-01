@@ -26,13 +26,13 @@ afterEach(cleanup);
 
 const ARROZ = itemEstimado({
   descricao: "Arroz branco cozido",
-  quantidadeGramas: 100,
+  quantidade: 100,
   calorias: 128, proteinaG: 2, carboidratosG: 28, gordurasG: 0, fibrasG: 1,
   confianca: "media", modelo: "modelo-x", origemEstimativa: "texto",
 });
 const BIFE = itemEstimado({
   descricao: "Bife grelhado",
-  quantidadeGramas: 120,
+  quantidade: 120,
   calorias: 250, proteinaG: 32, carboidratosG: 0, gordurasG: 13, fibrasG: 0,
   confianca: "alta", modelo: "modelo-x", origemEstimativa: "texto",
 });
@@ -82,7 +82,7 @@ describe("RevisaoEstimativa", () => {
     montar();
 
     expect(screen.getByText("você descreveu: duas colheres")).toBeTruthy();
-    expect(screen.getByLabelText("Gramas de Arroz branco cozido")).toBeTruthy();
+    expect(screen.getByLabelText("Quantidade de Arroz branco cozido em g")).toBeTruthy();
   });
 
   it("soma o total dos itens visíveis, e não o da estimativa original", () => {
@@ -94,7 +94,7 @@ describe("RevisaoEstimativa", () => {
   it("corrigir a porção reescala o item sem promover a estimativa", async () => {
     const aoMudar = montar();
 
-    fireEvent.change(screen.getByLabelText("Gramas de Arroz branco cozido"), {
+    fireEvent.change(screen.getByLabelText("Quantidade de Arroz branco cozido em g"), {
       target: { value: "50" },
     });
 
@@ -367,7 +367,10 @@ describe("RegistroPorDescricao", () => {
     await waitFor(() => expect(within(total).getByText(/250 kcal/)).toBeTruthy());
     const enviado = fns.recalcularItem.mock.calls[0][0];
     expect(enviado.get("alimento")).toBe("Arroz integral cozido");
-    expect(enviado.get("gramas")).toBe("100");
+    // A unidade viaja junto: pedir macros de "100" sem dizer se são
+    // gramas ou mililitros devolve o número de outra comida.
+    expect(enviado.get("quantidade")).toBe("100");
+    expect(enviado.get("unidade")).toBe("g");
 
     // Resolvido o aviso, ele desaparece — e só o daquela linha existia.
     await waitFor(() => expect(screen.queryByText(/Estes números são de/)).toBeNull());

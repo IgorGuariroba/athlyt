@@ -1,8 +1,6 @@
 /**
- * Perfil e Triagem — modelo de dados e cascata de etapas
- * (specs/mvp-vertical.md, user stories 5–13; specs/workflow/telas
- * 004–010, 016–024). A Importação de Histórico (telas 011–015) fica
- * fora desta fatia — ver ticket "Importação de Histórico".
+ * Perfil e Triagem — modelo de dados e cascata de etapas.
+ * A Importação de Histórico não faz parte desta cascata.
  *
  * Cada etapa é uma pergunta por tela. Uma etapa é considerada
  * "respondida" quando todas as suas `campos` existem em
@@ -138,18 +136,17 @@ export interface DefinicaoEtapa {
   campos: (keyof RespostasTriagem)[];
   /**
    * Etapas obrigatórias formam o mínimo para sair do Modo
-   * Conservador (specs/mvp-vertical.md: "Modo Conservador ... estado
-   * explícito derivado da suficiência ... dos dados"). Etapas
-   * complementares refinam o plano mas não bloqueiam a suficiência.
+   * Conservador, cujo estado é derivado da suficiência dos dados.
+   * Etapas complementares refinam o plano mas não bloqueiam a
+   * suficiência.
    */
   obrigatoria: boolean;
   destrava: string;
 }
 
 /**
- * Ordem canônica da cascata (specs/workflow/telas 005–010,
- * 016–023). A tela 004 (introdução) e 024 (resumo) não são etapas de
- * dados — são a moldura da cascata.
+ * Ordem canônica das etapas de dados da cascata. A introdução e o
+ * resumo são apenas a moldura e não fazem parte desta lista.
  */
 export const ETAPAS_TRIAGEM: readonly DefinicaoEtapa[] = [
   {
@@ -292,19 +289,16 @@ export function etapaSeguinte(id: EtapaId): EtapaId | null {
 
 /**
  * Como `etapaSeguinte`, mas devolve `"resumo"` após a última etapa —
- * o destino da server action e do form da cascata (specs/workflow/
- * telas/024-resumo-triagem.md é a moldura seguinte à última
- * pergunta).
+ * o destino da server action e do form da cascata.
  */
 export function proximoDestinoCascata(id: EtapaId): EtapaId | "resumo" {
   return etapaSeguinte(id) ?? "resumo";
 }
 
 /**
- * Opções canônicas para os campos de seleção múltipla da cascata
- * (specs/workflow/telas 018, 021). Mantidas junto ao domínio para que
- * a triagem e futuras telas de edição (Mais > Perfil) usem a mesma
- * lista.
+ * Opções canônicas para os campos de seleção múltipla da cascata.
+ * Mantidas junto ao domínio para que a triagem e futuras telas de
+ * edição (Mais > Perfil) usem a mesma lista.
  */
 export const RESTRICOES_ALIMENTARES_COMUNS: readonly string[] = [
   "Vegetariano",

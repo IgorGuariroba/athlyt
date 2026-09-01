@@ -8,10 +8,9 @@ import { cn } from "@/lib/utils";
  * aparece como uma barra azul clara de 16px que não pertence a
  * nenhuma superfície do produto.
  *
- * A cor do trilho **não** classifica o resultado. Pintar de vermelho
- * um score baixo violaria a neutralidade comportamental de DESIGN.md
- * > Principles ("feedback informa sem culpa, dramatização ou
- * linguagem punitiva"): o número já comunica, a cor só adicionaria
+ * A cor do trilho **não** classifica o resultado. O feedback deve
+ * informar sem culpa, dramatização ou linguagem punitiva: o número já
+ * comunica, enquanto pintar um score baixo de vermelho só adicionaria
  * julgamento. O preenchimento usa `on-surface-strong` — a mesma
  * ênfase de qualquer métrica do produto.
  *

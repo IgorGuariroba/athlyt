@@ -11,8 +11,8 @@ import {
 import { isEtapaId, type EtapaId } from "@/domain/triagem/etapas";
 
 /**
- * Submete uma etapa da cascata (specs/workflow/telas 005–023): valida
- * o FormData, registra a resposta como nova versão do perfil e
+ * Submete uma etapa da cascata: valida o FormData, registra a resposta
+ * como nova versão do perfil e
  * redireciona para a próxima etapa informada pelo cliente (a ordem
  * fixa vive em `ETAPAS_TRIAGEM`, o form embute o próximo passo em um
  * campo oculto para não duplicar essa regra na server action).

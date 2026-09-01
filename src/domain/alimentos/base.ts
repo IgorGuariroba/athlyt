@@ -1,16 +1,16 @@
 /**
- * Base nutricional auditável (user stories 47, 57, 59; tela 051).
+ * Base nutricional auditável.
  *
  * Dado de domínio versionado, como o catálogo de exercícios: um
  * alimento ausente daqui é um alimento que a busca não encontra — e o
- * caminho para ele é a entrada manual (tela 052), não um valor
+ * caminho para ele é a entrada manual, não um valor
  * inventado. Os ids são estáveis porque atravessam o banco (um
  * Consumo Confirmado guarda o id do que foi comido).
  *
  * Os valores são por 100 g da porção comestível, na forma de preparo
- * indicada no nome. Cada alimento declara a fonte, a versão e a data,
- * porque a user story 57 exige poder auditar o cálculo — e porque sem
- * isso a ponderação de fontes conflitantes não teria em que se apoiar.
+ * indicada no nome. Cada alimento declara a fonte, a versão e a data
+ * para o cálculo continuar auditável; sem isso, a ponderação de fontes
+ * conflitantes não teria em que se apoiar.
  *
  * Fontes usadas: TBCA (Tabela Brasileira de Composição de Alimentos,
  * USP) e TACO (Unicamp), ambas tabelas analíticas públicas. Valores

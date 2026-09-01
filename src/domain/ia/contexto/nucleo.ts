@@ -5,7 +5,7 @@ import { importado, medido, type ValorContexto } from "./tipos";
 
 /**
  * Núcleo do Contexto do Atleta — a parte presente em toda chamada de
- * IA (ADR 0006). É o mínimo para que o modelo nunca prescreva algo
+ * IA. É o mínimo para que o modelo nunca prescreva algo
  * inviável (equipamento que não existe) ou inseguro (exercício sobre
  * lesão ativa).
  *
@@ -27,9 +27,8 @@ export interface NucleoContexto {
   localTreino?: ValorContexto<string>;
   equipamentos?: ValorContexto<string[]>;
   /**
-   * Lesões e condições viajam no Núcleo por decisão explícita da ADR
-   * 0006: omiti-las de uma prescrição seria falha de produto, não
-   * proteção de privacidade.
+   * Lesões e condições sempre viajam no Núcleo: omiti-las de uma
+   * prescrição seria falha de produto, não proteção de privacidade.
    */
   lesoes?: ValorContexto<string>;
   condicoes?: ValorContexto<string>;
@@ -48,9 +47,9 @@ export function idadeEmAnos(dataNascimento: string, agora: Date): number {
 
 /**
  * Monta o Núcleo a partir do perfil de triagem vigente. Campos não
- * respondidos ficam ausentes em vez de virar valor default — o
- * modelo precisa distinguir "não sei" de "zero" (ADR 0006,
- * invariante 5: sem aproximação silenciosa).
+ * respondidos ficam ausentes em vez de virar valor default: não se
+ * faz aproximação silenciosa, pois o modelo precisa distinguir "não
+ * sei" de "zero".
  *
  * Toda a triagem é `medido` (resposta direta do usuário), exceto o
  * que vier marcado como importado pela Importação de Histórico.

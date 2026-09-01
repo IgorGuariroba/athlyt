@@ -38,7 +38,7 @@ test("busca, monta o Prato e registra consumo fora do plano", async ({ page, con
   await page.getByRole("link", { name: "Registrar por busca manual" }).click();
   await expect(page.getByRole("navigation", { name: "Atalhos de Registro" })).toBeVisible();
 
-  // Busca na base com proveniência visível por alimento (tela 051).
+  // Busca na base com proveniência visível por alimento.
   await page.getByLabel("Buscar alimento").fill("arroz");
   const resultado = page.getByRole("button", { name: /Arroz branco cozido/ });
   await expect(resultado).toBeVisible();
@@ -50,12 +50,12 @@ test("busca, monta o Prato e registra consumo fora do plano", async ({ page, con
   await page.getByLabel("Quantidade de Arroz branco cozido").fill("2");
   await page.getByRole("button", { name: "Adicionar ao Prato" }).click();
 
-  // Prato acumula com subtotal (tela 058): 2 escumadeiras = 200 g = 256 kcal.
+  // Prato acumula com subtotal: 2 escumadeiras = 200 g = 256 kcal.
   const prato = page.getByRole("region", { name: "Prato" });
   await expect(prato.getByText("Prato (1)")).toBeVisible();
   await expect(prato.getByLabel("Subtotal do Prato: 256 kcal")).toBeVisible();
 
-  // Segundo item pela entrada manual (tela 052), marcado como estimativa.
+  // Segundo item pela entrada manual, marcado como estimativa.
   await page.getByRole("button", { name: "Manual" }).click();
   await page.getByLabel("Nome do alimento").fill("Marmita da firma");
   await page.getByLabel("Energia (kcal)").fill("400");
@@ -96,7 +96,7 @@ test("favorito salvo reaparece na aba Favoritos e recorrente vira atalho", async
 
   await page.goto("/diario/registrar");
 
-  // Favoritos começa vazio e diz como preencher (tela 053).
+  // Favoritos começa vazio e diz como preencher.
   await page.getByRole("button", { name: "Favoritos" }).click();
   await expect(page.getByText(/Nenhum favorito ainda/)).toBeVisible();
 
@@ -148,6 +148,6 @@ test("alimento criado na entrada manual fica reutilizável nos Favoritos", async
   const prato = page.getByRole("region", { name: "Prato" });
   await expect(prato.getByText("Prato (1)")).toBeVisible();
   await expect(prato.getByLabel("Subtotal do Prato: 700 kcal")).toBeVisible();
-  // Entrada do usuário continua marcada como estimativa (user story 59).
+  // Entrada do usuário continua marcada como estimativa.
   await expect(prato.getByText(/Estimativa/)).toBeVisible();
 });

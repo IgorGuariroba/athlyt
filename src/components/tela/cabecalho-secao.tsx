@@ -2,8 +2,7 @@ import { cn } from "@/lib/utils";
 
 /**
  * Título de uma seção dentro de uma tela, com ação/filtro opcional à
- * direita (DESIGN.md > Typography > Hierarquia: `title` para "cards,
- * seções e modais").
+ * direita. Usa a escala `title`, reservada a cards, seções e modais.
  *
  * Existe porque `h2` solto em página vinha com escalas divergentes —
  * inclusive `text-title-lg`, que não é um token do sistema e caía no

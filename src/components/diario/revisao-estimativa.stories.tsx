@@ -12,7 +12,7 @@ import { RevisaoEstimativa } from "./revisao-estimativa";
 const ITENS: ItemPrato[] = [
   itemEstimado({
     descricao: "Arroz branco cozido",
-    quantidadeGramas: 150,
+    quantidade: 150,
     calorias: 192, proteinaG: 3, carboidratosG: 42, gordurasG: 0, fibrasG: 2,
     confianca: "media",
     modelo: "google/gemini-2.5-flash-lite",
@@ -20,7 +20,7 @@ const ITENS: ItemPrato[] = [
   }),
   itemEstimado({
     descricao: "Bife de alcatra grelhado",
-    quantidadeGramas: 120,
+    quantidade: 120,
     calorias: 250, proteinaG: 32, carboidratosG: 0, gordurasG: 13, fibrasG: 0,
     confianca: "alta",
     modelo: "google/gemini-2.5-flash-lite",
@@ -28,7 +28,7 @@ const ITENS: ItemPrato[] = [
   }),
   itemEstimado({
     descricao: "Azeite no preparo",
-    quantidadeGramas: 8,
+    quantidade: 8,
     calorias: 71, proteinaG: 0, carboidratosG: 0, gordurasG: 8, fibrasG: 0,
     confianca: "baixa",
     modelo: "google/gemini-2.5-flash-lite",
@@ -36,9 +36,12 @@ const ITENS: ItemPrato[] = [
   }),
 ];
 
+// Bebida em mililitros: é a unidade em que quem bebeu reconhece a
+// porção, e a que o modelo declara para líquidos.
 const REFRIGERANTE = itemEstimado({
   descricao: "Refrigerante de cola",
-  quantidadeGramas: 250,
+  quantidade: 250,
+  unidade: "ml",
   calorias: 105, proteinaG: 0, carboidratosG: 27, gordurasG: 0, fibrasG: 0,
   confianca: "media",
   modelo: "google/gemini-2.5-flash-lite",

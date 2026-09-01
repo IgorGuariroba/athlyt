@@ -12,11 +12,11 @@ import { isEmailAllowed } from "@/domain/acesso/allowlist";
 import { getAllowlist } from "./allowlist-store";
 
 /**
- * Rota de acesso restrito (tela 003). Um e-mail autenticado pelo
+ * Rota de acesso restrito. Um e-mail autenticado pelo
  * Google mas fora da allowlist é redirecionado para cá — o próprio
  * Auth.js aborta o fluxo antes de qualquer persistência quando o
  * callback signIn devolve uma string, então nenhum usuário/conta é
- * gravado no banco (specs/mvp-vertical.md, user story 3).
+ * gravado no banco.
  */
 export const ACCESS_DENIED_ROUTE = "/acesso-restrito";
 
@@ -29,8 +29,8 @@ export function buildAuthConfig(
   loadAllowlist: () => Promise<string[]>,
 ): NextAuthConfig {
   return {
-    // Necessário atrás de proxy reverso (Dockploy/Traefik na VPS,
-    // ADR 0003) para o Auth.js confiar no host encaminhado.
+    // Necessário para o Auth.js confiar no host encaminhado pelo proxy
+    // reverso (Dockploy/Traefik na VPS).
     trustHost: true,
     adapter: DrizzleAdapter(db, {
       usersTable: users,

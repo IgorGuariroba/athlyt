@@ -5,19 +5,18 @@ import { cn } from "@/lib/utils";
 
 /**
  * Cabeçalho padrão de uma tela de conteúdo: contexto (eyebrow),
- * título e explicação curta, na ordem da hierarquia espacial de
- * DESIGN.md > Layout ("título/contexto" antes de tudo).
+ * título e explicação curta, com título/contexto antes de tudo na
+ * hierarquia espacial.
  *
  * O eyebrow é o único lugar do produto onde caixa alta é aceita: ele
- * é rótulo de seção, não título (DESIGN.md > Typography > Regras —
- * "títulos do app usam sentence case").
+ * é rótulo de seção, não título. Títulos do app usam sentence case.
  *
  * `voltar` cobre as telas de segundo nível. Cada uma vinha montando o
  * próprio `<header>` com um `Button` fantasma e um `ChevronLeft` solto,
  * em quatro variações de espaçamento e alinhamento. Como afordância de
  * retorno, o alvo precisa de duas garantias que se perdem quando é
- * remontado à mão: 44px de área tocável (DESIGN.md > Accessibility) e
- * alinhamento com a primeira linha do título, não com o bloco inteiro.
+ * remontado à mão: 44px de área tocável e alinhamento com a primeira
+ * linha do título, não com o bloco inteiro.
  */
 export function CabecalhoTela({
   contexto,

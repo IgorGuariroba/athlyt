@@ -16,8 +16,8 @@ export interface ResumoTriagem {
 }
 
 /**
- * Resumo apresentável da triagem (specs/workflow/telas/024-resumo-
- * triagem.md): checklist por seção + estado do Modo Conservador.
+ * Resumo apresentável da triagem: checklist por seção + estado do
+ * Modo Conservador.
  * Reaproveitado pelo cartão "completar perfil" do Início.
  */
 export function montarResumoTriagem(

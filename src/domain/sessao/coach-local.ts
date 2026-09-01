@@ -1,7 +1,7 @@
 import type { ExercicioSessao, SerieSessao } from "./repositorio";
 
 /**
- * Coach Local (user stories 37 e 38; tela 042).
+ * Coach Local.
  *
  * Offline, o Copiloto de Sessão sai do ar e este pacote assume. Ele é
  * determinístico, versionado e auditável: dadas as mesmas séries, dá
@@ -9,8 +9,8 @@ import type { ExercicioSessao, SerieSessao } from "./repositorio";
  * produziu. Isso é o oposto de "IA degradada" — não há geração, não há
  * variabilidade, e a UI é obrigada a rotular a origem como regra local.
  *
- * O escopo é o que a spec autoriza: **decisões de baixo risco**. Ajuste
- * de carga dentro de uma faixa estreita, descanso e alerta de parar.
+ * O escopo se limita a **decisões de baixo risco**: ajuste de carga
+ * dentro de uma faixa estreita, descanso e alerta de parar.
  * Progressão de bloco, mudança de plano e qualquer leitura de dor
  * continuam sendo decisão do servidor ou do humano.
  */

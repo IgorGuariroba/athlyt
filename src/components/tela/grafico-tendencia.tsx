@@ -1,8 +1,8 @@
 import { cn } from "@/lib/utils";
 
 /**
- * Cartão de gráfico do sistema (DESIGN.md > Components > Chart card):
- * header com título e valor mais recente, plot com linhas de grade
+ * Cartão de gráfico do sistema: header com título e valor mais recente,
+ * plot com linhas de grade
  * discretas, eixos em `caption` e estados de dados/sem dados
  * explícitos.
  *
@@ -13,9 +13,8 @@ import { cn } from "@/lib/utils";
  *    valores são parte do componente, não um extra da tela.
  * 2. **A série é mais saturada que os eixos.** A cor entra por token da
  *    paleta de dados; a grade usa `border` com baixa ênfase.
- * 3. **A leitura não depende do desenho.** O `aria-label` carrega o
- *    resumo textual exigido em DESIGN.md > Accessibility ("gráficos
- *    precisam de resumo textual/tabela acessível").
+ * 3. **A leitura não depende do desenho.** Gráficos precisam de resumo
+ *    textual ou tabela acessível, fornecidos aqui pelo `aria-label`.
  * 4. **Séries comparáveis dividem o mesmo eixo.** Direito e esquerdo
  *    de uma medida bilateral existem para serem comparados: em dois
  *    gráficos com escalas próprias, uma assimetria de 5 mm parece
@@ -164,8 +163,8 @@ export function GraficoTendencia({
           >
             {serie.area ? (
               // Preenchimento translúcido sob a linha é o único recurso
-              // de profundidade permitido em gráficos (DESIGN.md >
-              // Elevation). Com duas séries ele viraria ruído.
+              // de profundidade permitido em gráficos. Com duas séries
+              // ele viraria ruído.
               <polygon points={serie.area} fill="currentColor" opacity="0.12" />
             ) : null}
             <polyline
@@ -176,7 +175,7 @@ export function GraficoTendencia({
               strokeLinecap="round"
               strokeLinejoin="round"
               // A segunda série é tracejada: a distinção não pode
-              // depender só de cor (DESIGN.md > Accessibility).
+              // depender só de cor.
               strokeDasharray={indice > 0 ? "5 4" : undefined}
               vectorEffect="non-scaling-stroke"
             />

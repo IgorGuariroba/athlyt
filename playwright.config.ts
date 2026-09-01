@@ -5,9 +5,8 @@ import { existsSync } from "node:fs";
 loadEnv({ path: ".env" });
 
 /**
- * E2E mobile (ADR — specs/mvp-vertical.md, Testing Decisions):
- * "Testes E2E reais em navegador deverão cobrir viewport mobile e
- * serem gravados em vídeo como evidência durante validação."
+ * Testes E2E reais rodam em navegador com viewport mobile e são
+ * gravados em vídeo como evidência durante a validação.
  */
 /**
  * `PLAYWRIGHT_BASE_URL` permite apontar a suíte para um servidor já no
