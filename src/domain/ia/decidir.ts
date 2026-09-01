@@ -62,11 +62,20 @@ export interface EntradaDecisao<T> {
   audios?: readonly { dados: Uint8Array; mediaType: string }[];
   /** Teto de passos quando há Ferramentas de Leitura em jogo. */
   maxPassos?: number;
-  origem?: {
-    tela: string;
-    rota: string;
-    gatilho: string;
-  };
+  origem?: OrigemDecisao;
+}
+
+/**
+ * De onde a decisão partiu, para a Trilha de Decisão.
+ *
+ * É um tipo nomeado porque há operação servindo mais de uma tela
+ * (`alimento-macros` atende foto, texto e áudio): nesses casos a
+ * origem é dado do chamador, e não constante da operação.
+ */
+export interface OrigemDecisao {
+  tela: string;
+  rota: string;
+  gatilho: string;
 }
 
 export type ResultadoDecisao<T> =

@@ -14,13 +14,13 @@ const ESTIMATIVA: EstimativaDescrita = {
   itens: [
     itemEstimado({
       descricao: "Arroz branco cozido",
-      quantidadeGramas: 150,
+      quantidade: 150,
       calorias: 192, proteinaG: 3, carboidratosG: 42, gordurasG: 0, fibrasG: 2,
       confianca: "media", modelo: "google/gemini-2.5-flash-lite", origemEstimativa: "texto",
     }),
     itemEstimado({
       descricao: "Bife de alcatra grelhado",
-      quantidadeGramas: 120,
+      quantidade: 120,
       calorias: 250, proteinaG: 32, carboidratosG: 0, gordurasG: 13, fibrasG: 0,
       confianca: "alta", modelo: "google/gemini-2.5-flash-lite", origemEstimativa: "texto",
     }),

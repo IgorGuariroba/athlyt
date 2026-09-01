@@ -16,7 +16,8 @@ const estimativaValida = {
     {
       descricao: "Arroz branco cozido",
       porcaoDescrita: "duas colheres de sopa",
-      quantidadeGramas: 50,
+      quantidade: 50,
+      unidade: "g" as const,
       calorias: 64, proteinaG: 1, carboidratosG: 14, gordurasG: 0, fibrasG: 1,
       confianca: "media" as const,
     },
@@ -111,6 +112,26 @@ describe("estimarRefeicaoPorDescricao", () => {
 
   it("aceita estimativa com porção descrita, confiança e limitações", () => {
     expect(refeicaoTextoSchema.safeParse(estimativaValida).success).toBe(true);
+  });
+
+  it("aceita líquido declarado em mililitros", () => {
+    // Quem diz "tomei uma lata" descreve volume. Forçar gramas obrigava
+    // o modelo a inventar densidade e a não dizer que inventou.
+    const comBebida = {
+      ...estimativaValida,
+      itens: [
+        { ...estimativaValida.itens[0], descricao: "Coca-Cola Zero", unidade: "ml", quantidade: 350 },
+      ],
+    };
+    expect(refeicaoTextoSchema.safeParse(comBebida).success).toBe(true);
+  });
+
+  it("recusa unidade fora de g e ml: o Prato não sabe reescalar o resto", () => {
+    const emColheres = {
+      ...estimativaValida,
+      itens: [{ ...estimativaValida.itens[0], unidade: "colher" }],
+    };
+    expect(refeicaoTextoSchema.safeParse(emColheres).success).toBe(false);
   });
 
   it("recusa item sem a porção que o atleta descreveu", () => {

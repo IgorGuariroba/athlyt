@@ -26,13 +26,13 @@ afterEach(cleanup);
 
 const ARROZ = itemEstimado({
   descricao: "Arroz branco cozido",
-  quantidadeGramas: 100,
+  quantidade: 100,
   calorias: 128, proteinaG: 2, carboidratosG: 28, gordurasG: 0, fibrasG: 1,
   confianca: "media", modelo: "modelo-x", origemEstimativa: "texto",
 });
 const BIFE = itemEstimado({
   descricao: "Bife grelhado",
-  quantidadeGramas: 120,
+  quantidade: 120,
   calorias: 250, proteinaG: 32, carboidratosG: 0, gordurasG: 13, fibrasG: 0,
   confianca: "alta", modelo: "modelo-x", origemEstimativa: "texto",
 });

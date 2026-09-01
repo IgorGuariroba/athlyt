@@ -29,7 +29,7 @@ describe("preparo da foto do prato", () => {
 describe("item estimado por foto", () => {
   const item = itemEstimado({
     descricao: "Arroz branco",
-    quantidadeGramas: 150,
+    quantidade: 150,
     calorias: 192,
     proteinaG: 3,
     carboidratosG: 42,

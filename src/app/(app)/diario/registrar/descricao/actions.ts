@@ -14,7 +14,13 @@ import {
   validarAudioRefeicao,
   validarDescricaoRefeicao,
 } from "@/domain/alimentos/audio-refeicao";
-import { itemEstimado, type ItemPrato, type OrigemEstimativa } from "@/domain/alimentos/prato";
+import {
+  descricaoSemQuantidade,
+  itemEstimado,
+  type ItemPrato,
+  type OrigemEstimativa,
+  type UnidadeEstimada,
+} from "@/domain/alimentos/prato";
 import { FUSO_PADRAO } from "@/domain/diario/dia-alimentar";
 import {
   hojeDoUsuario,
@@ -249,9 +255,10 @@ export async function recalcularMacrosDoItemAction(fd: FormData): Promise<Result
     return { ok: false, erro: "Escreva o nome do alimento para recalcular." };
   }
 
-  const gramas = Number(String(fd.get("gramas") ?? "").replace(",", "."));
-  if (!Number.isFinite(gramas) || gramas <= 0 || gramas > 3000) {
-    return { ok: false, erro: "Quantidade fora do intervalo aceito (1 a 3000 g)." };
+  const quantidade = Number(String(fd.get("quantidade") ?? "").replace(",", "."));
+  const unidade: UnidadeEstimada = fd.get("unidade") === "ml" ? "ml" : "g";
+  if (!Number.isFinite(quantidade) || quantidade <= 0 || quantidade > 3000) {
+    return { ok: false, erro: `Quantidade fora do intervalo aceito (1 a 3000 ${unidade}).` };
   }
 
   const nucleo = await contextoDoAtleta(userId);
@@ -262,7 +269,13 @@ export async function recalcularMacrosDoItemAction(fd: FormData): Promise<Result
     userId,
     nucleo,
     alimento,
-    quantidadeGramas: Math.round(gramas),
+    quantidade: Math.round(quantidade),
+    unidade,
+    origem: {
+      tela: "Registrar por descrição",
+      rota: "/diario/registrar/descricao",
+      gatilho: "recalculo-de-macros-do-item",
+    },
   });
 
   if (resultado.status !== "ok") {
@@ -322,15 +335,17 @@ export async function registrarConsumoRealAction(fd: FormData): Promise<Resultad
   let itens: ItemPrato[];
   try {
     itens = (bruto as ItemPrato[]).map((item) => {
-      const gramas = Number(item.quantidade);
-      if (!Number.isFinite(gramas) || gramas <= 0 || gramas > 3000) {
-        throw new Error("Quantidade fora do intervalo aceito (1 a 3000 g).");
+      const quantidade = Number(item.quantidade);
+      const unidade: UnidadeEstimada = item.unidade === "ml" ? "ml" : "g";
+      if (!Number.isFinite(quantidade) || quantidade <= 0 || quantidade > 3000) {
+        throw new Error(`Quantidade fora do intervalo aceito (1 a 3000 ${unidade}).`);
       }
-      const descricao = String(item.descricao ?? "").replace(/\s\d+\s?g$/, "").trim();
+      const descricao = descricaoSemQuantidade(String(item.descricao ?? "")).trim();
       if (descricao.length === 0) throw new Error("Todo item precisa de uma descrição.");
       return itemEstimado({
         descricao,
-        quantidadeGramas: gramas,
+        quantidade,
+        unidade,
         calorias: numero(item.calorias, 5000),
         proteinaG: numero(item.proteinaG, 400),
         carboidratosG: numero(item.carboidratosG, 700),

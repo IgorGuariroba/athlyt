@@ -1,5 +1,17 @@
 import { describe, expect, it } from "vitest";
-import { adicionarAoPrato, itemDeAlimento, itemManual, removerDoPrato, subtotalDoPrato } from "../prato";
+import {
+  adicionarAoPrato,
+  descricaoSemQuantidade,
+  itemDeAlimento,
+  itemEstimado,
+  itemManual,
+  macrosDesatualizados,
+  nomeDoItem,
+  reescalarItem,
+  removerDoPrato,
+  renomearItem,
+  subtotalDoPrato,
+} from "../prato";
 
 const arroz = itemDeAlimento("arroz-branco-cozido", { quantidade: 150, unidade: "g" });
 const frango = itemDeAlimento("peito-frango-grelhado", { quantidade: 1, unidade: "filé médio" });
@@ -64,5 +76,69 @@ describe("proveniência dos itens do Prato", () => {
 
   it("alimento inexistente falha em vez de gerar um item fantasma", () => {
     expect(() => itemDeAlimento("nao-existe", { quantidade: 1, unidade: "g" })).toThrow(/alimento/i);
+  });
+});
+
+/**
+ * Líquido se mede em mililitros. O caso guia é o do refrigerante
+ * fotografado: a estimativa vem como "Coca-Cola 250 ml" e o atleta
+ * corrige o alimento para a versão zero.
+ */
+describe("unidade do item estimado", () => {
+  const refrigerante = itemEstimado({
+    descricao: "Coca-Cola",
+    quantidade: 250,
+    unidade: "ml",
+    calorias: 105, proteinaG: 0, carboidratosG: 26, gordurasG: 0, fibrasG: 0,
+    confianca: "media",
+    modelo: "google/gemini-2.5-flash-lite",
+  });
+
+  it("bebida guarda mililitros, e a descrição os declara", () => {
+    expect(refrigerante.unidade).toBe("ml");
+    expect(refrigerante.descricao).toBe("Coca-Cola 250 ml");
+  });
+
+  it("grama continua o padrão de quem não declara unidade", () => {
+    // Registro já gravado antes das unidades não pode ser reinterpretado
+    // como volume só porque o campo passou a existir.
+    const arrozEstimado = itemEstimado({
+      descricao: "Arroz branco cozido",
+      quantidade: 150,
+      calorias: 193, proteinaG: 4, carboidratosG: 42, gordurasG: 0, fibrasG: 2,
+      confianca: "media", modelo: "m",
+    });
+    expect(arrozEstimado.unidade).toBe("g");
+    expect(arrozEstimado.descricao).toBe("Arroz branco cozido 150 g");
+  });
+
+  it("renomear preserva a quantidade de um item em ml", () => {
+    // Antes das unidades o sufixo só era recolocado para gramas, e
+    // renomear uma bebida apagava a quantidade da descrição.
+    const corrigido = renomearItem(refrigerante, "Coca-Cola Zero");
+    expect(corrigido.descricao).toBe("Coca-Cola Zero 250 ml");
+    expect(corrigido.quantidade).toBe(250);
+    expect(corrigido.unidade).toBe("ml");
+  });
+
+  it("renomear não mexe nos macros: dizer o que era não é dizer quanto era", () => {
+    const corrigido = renomearItem(refrigerante, "Coca-Cola Zero");
+    expect(corrigido.calorias).toBe(105);
+    expect(macrosDesatualizados(corrigido, "Coca-Cola")).toBe(true);
+  });
+
+  it("reescalar mantém a unidade em vez de normalizar para grama", () => {
+    // Corrigir 250 para 350 numa lata fala dos mesmos mililitros;
+    // reescrever a unidade converteria volume em massa em silêncio.
+    const lata = reescalarItem(refrigerante, 350);
+    expect(lata.unidade).toBe("ml");
+    expect(lata.descricao).toBe("Coca-Cola 350 ml");
+    expect(lata.calorias).toBe(147);
+  });
+
+  it("o nome do item não carrega o sufixo, seja ele g ou ml", () => {
+    expect(nomeDoItem(refrigerante)).toBe("Coca-Cola");
+    expect(descricaoSemQuantidade("Arroz branco cozido 150 g")).toBe("Arroz branco cozido");
+    expect(descricaoSemQuantidade("Suco de laranja 300 ml")).toBe("Suco de laranja");
   });
 });

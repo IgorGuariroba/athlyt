@@ -5,7 +5,13 @@ import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { escalarMacros } from "@/domain/diario/cardapio";
 import { alternarFavorito, registrarPrato, salvarAlimentoProprio } from "@/domain/alimentos/repositorio";
-import { itemDeAlimento, itemEstimado, itemManual, type ItemPrato } from "@/domain/alimentos/prato";
+import {
+  descricaoSemQuantidade,
+  itemDeAlimento,
+  itemEstimado,
+  itemManual,
+  type ItemPrato,
+} from "@/domain/alimentos/prato";
 import {
   confirmarRefeicao,
   desfazerConfirmacao,
@@ -107,8 +113,9 @@ export async function registrarPratoAction(formData: FormData) {
     // e a ponderação de fontes trata as duas com credenciais distintas.
     if (item.origemDado === "estimativa-ia") {
       return itemEstimado({
-        descricao: item.descricao.replace(/\s\d+\s?g$/, ""),
-        quantidadeGramas: item.quantidade ?? 100,
+        descricao: descricaoSemQuantidade(item.descricao),
+        quantidade: item.quantidade ?? 100,
+        unidade: item.unidade === "ml" ? "ml" : "g",
         calorias: item.calorias, proteinaG: item.proteinaG,
         carboidratosG: item.carboidratosG, gordurasG: item.gordurasG, fibrasG: item.fibrasG,
         confianca: item.confianca ?? "baixa",
