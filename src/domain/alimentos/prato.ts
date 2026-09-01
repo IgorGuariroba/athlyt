@@ -1,6 +1,5 @@
 /**
- * Prato — montagem de múltiplos alimentos registrada de uma vez
- * (CONTEXT.md > Prato; tela 058; user story 49d).
+ * Prato — montagem de múltiplos alimentos registrada de uma vez.
  *
  * O Prato é uma lista imutável: cada operação devolve um novo array.
  * Isso mantém o estado fora do React previsível e evita a classe de
@@ -59,9 +58,9 @@ function sufixoDe(item: Pick<ItemPrato, "quantidade" | "unidade">): string {
 }
 
 /**
- * Item do Prato. Estende `ItemAlimentar` (o que o Diário grava) com a
- * proveniência exigida pelas user stories 57 e 59 — o consumo
- * registrado precisa dizer de onde veio cada número.
+ * Item do Prato. Estende `ItemAlimentar` (o que o Diário grava) com
+ * proveniência: o consumo registrado precisa dizer de onde veio cada
+ * número e com que confiança.
  */
 export interface ItemPrato extends ItemAlimentar {
   alimentoId: string | null;
@@ -97,7 +96,7 @@ export interface EntradaManual extends Macros {
 }
 
 /**
- * Entrada manual (tela 052). Confiança sempre baixa e origem
+ * Entrada manual. Confiança sempre baixa e origem
  * declarada: o atleta informou de memória ou de um rótulo lido às
  * pressas, e tratar isso como equivalente a uma tabela analítica
  * falsificaria a auditoria dos cálculos.

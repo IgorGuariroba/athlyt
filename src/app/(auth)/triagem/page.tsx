@@ -32,7 +32,7 @@ const SECOES = [
   },
 ] as const;
 
-/** Tela 004 — introdução da triagem antes da primeira pergunta. */
+/** Introdução da triagem antes da primeira pergunta. */
 export default async function InicioTriagemPage({
   searchParams,
 }: {

@@ -2,12 +2,12 @@ import { createOpenAICompatible } from "@ai-sdk/openai-compatible";
 import type { OperacaoIA } from "./contexto/tipos";
 
 /**
- * Conexão com o OpenRouter (ADR 0005).
+ * Conexão com o OpenRouter.
  *
  * O app conhece nomes lógicos de operação; os mapas abaixo traduzem
- * para modelo concreto. Diferente do gateway self-hosted da ADR 0004,
- * esse mapa vive em código versionado — trocar modelo exige deploy,
- * em troca o histórico da mudança fica no git.
+ * para modelo concreto. O mapa vive em código versionado, em vez de
+ * depender de um gateway self-hosted — trocar modelo exige deploy,
+ * mas o histórico da mudança fica no git.
  */
 
 /**
@@ -97,7 +97,7 @@ export function modeloDe(
   return mapa[operacao];
 }
 
-/** Nome do provedor exibido no consentimento (user story 106). */
+/** Nome do provedor exibido no consentimento. */
 export const NOME_PROVEDOR = "OpenRouter";
 
 function exigirEnv(nome: string): string {
@@ -135,7 +135,7 @@ export function resetarProvedor() {
 /**
  * Opções de provedor enviadas ao OpenRouter em toda chamada.
  *
- * `allow_fallbacks: false` é requisito, não otimização (ADR 0005): com
+ * `allow_fallbacks: false` é requisito, não otimização: com
  * fallback ligado o OpenRouter pode servir a requisição por um
  * provedor diferente do consentido, o que tornaria falso o texto de
  * consentimento apresentado ao usuário.

@@ -10,12 +10,12 @@ const REGIOES = [
 ] as const;
 
 /**
- * Preferência de ênfase por região (tela 065): entrada do usuário para
+ * Preferência de ênfase por região: entrada do usuário para
  * o recálculo das Metas de Proporção Corporal.
  *
  * Fica em um cartão próprio, e não dentro da lista de metas, porque é
- * ação e não dado: misturar o formulário às linhas de leitura violaria
- * a hierarquia espacial de DESIGN.md (dados, depois controles).
+ * ação e não dado. A hierarquia espacial apresenta primeiro os dados e
+ * depois os controles.
  */
 export function EnfasesCorporais({
   action,

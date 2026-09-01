@@ -1,16 +1,14 @@
 import { cn } from "@/lib/utils";
 
 /**
- * CTA principal no fluxo normal da tela — não `fixed` (DESIGN.md >
- * Layout: "CTA fixo alinhado ao rodapé"; ver ressalva abaixo).
+ * CTA principal no fluxo normal da tela — não `fixed`.
  *
  * Dentro do casco autenticado (`src/app/(app)/layout.tsx`), a
  * `BottomNav` já ocupa `fixed inset-x-0 bottom-0`. Um CTA com o mesmo
  * posicionamento (`BarraAcaoFixa`) compete pela mesma faixa: no
  * iPhone, a barra de endereço do Safari e do Chrome soma uma camada
  * extra sobre o inset de sistema, e o botão fica coberto por completo
- * em vez de só perder folga (ver
- * docs/memory/cta-fixo-nao-compete-com-bottom-nav.md).
+ * em vez de só perder folga.
  *
  * `AcaoTela` resolve isso saindo do posicionamento fixo: o botão some
  * no fluxo, logo após o último conteúdo, sem entrar na faixa da

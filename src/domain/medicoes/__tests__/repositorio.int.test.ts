@@ -10,7 +10,7 @@ describe("jornada persistida de medições", () => {
   it("preserva leituras, método de gordura e metas versionadas", async () => {
     const userId = await usuario();
     await registrarPeso(userId, 82.4);
-    // Caminho real do produto: uma leitura por região (`fita-v2`, ADR 0007).
+    // Caminho real do produto: `fita-v2` usa uma leitura por região.
     const medicao = await registrarCircunferencia(userId, { regiao: "ombros", leiturasCm: [116.2] });
     expect(medicao.ok).toBe(true);
     await registrarGorduraCorporal(userId, { percentual: 18.2, metodo: "bioimpedancia", protocolo: "jejum" });

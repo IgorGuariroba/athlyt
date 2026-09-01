@@ -34,7 +34,7 @@ import {
 } from "./trilha";
 
 /**
- * Executor único de decisões de IA (ADR 0005 + ADR 0006).
+ * Executor único de decisões de IA.
  *
  * Toda operação passa por aqui, e é isso que torna as invariantes
  * mecânicas em vez de disciplina: o contexto é filtrado pela
@@ -43,7 +43,7 @@ import {
  * falha.
  *
  * Usa `generateText` com `Output.object` em vez de `generateObject`
- * porque só esse caminho admite Ferramentas de Leitura (ADR 0006):
+ * porque só esse caminho admite Ferramentas de Leitura:
  * `generateObject` é sempre um passo único, sem tool calling.
  */
 
@@ -223,7 +223,7 @@ ${erro.text}`);
     }
 
     // A auditoria exige o modelo efetivamente resolvido pelo
-    // provedor, não o solicitado (ADR 0005).
+    // provedor, não o solicitado.
     const modeloResolvido = resposta.response.modelId || null;
 
     await registrarDecisao({
@@ -233,8 +233,8 @@ ${erro.text}`);
       resultado: resposta.output,
     });
 
-    // Sem modelo identificado não há como reproduzir a decisão; a ADR
-    // 0005 manda degradar com segurança em vez de usar o resultado.
+    // Sem modelo identificado não há como reproduzir a decisão; nesse
+    // caso, degrade com segurança em vez de usar o resultado.
     if (modeloResolvido === null) {
       const motivo = "Resposta não auditável: provedor não identificou o modelo.";
       logger.error(

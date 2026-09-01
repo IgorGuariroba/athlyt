@@ -4,8 +4,7 @@ import { cn } from "@/lib/utils";
  * Moldura das telas de conteúdo rolável (as que não são etapa da
  * cascata): coluna única, largura limitada e centralizada, margem
  * lateral de 16–24px e espaço inferior reservado para a
- * `BarraAcaoFixa` (DESIGN.md > Layout > Estrutura móvel: "conteúdo
- * rolável não pode ficar escondido pelo CTA fixo").
+ * `BarraAcaoFixa`, impedindo que o CTA fixo esconda conteúdo rolável.
  *
  * `comAcaoFixa` existe para que o padding inferior seja consequência
  * declarada da presença do CTA, e não um número mágico repetido em
@@ -51,8 +50,7 @@ export function SecoesTela({
 
 /**
  * Texto auxiliar de rodapé — ressalvas, origem do cálculo, avisos de
- * escopo. Sempre `muted`, nunca informação crítica (DESIGN.md >
- * Colors > Uso semântico).
+ * escopo. Sempre `muted`, nunca informação crítica.
  */
 export function NotaTela({ children }: { children: React.ReactNode }) {
   return (

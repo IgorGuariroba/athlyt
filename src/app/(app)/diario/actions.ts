@@ -35,7 +35,7 @@ function contexto(formData: FormData) {
   };
 }
 
-/** Tela 047 — confirmar em um toque. */
+/** Confirma a refeição em um toque. */
 export async function confirmarRefeicaoAction(formData: FormData) {
   const { dia, fuso, refeicaoRef } = contexto(formData);
   await confirmarRefeicao(await usuario(), { refeicaoRef, dia, fuso });
@@ -60,7 +60,7 @@ export async function desfazerConfirmacaoAction(formData: FormData) {
 }
 
 /**
- * Tela 048 — editar antes de confirmar. As porções vêm como fator por
+ * Permite editar antes de confirmar. As porções vêm como fator por
  * item (0 = não comi); o consumo gravado é o real, e o planejado
  * continua ao lado como referência neutra.
  */
@@ -89,7 +89,7 @@ export async function confirmarRefeicaoEditadaAction(formData: FormData) {
 }
 
 /**
- * Tela 058 — registra o Prato inteiro de uma vez.
+ * Registra o Prato inteiro de uma vez.
  *
  * Os itens chegam serializados porque o Prato é montado no cliente. O
  * servidor não confia neles cegamente: itens vindos da base são
@@ -145,14 +145,14 @@ export async function registrarPratoAction(formData: FormData) {
   redirect(`/diario?dia=${dia}`);
 }
 
-/** Tela 053 — marca/desmarca um alimento da base como favorito. */
+/** Marca/desmarca um alimento da base como favorito. */
 export async function favoritarAction(formData: FormData) {
   await alternarFavorito(await usuario(), String(formData.get("alimentoId")));
   revalidatePath("/diario/registrar");
 }
 
 /**
- * Tela 052 — "salvar como alimento reutilizável".
+ * Salva como alimento reutilizável.
  *
  * O que o atleta digitou uma vez fica disponível na biblioteca; sem
  * isso, a entrada manual obrigaria a redigitar os mesmos macros toda

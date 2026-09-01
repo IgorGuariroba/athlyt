@@ -31,7 +31,7 @@ afterEach(cleanup);
  * O kit de telas é a superfície que padroniza o visual do produto: uma
  * regressão aqui vaza para toda tela construída sobre ele. Estes
  * testes fixam o contrato observável — papéis, rótulos acessíveis e as
- * decisões de DESIGN.md que só existem no componente.
+ * decisões visuais que só existem no componente.
  */
 describe("CabecalhoTela", () => {
   it("expõe o título como o cabeçalho de nível 1 da tela", () => {
@@ -79,8 +79,8 @@ describe("CartaoLista", () => {
   });
 
   it("agrupa as linhas em uma lista, e não em cartões independentes", () => {
-    // DESIGN.md > Components > Card: "não transforme toda linha em card
-    // se divisores bastarem". A lista é o que dá essa semântica.
+    // Não transforme toda linha em card se divisores bastarem. A lista
+    // é o que dá essa semântica.
     render(
       <LinhasCartaoLista>
         <LinhaCartaoLista titulo="Café da manhã" valor="613 kcal" />
@@ -181,8 +181,8 @@ describe("Revelar", () => {
 
 describe("TelaConteudo", () => {
   it("reserva espaço inferior quando existe CTA fixo", () => {
-    // Sem esta folga o último item fica sob a barra fixa — DESIGN.md >
-    // Accessibility: "conteúdo rolável não pode ficar escondido pelo CTA".
+    // Sem esta folga o último item fica sob a barra fixa: conteúdo
+    // rolável não pode ficar escondido pelo CTA.
     const { container } = render(<TelaConteudo comAcaoFixa>conteúdo</TelaConteudo>);
 
     expect(container.querySelector("main")?.className).toContain("pb-28");

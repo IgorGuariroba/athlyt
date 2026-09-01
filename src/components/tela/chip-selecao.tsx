@@ -1,9 +1,8 @@
 import { cn } from "@/lib/utils";
 
 /**
- * Chip de seleção múltipla (DESIGN.md > Shapes: "chips, segmented
- * controls e avatares: `rounded.pill`"; Components > Segmented control,
- * tabs e chips).
+ * Chip de seleção múltipla com formato `rounded.pill`, compartilhado
+ * por chips, controles segmentados e avatares.
  *
  * Usa um `input` nativo transparente em vez do `Checkbox` do shadcn
  * porque o alvo clicável aqui é o chip inteiro — o estado é comunicado
@@ -14,8 +13,8 @@ import { cn } from "@/lib/utils";
  * container; `sr-only` com `position: absolute` deixava o input fora
  * desse containing block e criava uma segunda rolagem no documento.
  *
- * O alvo mantém 44px de altura mínima (DESIGN.md > Accessibility) e
- * `focus-visible` fica no chip via `:has`, já que o input é transparente.
+ * O alvo mantém 44px de altura mínima, e `focus-visible` fica no chip
+ * via `:has`, já que o input é transparente.
  */
 export function ChipSelecao({
   id,

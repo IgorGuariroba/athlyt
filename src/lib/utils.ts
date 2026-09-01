@@ -2,8 +2,8 @@ import { clsx, type ClassValue } from "clsx"
 import { extendTailwindMerge } from "tailwind-merge"
 
 /**
- * Escala tipográfica de DESIGN.md, declarada em `globals.css` como
- * `--text-*`. Precisa ser repetida aqui porque o tailwind-merge não lê
+ * Escala tipográfica declarada em `globals.css` como `--text-*`.
+ * Precisa ser repetida aqui porque o tailwind-merge não lê
  * o CSS: sem isso ele classifica `text-label-lg` como cor de texto e,
  * ao mesclar com `text-primary-foreground`, descarta um dos dois de
  * forma silenciosa — foi assim que o CTA branco apareceu com texto

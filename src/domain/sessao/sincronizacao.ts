@@ -5,7 +5,7 @@ import { mesclarEventos, ordenarEventos, type ConflitoSincronizacao, type Estado
 import type { ExercicioSessao } from "./repositorio";
 
 /**
- * Recepção da fila offline (user story 39; telas 042 e 085).
+ * Recepção da fila offline.
  *
  * O endpoint é idempotente em dois níveis, de propósito. O merge puro
  * já é idempotente por construção, mas isso não basta sob corrida:
@@ -104,7 +104,7 @@ function mapearConflito(linha: typeof syncConflicts.$inferSelect): ConflitoPende
   };
 }
 
-/** Conflitos abertos do usuário, para a tela 085. */
+/** Conflitos abertos do usuário, exibidos para resolução explícita. */
 export async function listarConflitosPendentes(userId: string): Promise<ConflitoPendente[]> {
   const linhas = await db.select().from(syncConflicts)
     .where(and(eq(syncConflicts.userId, userId), isNull(syncConflicts.resolvidoEm)))

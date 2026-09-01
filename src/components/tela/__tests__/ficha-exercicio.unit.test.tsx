@@ -6,11 +6,9 @@ import { FichaExercicio } from "../ficha-exercicio";
 afterEach(cleanup);
 
 /**
- * Mídia de Execução (CONTEXT.md): sem vídeo/animação disponível ainda,
- * o fallback em texto é a única fonte de "como executar" durante a
- * sessão. O componente é o ponto de entrada — ícone junto ao nome do
- * exercício, como no Alpha Progression (workflow-imagens-references/
- * alpha-progression/050 e 062) — para essa instrução, escondida por
+ * Sem vídeo/animação disponível, o fallback em texto é a única fonte
+ * de "como executar" durante a sessão. O componente dá acesso a essa
+ * instrução por um ícone junto ao nome do exercício, escondida por
  * padrão para não competir com o registro de série.
  */
 describe("FichaExercicio", () => {

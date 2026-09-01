@@ -18,9 +18,8 @@ import { cn } from "@/lib/utils";
  * de uma visualização — zoom, opacidade — onde o valor exato é
  * secundário e o gesto é de varredura.
  *
- * O polegar tem 20px visuais mas área tocável de 44px via
- * `::-webkit-slider-thumb`, atendendo DESIGN.md > Accessibility sem
- * engordar o trilho.
+ * O polegar tem 20px visuais, mas mantém área tocável de 44px via
+ * `::-webkit-slider-thumb`, sem engordar o trilho.
  */
 export function ControleFaixa({
   id,

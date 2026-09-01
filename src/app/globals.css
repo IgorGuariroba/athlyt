@@ -8,7 +8,7 @@
 @custom-variant dark (&:is(.dark *));
 
 /*
- * Tokens derivados de DESIGN.md (MacroFactor Visual System).
+ * Tokens do sistema visual inspirado no MacroFactor.
  * O produto é dark-first por decisão de produto ("o preto é estrutural,
  * não apenas modo escuro") — não há alternância por prefers-color-scheme
  * nem tema claro nesta fase.
@@ -118,14 +118,14 @@
     sans-serif;
 
   /*
-   * Fonte de marca (DESIGN.md > Typography > Famílias). Archivo ocupa o
-   * papel que `Macro Sans` — proprietária, não licenciável — tem no
+   * Archivo é a fonte de marca e ocupa o papel que `Macro Sans` —
+   * proprietária, não licenciável — tem no
    * MacroFactor: display e headlines. Todo o resto permanece em DM Sans,
    * que é a própria fonte de interface do app original.
    */
   --font-brand: var(--font-archivo), var(--font-dm-sans), system-ui, sans-serif;
 
-  /* Escala tipográfica de DESIGN.md > Typography > Hierarquia */
+  /* Escala tipográfica hierárquica, do display aos rótulos. */
   --text-display: 40px;
   --text-display--line-height: 44px;
   --text-display--font-weight: 700;
@@ -213,9 +213,9 @@
 }
 
 /**
- * Transição entre etapas da cascata de triagem (DESIGN.md > Motion &
- * Interaction: "transição de página: 200-300ms", `ease-out` ao entrar).
- * A etapa entra deslizando no sentido do avanço — da direita ao seguir
+ * A transição entre etapas da cascata dura de 200 a 300 ms e usa
+ * `ease-out` na entrada. A etapa desliza no sentido do avanço — da
+ * direita ao seguir
  * adiante, da esquerda ao voltar — para que a direção do gesto
  * corresponda à direção do fluxo.
  */
@@ -250,8 +250,8 @@
 }
 
 /**
- * `prefers-reduced-motion`: sem deslocamento, apenas um fade curto
- * (DESIGN.md > Motion & Interaction).
+ * Com `prefers-reduced-motion`, não há deslocamento, apenas um fade
+ * curto.
  */
 @media (prefers-reduced-motion: reduce) {
   .etapa-transicao,

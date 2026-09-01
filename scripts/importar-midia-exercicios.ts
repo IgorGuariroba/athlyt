@@ -1,8 +1,7 @@
 import { config } from "dotenv";
 
 /**
- * Ferramenta operacional da Mídia de Execução (CONTEXT.md).
- * Guia completo: docs/midia-de-execucao.md
+ * Ferramenta operacional da Mídia de Execução.
  *
  * --sugerir  lista candidatos da ExerciseDB para cada exercício do
  *            catálogo Athlyt ainda sem mapeamento em MIDIA_EXECUCAO.
@@ -11,7 +10,7 @@ import { config } from "dotenv";
  * --espelhar baixa o GIF de cada entrada já mapeada e grava no R2.
  *            Idempotente (pula o que já existe, salvo --forcar).
  *            Só deve rodar contra produção depois de o licenciamento
- *            estar confirmado na ADR 0001.
+ *            da mídia estar confirmado; o script não verifica isso.
  */
 
 async function principal() {

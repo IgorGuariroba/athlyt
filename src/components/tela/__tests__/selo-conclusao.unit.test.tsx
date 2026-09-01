@@ -31,8 +31,8 @@ describe("SeloConclusao", () => {
   });
 
   it("diz o desfecho em palavras, e não apenas pela cor do selo", () => {
-    // DESIGN.md > Accessibility: estado nunca é comunicado só por cor.
-    // O tom `atencao` é reforço do que contexto e descrição já dizem.
+    // Estado nunca é comunicado só por cor. O tom `atencao` é reforço
+    // do que contexto e descrição já dizem.
     render(
       <SeloConclusao
         Icone={Award}

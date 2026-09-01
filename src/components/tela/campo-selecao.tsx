@@ -11,8 +11,8 @@ import { cn } from "@/lib/utils";
  * tela sem trabalho extra e envia o valor no `FormData` de uma Server
  * Action sem estado de cliente.
  *
- * O que o nativo **não** entrega, e por isso vive aqui: altura de 48px
- * (DESIGN.md > Components > Input), superfície de cartão, e o chevron
+ * O que o nativo **não** entrega, e por isso vive aqui: altura de
+ * 48px, superfície de cartão e o chevron
  * da família de ícones do produto no lugar da seta do sistema
  * operacional — que é o detalhe que denunciava o controle como
  * "formulário web" no meio de uma interface móvel.
@@ -39,7 +39,7 @@ export function CampoSelecao({
   /**
    * Reduz o campo a 36px e o rótulo a `caption`, para filtros lado a
    * lado onde o controle é acessório da leitura — não uma pergunta do
-   * formulário (DESIGN.md > Components > Button: `compact-height`).
+   * formulário.
    */
   compacto?: boolean;
 }) {

@@ -4,9 +4,8 @@ import { entrarComGoogle, entrarComoUsuarioDev } from "./(auth)/actions";
 import { Button } from "@/components/ui/button";
 
 /**
- * Tela 001 — Boas-vindas (specs/workflow/telas/001-boas-vindas.md).
- * Única forma de acesso: conta Google. Sessão já ativa pula direto
- * para a aba Dieta.
+ * Boas-vindas. A única forma de acesso é uma conta Google. Uma sessão
+ * já ativa pula direto para a aba Dieta.
  */
 export default async function BoasVindasPage() {
   const session = await auth();

@@ -8,11 +8,7 @@ import { salvarMedidasEssenciais } from "../actions";
 import { CampoMedida } from "../_components/campo-medida";
 
 /**
- * Tela 008b — medidas essenciais
- * (specs/workflow/telas/008b-avaliacao-medidas-essenciais.md).
- *
- * Uma medida por região (`fita-v2`,
- * docs/adr/0007-uma-leitura-por-circunferencia.md). O que garante a
+ * As medidas essenciais usam uma medida por região. O que garante a
  * comparação ao longo do tempo é a instrução anatômica — mesmo ponto,
  * mesma postura, mesma tensão de fita — e não repetir a leitura no
  * mesmo dia.

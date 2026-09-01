@@ -6,7 +6,7 @@ import { rotuloDeConfianca } from "../proveniencia";
  * "quão certo ele é". Sem essa distinção, um frango que o modelo
  * reconheceu numa foto com confiança alta aparecia na tela como "valor
  * de tabela analítica" — uma estimativa vestida de medição, que é
- * exatamente o que a user story 59 proíbe.
+ * exatamente o que a regra de transparência da estimativa proíbe.
  */
 describe("rótulo de confiança por origem do dado", () => {
   it("nunca chama estimativa de IA de valor de tabela, mesmo com confiança alta", () => {

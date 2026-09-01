@@ -4,8 +4,7 @@ import { decidir, type ResultadoDecisao } from "../decidir";
 
 /**
  * Estimativa de refeição a partir da descrição escrita ou da
- * transcrição de um áudio (Recorte `refeicao-texto`; CONTEXT.md >
- * Estimativa por Descrição).
+ * transcrição de um áudio.
  *
  * O schema é irmão do de `refeicao-foto` e difere no ponto que muda a
  * natureza do palpite: aqui a incerteza está na **porção que o atleta
@@ -13,7 +12,7 @@ import { decidir, type ResultadoDecisao } from "../decidir";
  * modelo consegue ver. Por isso cada item carrega, além da quantidade
  * estimada, a `porcaoDescrita` que originou o número — é ela que o
  * atleta reconhece ao revisar e é ela que torna o registro auditável
- * depois (user story 17).
+ * depois.
  *
  * A `unidade` é do modelo, como em `refeicao-foto`: quem diz "tomei
  * uma lata de refrigerante" descreve volume, e traduzir isso para
@@ -21,8 +20,8 @@ import { decidir, type ResultadoDecisao } from "../decidir";
  *
  * `limitacoes` não é enfeite: descrição sem quantidade, preparo
  * desconhecido e gordura de preparo não mencionada mudam
- * materialmente a estimativa, e a user story 9 proíbe estimativa que
- * se passe por medição.
+ * materialmente a estimativa; por isso, ela nunca pode se passar por
+ * medição.
  *
  * O resultado nunca é gravado direto: vira Prato editável, e o atleta
  * confirma. A IA propõe, o atleta registra.

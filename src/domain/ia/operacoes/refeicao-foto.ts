@@ -3,8 +3,7 @@ import type { NucleoContexto } from "../contexto/nucleo";
 import { decidir, type ResultadoDecisao } from "../decidir";
 
 /**
- * Estimativa de refeição a partir da foto do prato (Recorte
- * `refeicao-foto`; CONTEXT.md > Atalhos de Registro: "foto via IA").
+ * Estimativa de refeição a partir da foto do prato.
  *
  * O schema é deliberadamente conservador em dois pontos:
  *
@@ -18,8 +17,8 @@ import { decidir, type ResultadoDecisao } from "../decidir";
  *   que é molho, iogurte ou sopa, e erraria calada;
  * - `limitacoes` não é enfeite: ângulo, oclusão (arroz debaixo do
  *   bife), molho invisível e ausência de referência de escala mudam
- *   materialmente a estimativa, e a user story 59 proíbe estimativa
- *   que se passe por medição.
+ *   materialmente a estimativa; por isso, ela nunca pode se passar
+ *   por medição.
  *
  * O resultado nunca é gravado direto: ele vira Prato editável, e o
  * atleta confirma. A IA propõe, o atleta registra.

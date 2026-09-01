@@ -1,6 +1,6 @@
 /**
- * Mapa curado Athlyt → ExerciseDB (CONTEXT.md, Mídia de Execução):
- * liga o id estável do catálogo de exercícios (`exercicios.ts`) ao
+ * Mapa curado Athlyt → ExerciseDB para a Mídia de Execução: liga o id
+ * estável do catálogo de exercícios (`exercicios.ts`) ao
  * exercício correspondente na ExerciseDB (AscendAPI, tier V1 OSS).
  *
  * A curadoria é manual, não fuzzy match: um nome parecido pode ser um

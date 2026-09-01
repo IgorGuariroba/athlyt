@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { CheckCircle2, LoaderCircle } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 
-/** Feedback breve da tela 025; o plano já foi materializado no servidor. */
+/** Feedback breve enquanto o plano já materializado é carregado. */
 export function TransicaoGeracao() {
   const router = useRouter();
   useEffect(() => {

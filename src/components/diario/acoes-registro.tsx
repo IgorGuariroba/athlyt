@@ -16,7 +16,7 @@ import { cn } from "@/lib/utils";
  *
  * `hrefDescricao` entra numa segunda linha, e não disputando a
  * primeira: descrever é o caminho de quem **não está** diante do
- * prato (ADR 0002), e pô-lo lado a lado com a câmera faria os dois
+ * prato, e pô-lo lado a lado com a câmera faria os dois
  * parecerem alternativas do mesmo momento.
  */
 export function AcoesRegistro({

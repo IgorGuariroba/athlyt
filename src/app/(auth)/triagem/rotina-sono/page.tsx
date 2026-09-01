@@ -34,10 +34,6 @@ const NIVEIS = [
   },
 ] as const;
 
-/**
- * Tela 023 — Rotina, sono e atividade
- * (specs/workflow/telas/023-rotina-sono.md).
- */
 export default async function RotinaSonoPage() {
   const respostas = await carregarRespostasTriagem();
   const { indice, total } = posicaoNaCascata("rotina-sono");

@@ -14,7 +14,6 @@ const ICONE_OBJETIVO = {
   "ganhar-massa": Dumbbell,
 } as const;
 
-/** Tela 009 — Objetivo (specs/workflow/telas/009-objetivo.md). */
 export default async function ObjetivoPage() {
   const session = await auth();
   const userId = session?.user?.id;

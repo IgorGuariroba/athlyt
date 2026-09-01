@@ -22,9 +22,8 @@ import { rotuloDeConfianca, type Confianca } from "@/domain/alimentos/provenienc
 import { cn } from "@/lib/utils";
 
 /**
- * Revisão dos itens que a IA estimou, antes de virarem Consumo Real
- * (ADR 0002, decisão 4: a estimativa é sempre apresentada para
- * revisão).
+ * Revisão dos itens que a IA estimou antes de virarem Consumo Real.
+ * Toda estimativa deve ser apresentada para revisão.
  *
  * Mora no catálogo, e não na rota, porque a mesma revisão serve foto,
  * texto e áudio: o que muda entre os três é como a estimativa nasceu,
@@ -35,12 +34,12 @@ import { cn } from "@/lib/utils";
  *
  * - o rótulo de confiança acompanha **cada item**, com a origem certa:
  *   "pouco visível na foto" seria falso sobre um prato que ninguém
- *   fotografou (user story 9);
+ *   fotografou;
  * - a porção descrita pelo atleta ("uma colher de sopa") fica ao lado
  *   das gramas, porque é ela que ele reconhece ao conferir — o número
  *   em gramas é a tradução do modelo, não a memória dele;
  * - o total recalcula a cada edição e fica visível antes do botão de
- *   confirmar, nunca depois (user story 16).
+ *   confirmar, nunca depois.
  *
  * Corrigir o nome não mexe nos macros sozinho, mas há correções que
  * trocam o alimento e não só o rótulo ("cola" → "cola zero"). Quando
@@ -228,7 +227,7 @@ export function RevisaoEstimativa({
 
       {/* Acrescentar o que a IA não captou é parte da revisão, não um
           fluxo à parte: sem isso, uma omissão obrigaria a recomeçar a
-          descrição inteira (user story 15). */}
+          descrição inteira. */}
       {adicionando ? (
         <FormularioItemFaltante
           aoCancelar={() => setAdicionando(false)}

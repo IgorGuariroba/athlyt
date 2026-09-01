@@ -5,10 +5,6 @@ import { CascataShell } from "@/components/tela/cascata-shell";
 import { carregarRespostasTriagem } from "../_lib/carregar-respostas";
 import { EtapaForm } from "../_components/etapa-form";
 
-/**
- * Tela 019 — Lesões e desconfortos
- * (specs/workflow/telas/019-saude-lesoes.md).
- */
 export default async function SaudeLesoesPage() {
   const respostas = await carregarRespostasTriagem();
   const { indice, total } = posicaoNaCascata("saude-lesoes");

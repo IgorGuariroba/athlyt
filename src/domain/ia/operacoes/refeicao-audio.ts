@@ -4,13 +4,12 @@ import { decidir, type ResultadoDecisao } from "../decidir";
 import { LIMITE_DESCRICAO } from "@/domain/alimentos/audio-refeicao";
 
 /**
- * Transcrição do áudio em que o atleta descreve a refeição (Recorte
- * `refeicao-audio`; ADR 0002).
+ * Transcrição do áudio em que o atleta descreve a refeição.
  *
  * É uma operação separada da estimativa de propósito. Pedir ao mesmo
  * modelo, na mesma chamada, que ouça e calcule macros tiraria do
- * atleta o passo que a ADR exige: rever a transcrição **antes** de
- * qualquer número existir. Um "duzentos gramas" ouvido como "duzentos
+ * atleta um passo obrigatório: rever a transcrição **antes** de qualquer
+ * número existir. Um "duzentos gramas" ouvido como "duzentos
  * quilos" viraria macros errados sem ninguém ver a frase.
  *
  * A saída é texto, não estrutura nutricional: ela alimenta

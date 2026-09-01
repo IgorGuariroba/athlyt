@@ -19,7 +19,7 @@ import {
 } from "./actions";
 
 /**
- * Registro Retroativo por texto ou áudio (ADR 0002) — rota própria e
+ * Registro Retroativo por texto ou áudio — rota própria e
  * não modal, pelo mesmo motivo dos demais Atalhos: endereçável,
  * sobrevive a recarregar e mantém dia e refeição explícitos na URL.
  *

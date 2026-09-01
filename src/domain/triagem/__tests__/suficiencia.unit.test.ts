@@ -8,9 +8,8 @@ import type { RespostasTriagem } from "../etapas";
 
 /**
  * Seam: as funções puras de suficiência/cascata do domínio de
- * Triagem (specs/mvp-vertical.md, user stories 5, 6, 14, 15;
- * Testing Decisions > "perfil insuficiente ativa Modo Conservador;
- * completar dados habilita capacidades").
+ * Triagem. Um perfil insuficiente ativa o Modo Conservador; completar
+ * os dados habilita capacidades.
  */
 describe("etapaRespondida", () => {
   it("considera respondida quando todos os campos da etapa existem", () => {

@@ -8,7 +8,7 @@ import {
  * Uma etapa está respondida quando todos os seus campos existem em
  * `respostas` — `undefined`/campo ausente é "não visitada", qualquer
  * outro valor (incluindo string vazia ou array vazio) é uma resposta
- * explícita de "nenhum(a)" (specs/mvp-vertical.md, user story 6).
+ * explícita de "nenhum(a)".
  */
 export function etapaRespondida(
   etapaId: EtapaId,
@@ -28,8 +28,8 @@ export function etapaRespondida(
 
 export interface ResultadoSuficiencia {
   /**
-   * Modo Conservador (specs/mvp-vertical.md): ativo enquanto qualquer
-   * etapa obrigatória não tiver sido respondida.
+   * Modo Conservador: ativo enquanto qualquer etapa obrigatória não
+   * tiver sido respondida.
    */
   modoConservador: boolean;
   /** Perfil não tem nenhuma etapa (obrigatória ou complementar) pendente. */
@@ -63,8 +63,7 @@ export function avaliarSuficiencia(
 
 /**
  * Próxima etapa não respondida, na ordem canônica da cascata — o que
- * permite retomar exatamente de onde o usuário parou (specs/mvp-
- * vertical.md, user story 5).
+ * permite retomar exatamente de onde o usuário parou.
  */
 export function proximaEtapaPendente(
   respostas: RespostasTriagem,

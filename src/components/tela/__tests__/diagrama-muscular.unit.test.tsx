@@ -20,8 +20,8 @@ const TODOS_OS_GRUPOS: readonly GrupoMuscular[] = [
 ];
 
 /**
- * Diagrama de músculos-alvo da Mídia de Execução (CONTEXT.md): segunda
- * metade do fallback, ao lado do texto de "como executar". Cada grupo
+ * O diagrama de músculos-alvo é a segunda metade do fallback da Mídia
+ * de Execução, ao lado do texto de "como executar". Cada grupo
  * pertence a exatamente uma vista (frontal ou posterior), porque
  * misturar as duas obrigaria o atleta a decidir qual lado olhar.
  */

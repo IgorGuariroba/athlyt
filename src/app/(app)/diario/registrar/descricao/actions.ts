@@ -100,8 +100,8 @@ async function contextoDoAtleta(userId: string) {
 /**
  * Transcreve o áudio e devolve o texto **sem estimar nada**.
  *
- * A parada aqui é a decisão da ADR 0002: reconhecimento de fala erra
- * palavras, e uma palavra errada vira macro errado. Separar transcrever
+ * O reconhecimento de fala erra palavras, e uma palavra errada vira
+ * macro errado. Separar transcrever
  * de estimar dá ao atleta a chance de corrigir a frase enquanto ela
  * ainda é frase.
  *
@@ -164,7 +164,7 @@ const CAMPOS_TEXTO = ["descricao-livre", "metas-restantes", "restricoes"];
  *
  * Mesma separação do registro por foto: a IA propõe, o atleta
  * confirma. Falhar aqui não custa a descrição digitada — ela continua
- * na tela, porque nada dela vive no servidor (user story 32).
+ * na tela, porque nada dela vive no servidor.
  */
 export async function estimarPorDescricaoAction(fd: FormData): Promise<ResultadoDescricao> {
   const session = await auth();

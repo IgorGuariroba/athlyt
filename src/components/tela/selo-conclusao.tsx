@@ -7,17 +7,16 @@ import { cn } from "@/lib/utils";
  * Sessão de Treino.
  *
  * É a única marca celebratória do produto, e por isso existe como
- * componente e não como markup de uma tela: DESIGN.md > Typography
- * autoriza a escala de destaque apenas para "resultados excepcionais",
- * e essa autorização precisa morar em um lugar só. Montada à mão na
+ * componente e não como markup de uma tela. A escala de destaque é
+ * reservada a resultados excepcionais, e essa regra precisa morar em
+ * um lugar só. Montada à mão na
  * página, a regra vira classe solta e a próxima tela de conclusão
  * inventa outro selo.
  *
  * O `tom` distingue o desfecho sem depender do texto: `sucesso` para o
  * ciclo que fechou como planejado, `atencao` para o que foi encerrado
- * antes. A cor é reforço — o contexto e o título dizem a mesma coisa
- * em palavras (DESIGN.md > Accessibility: "nunca comunique estado só
- * por cor").
+ * antes. A cor é apenas reforço: o estado nunca depende só dela, pois
+ * o contexto e o título dizem a mesma coisa em palavras.
  */
 export function SeloConclusao({
   Icone,

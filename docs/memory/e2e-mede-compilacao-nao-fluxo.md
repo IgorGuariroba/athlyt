@@ -11,6 +11,9 @@ sources:
   - id: medicao-e2e-2026-08-12
     resource: "scripts/medir-e2e.sh, playwright.config.ts, .github/workflows/ci.yml, PR #75"
     title: "Medição de três variantes do job E2E do CI"
+  - id: schema-estimativa-foto-2026-09-01
+    resource: "src/domain/ia/operacoes/refeicao-foto.ts, scripts/servidor-ia-e2e.ts, playwright.config.ts"
+    title: "E2E local serviu build anterior depois de mudar o schema da estimativa por foto"
 ---
 
 # Contexto
@@ -46,6 +49,8 @@ Antes de otimizar um job de E2E lento, **leia o tempo por teste, não o total**.
 Ao propor paralelismo, meça também a *estabilidade*, não só o relógio: rode a variante mais de uma vez e compare quais testes falham. Ganho de segundos pago com flakiness é regressão disfarçada de otimização.
 
 Ao escrever asserção sobre `role="alert"` em app Next, filtre por texto (`.filter({ hasText: /\S/ })`): o route announcer é um alerta vazio permanente em produção.
+
+**Localmente, servir produção exige reconstruir depois de mudar o código.** O CI não refaz o build no job E2E porque recebe o artefato novo do job `build`; isso não vale para uma execução manual contra `.next` já existente. Se o mock atualizado responde um schema novo e o app devolve o fallback de indisponibilidade antes de chegar à tela esperada, confira a idade do build antes de diagnosticar o fluxo. Rode `npm run build` e só então `npx playwright test`. No incidente da estimativa por foto, o dublê já devolvia `quantidade + unidade`, mas o bundle antigo ainda validava `quantidadeGramas`; Zod recusava a resposta e os dois testes falhavam sem alcançar a revisão. O mesmo E2E passou sem alteração funcional depois do rebuild.
 
 # Evidência
 

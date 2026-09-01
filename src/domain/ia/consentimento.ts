@@ -5,12 +5,11 @@ import { obterRecorte } from "./contexto/recortes";
 import type { OperacaoIA } from "./contexto/tipos";
 
 /**
- * Consentimento por operação (user stories 105–107).
+ * Consentimento por operação.
  *
  * O consentimento é por campo declarado do Recorte de Contexto, não
  * por categoria genérica: é isso que permite o texto exibido ser
- * derivado da declaração em vez de escrito à mão e ficar defasado
- * (ADR 0006, invariante 3).
+ * derivado da declaração em vez de escrito à mão e ficar defasado.
  */
 
 /** Consentimento concedido, com a versão de recorte em que foi dado. */
@@ -145,7 +144,7 @@ export async function conceder(
 /**
  * Revoga usos futuros sem apagar o registro histórico — a auditoria
  * de decisões passadas depende de saber que o consentimento existia
- * quando a decisão foi tomada (user story 107).
+ * quando a decisão foi tomada.
  */
 export async function revogar(
   userId: string,

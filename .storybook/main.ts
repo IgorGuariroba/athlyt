@@ -31,9 +31,9 @@ const config: StorybookConfig = {
   // caminho absoluto (`/equipamentos/*.svg`), como no produto.
   staticDirs: ["../public"],
   async viteFinal(config) {
-    // Tailwind v4 não tem arquivo de configuração: os tokens de
-    // DESIGN.md vivem em `@theme` dentro de `globals.css` e só existem
-    // se o plugin processar essa folha. Sem isto, toda story renderiza
+    // Tailwind v4 não tem arquivo de configuração: os tokens vivem em
+    // `@theme` dentro de `globals.css` e só existem se o plugin
+    // processar essa folha. Sem isto, toda story renderiza
     // sem `--surface`, `--on-surface` e a escala tipográfica.
     config.plugins = [...(config.plugins ?? []), tailwindcss()];
     return config;

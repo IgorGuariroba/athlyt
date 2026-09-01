@@ -6,11 +6,8 @@ import { EtapaForm } from "../_components/etapa-form";
 import { SelecaoEquipamentos } from "./_components/selecao-equipamentos";
 
 /**
- * Tela 018 — Academia e equipamentos
- * (specs/workflow/telas/018-academia-equipamentos.md).
- *
- * É a etapa que mais restringe o plano: um equipamento não declarado
- * aqui é um exercício que a IA não pode prescrever. A seleção em si
+ * Esta etapa é a que mais restringe o plano: um equipamento não
+ * declarado aqui é um exercício que a IA não pode prescrever. A seleção em si
  * vive num componente cliente porque o local de treino pré-marca os
  * equipamentos plausíveis.
  */

@@ -79,7 +79,7 @@ describe("decidir", () => {
     expect(resultado.status).toBe("ok");
     if (resultado.status !== "ok") return;
     expect(resultado.valor).toEqual({ carga: 60 });
-    // O resolvido, não o solicitado (ADR 0005).
+    // O resolvido, não o solicitado.
     expect(resultado.modeloResolvido).toBe("openai/gpt-5-mini-2026-01");
     expect(decisoesGravadas).toHaveLength(1);
     expect(decisoesGravadas[0]).toMatchObject({

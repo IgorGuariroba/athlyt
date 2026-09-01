@@ -80,7 +80,7 @@ describe("item estimado por descrição", () => {
 
   it("guarda a origem da estimativa para o registro continuar auditável", () => {
     // Um número vindo de descrição e um vindo de foto merecem
-    // desconfianças diferentes na revisão do dia (user story 30).
+    // desconfianças diferentes na revisão do dia.
     expect(item.origemDado).toBe("estimativa-ia");
     expect(item.fonte).toBe("Estimativa por descrição");
   });

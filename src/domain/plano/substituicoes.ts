@@ -1,6 +1,5 @@
 /**
- * Substituição de exercício preservando o estímulo (specs/workflow/telas/
- * 035-exercicio-substituir.md; user story 23).
+ * Substituição de exercício preservando o estímulo.
  *
  * Regra central: o app nunca troca exercício por variedade. Uma troca
  * só existe porque o usuário declarou um motivo — equipamento

@@ -11,8 +11,7 @@ import { cn } from "@/lib/utils";
  *
  * Dieta vem primeiro por frequência de uso: é a aba tocada várias
  * vezes por dia. Diário (o extrato cronológico completo do dia) e as
- * demais configurações vivem sob Mais (DESIGN.md > Components > Bottom
- * navigation; specs/workflow.md > Decisões estruturais).
+ * demais configurações vivem sob Mais.
  *
  * Flutua acima de `--safe-bottom`, mantendo distância do indicador de
  * início do aparelho. O casco reserva sua altura mais esse afastamento

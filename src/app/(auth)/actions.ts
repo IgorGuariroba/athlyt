@@ -11,7 +11,7 @@ import { randomUUID } from "node:crypto";
 
 const DEV_SESSION_EMAIL = "dev@athlyt.local";
 
-/** Tela 001 — Entrada real via Google. */
+/** Entrada real via Google. */
 export async function entrarComGoogle() {
   await signIn("google", { redirectTo: "/dieta" });
 }
@@ -50,7 +50,7 @@ export async function sair() {
 }
 
 /**
- * Encerra a sessão em todos os dispositivos (user story 4): apaga
+ * Encerra a sessão em todos os dispositivos: apaga
  * toda linha de `session` do usuário, não só a do dispositivo atual,
  * e então também desloga o dispositivo atual.
  */

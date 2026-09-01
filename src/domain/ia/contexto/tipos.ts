@@ -1,5 +1,5 @@
 /**
- * Contexto do Atleta — tipos base (ADR 0006).
+ * Contexto do Atleta — tipos base.
  *
  * O Contexto do Atleta é a projeção versionada do estado do usuário
  * enviada ao modelo em cada decisão. Não é dump do banco nem
@@ -9,9 +9,9 @@
 
 /**
  * Origem de um valor, usada pelo modelo para ponderar confiança e
- * pelo Modo Conservador para decidir agressividade (ADR 0006,
- * invariante 1). `medido` vem de registro direto do usuário;
- * `importado` veio da Importação de Histórico; `estimado` foi
+ * pelo Modo Conservador para decidir agressividade. `medido` vem de
+ * registro direto do usuário; `importado` veio da Importação de
+ * Histórico; `estimado` foi
  * derivado pelo sistema ou por IA e ainda não confirmado.
  */
 export type Proveniencia = "medido" | "importado" | "estimado";
@@ -57,7 +57,7 @@ export type OperacaoIA =
  * Campo declarado por um Recorte. `sensivel` marca os campos que
  * exigem consentimento vigente para a operação; a lista de campos é
  * a fonte de verdade do texto de consentimento e do registro na
- * Trilha de Decisão (ADR 0006, invariante 3).
+ * Trilha de Decisão.
  */
 export interface CampoDeclarado {
   id: string;
@@ -68,7 +68,7 @@ export interface CampoDeclarado {
 /**
  * Um Recorte de Contexto é versionado: mudar o que uma operação
  * envia é mudança de versão, reproduzível a partir da Trilha de
- * Decisão (ADR 0006, invariante 4).
+ * Decisão.
  */
 export interface RecorteDeclarado {
   operacao: OperacaoIA;

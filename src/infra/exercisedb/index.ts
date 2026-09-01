@@ -1,6 +1,6 @@
 /**
  * Cliente da ExerciseDB (AscendAPI, tier V1 OSS) — origem da Mídia de
- * Execução (CONTEXT.md): "animação/vídeo demonstrativo do exercício
+ * Execução: "animação/vídeo demonstrativo do exercício
  * vindo de banco aberto/licenciado". Este cliente só normaliza a API
  * externa; a camada que decide qual exercício do Athlyt usa qual mídia
  * é `src/domain/plano/midia-execucao.ts`.

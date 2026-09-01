@@ -17,7 +17,7 @@ import { decidir, type OrigemDecisao, type ResultadoDecisao } from "../decidir";
  * "refrigerante de cola zero" zera 105 kcal e 27 g de carboidrato. Sem
  * uma forma de recalcular só aquele item, o atleta escolhia entre
  * gravar o nome certo com números errados ou refazer a refeição
- * inteira (user story 12).
+ * inteira.
  *
  * É uma operação separada de `refeicao-texto` porque a pergunta é
  * outra e o contexto enviado é menor: aqui não há descrição da

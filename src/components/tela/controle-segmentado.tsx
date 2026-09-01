@@ -3,10 +3,9 @@ import Link from "next/link";
 import { cn } from "@/lib/utils";
 
 /**
- * Segmented control de 2–6 opções curtas (DESIGN.md > Components >
- * Segmented control, tabs e chips): trilho em superfície de cartão,
- * opção ativa em superfície elevada com texto forte, inativa em
- * `muted`.
+ * Segmented control de 2–6 opções curtas: trilho em superfície de
+ * cartão, opção ativa em superfície elevada com texto forte e opção
+ * inativa em `muted`.
  *
  * Navega por `Link` porque o estado que ele alterna — período de um
  * gráfico, subview — pertence à URL: a tela continua endereçável e

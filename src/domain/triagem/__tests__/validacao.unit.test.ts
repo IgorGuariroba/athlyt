@@ -18,9 +18,8 @@ function formData(entries: Record<string, string | string[]>): FormData {
 
 /**
  * Seam: parsing puro de FormData -> RespostasTriagem por etapa,
- * usado pela server action da cascata (specs/workflow/telas
- * 005-010, 016-023). Sem I/O — cobre a validação de entrada antes de
- * qualquer persistência.
+ * usado pela server action da cascata. Sem I/O — cobre a validação de
+ * entrada antes de qualquer persistência.
  */
 describe("validarEquipamentosPersonalizados", () => {
   it("mantém na seleção somente nomes presentes no inventário", () => {

@@ -1,14 +1,16 @@
 /**
- * Proveniência e ponderação de fontes nutricionais (user stories 57,
- * 58, 59 e 97; specs/mvp-vertical.md > "A composição nutricional
- * manterá proveniência por alimento/nutriente").
+ * Proveniência e ponderação de fontes nutricionais.
+ *
+ * A composição nutricional mantém proveniência por alimento e por
+ * nutriente: todo número exibido sabe dizer de onde veio.
  *
  * Duas regras dão forma a este módulo:
  *
  * 1. Diante de fontes conflitantes, o app **elege uma fonte real** em
  *    vez de tirar média. Uma média entre 165 e 240 kcal produz um
  *    número que nenhuma fonte sustenta e que ninguém consegue
- *    auditar — a user story 97 proíbe esconder incerteza assim.
+ *    auditar: esconder incerteza atrás de um valor inventado é
+ *    proibido.
  * 2. O que foi descartado continua visível. A divergência é o dado
  *    mais informativo quando é material, e some para sempre se a
  *    escolha guardar só o vencedor.
@@ -22,7 +24,12 @@ export interface CriterioFonte {
   peso: number;
 }
 
-/** Os seis critérios nomeados pela user story 58, com peso explícito. */
+/**
+ * Seis critérios de ponderação com peso explícito: credencial da
+ * fonte, método analítico, reprodutibilidade, atualidade, adequação ao
+ * contexto e concordância entre fontes. Os pesos somam 100; mudar a
+ * lista altera a pontuação de todo valor auditado.
+ */
 export const CRITERIOS_FONTE: readonly CriterioFonte[] = [
   { id: "credencial", rotulo: "Credencial da fonte", peso: 30 },
   { id: "metodo", rotulo: "Método analítico", peso: 20 },
@@ -97,7 +104,7 @@ function peso(id: string): number {
   return CRITERIOS_FONTE.find((c) => c.id === id)!.peso;
 }
 
-/** Pontuação 0–100 da fonte, pelos seis critérios da user story 58. */
+/** Pontuação 0–100 da fonte, pelos seis critérios ponderados. */
 export function pontuarFonte(
   valor: ValorDeFonte,
   contexto: { hoje: Date; valores: readonly ValorDeFonte[] },
@@ -160,8 +167,8 @@ export function escolherValor(
 }
 
 /**
- * Grau de confiança exibível (user story 59: estimativa não pode se
- * passar por medição). A faixa vem da pontuação da fonte eleita e da
+ * Grau de confiança exibível: estimativa não pode se passar por
+ * medição. A faixa vem da pontuação da fonte eleita e da
  * existência de divergência material.
  */
 export type Confianca = "alta" | "media" | "baixa";
@@ -184,8 +191,8 @@ export const ROTULO_CONFIANCA: Record<Confianca, string> = {
  * Precisa de rótulos próprios porque `ROTULO_CONFIANCA` fala da fonte
  * ponderada: dizer "valor de tabela analítica" sobre um frango que o
  * modelo apenas reconheceu numa foto é falso, e falso exatamente no
- * ponto que a user story 59 protege — estimativa não pode se passar
- * por medição. Aqui `alta` significa "o modelo está seguro do que viu",
+ * ponto mais sensível — estimativa não pode se passar por medição.
+ * Aqui `alta` significa "o modelo está seguro do que viu",
  * o que continua sendo um palpite sobre a porção.
  */
 export const ROTULO_CONFIANCA_ESTIMATIVA: Record<Confianca, string> = {
@@ -196,13 +203,13 @@ export const ROTULO_CONFIANCA_ESTIMATIVA: Record<Confianca, string> = {
 
 /**
  * Confiança de um valor estimado **a partir da descrição** do atleta,
- * escrita ou ditada (CONTEXT.md > Estimativa por Descrição).
+ * escrita ou ditada.
  *
  * Não reusa os rótulos de foto porque a incerteza tem outra origem:
  * quem descreve sabe o que comeu e erra a porção, enquanto a foto
  * pode errar o próprio alimento. Dizer "pouco visível na foto" sobre
- * um prato que ninguém fotografou seria falso justo no ponto que a
- * user story 9 protege.
+ * um prato que ninguém fotografou seria falso justo onde o rótulo
+ * deveria proteger o atleta.
  */
 export const ROTULO_CONFIANCA_DESCRICAO: Record<Confianca, string> = {
   alta: "Estimativa — porção descrita com clareza",

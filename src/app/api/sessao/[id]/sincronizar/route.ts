@@ -4,7 +4,7 @@ import { auth } from "@/auth";
 import { sincronizarEventos } from "@/domain/sessao/sincronizacao";
 
 /**
- * Endpoint idempotente da fila offline (user story 39).
+ * Endpoint idempotente da fila offline.
  *
  * É seguro chamar com o mesmo lote quantas vezes for preciso: o
  * `client_event_id` de cada evento é a chave de idempotência, e o

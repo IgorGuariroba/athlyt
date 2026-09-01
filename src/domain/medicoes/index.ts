@@ -1,8 +1,7 @@
 /**
  * `fita-v2` registra uma leitura por região. A v1 exigia duas leituras
  * e uma terceira por divergência; medições gravadas sob ela continuam
- * com esse protocolo no banco e não devem ser reinterpretadas
- * (docs/adr/0007-uma-leitura-por-circunferencia.md).
+ * com esse protocolo no banco e não devem ser reinterpretadas.
  */
 export const PROTOCOLO_CIRCUNFERENCIAS_VERSAO = "fita-v2";
 export const METODOLOGIA_METAS_VERSAO = "trajetoria-v1";

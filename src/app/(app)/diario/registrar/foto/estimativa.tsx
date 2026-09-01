@@ -17,7 +17,7 @@ import type {
 } from "./actions";
 
 /**
- * Registro por foto (CONTEXT.md > Atalhos de Registro: "foto via IA").
+ * Registro por foto via IA.
  *
  * O fluxo tem exatamente três estados e nenhum a mais, porque o
  * caminho que ele existe para servir é "não quero editar nada, só
@@ -27,8 +27,8 @@ import type {
  *
  * A estimativa nunca é gravada sozinha. A IA propõe e o atleta
  * confirma: registrar direto tornaria o número irrevisável justo onde
- * a incerteza é maior, e a user story 59 proíbe estimativa que se
- * passe por medição. Por isso cada item mostra sua confiança e as
+ * a incerteza é maior. Uma estimativa não pode se passar por medição;
+ * por isso cada item mostra sua confiança e as
  * limitações da leitura ficam visíveis antes do botão, não depois.
  *
  * A revisão é a **mesma** de texto e áudio (`RevisaoEstimativa`).

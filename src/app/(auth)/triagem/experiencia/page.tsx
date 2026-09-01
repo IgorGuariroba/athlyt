@@ -33,10 +33,6 @@ const OPCOES = [
   },
 ] as const;
 
-/**
- * Tela 010 — Experiência de treino
- * (specs/workflow/telas/010-experiencia-treino.md).
- */
 export default async function ExperienciaPage() {
   const respostas = await carregarRespostasTriagem();
   const { indice, total } = posicaoNaCascata("experiencia");

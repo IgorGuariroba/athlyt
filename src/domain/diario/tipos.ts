@@ -13,8 +13,8 @@ export interface ItemAlimentar extends Macros {
 }
 
 /**
- * Refeição do Cardápio Diário materializada na linha do tempo
- * (CONTEXT.md > Entrada Planejada). Enquanto não houver Consumo
+ * Refeição do Cardápio Diário materializada na linha do tempo.
+ * Enquanto não houver Consumo
  * Confirmado correspondente, é apenas prescrição — nada dela conta
  * nos macros consumidos.
  */
@@ -37,7 +37,7 @@ export interface EntradaPlanejada {
 export type OrigemConsumo = "planejado" | "editado" | "avulso";
 
 /**
- * O que foi realmente consumido (CONTEXT.md > Consumo Confirmado).
+ * O que foi realmente consumido.
  * Entidade distinta do planejado: `planejado` guarda o snapshot da
  * prescrição no momento da confirmação, de modo que o desvio continue
  * legível mesmo depois de o plano mudar de versão.

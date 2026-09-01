@@ -9,9 +9,9 @@ import { cn } from "@/lib/utils";
  * O produto vinha resolvendo isso com um cartão contendo uma frase
  * `muted` ("Suas sessões concluídas aparecerão aqui."). Numa tela
  * inteira vazia, esse cartão fica ambíguo: não se distingue de conteúdo
- * ainda carregando, e não diz o que fazer a seguir. DESIGN.md >
- * Principles pede "neutralidade comportamental" — informar sem culpa —
- * mas informar inclui apontar a próxima ação.
+ * ainda carregando, e não diz o que fazer a seguir. A neutralidade
+ * comportamental exige informar sem culpa, inclusive apontando a
+ * próxima ação.
  *
  * O ícone é decorativo (`aria-hidden`): quem usa leitor de tela recebe
  * o título e a explicação, que carregam o significado inteiro.

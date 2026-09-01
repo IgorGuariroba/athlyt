@@ -14,8 +14,7 @@ export async function registrarCheckinCorporal(fd: FormData) {
   const userId = session.user.id;
   const peso = n(fd, "peso");
   if (Number.isFinite(peso)) await registrarPeso(userId, peso);
-  // Uma medida por região (`fita-v2`,
-  // docs/adr/0007-uma-leitura-por-circunferencia.md).
+  // Uma medida por região.
   const cintura = n(fd, "cintura");
   if (Number.isFinite(cintura)) {
     const resultado = await registrarCircunferencia(userId, { regiao: "cintura", leiturasCm: [cintura] });

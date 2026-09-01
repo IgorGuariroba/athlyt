@@ -114,8 +114,7 @@ jobs:
           retention-days: 1
           include-hidden-files: true
 
-  # E2E real em navegador (viewport mobile) contra Postgres efêmero,
-  # conforme specs/mvp-vertical.md > Testing Decisions.
+  # E2E real em navegador (viewport mobile) contra Postgres efêmero.
   e2e:
     name: E2E mobile
     runs-on: ubuntu-latest

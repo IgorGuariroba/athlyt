@@ -12,8 +12,8 @@ import { registrarCheckinCorporal } from "./actions";
 
 /**
  * Registro avulso de medições. Cada campo é opcional por construção:
- * o produto não força completar o que não foi medido (DESIGN.md >
- * Principles — "neutralidade comportamental").
+ * por neutralidade comportamental, o produto não força o atleta a
+ * completar o que não foi medido.
  */
 const METODOS = [
   { valor: "bioimpedancia", rotulo: "Bioimpedância" },

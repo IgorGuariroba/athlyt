@@ -1,6 +1,6 @@
 /**
- * Catálogo de exercícios do Motor Adaptativo (specs/mvp-vertical.md,
- * user stories 18–20; ADR: motor híbrido com regras determinísticas).
+ * Catálogo de exercícios do Motor Adaptativo híbrido, com regras
+ * determinísticas.
  *
  * Assim como o catálogo de equipamentos, este é dado de domínio
  * versionado: um exercício ausente daqui é um exercício que o plano
@@ -31,8 +31,7 @@ export type GrupoMuscular =
 
 /**
  * Padrão de movimento — a unidade de estímulo que uma substituição
- * precisa preservar (user story 23: trocar sem descaracterizar o
- * bloco).
+ * precisa preservar para não descaracterizar o bloco.
  */
 export type PadraoMovimento =
   | "empurrar-horizontal"
@@ -52,7 +51,7 @@ export type PadraoMovimento =
 
 /**
  * Região corporal citada em lesão. O plano evita exercícios que
- * carregam a região lesionada (user story 10).
+ * carregam a região lesionada.
  */
 export type RegiaoCorporal =
   | "ombro"
@@ -79,7 +78,7 @@ export interface DefinicaoExercicio {
   /**
    * Exige controle técnico sob carga axial ou instabilidade. O Modo
    * Conservador não prescreve estes: com perfil incompleto o sistema
-   * não sabe o suficiente para liberar a capacidade (user story 14).
+   * não sabe o suficiente para liberar a capacidade.
    */
   exigeTecnicaAvancada: boolean;
   /**
@@ -88,11 +87,11 @@ export interface DefinicaoExercicio {
    * viáveis, sem depender da ordem do array.
    */
   prioridade: number;
-  /** Por que este exercício existe no plano (user story 20). */
+  /** Por que este exercício existe no plano. */
   justificativa: string;
   /**
-   * Fallback em texto da Mídia de Execução (CONTEXT.md): instrução
-   * objetiva de como executar o movimento com boa técnica, usada
+   * Fallback em texto da Mídia de Execução: instrução objetiva de
+   * como executar o movimento com boa técnica, usada
    * quando não há animação/vídeo disponível para o exercício.
    */
   comoExecutar: string;

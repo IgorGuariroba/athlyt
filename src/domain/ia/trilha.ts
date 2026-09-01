@@ -5,7 +5,7 @@ import type { ContextoDoAtleta } from "./contexto/montagem";
 import type { OperacaoIA } from "./contexto/tipos";
 
 /**
- * Trilha de Decisão (specs/mvp-vertical.md, user stories 91–92, 116).
+ * Trilha de Decisão.
  *
  * Registra o que foi usado, por qual modelo, em qual versão de
  * recorte e com qual resultado. A gravação acontece mesmo quando a
@@ -32,8 +32,8 @@ export interface RegistroDecisao {
   ferramentasConsultadas: ChamadaFerramenta[];
   degradado: boolean;
   /**
-   * Falso quando o provedor não identificou o modelo resolvido — a
-   * ADR 0005 trata esse caso como não auditável.
+   * Falso quando o provedor não identificou o modelo resolvido, pois
+   * sem essa identificação a decisão não pode ser reproduzida.
    */
   auditavel: boolean;
   resultado: unknown;
@@ -74,8 +74,7 @@ export async function registrarDecisao(
 
 /**
  * Deriva os campos auditáveis a partir do contexto montado, para que
- * a trilha não possa divergir do que foi realmente enviado (ADR
- * 0006, invariante 2).
+ * a trilha não possa divergir do que foi realmente enviado.
  */
 export function camposDoContexto(contexto: ContextoDoAtleta): {
   camposEnviados: string[];

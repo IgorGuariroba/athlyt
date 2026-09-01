@@ -19,7 +19,7 @@ import { rotuloDeConfianca } from "../proveniencia";
 const arroz = itemDeAlimento("arroz-branco-cozido", { quantidade: 150, unidade: "g" });
 const frango = itemDeAlimento("peito-frango-grelhado", { quantidade: 1, unidade: "filé médio" });
 
-describe("Prato — montagem de múltiplos alimentos (tela 058)", () => {
+describe("Prato — montagem de múltiplos alimentos", () => {
   it("acumula itens preservando a ordem de adição", () => {
     const prato = adicionarAoPrato(adicionarAoPrato([], arroz), frango);
     expect(prato.map((i) => i.descricao)).toEqual([arroz.descricao, frango.descricao]);

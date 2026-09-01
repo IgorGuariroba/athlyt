@@ -2,13 +2,13 @@ import type { GrupoMuscular } from "@/domain/plano/exercicios";
 import { cn } from "@/lib/utils";
 
 /**
- * Diagrama de músculos-alvo da Mídia de Execução (CONTEXT.md):
- * "fallback de instruções em texto **e diagrama de músculos-alvo**".
+ * Diagrama de músculos-alvo da Mídia de Execução, complementar ao
+ * fallback de instruções em texto.
  *
  * Silhueta estilizada — não uma ilustração anatômica licenciada — na
- * mesma linguagem linear e tonal do resto do produto (DESIGN.md >
- * Iconography, Elevation): sem gradiente, sem foto de banco de
- * imagens, cor só para marcar a região trabalhada.
+ * mesma linguagem linear e tonal do resto do produto: sem gradiente,
+ * sem foto de banco de imagens e com cor apenas para marcar a região
+ * trabalhada.
  *
  * Cada grupo muscular pertence a exatamente uma das duas vistas.
  * Mostrar as duas ao mesmo tempo obrigaria o atleta a decidir qual

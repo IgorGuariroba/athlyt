@@ -1,9 +1,9 @@
 /**
- * O "dia" alimentar (specs/mvp-vertical.md, Implementation Decisions:
- * "Horários serão persistidos em UTC com fuso do usuário para
- * apresentação e definição do 'dia' alimentar/treino").
+ * O "dia" alimentar.
  *
- * Instantes vão para o banco em UTC; o recorte do dia é sempre
+ * Horários são persistidos em UTC com o fuso do usuário usado para
+ * apresentação e definição do dia alimentar ou de treino. Instantes
+ * vão para o banco em UTC; o recorte do dia é sempre
  * derivado aqui, a partir do fuso do atleta. Guardar o rótulo do dia
  * calculado no servidor com o fuso do servidor seria o erro clássico:
  * uma ceia às 22h de São Paulo cairia no dia seguinte em UTC.

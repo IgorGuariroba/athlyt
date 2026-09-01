@@ -3,7 +3,7 @@
 import type { EventoOutbox, TipoEventoOutbox } from "@/domain/sessao/outbox";
 
 /**
- * Fila local da Sessão de Treino em IndexedDB (ADR 0001).
+ * Fila local da Sessão de Treino em IndexedDB.
  *
  * IndexedDB, e não localStorage, porque a fila precisa sobreviver ao
  * fechamento da aba e a escrita precisa ser transacional: um registro

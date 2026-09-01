@@ -9,7 +9,7 @@ import { favoritarAction, registrarPratoAction, salvarAlimentoProprioAction } fr
 import { Atalhos } from "./atalhos";
 
 /**
- * Painel de Atalhos de Registro (tela 050) — rota própria em vez de
+ * Painel de Atalhos de Registro — rota própria em vez de
  * modal: a tela é endereçável, sobrevive a recarregar e mantém o dia
  * escolhido explícito na URL.
  */

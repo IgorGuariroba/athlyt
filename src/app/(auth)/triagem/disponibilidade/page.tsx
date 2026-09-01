@@ -14,10 +14,6 @@ const DIAS = [
   { value: "domingo", label: "Domingo" },
 ] as const;
 
-/**
- * Tela 016 — Disponibilidade semanal
- * (specs/workflow/telas/016-disponibilidade-dias.md).
- */
 export default async function DisponibilidadePage() {
   const respostas = await carregarRespostasTriagem();
   const { indice, total } = posicaoNaCascata("disponibilidade");

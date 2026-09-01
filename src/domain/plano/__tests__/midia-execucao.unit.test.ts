@@ -3,7 +3,7 @@ import { EXERCICIOS } from "../exercicios";
 import { MIDIA_EXECUCAO, midiaDoExercicio } from "../midia-execucao";
 
 /**
- * Mapa curado Athlyt → ExerciseDB (CONTEXT.md, Mídia de Execução).
+ * Mapa curado Athlyt → ExerciseDB para a Mídia de Execução.
  *
  * Invariante no mesmo espírito de `equipamentosDesconhecidos()`: toda
  * chave do mapa precisa apontar para um exercício real do catálogo —

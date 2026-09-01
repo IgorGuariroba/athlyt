@@ -8,7 +8,7 @@ import type {
 } from "./tipos";
 
 /**
- * Montagem do Contexto do Atleta para uma operação (ADR 0006).
+ * Montagem do Contexto do Atleta para uma operação.
  *
  * O resultado é ao mesmo tempo o que vai ao modelo e o que vai à
  * Trilha de Decisão — são a mesma estrutura por construção, para que
@@ -40,13 +40,13 @@ export interface EntradaMontagem {
 /**
  * Monta o contexto aplicando a declaração do Recorte como filtro.
  *
- * Duas regras da ADR 0006 ficam mecânicas aqui:
+ * Duas regras ficam mecânicas aqui:
  *
  * - Campo não declarado é descartado mesmo se vier em `dados` — a
  *   declaração limita o envio, não a intenção de quem chama.
  * - Campo sensível sem consentimento é omitido e registrado em
- *   `camposOmitidos`, nunca substituído por aproximação silenciosa
- *   (invariante 5). O chamador degrada declarando ao usuário que
+ *   `camposOmitidos`, nunca substituído por aproximação silenciosa.
+ *   O chamador degrada declarando ao usuário que
  *   decidiu com menos informação.
  */
 export function montarContexto(entrada: EntradaMontagem): ContextoDoAtleta {
@@ -98,7 +98,7 @@ function rotuloProveniencia(
 /**
  * Serializa um valor anotado mantendo proveniência e recência
  * visíveis ao modelo — sem isso ele pondera dado `estimado` antigo
- * como se fosse medição de hoje (ADR 0006, invariante 1).
+ * como se fosse medição de hoje.
  */
 const EXPERIENCIA_TREINO_PARA_AGENT: Record<string, string> = {
   "nunca-treinou": "nunca treinou musculação (sem experiência prévia)",
@@ -183,8 +183,7 @@ export function renderizarContexto(contexto: ContextoDoAtleta): string {
 
 /**
  * Texto de consentimento derivado da declaração do Recorte, não
- * escrito à mão (ADR 0006, invariante 3): dado, finalidade e
- * provedor, como exige a user story 106.
+ * escrito à mão: informa dado, finalidade e provedor.
  */
 export function textoConsentimento(
   recorte: RecorteDeclarado,

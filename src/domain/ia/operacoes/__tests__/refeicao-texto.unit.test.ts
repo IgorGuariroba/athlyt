@@ -93,8 +93,8 @@ describe("estimarRefeicaoPorDescricao", () => {
       metasRestantes: { calorias: 900 },
     });
 
-    // User story 36: as metas calibram porções plausíveis; forçar o
-    // resultado a fechar a meta descreveria o plano, não a refeição.
+    // As metas calibram porções plausíveis; forçar o resultado a
+    // fechar a meta descreveria o plano, não a refeição.
     const { instrucao } = decidir.mock.calls[0][0] as { instrucao: string };
     expect(instrucao).toMatch(/Nunca ajuste a estimativa para fechar a meta/i);
   });
@@ -140,7 +140,7 @@ describe("estimarRefeicaoPorDescricao", () => {
       itens: [{ ...estimativaValida.itens[0], porcaoDescrita: undefined }],
     };
     // Sem ela o atleta revisa gramas que ele nunca disse, e o número
-    // deixa de ser reconhecível como a própria memória (user story 17).
+    // deixa de ser reconhecível como a própria memória.
     expect(refeicaoTextoSchema.safeParse(semPorcao).success).toBe(false);
   });
 

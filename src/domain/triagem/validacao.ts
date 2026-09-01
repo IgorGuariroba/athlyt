@@ -296,8 +296,7 @@ const SCHEMAS: Record<EtapaId, (formData: FormData) => ResultadoParse> = {
 /**
  * Valida o FormData de uma etapa da cascata e devolve o fragmento de
  * `RespostasTriagem` a mesclar no perfil, ou um erro legível para
- * exibir na própria tela (uma pergunta por tela — specs/workflow/
- * telas 005-023).
+ * exibir na própria tela. Cada etapa contém uma pergunta.
  */
 export function parseRespostaEtapa(
   etapa: EtapaId,

@@ -64,8 +64,7 @@ function normalizar(texto: string) {
 }
 
 /**
- * Seleção de local e equipamentos (specs/workflow/telas/018; âncoras
- * `alpha-progression/020` e `fitbod/011..012`).
+ * Seleção de local e equipamentos.
  *
  * A etapa é interativa por necessidade, não por enfeite: escolher o
  * local **pré-marca** um conjunto plausível de equipamentos, que o

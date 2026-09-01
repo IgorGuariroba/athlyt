@@ -1,7 +1,7 @@
 import type { EstadoSessao, ExercicioSessao } from "./repositorio";
 
 /**
- * Outbox de eventos da Sessão de Treino (ADR 0001).
+ * Outbox de eventos da Sessão de Treino.
  *
  * O dispositivo é a autoridade sobre *o que aconteceu*: cada ação da
  * sessão vira um evento com identificador estável gerado localmente,
@@ -10,9 +10,9 @@ import type { EstadoSessao, ExercicioSessao } from "./repositorio";
  * sobre o estado persistido.
  *
  * Este módulo é deliberadamente puro: nada de banco, rede ou
- * IndexedDB. É ele que a spec autoriza a testar abaixo do seam
- * principal ("merge idempotente offline"), porque a matriz de ordens,
- * duplicatas e reenvios é grande demais para caber só em jornada.
+ * IndexedDB. Assim, o merge idempotente offline pode ser testado
+ * abaixo do seam principal, pois a matriz de ordens, duplicatas e
+ * reenvios é grande demais para caber só em jornada.
  */
 
 export type TipoEventoOutbox =
@@ -72,7 +72,7 @@ export interface ResultadoMerge {
   duplicados: string[];
   /**
    * Divergências que não dá para resolver com segurança. Não são
-   * descartadas nem aplicadas: sobem para decisão humana (tela 085).
+   * descartadas nem aplicadas: sobem para decisão humana.
    */
   conflitos: ConflitoSincronizacao[];
 }

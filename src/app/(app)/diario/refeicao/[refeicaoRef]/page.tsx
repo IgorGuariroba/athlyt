@@ -10,12 +10,10 @@ import { hojeDoUsuario, obterEntradaPlanejada } from "@/domain/diario/repositori
 import { confirmarRefeicaoEditadaAction } from "../../actions";
 
 /**
- * Tela 048 — editar a refeição antes de confirmar.
- *
- * A porção por item é o ajuste mais frequente ("comi metade do
- * arroz"), e 0 remove o item. A base de alimentos e os Atalhos de
- * Registro, que permitem *adicionar* itens fora do plano, chegam no
- * ticket dos Atalhos de Registro (#23).
+ * Permite editar a refeição antes de confirmar. A porção por item é o
+ * ajuste mais frequente ("comi metade do arroz"), e 0 remove o item.
+ * Para adicionar itens fora do plano, o atleta usa os Atalhos de
+ * Registro do Diário.
  */
 export default async function EditarRefeicaoPage({
   params,

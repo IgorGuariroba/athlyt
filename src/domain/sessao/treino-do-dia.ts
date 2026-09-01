@@ -1,5 +1,5 @@
 /**
- * Qual treino o Início oferece hoje (tela 029, cartão "Treino do dia").
+ * Qual treino o cartão "Treino do dia" oferece hoje no Início.
  *
  * Sem isto o cartão fica preso no primeiro dia do bloco e um treino
  * concluído desaparece do histórico visível do usuário: ele volta ao

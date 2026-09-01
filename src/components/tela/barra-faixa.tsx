@@ -6,16 +6,16 @@ import { cn } from "@/lib/utils";
  *
  * Uma meta de proporção responde a três perguntas distintas — onde
  * estou, aonde vou neste ciclo, qual é a faixa ideal de longo prazo —
- * e DESIGN.md > Princípios pede estruturar por comparação. Mas régua
+ * e por isso deve ser estruturada por comparação. Mas régua
  * sem legenda não comunica: a versão anterior desenhava três
  * marcadores sem nomear nenhum, e os únicos números rotulados eram os
  * extremos da faixa.
  *
  * Por isso cada valor aparece como par rótulo+número, e cada rótulo
  * carrega o mesmo marcador que o representa no eixo. É o que liga o
- * desenho ao dado sem depender de o usuário adivinhar a convenção
- * (DESIGN.md > Accessibility: "não comunicar seleção, tendência ou
- * erro apenas por cor" — aqui, nem apenas por posição).
+ * desenho ao dado sem depender de o usuário adivinhar a convenção.
+ * Seleção, tendência ou erro não podem depender apenas de cor — aqui,
+ * nem apenas de posição.
  *
  * A faixa ocupa 60% centrais do eixo para que valores fora dela ainda
  * apareçam dentro do desenho: uma medida acima do limite superior

@@ -57,11 +57,10 @@ export type ResultadoMacrosItem =
 export type ResultadoRegistro = { ok: true } | { ok: false; erro: string };
 
 /**
- * Registro Retroativo por texto ou áudio (ADR 0002).
+ * Registro Retroativo por texto ou áudio.
  *
- * O fluxo tem quatro estados e cada um existe por um motivo que a ADR
- * nomeia: **descrever → revisar a transcrição → revisar a estimativa →
- * confirmar**.
+ * O fluxo tem quatro estados: **descrever → revisar a transcrição →
+ * revisar a estimativa → confirmar**.
  *
  * A revisão da transcrição só aparece no caminho do áudio, e é o passo
  * que impede um "duzentos gramas" ouvido como "duzentos quilos" de
@@ -70,8 +69,7 @@ export type ResultadoRegistro = { ok: true } | { ok: false; erro: string };
  *
  * A confirmação nunca é implícita. Quando já existe Consumo Real para
  * aquela refeição, o botão passa por um aviso explícito de
- * substituição — cancelar ali preserva o registro anterior intacto
- * (user stories 21 e 22).
+ * substituição — cancelar ali preserva o registro anterior intacto.
  */
 export function RegistroPorDescricao({
   dia,
@@ -352,7 +350,7 @@ export function RegistroPorDescricao({
         )}
 
         {/* A descrição usada fica visível junto do resultado: é o que
-            torna a estimativa auditável meses depois (user story 17). */}
+            torna a estimativa auditável meses depois. */}
         <details className="rounded-xl border border-border bg-surface-container px-4 py-3">
           <summary className="text-label-md text-on-surface-strong">
             {estimativa.origem === "audio"

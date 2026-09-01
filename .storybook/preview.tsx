@@ -36,8 +36,8 @@ const preview: Preview = {
     // Storybook captura o erro na moldura dele, a story apareceria
     // apenas vazia, sem indicar a causa.
     nextjs: { appDirectory: true },
-    // O produto não tem tema claro (DESIGN.md: "o preto é estrutural,
-    // não apenas modo escuro"). Um fundo branco de fábrica faria a
+    // O produto não tem tema claro: o preto é estrutural, não apenas
+    // modo escuro. Um fundo branco de fábrica faria a
     // galeria reprovar contrastes que o produto nunca exibe.
     backgrounds: {
       options: {

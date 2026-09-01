@@ -7,9 +7,6 @@ import { obterPerfilVigente } from "@/domain/triagem/perfil";
 import { CascataShell } from "@/components/tela/cascata-shell";
 import { EtapaForm } from "../_components/etapa-form";
 
-/**
- * Tela 005 — Idade (specs/workflow/telas/005-dados-idade.md).
- */
 export default async function IdadePage() {
   const session = await auth();
   const userId = session?.user?.id;

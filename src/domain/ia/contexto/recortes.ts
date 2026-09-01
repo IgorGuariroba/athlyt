@@ -1,7 +1,7 @@
 import type { OperacaoIA, RecorteDeclarado } from "./tipos";
 
 /**
- * Recortes de Contexto declarados por operação (ADR 0006).
+ * Recortes de Contexto declarados por operação.
  *
  * A lista de campos aqui é a fonte de verdade de três coisas ao
  * mesmo tempo: o que é enviado ao modelo, o texto de consentimento
@@ -185,7 +185,7 @@ export const RECORTES: Record<OperacaoIA, RecorteDeclarado> = {
    * Recorte mínimo de propósito: vai o alimento e a gramagem, e nada
    * mais. Não há descrição da refeição, metas do dia nem os outros
    * itens do prato — recalcular uma linha não justifica reenviar o
-   * contexto inteiro da refeição (ADR 0006, invariante 2).
+   * contexto inteiro da refeição.
    */
   "alimento-macros": {
     operacao: "alimento-macros",
@@ -204,7 +204,7 @@ export const RECORTES: Record<OperacaoIA, RecorteDeclarado> = {
    * Transcrição do áudio, separada de `refeicao-texto` porque o dado
    * enviado é outro: aí vai um texto que o atleta escreveu, aqui vai
    * a gravacão da voz dele. Consentir uma coisa não é consentir a
-   * outra, e a voz é sensível (ADR 0006, invariante 3).
+   * outra, e a voz é sensível.
    */
   "refeicao-audio": {
     operacao: "refeicao-audio",

@@ -24,9 +24,9 @@ const ROTULO_TIPO: Record<string, string> = {
 };
 
 /**
- * Metade da tela 085 que só o dispositivo conhece. Lista o que ainda
- * não chegou ao servidor com o carimbo do aparelho, para que "0 na
- * fila" seja uma afirmação verificável e não uma promessa.
+ * Lista a parte da sincronização que só o dispositivo conhece: o que
+ * ainda não chegou ao servidor, com o carimbo do aparelho, para que
+ * "0 na fila" seja uma afirmação verificável e não uma promessa.
  */
 export function FilaLocal() {
   const router = useRouter();

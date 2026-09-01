@@ -1,7 +1,6 @@
 /**
- * CTA principal ancorado ao rodapé (DESIGN.md > Layout: "CTA fixo
- * alinhado ao rodapé com 16px laterais e safe area inferior";
- * Components > Primary button: "um por viewport").
+ * CTA principal ancorado ao rodapé, com 16px laterais e safe area
+ * inferior. Deve haver apenas um CTA principal por viewport.
  *
  * O elemento fica fixo em vez de sticky porque a tela inteira rola:
  * sticky dentro de um `main` em coluna só cola no fim do conteúdo. O

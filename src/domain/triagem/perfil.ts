@@ -11,8 +11,7 @@ export interface PerfilVigente {
 
 /**
  * Versão mais recente do perfil de triagem do usuário, ou `null` se
- * nenhuma resposta foi dada ainda (specs/mvp-vertical.md, user story
- * 17 — perfil versionado).
+ * nenhuma resposta foi dada ainda.
  */
 export async function obterPerfilVigente(
   userId: string,
@@ -36,9 +35,8 @@ export async function obterPerfilVigente(
 /**
  * Registra novas respostas como uma versão nova do perfil, fazendo
  * merge sobre o snapshot vigente — nunca sobrescreve a linha
- * anterior, apenas insere a próxima (specs/mvp-vertical.md, user
- * story 17: "corrigir e versionar informações do perfil ... sem
- * apagar o histórico").
+ * anterior, apenas insere a próxima, para permitir correções sem
+ * apagar o histórico.
  */
 export async function registrarRespostas(
   userId: string,
@@ -79,8 +77,7 @@ export async function registrarRespostas(
 }
 
 /**
- * Histórico completo de versões, mais recente primeiro — base da
- * consulta de histórico exigida pela user story 17.
+ * Histórico completo de versões, mais recente primeiro.
  */
 export async function listarHistoricoPerfil(
   userId: string,

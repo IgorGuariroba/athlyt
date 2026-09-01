@@ -4,8 +4,7 @@ const CHAVE_ULTIMA_ETAPA = "triagem:ultimo-indice";
 
 /**
  * Anima a entrada de cada etapa da cascata no sentido do fluxo: da
- * direita ao avançar, da esquerda ao voltar (DESIGN.md > Motion &
- * Interaction).
+ * direita ao avançar e da esquerda ao voltar.
  *
  * A direção não vem do evento de navegação — o avanço é um `redirect`
  * de server action e o retorno é um `<Link>`, dois caminhos que a

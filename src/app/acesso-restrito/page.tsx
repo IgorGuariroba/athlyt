@@ -7,9 +7,8 @@ import { SecoesTela, TelaConteudo } from "@/components/tela/tela-conteudo";
 import { Button } from "@/components/ui/button";
 
 /**
- * Tela 003 — Acesso restrito (specs/workflow/telas/003-acesso-restrito.md).
- * Alcançada pelo redirect do callback signIn quando o e-mail
- * autenticado no Google não está na allowlist. Nenhum usuário, conta
+ * Acesso restrito. Alcançada pelo redirect do callback signIn quando
+ * o e-mail autenticado no Google não está na allowlist. Nenhum usuário, conta
  * ou dado de saúde é persistido para chegar aqui — o Auth.js cancela
  * o fluxo antes de qualquer escrita (ver src/auth/config.ts).
  */

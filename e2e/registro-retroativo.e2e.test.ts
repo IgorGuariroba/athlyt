@@ -5,7 +5,7 @@ import type { PlanoGerado } from "@/domain/plano/tipos";
 import { allowEmail, seedAuthenticatedSession } from "./helpers/seed-session";
 
 /**
- * Registro Retroativo por descrição (ADR 0002): o caminho de quem não
+ * Registro Retroativo por descrição: o caminho de quem não
  * estava com o celular na hora de comer.
  *
  * O que este teste protege é a promessa do fluxo — descrever, ver a

@@ -31,14 +31,12 @@ const ABAS: ReadonlyArray<{ id: Aba; rotulo: string; Icone: typeof Search }> = [
 ];
 
 /**
- * Atalhos de Registro (telas 050–053) com o Prato (058) sempre
- * visível no rodapé, como no MacroFactor: o subtotal acompanha a
- * montagem em vez de aparecer só no fim.
+ * Atalhos de Registro com o Prato sempre visível no rodapé: o
+ * subtotal acompanha a montagem em vez de aparecer só no fim.
  *
  * O Prato é estado local por natureza — existe enquanto a tela está
- * aberta e some ao sair, como a referência declara ("foods you added
- * will be cleared"). O que persiste é o registro, e ele só nasce no
- * submit.
+ * aberta e some ao sair. O que persiste é o registro, e ele só nasce
+ * no submit.
  */
 export function Atalhos({
   dia,
@@ -74,7 +72,7 @@ export function Atalhos({
     const alimento = f.alimentoId ? encontrarAlimento(f.alimentoId) : undefined;
     return alimento ? [alimento] : [];
   });
-  // Alimentos criados na entrada manual (tela 052) vivem na mesma
+  // Alimentos criados na entrada manual vivem na mesma
   // biblioteca dos favoritos e precisam ser reutilizáveis com um
   // toque — senão "salvar" não produziria efeito algum.
   const proprios = favoritos.filter((f) => f.alimentoId === null && f.por100g);
@@ -160,7 +158,7 @@ export function Atalhos({
                         {alimento.por100g.calorias} kcal · {alimento.por100g.proteinaG}P ·{" "}
                         {alimento.por100g.carboidratosG}C · {alimento.por100g.gordurasG}G por 100 g
                       </p>
-                      {/* Proveniência visível por alimento (user story 57). */}
+                      {/* Proveniência visível por alimento. */}
                       <p className="mt-1 text-caption text-muted-foreground">
                         {alimento.proveniencia.fonte} · v{alimento.proveniencia.versao} ·{" "}
                         {ROTULO_CONFIANCA[alimento.confianca]}
@@ -480,8 +478,8 @@ function EntradaManual({
         <Plus className="size-4" aria-hidden="true" /> Adicionar ao Prato
       </Button>
 
-      {/* Tela 052: "salvar como alimento reutilizável". Separado do
-          botão acima de propósito — registrar hoje e guardar para
+      {/* "Salvar como alimento reutilizável" fica separado do botão
+          acima de propósito — registrar hoje e guardar para
           sempre são decisões diferentes. */}
       <form action={salvarProprio}>
         <input type="hidden" name="nome" value={nome.trim()} />

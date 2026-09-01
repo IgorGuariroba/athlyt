@@ -10,7 +10,7 @@ const meta = {
     docs: {
       description: {
         component:
-          "Única marca celebratória do produto. DESIGN.md > Typography autoriza a escala de destaque apenas para resultados excepcionais — concentrar essa autorização aqui evita que cada tela de conclusão invente o próprio selo.",
+          "Única marca celebratória do produto. A escala de destaque é reservada a resultados excepcionais — concentrar essa regra aqui evita que cada tela de conclusão invente o próprio selo.",
       },
     },
   },

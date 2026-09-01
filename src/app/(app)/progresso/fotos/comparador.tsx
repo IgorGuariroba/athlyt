@@ -18,10 +18,10 @@ type Foto = {
 /**
  * Comparação de duas fotos da mesma pose ao longo do tempo.
  *
- * A divergência de protocolo permanece visível: iluminação, horário e
- * postura mudam a aparência sem que o corpo tenha mudado, e fundir
- * isso em "antes e depois" produziria leitura falsa (DESIGN.md >
- * Principles — "dados antes de decoração").
+ * Os dados de protocolo vêm antes da decoração e permanecem visíveis:
+ * iluminação, horário e postura mudam a aparência sem que o corpo
+ * tenha mudado, e fundir isso em "antes e depois" produziria uma
+ * leitura falsa.
  */
 export function ComparadorFotos({ fotos }: { fotos: Foto[] }) {
   const poses = [...new Set(fotos.map((foto) => foto.pose))];

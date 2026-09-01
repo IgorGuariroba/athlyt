@@ -9,7 +9,7 @@ const meta = {
     docs: {
       description: {
         component:
-          "Mídia de Execução (CONTEXT.md): ícone de informação junto ao nome do exercício, separado das ações operacionais. Abre a animação real da ExerciseDB (espelhada no R2 via `/api/midia-execucao/{id}`), com texto e diagrama de músculos-alvo como fallback quando não há mídia mapeada.",
+          "Mídia de Execução: ícone de informação junto ao nome do exercício, separado das ações operacionais. Abre a animação real da ExerciseDB (espelhada no R2 via `/api/midia-execucao/{id}`), com texto e diagrama de músculos-alvo como fallback quando não há mídia mapeada.",
       },
     },
   },

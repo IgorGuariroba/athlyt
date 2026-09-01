@@ -6,11 +6,10 @@ import { cn } from "@/lib/utils";
  * Cartão que agrupa um conjunto de itens homogêneos separados por
  * divisor, e não uma pilha de cartões por item.
  *
- * É a tradução de duas regras de DESIGN.md que se reforçam: Components
- * > Card ("não transforme toda linha em card se divisores bastarem") e
- * Layout > Hierarquia espacial ("divisores substituem espaço quando
- * listas precisam ser densas; nunca use simultaneamente divisor forte,
- * grande gap e superfície contrastante para separar a mesma relação").
+ * Duas regras se reforçam: não transformar toda linha em card se
+ * divisores bastarem; e, em listas densas, usar divisores no lugar de
+ * espaço sem combinar divisor forte, grande gap e superfície
+ * contrastante para separar a mesma relação.
  */
 export function CartaoLista({
   className,
@@ -132,8 +131,7 @@ export function NotaLinha({ children }: { children: React.ReactNode }) {
 
 /**
  * Faixa de prescrição/dados dentro de uma linha: números tabulares em
- * superfície elevada, com unidade junto do valor (DESIGN.md >
- * Components > Text field: "unidades ficam próximas do valor").
+ * superfície elevada, com a unidade próxima do valor.
  */
 export function FaixaDados({ children }: { children: React.ReactNode }) {
   return (

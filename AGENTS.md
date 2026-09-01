@@ -26,7 +26,7 @@ Use descriptive filenames and keep screenshots, videos, traces, and other eviden
 
 Reusable development knowledge belongs in the OKF bundle under `docs/memory/`.
 
-After completing a task or investigation, assess whether a durable insight emerged that can prevent a recurring mistake or reproduce a relevant success. Record it only when it has lasting value and is not already evident in the code, specs, `CONTEXT.md`, or ADRs.
+After completing a task or investigation, assess whether a durable insight emerged that can prevent a recurring mistake or reproduce a relevant success. Record it only when it has lasting value and is not already evident in the code itself.
 
 The agent decides when a memory is warranted. If the user says **“grave isso na memória”**, recording it is mandatory.
 
@@ -36,7 +36,5 @@ Use `docs/templates/memory-okf.md` as the reference. When creating or updating a
 
 Keep knowledge in its canonical location:
 
-* Requirements → `specs/`
-* Domain knowledge → `CONTEXT.md`
-* Architectural decisions → `docs/adr/`
 * Reusable development knowledge → `docs/memory/`
+* Everything else — requirements, domain vocabulary, the reasoning behind a decision — lives in the code it governs, as a comment next to what it explains.

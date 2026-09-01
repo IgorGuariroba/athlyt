@@ -12,10 +12,6 @@ const ORCAMENTOS = [
   { value: "alto", label: "Alto", descricao: "Sem grandes restrições de custo" },
 ] as const;
 
-/**
- * Tela 022 — Orçamento e preparo
- * (specs/workflow/telas/022-alimentacao-logistica.md).
- */
 export default async function AlimentacaoLogisticaPage() {
   const respostas = await carregarRespostasTriagem();
   const { indice, total } = posicaoNaCascata("alimentacao-logistica");
