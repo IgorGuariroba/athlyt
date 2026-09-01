@@ -115,6 +115,13 @@ export const weightMeasurements = pgTable("weight_measurement", {
   createdAt: timestamp("created_at", { mode: "date", withTimezone: true }).notNull().defaultNow(),
 }, (t) => [index("weight_measurement_user_date_idx").on(t.userId, t.observadoEm)]);
 
+export const weightGoals = pgTable("weight_goal", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  pesoGramas: integer("peso_gramas").notNull(),
+  createdAt: timestamp("created_at", { mode: "date", withTimezone: true }).notNull().defaultNow(),
+}, (t) => [index("weight_goal_user_date_idx").on(t.userId, t.createdAt)]);
+
 export const bodyMeasurements = pgTable("body_measurement", {
   id: uuid("id").primaryKey().defaultRandom(),
   assessmentId: uuid("assessment_id").references(() => bodyAssessments.id, { onDelete: "set null" }),

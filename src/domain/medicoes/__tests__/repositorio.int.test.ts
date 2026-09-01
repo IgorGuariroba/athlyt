@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto";
 import { describe, expect, it } from "vitest";
 import { db } from "@/db/client";
 import { users } from "@/db/schema";
-import { atualizarEstadoRevisaoCorporal, listarFotosExpiradas, obterOuCriarAvaliacaoInicial, obterPanoramaCorporal, recalcularMetasProporcao, registrarAvaliacaoVisual, registrarCircunferencia, registrarFotoProgresso, registrarGorduraCorporal, registrarPeso, registrarRevisaoCorporal, revogarAvaliacoesVisuais, salvarCircunferenciaDaAvaliacaoInicial } from "../repositorio";
+import { atualizarEstadoRevisaoCorporal, listarFotosExpiradas, obterOuCriarAvaliacaoInicial, obterPanoramaCorporal, obterPesoEMetaAtuais, recalcularMetasProporcao, registrarAvaliacaoVisual, registrarCircunferencia, registrarFotoProgresso, registrarGorduraCorporal, registrarPeso, registrarPesoEMeta, registrarRevisaoCorporal, revogarAvaliacoesVisuais, salvarCircunferenciaDaAvaliacaoInicial } from "../repositorio";
 import { produzirRevisaoCorporal } from "../revisao-corporal";
 
 async function usuario() { const [u] = await db.insert(users).values({ email: `medicoes-${randomUUID()}@example.com` }).returning(); return u.id; }
@@ -22,6 +22,17 @@ describe("jornada persistida de medições", () => {
     // A medida guarda o protocolo sob o qual foi coletada, para que
     // registros de `fita-v1` não sejam reinterpretados depois.
     expect(panorama.medicoes[0]).toMatchObject({ valorMm: 1162, qualidade: "moderada" });
+  });
+
+  it("insere cada pesagem e preserva o histórico de metas", async () => {
+    const userId = await usuario();
+    const primeiro = await registrarPesoEMeta(userId, { pesoAtualKg: 82.4, pesoMetaKg: 76 });
+    const segundo = await registrarPesoEMeta(userId, { pesoAtualKg: 81.9, pesoMetaKg: 75 });
+
+    expect(segundo.meta.id).not.toBe(primeiro.meta.id);
+    expect(await obterPesoEMetaAtuais(userId)).toEqual({ pesoAtualKg: 81.9, pesoMetaKg: 75 });
+    const panorama = await obterPanoramaCorporal(userId);
+    expect(panorama.pesos.map((peso) => peso.pesoGramas)).toEqual([81900, 82400]);
   });
 
   it("atualiza a mesma região da avaliação inicial sem criar falsa evolução", async () => {
