@@ -47,7 +47,7 @@ export function BottomNav() {
               aria-current={ativo ? "page" : undefined}
               aria-label={ativo ? undefined : aba.label}
               className={cn(
-                "flex min-h-11 min-w-0 items-center justify-center gap-1 rounded-xl px-1 text-caption transition-colors duration-300 motion-reduce:transition-none",
+                "flex min-h-13 min-w-0 items-center justify-center gap-1 rounded-xl px-1 text-caption transition-colors duration-300 motion-reduce:transition-none",
                 ativo
                   ? "bg-primary text-primary-foreground shadow-md"
                   : "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
@@ -56,7 +56,7 @@ export function BottomNav() {
               <aba.Icone
                 aria-hidden="true"
                 className={cn(
-                  "size-5 transition-transform duration-300 motion-reduce:transition-none",
+                  "size-6 transition-transform duration-300 motion-reduce:transition-none",
                   ativo && "scale-105",
                 )}
                 strokeWidth={ativo ? 2.5 : 2}
