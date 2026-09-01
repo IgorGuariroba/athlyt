@@ -9,7 +9,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { LIMITE_DESCRICAO } from "@/domain/alimentos/audio-refeicao";
-import { nomeDoItem, reestimarMacros, type ItemPrato } from "@/domain/alimentos/prato";
+import { type ItemPrato } from "@/domain/alimentos/prato";
+import { useRevisaoEstimativa } from "./use-revisao-estimativa";
 import type { Macros } from "@/domain/diario/tipos";
 import { CapturaAudio } from "./captura-audio";
 import { RevisaoEstimativa } from "./revisao-estimativa";
@@ -117,14 +118,6 @@ export function RegistroPorDescricao({
   const [trechosIncertos, setTrechosIncertos] = useState<string[]>([]);
   const estimativaExistente: EstimativaDescrita | null = itensIniciais.length ? { nome: nomeInicial, itens: itensIniciais, porcoesDescritas: itensIniciais.map(() => ""), limitacoes: [], confianca: "baixa", descricaoUsada: "Consumo registrado anteriormente", origem: modoInicial } : null;
   const [estimativa, setEstimativa] = useState<EstimativaDescrita | null>(estimativaExistente);
-  const [itens, setItens] = useState<ItemPrato[]>(itensIniciais);
-  /**
-   * Nome de cada item no momento em que seus macros foram estimados.
-   * Guardado à parte porque a lista é editada livremente: é a
-   * comparação entre os dois que revela um alimento trocado sem os
-   * números correspondentes.
-   */
-  const [nomesEstimados, setNomesEstimados] = useState<string[]>(itensIniciais.map(nomeDoItem));
   const [nome, setNome] = useState(nomeInicial);
   const [diaEscolhido, setDiaEscolhido] = useState(dia);
   const [hora, setHora] = useState(horaInicial);
@@ -132,6 +125,12 @@ export function RegistroPorDescricao({
   const [erro, setErro] = useState<string | null>(null);
   const [ocupado, setOcupado] = useState(false);
   const [registrando, iniciarRegistro] = useTransition();
+
+  // A revisão é a mesma da tela de foto: corrigir porção, corrigir
+  // alimento, remover, acrescentar, recalcular a linha que mudou de
+  // comida. O erro sobe para o aviso único desta tela.
+  const revisao = useRevisaoEstimativa({ itensIniciais, recalcularItem, aoErrar: setErro });
+  const { itens } = revisao;
 
   async function transcreverAudio() {
     if (!audio) return;
@@ -171,8 +170,7 @@ export function RegistroPorDescricao({
         return;
       }
       setEstimativa(resultado.estimativa);
-      setItens(resultado.estimativa.itens);
-      setNomesEstimados(resultado.estimativa.itens.map(nomeDoItem));
+      revisao.reiniciar(resultado.estimativa.itens);
       setNome(resultado.estimativa.nome);
     } catch {
       setErro("Falha de conexão durante a estimativa. Sua descrição continua aqui.");
@@ -181,50 +179,6 @@ export function RegistroPorDescricao({
     }
   }
 
-  /**
-   * A lista de nomes estimados acompanha a de itens por posição, e a
-   * revisão permite remover e acrescentar. Realinhar aqui, num único
-   * ponto, evita a classe de bug em que o aviso passa a apontar para o
-   * item vizinho depois de uma remoção.
-   *
-   * Item acrescentado à mão entra com o próprio nome: ele nunca está
-   * defasado, porque quem informou os macros foi o atleta.
-   */
-  function aoMudarItens(novos: ItemPrato[]) {
-    if (novos.length !== itens.length) {
-      const anteriores = new Map(itens.map((item, indice) => [item, nomesEstimados[indice]]));
-      setNomesEstimados(novos.map((item) => anteriores.get(item) ?? nomeDoItem(item)));
-    }
-    setItens(novos);
-  }
-
-  async function recalcular(indice: number) {
-    if (!recalcularItem) return;
-    const item = itens[indice];
-    if (!item) return;
-    setErro(null);
-
-    const corpo = new FormData();
-    corpo.set("alimento", nomeDoItem(item));
-    corpo.set("gramas", String(item.quantidade));
-    try {
-      const resultado = await recalcularItem(corpo);
-      if (!resultado.ok) {
-        setErro(resultado.erro);
-        return;
-      }
-      // Os números passam a valer para o nome atual, então o aviso desta
-      // linha some — e só o desta.
-      setItens((atuais) =>
-        atuais.map((alvo, i) => (i === indice ? reestimarMacros(alvo, resultado.macros) : alvo)),
-      );
-      setNomesEstimados((atuais) =>
-        atuais.map((alvo, i) => (i === indice ? nomeDoItem(item) : alvo)),
-      );
-    } catch {
-      setErro("Falha de conexão ao recalcular. Os números continuam como estavam.");
-    }
-  }
 
   function confirmar() {
     setErro(null);
@@ -387,10 +341,10 @@ export function RegistroPorDescricao({
         ) : (
           <RevisaoEstimativa
             itens={itens}
-            aoMudar={aoMudarItens}
+            aoMudar={revisao.aoMudarItens}
             porcoesDescritas={estimativa.porcoesDescritas}
-            nomesEstimados={nomesEstimados}
-            aoRecalcularItem={recalcularItem ? recalcular : undefined}
+            nomesEstimados={revisao.nomesEstimados}
+            aoRecalcularItem={recalcularItem ? revisao.recalcular : undefined}
             limitacoes={estimativa.limitacoes}
             confianca={estimativa.confianca}
             origemEstimativa={estimativa.origem}

@@ -367,7 +367,10 @@ describe("RegistroPorDescricao", () => {
     await waitFor(() => expect(within(total).getByText(/250 kcal/)).toBeTruthy());
     const enviado = fns.recalcularItem.mock.calls[0][0];
     expect(enviado.get("alimento")).toBe("Arroz integral cozido");
-    expect(enviado.get("gramas")).toBe("100");
+    // A unidade viaja junto: pedir macros de "100" sem dizer se são
+    // gramas ou mililitros devolve o número de outra comida.
+    expect(enviado.get("quantidade")).toBe("100");
+    expect(enviado.get("unidade")).toBe("g");
 
     // Resolvido o aviso, ele desaparece — e só o daquela linha existia.
     await waitFor(() => expect(screen.queryByText(/Estes números são de/)).toBeNull());
