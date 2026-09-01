@@ -137,6 +137,24 @@ export const FONTE_ESTIMATIVA: Record<OrigemEstimativa, string> = {
   audio: "Estimativa por áudio descrito",
 };
 
+/**
+ * Origem da estimativa **daquele item**, e não da tela.
+ *
+ * Um prato fotografado pode conter linhas que já não vieram da foto:
+ * basta o atleta corrigir o alimento e recalcular. Perguntar à tela
+ * de onde veio o número faria a linha recalculada dizer "alimento e
+ * porção claros na foto" sobre algo que a foto nunca mostrou.
+ */
+export function origemDaEstimativa(
+  item: Pick<ItemPrato, "fonte">,
+  padrao: OrigemEstimativa,
+): OrigemEstimativa {
+  const encontrada = (Object.keys(FONTE_ESTIMATIVA) as OrigemEstimativa[]).find(
+    (chave) => FONTE_ESTIMATIVA[chave] === item.fonte,
+  );
+  return encontrada ?? padrao;
+}
+
 export interface EntradaEstimada extends Macros {
   descricao: string;
   quantidade: number;
@@ -285,6 +303,14 @@ export function descricaoSemQuantidade(descricao: string): string {
  * são os que o atleta corrigiu, o que faltava eram os números. A
  * origem continua `estimativa-ia` porque continua sendo palpite de
  * modelo — mais recente, não mais confiável.
+ *
+ * A **origem da estimativa** passa a ser `texto`, mesmo num item que
+ * nasceu de foto: estes números vieram do nome que o atleta digitou,
+ * não da imagem. Sem isso a linha recalculada exibia "alimento e
+ * porção claros na foto" sobre uma Coca-Cola Zero que a foto nunca
+ * mostrou — a mesma falha de
+ * `docs/memory/rotulo-de-confianca-esconde-a-origem.md`, reincidindo
+ * pelo recálculo.
  */
 export function reestimarMacros(
   item: ItemPrato,
@@ -292,6 +318,7 @@ export function reestimarMacros(
 ): ItemPrato {
   return {
     ...item,
+    fonte: FONTE_ESTIMATIVA.texto,
     calorias: Math.round(macros.calorias),
     proteinaG: Math.round(macros.proteinaG),
     carboidratosG: Math.round(macros.carboidratosG),

@@ -36,9 +36,12 @@ const ITENS: ItemPrato[] = [
   }),
 ];
 
+// Bebida em mililitros: é a unidade em que quem bebeu reconhece a
+// porção, e a que o modelo declara para líquidos.
 const REFRIGERANTE = itemEstimado({
   descricao: "Refrigerante de cola",
   quantidade: 250,
+  unidade: "ml",
   calorias: 105, proteinaG: 0, carboidratosG: 27, gordurasG: 0, fibrasG: 0,
   confianca: "media",
   modelo: "google/gemini-2.5-flash-lite",

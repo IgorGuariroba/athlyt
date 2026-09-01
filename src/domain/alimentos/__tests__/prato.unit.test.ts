@@ -7,11 +7,14 @@ import {
   itemManual,
   macrosDesatualizados,
   nomeDoItem,
+  origemDaEstimativa,
   reescalarItem,
+  reestimarMacros,
   removerDoPrato,
   renomearItem,
   subtotalDoPrato,
 } from "../prato";
+import { rotuloDeConfianca } from "../proveniencia";
 
 const arroz = itemDeAlimento("arroz-branco-cozido", { quantidade: 150, unidade: "g" });
 const frango = itemDeAlimento("peito-frango-grelhado", { quantidade: 1, unidade: "filé médio" });
@@ -134,6 +137,24 @@ describe("unidade do item estimado", () => {
     expect(lata.unidade).toBe("ml");
     expect(lata.descricao).toBe("Coca-Cola 350 ml");
     expect(lata.calorias).toBe(147);
+  });
+
+  it("a linha recalculada deixa de dizer que veio da foto", () => {
+    // Os números passaram a vir do nome que o atleta digitou, e a foto
+    // nunca mostrou a versão zero. Dizer "claros na foto" ali é a falha
+    // de docs/memory/rotulo-de-confianca-esconde-a-origem.md.
+    const zero = reestimarMacros(renomearItem(refrigerante, "Coca-Cola Zero"), {
+      calorias: 0, proteinaG: 0, carboidratosG: 0, gordurasG: 0, fibrasG: 0,
+      confianca: "alta", modelo: "m",
+    });
+
+    expect(origemDaEstimativa(zero, "foto")).toBe("texto");
+    expect(rotuloDeConfianca(zero.confianca, zero.origemDado, origemDaEstimativa(zero, "foto")))
+      .not.toMatch(/foto/i);
+  });
+
+  it("o item que ninguém recalculou continua sendo da foto", () => {
+    expect(origemDaEstimativa(refrigerante, "foto")).toBe("foto");
   });
 
   it("o nome do item não carrega o sufixo, seja ele g ou ml", () => {

@@ -10,6 +10,7 @@ import {
   itemManual,
   macrosDesatualizados,
   nomeDoItem,
+  origemDaEstimativa,
   reescalarItem,
   removerDoPrato,
   renomearItem,
@@ -142,21 +143,26 @@ export function RevisaoEstimativa({
                   }
                   className="h-11 min-w-0 flex-1"
                 />
+                {/* A unidade é a que o modelo declarou, e o rótulo a
+                    repete: pedir "gramas" de um refrigerante convidaria
+                    o atleta a converter volume em massa de cabeça. */}
                 <label className="flex shrink-0 items-center gap-1">
                   <Input
                     value={String(item.quantidade)}
                     inputMode="numeric"
-                    aria-label={`Gramas de ${nome}`}
+                    aria-label={`Quantidade de ${nome} em ${item.unidade}`}
                     onChange={(evento) => {
-                      const gramas = Number(evento.target.value.replace(",", "."));
-                      if (!Number.isFinite(gramas) || gramas <= 0) return;
+                      const quantidade = Number(evento.target.value.replace(",", "."));
+                      if (!Number.isFinite(quantidade) || quantidade <= 0) return;
                       aoMudar(
-                        itens.map((alvo, i) => (i === indice ? reescalarItem(alvo, gramas) : alvo)),
+                        itens.map((alvo, i) =>
+                          i === indice ? reescalarItem(alvo, quantidade) : alvo,
+                        ),
                       );
                     }}
                     className="h-11 w-16 text-center tabular-nums"
                   />
-                  <span className="text-body-sm text-muted-foreground">g</span>
+                  <span className="text-body-sm text-muted-foreground">{item.unidade}</span>
                 </label>
                 <Button
                   type="button"
@@ -174,7 +180,13 @@ export function RevisaoEstimativa({
               <p className="text-caption tabular-nums text-muted-foreground">
                 {item.calorias} kcal · {item.proteinaG}P · {item.carboidratosG}C ·{" "}
                 {item.gordurasG}G ·{" "}
-                {rotuloDeConfianca(item.confianca, item.origemDado, origemEstimativa)}
+                {/* A origem é a do item, não a da tela: uma linha
+                    recalculada pelo nome deixou de vir da foto. */}
+                {rotuloDeConfianca(
+                  item.confianca,
+                  item.origemDado,
+                  origemDaEstimativa(item, origemEstimativa),
+                )}
               </p>
 
               {/* O aviso nomeia o alimento a que os números se referem:

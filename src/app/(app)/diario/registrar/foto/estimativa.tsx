@@ -1,16 +1,20 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { Check, Sparkles, Trash2, TriangleAlert } from "lucide-react";
+import { Check, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { AvisoAcao, CabecalhoSecao, EstadoVazio } from "@/components/tela";
 import { CapturaFoto } from "@/components/fotos/captura-foto";
 import { reduzirImagemParaEnvio } from "@/components/fotos/reduzir-imagem";
-import { removerDoPrato, reescalarItem, subtotalDoPrato, type ItemPrato } from "@/domain/alimentos/prato";
-import { ROTULO_CONFIANCA_ESTIMATIVA } from "@/domain/alimentos/proveniencia";
-import type { RefeicaoEstimadaNaTela, ResultadoEstimativa } from "./actions";
+import { RevisaoEstimativa } from "@/components/diario/revisao-estimativa";
+import { useRevisaoEstimativa } from "@/components/diario/use-revisao-estimativa";
+import type {
+  RefeicaoEstimadaNaTela,
+  ResultadoEstimativa,
+  ResultadoMacrosItem,
+} from "./actions";
 
 /**
  * Registro por foto (CONTEXT.md > Atalhos de Registro: "foto via IA").
@@ -26,6 +30,14 @@ import type { RefeicaoEstimadaNaTela, ResultadoEstimativa } from "./actions";
  * a incerteza é maior, e a user story 59 proíbe estimativa que se
  * passe por medição. Por isso cada item mostra sua confiança e as
  * limitações da leitura ficam visíveis antes do botão, não depois.
+ *
+ * A revisão é a **mesma** de texto e áudio (`RevisaoEstimativa`).
+ * Antes esta tela tinha uma lista própria onde o alimento era texto
+ * fixo: dava para corrigir 250 g para 300 g, mas não para dizer que
+ * a Coca-Cola da foto era a zero. E é justamente na foto que o modelo
+ * mais erra o alimento — ele vê a garrafa e não lê o rótulo. Duas
+ * revisões diferentes para o mesmo ato deixavam o caminho mais
+ * suscetível ao erro com menos meios de corrigi-lo.
  */
 export function RegistroPorFoto({
   dia,
@@ -35,6 +47,7 @@ export function RegistroPorFoto({
   nomeInicial,
   estimar,
   registrar,
+  recalcularItem,
 }: {
   dia: string;
   fuso: string;
@@ -43,17 +56,19 @@ export function RegistroPorFoto({
   nomeInicial?: string;
   estimar: (fd: FormData) => Promise<ResultadoEstimativa>;
   registrar: (fd: FormData) => Promise<void>;
+  /** Recalcula um item cujo alimento o atleta corrigiu na revisão. */
+  recalcularItem?: (fd: FormData) => Promise<ResultadoMacrosItem>;
 }) {
   const [arquivo, setArquivo] = useState<File | null>(null);
   const [observacao, setObservacao] = useState("");
   const [estimativa, setEstimativa] = useState<RefeicaoEstimadaNaTela | null>(null);
-  const [itens, setItens] = useState<ItemPrato[]>([]);
   const [nome, setNome] = useState("");
   const [erro, setErro] = useState<string | null>(null);
   const [analisando, setAnalisando] = useState(false);
   const [registrando, iniciarRegistro] = useTransition();
 
-  const subtotal = subtotalDoPrato(itens);
+  const revisao = useRevisaoEstimativa({ recalcularItem, aoErrar: setErro });
+  const { itens } = revisao;
 
   async function analisar() {
     if (!arquivo) return;
@@ -72,7 +87,7 @@ export function RegistroPorFoto({
         return;
       }
       setEstimativa(resultado.estimativa);
-      setItens(resultado.estimativa.itens);
+      revisao.reiniciar(resultado.estimativa.itens);
       setNome(resultado.estimativa.nome);
     } catch {
       setErro("Falha de conexão durante o envio da foto. Tente novamente.");
@@ -83,7 +98,7 @@ export function RegistroPorFoto({
 
   function recomecar() {
     setEstimativa(null);
-    setItens([]);
+    revisao.reiniciar([]);
     setNome("");
     setArquivo(null);
     setObservacao("");
@@ -136,27 +151,12 @@ export function RegistroPorFoto({
 
   return (
     <div className="flex flex-col gap-5">
+      {/* A instrução não fala mais em "gramas": a lista traz bebida em
+          mililitros, e o que se corrige também pode ser o alimento. */}
       <CabecalhoSecao
         titulo="Confira antes de registrar"
-        descricao="Ajuste as gramas do que estiver fora — o resto já está pronto."
+        descricao="Corrija o que estiver fora — alimento ou quantidade. O resto já está pronto."
       />
-
-      {estimativa.limitacoes.length > 0 ? (
-        <div className="flex gap-3 rounded-xl border border-border bg-surface-container px-4 py-3">
-          <TriangleAlert className="mt-0.5 size-4 shrink-0 text-warning" aria-hidden="true" />
-          <div className="flex flex-col gap-1">
-            <p className="text-label-md text-on-surface-strong">
-              O que a foto não mostra ·{" "}
-              {ROTULO_CONFIANCA_ESTIMATIVA[estimativa.confianca].toLowerCase()}
-            </p>
-            <ul className="flex flex-col gap-0.5 text-body-sm text-muted-foreground">
-              {estimativa.limitacoes.map((limitacao) => (
-                <li key={limitacao}>{limitacao}</li>
-              ))}
-            </ul>
-          </div>
-        </div>
-      ) : null}
 
       {itens.length === 0 ? (
         <EstadoVazio
@@ -169,59 +169,16 @@ export function RegistroPorFoto({
           }
         />
       ) : (
-        <ul className="flex flex-col gap-2">
-          {itens.map((item, indice) => (
-            <li
-              key={`${item.descricao}-${indice}`}
-              className="flex items-center gap-3 rounded-xl border border-border bg-surface-container p-3"
-            >
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-label-lg text-on-surface-strong">
-                  {item.descricao.replace(/\s\d+\s?g$/, "")}
-                </p>
-                <p className="text-caption tabular-nums text-muted-foreground">
-                  {item.calorias} kcal · {item.proteinaG}P · {item.carboidratosG}C ·{" "}
-                  {item.gordurasG}G · {ROTULO_CONFIANCA_ESTIMATIVA[item.confianca]}
-                </p>
-              </div>
-              <label className="flex shrink-0 items-center gap-1">
-                <span className="sr-only">Gramas de {item.descricao}</span>
-                <Input
-                  value={String(item.quantidade)}
-                  inputMode="numeric"
-                  aria-label={`Gramas de ${item.descricao}`}
-                  onChange={(evento) => {
-                    const gramas = Number(evento.target.value.replace(",", "."));
-                    if (!Number.isFinite(gramas) || gramas <= 0) return;
-                    setItens((atual) =>
-                      atual.map((alvo, i) => (i === indice ? reescalarItem(alvo, gramas) : alvo)),
-                    );
-                  }}
-                  className="h-11 w-16 text-center tabular-nums"
-                />
-                <span className="text-body-sm text-muted-foreground">g</span>
-              </label>
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon-sm"
-                aria-label={`Remover ${item.descricao}`}
-                onClick={() => setItens((atual) => removerDoPrato(atual, indice))}
-              >
-                <Trash2 className="size-4" />
-              </Button>
-            </li>
-          ))}
-        </ul>
+        <RevisaoEstimativa
+          itens={itens}
+          aoMudar={revisao.aoMudarItens}
+          nomesEstimados={revisao.nomesEstimados}
+          aoRecalcularItem={recalcularItem ? revisao.recalcular : undefined}
+          limitacoes={estimativa.limitacoes}
+          confianca={estimativa.confianca}
+          origemEstimativa="foto"
+        />
       )}
-
-      <div className="flex items-baseline justify-between gap-3 rounded-xl bg-surface-container-high px-4 py-3">
-        <span className="text-label-lg text-on-surface-strong">Total</span>
-        <span className="text-body-sm tabular-nums text-muted-foreground">
-          <strong className="text-on-surface-strong">{subtotal.calorias} kcal</strong> ·{" "}
-          {subtotal.proteinaG}P · {subtotal.carboidratosG}C · {subtotal.gordurasG}G
-        </span>
-      </div>
 
       {erro ? <AvisoAcao tipo="erro">{erro}</AvisoAcao> : null}
 

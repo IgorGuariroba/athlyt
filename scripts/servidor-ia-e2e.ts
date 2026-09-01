@@ -44,9 +44,9 @@ const server = createServer((req, res) => {
       responder(res, "athlyt-refeicao-texto-e2e-v1", {
         nome: "Almoço: arroz, bife e suco",
         itens: [
-          { descricao: "Arroz branco cozido", porcaoDescrita: "duas colheres", quantidadeGramas: 100, calorias: 128, proteinaG: 2, carboidratosG: 28, gordurasG: 0, fibrasG: 1, confianca: "media" },
-          { descricao: "Bife de alcatra grelhado", porcaoDescrita: "um bife médio", quantidadeGramas: 120, calorias: 250, proteinaG: 32, carboidratosG: 0, gordurasG: 13, fibrasG: 0, confianca: "media" },
-          { descricao: "Suco de laranja", porcaoDescrita: "um copo", quantidadeGramas: 200, calorias: 90, proteinaG: 1, carboidratosG: 21, gordurasG: 0, fibrasG: 0, confianca: "baixa" },
+          { descricao: "Arroz branco cozido", porcaoDescrita: "duas colheres", quantidade: 100, unidade: "g", calorias: 128, proteinaG: 2, carboidratosG: 28, gordurasG: 0, fibrasG: 1, confianca: "media" },
+          { descricao: "Bife de alcatra grelhado", porcaoDescrita: "um bife médio", quantidade: 120, unidade: "g", calorias: 250, proteinaG: 32, carboidratosG: 0, gordurasG: 13, fibrasG: 0, confianca: "media" },
+          { descricao: "Suco de laranja", porcaoDescrita: "um copo", quantidade: 200, unidade: "ml", calorias: 90, proteinaG: 1, carboidratosG: 21, gordurasG: 0, fibrasG: 0, confianca: "baixa" },
         ],
         limitacoes: ["A quantidade de arroz foi assumida como porção usual"],
         confianca: "media",
@@ -57,16 +57,20 @@ const server = createServer((req, res) => {
     // Estimativa de refeição por foto: reconhecida pela instrução de
     // sistema da operação, e não pela imagem — o corpo carrega a foto
     // em base64 e casar contra ela seria frágil.
-    if (/quantidadeGramas|refeição.*foto|refeicao.*foto|refeicao-foto|image_url|data:image|mediaType|type["']?:["']file/i.test(corpo) || !/cargaKg/.test(corpo)) {
+    if (/quantidade|refeição.*foto|refeicao.*foto|refeicao-foto|image_url|data:image|mediaType|type["']?:["']file/i.test(corpo) || !/cargaKg/.test(corpo)) {
+      // A Coca-Cola entra em ml e sem o "Zero": é o caso real — a foto
+      // mostra a garrafa, o modelo não lê o rótulo, e só quem bebeu
+      // sabe qual era. É o que o E2E exercita na revisão.
       const refeicao = JSON.stringify({
         nome: "Almoço: arroz, feijão e frango",
         itens: [
-          { descricao: "Arroz branco cozido", quantidadeGramas: 150, calorias: 192, proteinaG: 3, carboidratosG: 42, gordurasG: 0, fibrasG: 2, confianca: "media" },
-          { descricao: "Feijão carioca cozido", quantidadeGramas: 80, calorias: 61, proteinaG: 4, carboidratosG: 11, gordurasG: 1, fibrasG: 6, confianca: "media" },
-          { descricao: "Peito de frango grelhado", quantidadeGramas: 120, calorias: 191, proteinaG: 38, carboidratosG: 0, gordurasG: 4, fibrasG: 0, confianca: "alta" },
-          { descricao: "Óleo de preparo", quantidadeGramas: 5, calorias: 44, proteinaG: 0, carboidratosG: 0, gordurasG: 5, fibrasG: 0, confianca: "baixa" },
+          { descricao: "Arroz branco cozido", quantidade: 150, unidade: "g", calorias: 192, proteinaG: 3, carboidratosG: 42, gordurasG: 0, fibrasG: 2, confianca: "media" },
+          { descricao: "Feijão carioca cozido", quantidade: 80, unidade: "g", calorias: 61, proteinaG: 4, carboidratosG: 11, gordurasG: 1, fibrasG: 6, confianca: "media" },
+          { descricao: "Peito de frango grelhado", quantidade: 120, unidade: "g", calorias: 191, proteinaG: 38, carboidratosG: 0, gordurasG: 4, fibrasG: 0, confianca: "alta" },
+          { descricao: "Óleo de preparo", quantidade: 5, unidade: "g", calorias: 44, proteinaG: 0, carboidratosG: 0, gordurasG: 5, fibrasG: 0, confianca: "baixa" },
+          { descricao: "Coca-Cola", quantidade: 250, unidade: "ml", calorias: 105, proteinaG: 0, carboidratosG: 26, gordurasG: 0, fibrasG: 0, confianca: "media" },
         ],
-        limitacoes: ["O óleo do preparo não é visível na foto", "Sem referência de escala ao lado do prato"],
+        limitacoes: ["O óleo do preparo não é visível na foto", "O rótulo da bebida não está legível na foto"],
         confianca: "media",
       });
       res.writeHead(200, { "content-type": "application/json" });

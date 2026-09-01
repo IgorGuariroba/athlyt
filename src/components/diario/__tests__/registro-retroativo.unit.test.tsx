@@ -82,7 +82,7 @@ describe("RevisaoEstimativa", () => {
     montar();
 
     expect(screen.getByText("você descreveu: duas colheres")).toBeTruthy();
-    expect(screen.getByLabelText("Gramas de Arroz branco cozido")).toBeTruthy();
+    expect(screen.getByLabelText("Quantidade de Arroz branco cozido em g")).toBeTruthy();
   });
 
   it("soma o total dos itens visíveis, e não o da estimativa original", () => {
@@ -94,7 +94,7 @@ describe("RevisaoEstimativa", () => {
   it("corrigir a porção reescala o item sem promover a estimativa", async () => {
     const aoMudar = montar();
 
-    fireEvent.change(screen.getByLabelText("Gramas de Arroz branco cozido"), {
+    fireEvent.change(screen.getByLabelText("Quantidade de Arroz branco cozido em g"), {
       target: { value: "50" },
     });
 
