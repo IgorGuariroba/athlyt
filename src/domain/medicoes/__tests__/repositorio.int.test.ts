@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto";
 import { describe, expect, it } from "vitest";
 import { db } from "@/db/client";
 import { users } from "@/db/schema";
-import { atualizarEstadoRevisaoCorporal, listarFotosExpiradas, obterOuCriarAvaliacaoInicial, obterPanoramaCorporal, obterPesoEMetaAtuais, recalcularMetasProporcao, registrarAvaliacaoVisual, registrarCircunferencia, registrarFotoProgresso, registrarGorduraCorporal, registrarPeso, registrarPesoEMeta, registrarRevisaoCorporal, revogarAvaliacoesVisuais, salvarCircunferenciaDaAvaliacaoInicial } from "../repositorio";
+import { atualizarEstadoRevisaoCorporal, garantirPesoInicial, listarFotosExpiradas, obterOuCriarAvaliacaoInicial, obterPanoramaCorporal, obterPesoEMetaAtuais, obterSerieDePeso, recalcularMetasProporcao, registrarAvaliacaoVisual, registrarCircunferencia, registrarFotoProgresso, registrarGorduraCorporal, registrarPeso, registrarPesoEMeta, registrarRevisaoCorporal, revogarAvaliacoesVisuais, salvarCircunferenciaDaAvaliacaoInicial } from "../repositorio";
 import { produzirRevisaoCorporal } from "../revisao-corporal";
 
 async function usuario() { const [u] = await db.insert(users).values({ email: `medicoes-${randomUUID()}@example.com` }).returning(); return u.id; }
@@ -33,6 +33,38 @@ describe("jornada persistida de medições", () => {
     expect(await obterPesoEMetaAtuais(userId)).toEqual({ pesoAtualKg: 81.9, pesoMetaKg: 75 });
     const panorama = await obterPanoramaCorporal(userId);
     expect(panorama.pesos.map((peso) => peso.pesoGramas)).toEqual([81900, 82400]);
+  });
+
+  it("não versiona a meta quando ela não mudou", async () => {
+    const userId = await usuario();
+    const primeiro = await registrarPesoEMeta(userId, { pesoAtualKg: 82.4, pesoMetaKg: 76 });
+    const repetido = await registrarPesoEMeta(userId, { pesoAtualKg: 81.9, pesoMetaKg: 76 });
+
+    // A pesagem é sempre um fato novo; reenviar a mesma meta não é
+    // uma decisão de mudar de alvo.
+    expect(repetido.medicao.id).not.toBe(primeiro.medicao.id);
+    expect(repetido.meta.id).toBe(primeiro.meta.id);
+  });
+
+  it("cria a linha de base do gráfico uma única vez, mesmo reenviando a triagem", async () => {
+    const userId = await usuario();
+    const inicial = await garantirPesoInicial(userId, 90);
+    const reenvio = await garantirPesoInicial(userId, 88);
+
+    expect(reenvio.id).toBe(inicial.id);
+    const serie = await obterSerieDePeso(userId);
+    expect(serie.medicoes.map(({ pesoKg }) => pesoKg)).toEqual([90]);
+  });
+
+  it("entrega a série em ordem cronológica com a meta vigente", async () => {
+    const userId = await usuario();
+    await garantirPesoInicial(userId, 90);
+    await registrarPesoEMeta(userId, { pesoAtualKg: 88, pesoMetaKg: 80 });
+    await registrarPesoEMeta(userId, { pesoAtualKg: 86.5, pesoMetaKg: 78 });
+
+    const serie = await obterSerieDePeso(userId);
+    expect(serie.medicoes.map(({ pesoKg }) => pesoKg)).toEqual([90, 88, 86.5]);
+    expect(serie.pesoMetaKg).toBe(78);
   });
 
   it("atualiza a mesma região da avaliação inicial sem criar falsa evolução", async () => {

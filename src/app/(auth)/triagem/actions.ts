@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
+import { garantirPesoInicial } from "@/domain/medicoes/repositorio";
 import { registrarRespostas } from "@/domain/triagem/perfil";
 import {
   parseRespostaEtapa,
@@ -88,6 +89,12 @@ export async function submeterEtapaTriagem(
   }
 
   await registrarRespostas(userId, resultado.dados);
+
+  // O peso da triagem é a linha de base do gráfico do Progresso, e por
+  // isso precisa existir como medição, não só como resposta do perfil.
+  if (etapaAtual === "peso" && "pesoKg" in resultado.dados) {
+    await garantirPesoInicial(userId, resultado.dados.pesoKg as number);
+  }
 
   // A cascata permite avançar e retornar. Sem invalidação explícita, o
   // App Router pode reutilizar o payload RSC que montou a etapa antes
