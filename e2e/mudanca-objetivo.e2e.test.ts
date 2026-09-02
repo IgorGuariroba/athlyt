@@ -59,7 +59,13 @@ test("muda o objetivo sem substituir o Plano Ativo antes da Revisão Semanal", a
   await page.getByRole("link", { name: "Ver proposta" }).click();
   await expect(page.getByRole("heading", { name: "Proposta estrutural" })).toBeVisible();
   await aguardarHidratacao(page);
+  const criacaoRascunho = page.waitForResponse((resposta) =>
+    resposta.request().method() === "POST" &&
+    resposta.url().endsWith("/progresso/revisao/proposta"),
+  );
   await page.getByRole("button", { name: "Criar rascunho" }).click();
+  await criacaoRascunho;
+  await page.goto("/progresso/revisao/experimento");
   await expect(page.getByText("Comparação do plano")).toBeVisible();
   await expect(page.getByText("Recomposição corporal", { exact: true })).toBeVisible();
   await aguardarHidratacao(page);
