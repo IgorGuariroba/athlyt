@@ -15,7 +15,7 @@ const noDia = (dias: number, pesoKg: number) => ({
 const SERIE = [noDia(0, 90), noDia(30, 87), noDia(60, 85)];
 
 const pontos = (container: HTMLElement) =>
-  container.querySelectorAll("circle").length;
+  container.querySelectorAll("circle[data-slot=\"medicao\"]").length;
 
 describe("GraficoPeso", () => {
   it("não repete a faixa de valores no rodapé — a grade já a declara", () => {
@@ -39,7 +39,57 @@ describe("GraficoPeso", () => {
     const resumo = screen.getByRole("img").getAttribute("aria-label") ?? "";
     expect(resumo).toContain("Peso inicial 90 kg");
     expect(resumo).toContain("atual 85 kg");
-    expect(resumo).toContain("Meta 78 kg em 120 dias");
+    expect(resumo).toContain("Ritmo médio até a meta de 78 kg em 120 dias");
+  });
+
+  it("marca o alvo quando o dia 120 cabe na janela", () => {
+    const { container } = render(
+      <GraficoPeso medicoes={SERIE} pesoMetaKg={78} agora={noDia(60, 0).data} horizonteDias={120} />,
+    );
+
+    expect(container.querySelector('circle[data-slot="alvo"]')).not.toBeNull();
+  });
+
+  it("não marca a ponta interpolada nos recortes curtos", () => {
+    // Aos 30 dias a rampa termina onde o ritmo médio passa naquela
+    // data (~87 kg), que não é a meta.
+    for (const horizonteDias of [30, 90] as const) {
+      const { container } = render(
+        <GraficoPeso medicoes={SERIE} pesoMetaKg={78} agora={noDia(60, 0).data} horizonteDias={horizonteDias} />,
+      );
+      expect(container.querySelector('circle[data-slot="alvo"]')).toBeNull();
+      cleanup();
+    }
+  });
+
+  it("distingue o alvo das medições — anel vazado, não ponto cheio", () => {
+    const { container } = render(
+      <GraficoPeso medicoes={SERIE} pesoMetaKg={78} agora={noDia(60, 0).data} horizonteDias={120} />,
+    );
+
+    const alvo = container.querySelector('circle[data-slot="alvo"]')!;
+    expect(alvo.getAttribute("fill")).toBe("none");
+  });
+
+  it("informa quanto falta para a meta", () => {
+    render(
+      <GraficoPeso medicoes={SERIE} pesoMetaKg={78} agora={noDia(60, 0).data} horizonteDias={120} />,
+    );
+
+    expect(screen.getByText("Faltam 7 kg")).toBeDefined();
+  });
+
+  it("anuncia meta alcançada ao cruzar o alvo", () => {
+    render(
+      <GraficoPeso
+        medicoes={[noDia(0, 90), noDia(30, 77.5)]}
+        pesoMetaKg={78}
+        agora={noDia(30, 0).data}
+        horizonteDias={120}
+      />,
+    );
+
+    expect(screen.getByText("Meta alcançada")).toBeDefined();
   });
 
   it("rotula a grade com valores redondos", () => {
@@ -129,7 +179,7 @@ describe("GraficoPeso", () => {
 
     expect(pontos(container)).toBe(1);
     expect(container.querySelectorAll("polyline")).toHaveLength(1);
-    expect(screen.getByText("Meta em 120 dias")).toBeDefined();
+    expect(screen.getByText("Ritmo médio até a meta")).toBeDefined();
   });
 
   it("sem nenhum peso registrado, convida ao primeiro registro em vez de desenhar", () => {
@@ -144,7 +194,7 @@ describe("GraficoPeso", () => {
   it("omite a legenda da meta enquanto ela não existir", () => {
     render(<GraficoPeso medicoes={SERIE} agora={noDia(60, 0).data} />);
 
-    expect(screen.queryByText("Meta em 120 dias")).toBeNull();
+    expect(screen.queryByText("Ritmo médio até a meta")).toBeNull();
     expect(screen.getByRole("img").getAttribute("aria-label")).toContain(
       "Sem meta registrada",
     );

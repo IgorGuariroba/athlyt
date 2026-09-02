@@ -1,6 +1,8 @@
 import { Card } from "@/components/ui/card";
 import {
   calcularEscalaDePeso,
+  descreverDistanciaAMeta,
+  HORIZONTE_META_DIAS,
   montarPlanoDePeso,
   type HorizonteDias,
   type MedicaoPeso,
@@ -13,11 +15,18 @@ import { cn } from "@/lib/utils";
  * Distinto de `GraficoTendencia`, que desenha séries observadas em
  * escala derivada dos próprios dados. Aqui o eixo do tempo é **o
  * plano**, não os dados: começa no peso inicial e vai até o horizonte
- * escolhido, mesmo que não haja medição alguma no meio. É o que
- * permite ler adiantamento e atraso — a distância vertical entre a
- * polilinha e a rampa da meta.
+ * escolhido, mesmo que não haja medição alguma no meio.
  *
- * A rampa é tracejada porque é promessa, não medição; a polilinha é
+ * A tracejada é o **ritmo médio até a meta**: a interpolação linear
+ * entre peso inicial e meta, ou seja, onde o ritmo médio necessário
+ * estaria em cada data. Não é uma prescrição diária, e o gráfico não
+ * afirma atraso nem adiantamento — nada no sistema classifica progresso
+ * por desvio contra ela (a Revisão Semanal pontua tendência corporal
+ * por cintura, sem usar peso). Peso diário oscila com hidratação,
+ * glicogênio e sódio o bastante para que uma diferença pontual contra
+ * a reta não seja sinal.
+ *
+ * Ela é tracejada porque é referência, não medição; a polilinha é
  * sólida e traz um ponto por medição, para que o desenho não sugira
  * leituras contínuas que ninguém fez.
  *
@@ -30,9 +39,10 @@ import { cn } from "@/lib/utils";
 const LARGURA = 320;
 const ALTURA = 140;
 const MARGEM_Y = 12;
-// Os pontos das pontas têm raio 3: sem folga lateral, o primeiro e o
-// último seriam cortados ao meio pela borda do viewBox.
-const MARGEM_X = 4;
+// O anel do alvo tem raio 4 e traço de 2: sem esta folga, ele seria
+// cortado ao meio pela borda direita do viewBox quando cai no fim do
+// eixo. Vale também para os pontos das medições nas pontas (raio 3).
+const MARGEM_X = 6;
 // Coluna reservada aos rótulos do eixo Y, à esquerda do plot.
 //
 // Fora da área de desenho, e não sobreposta a ela: a rampa da meta
@@ -108,6 +118,29 @@ export function GraficoPeso({
   const atual = plano.medicoes[plano.medicoes.length - 1];
   const linhaMeta = plano.linhaMeta?.map(projetar) ?? null;
 
+  // O alvo só é marcável quando o dia 120 cabe na janela. Nos recortes
+  // de 30 e 90 dias a rampa termina num ponto **interpolado** — onde o
+  // ritmo médio passa naquela data — e marcá-lo anunciaria como
+  // destino um valor que não é a meta. Com prazo vencido a linha segue
+  // horizontal depois do alvo, e o marcador fica no dia 120, não na
+  // ponta da linha.
+  const dataAlvo = new Date(
+    plano.inicio.getTime() + HORIZONTE_META_DIAS * 24 * 60 * 60 * 1000,
+  );
+  const alvo =
+    pesoMetaKg !== undefined && dataAlvo <= plano.fim
+      ? projetar({ data: dataAlvo, pesoKg: pesoMetaKg })
+      : null;
+
+  const distancia =
+    pesoMetaKg === undefined
+      ? null
+      : descreverDistanciaAMeta({
+          pesoInicialKg: plano.medicoes[0].pesoKg,
+          pesoAtualKg: atual.pesoKg,
+          pesoMetaKg,
+        });
+
   const resumo = [
     `Peso em quilogramas de ${formatarData(plano.inicio)} a ${formatarData(plano.fim)}.`,
     // A grade também é informação: sem isto, quem lê por voz perde a
@@ -116,13 +149,13 @@ export function GraficoPeso({
     `Peso inicial ${formatarPeso(plano.medicoes[0].pesoKg)} kg, atual ${formatarPeso(atual.pesoKg)} kg, em ${plano.medicoes.length} ${plano.medicoes.length === 1 ? "registro" : "registros"}.`,
     pesoMetaKg === undefined
       ? "Sem meta registrada."
-      : `Meta ${formatarPeso(pesoMetaKg)} kg em 120 dias.`,
+      : `Ritmo médio até a meta de ${formatarPeso(pesoMetaKg)} kg em 120 dias. ${distancia}.`,
   ].join(" ");
 
   return (
     <Card className={cn("px-5", className)}>
     <figure className="flex flex-col gap-3">
-      <Cabecalho valor={atual.pesoKg} />
+      <Cabecalho valor={atual.pesoKg} distancia={distancia} />
 
       {/* Sem `preserveAspectRatio="none"`: esticar o viewBox achataria
           os pontos das medições em elipses. O gráfico escala
@@ -186,12 +219,29 @@ export function GraficoPeso({
         {pontos.map(({ x, y, data }) => (
           <circle
             key={data.getTime()}
+            data-slot="medicao"
             cx={x}
             cy={y}
             r="3"
             className="fill-on-surface-strong"
           />
         ))}
+
+        {/* Anel vazado, e não um ponto cheio: os pontos cheios são
+            medições reais, e o alvo é uma intenção. Repetir o mesmo
+            marcador diria que alguém já pesou aquilo. */}
+        {alvo ? (
+          <circle
+            data-slot="alvo"
+            cx={alvo.x}
+            cy={alvo.y}
+            r="4"
+            fill="none"
+            strokeWidth="2"
+            className="stroke-muted-foreground"
+            vectorEffect="non-scaling-stroke"
+          />
+        ) : null}
       </svg>
 
       {/* A faixa de valores saiu daqui: as marcas do eixo Y já a
@@ -223,7 +273,13 @@ export function GraficoPeso({
               aria-hidden="true"
               className="h-0.5 w-4 shrink-0 rounded-pill bg-muted-foreground opacity-60"
             />
-            Meta em 120 dias
+            {/* "Ritmo médio", e não "meta": a linha é a interpolação
+                linear entre peso inicial e meta — onde o ritmo médio
+                necessário estaria em cada data. Não é uma prescrição
+                diária, e nada no sistema classifica atraso ou
+                adiantamento a partir dela: a Revisão Semanal pontua
+                tendência corporal por cintura, sem usar peso. */}
+            Ritmo médio até a meta
             <span className="tabular-nums text-on-surface">
               {formatarPeso(pesoMetaKg)} kg
             </span>
@@ -235,15 +291,30 @@ export function GraficoPeso({
   );
 }
 
-function Cabecalho({ valor }: { valor: number }) {
+function Cabecalho({
+  valor,
+  distancia,
+}: {
+  valor: number;
+  distancia: string | null;
+}) {
   return (
     <div className="flex items-baseline justify-between gap-3">
-      {/* Um `figure` admite um único `figcaption`, reservado aqui ao
-          rodapé de eixos. O título é um `span`, como em
-          `GraficoTendencia`. */}
-      <span className="min-w-0 truncate text-label-lg text-on-surface-strong">
-        Peso
-      </span>
+      <div className="flex min-w-0 flex-col">
+        {/* Um `figure` admite um único `figcaption`, reservado aqui ao
+            rodapé de eixos. O título é um `span`, como em
+            `GraficoTendencia`. */}
+        <span className="truncate text-label-lg text-on-surface-strong">
+          Peso
+        </span>
+        {/* A resposta a "como estou indo" fica junto do título, em
+            hierarquia menor: é leitura derivada, não medição. */}
+        {distancia ? (
+          <span className="truncate text-body-sm tabular-nums text-muted-foreground">
+            {distancia}
+          </span>
+        ) : null}
+      </div>
       <span className="shrink-0 text-label-lg tabular-nums text-on-surface-strong">
         {formatarPeso(valor)}{" "}
         <span className="text-body-sm font-normal text-muted-foreground">

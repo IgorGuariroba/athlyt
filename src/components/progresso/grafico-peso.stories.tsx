@@ -29,7 +29,7 @@ const meta = {
     docs: {
       description: {
         component:
-          "Peso medido contra a rampa da meta. O eixo do tempo é o plano — começa no peso inicial e vai até o horizonte escolhido. Componente controlado: o recorte chega por prop; quem o escolhe é `PainelGraficoPeso`.",
+          "Peso medido contra o ritmo médio até a meta — a interpolação linear entre peso inicial e meta, não uma prescrição diária. O eixo do tempo é o plano: começa no peso inicial e vai até o horizonte escolhido. Componente controlado: o recorte chega por prop; quem o escolhe é `PainelGraficoPeso`.",
       },
     },
   },
@@ -61,6 +61,27 @@ export const PrazoVencido: Story = {
   args: {
     medicoes: [...SERIE, noDia(120, 79.2), noDia(150, 78.6)],
     agora: noDia(150, 0).data,
+  },
+};
+
+/**
+ * Manutenção: 300 g de oscilação. O piso de 2 kg no eixo impede que
+ * ruído de hidratação pareça transformação.
+ */
+export const Manutencao: Story = {
+  args: {
+    medicoes: [noDia(0, 85), noDia(10, 85.3), noDia(20, 84.9), noDia(30, 85.1)],
+    pesoMetaKg: 85,
+    agora: noDia(30, 0).data,
+    horizonteDias: 30,
+  },
+};
+
+/** Meta cruzada: a distância dá lugar a "Meta alcançada". */
+export const MetaAlcancada: Story = {
+  args: {
+    medicoes: [...SERIE, noDia(90, 79), noDia(110, 77.6)],
+    agora: noDia(110, 0).data,
   },
 };
 

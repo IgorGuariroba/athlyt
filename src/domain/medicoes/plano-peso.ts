@@ -69,6 +69,21 @@ export type EscalaDePeso = {
 const MARCAS_ALVO = 4;
 
 /**
+ * Amplitude mínima do eixo de peso, em kg.
+ *
+ * Sem piso, uma semana de manutenção com 300 g de oscilação ocuparia a
+ * altura inteira do gráfico e pareceria transformação — e a distorção
+ * apareceria justamente ao trocar 30/90/120, que é quando o atleta
+ * compara. Peso diário varia ±0,5–1 kg só por hidratação, glicogênio e
+ * sódio; cobrir ao menos 2 kg mantém esse ruído em fração da altura
+ * sem achatar progresso real.
+ *
+ * Praticamente inerte quando a rampa da meta já exige mais amplitude,
+ * que é o caso comum fora de manutenção.
+ */
+const AMPLITUDE_MINIMA_KG = 2;
+
+/**
  * Passos aceitos, por ordem de preferência dentro de cada década.
  *
  * São os únicos incrementos que se somam de cabeça: contar de 2,5 em
@@ -104,12 +119,17 @@ export function calcularEscalaDePeso({
   minKg: number;
   maxKg: number;
 }): EscalaDePeso {
-  // Peso e meta iguais dariam amplitude zero e nenhuma escala. Uma
-  // faixa mínima de 1 kg mantém o desenho com altura útil.
-  const amplitude = maxKg - minKg || 1;
-  const passo = escolherPasso(amplitude / MARCAS_ALVO);
-  const pisoKg = Math.floor(minKg / passo) * passo;
-  const tetoKg = Math.ceil((minKg === maxKg ? minKg + 1 : maxKg) / passo) * passo;
+  // Expande em torno do centro da faixa real, e não para um dos lados:
+  // crescer só para cima ou só para baixo colaria a série inteira em
+  // uma extremidade do desenho.
+  const centro = (minKg + maxKg) / 2;
+  const meiaAmplitude = Math.max(maxKg - minKg, AMPLITUDE_MINIMA_KG) / 2;
+  const alvoMin = centro - meiaAmplitude;
+  const alvoMax = centro + meiaAmplitude;
+
+  const passo = escolherPasso((alvoMax - alvoMin) / MARCAS_ALVO);
+  const pisoKg = Math.floor(alvoMin / passo) * passo;
+  const tetoKg = Math.ceil(alvoMax / passo) * passo;
 
   const marcas: number[] = [];
   // Acumular por multiplicação, e não somando `passo` repetidamente,
@@ -120,6 +140,40 @@ export function calcularEscalaDePeso({
   }
 
   return { marcas, pisoKg: marcas[0], tetoKg: marcas[marcas.length - 1] };
+}
+
+/**
+ * Frase de distância até a meta, para leitura imediata do "como estou
+ * indo".
+ *
+ * Avalia **estado atual contra alvo atual**: se o peso voltar para o
+ * lado errado do alvo, a distância reaparece. "Atingiu em algum
+ * momento" seria histórico, e não é o que esta tela responde.
+ *
+ * O cruzamento respeita a **direção original** — de onde o atleta
+ * partiu rumo à meta — e não o módulo da diferença: quem saiu de 105
+ * para 95 kg e chegou a 88 ultrapassou o alvo no sentido pretendido,
+ * enquanto `Math.abs` acusaria 7 kg faltando.
+ *
+ * Devolve `null` quando a meta coincide com o ponto de partida: é
+ * manutenção, não percurso. Anunciar "Meta alcançada" a quem nunca
+ * teve distância a percorrer parabenizaria por nada — e continuaria
+ * dizendo isso mesmo se o peso se afastasse do alvo.
+ */
+export function descreverDistanciaAMeta({
+  pesoInicialKg,
+  pesoAtualKg,
+  pesoMetaKg,
+}: {
+  pesoInicialKg: number;
+  pesoAtualKg: number;
+  pesoMetaKg: number;
+}): string | null {
+  const sentido = Math.sign(pesoMetaKg - pesoInicialKg);
+  if (sentido === 0) return null;
+  const restante = (pesoMetaKg - pesoAtualKg) * sentido;
+  if (restante <= 0) return "Meta alcançada";
+  return `Faltam ${restante.toLocaleString("pt-BR", { maximumFractionDigits: 1 })} kg`;
 }
 
 /**

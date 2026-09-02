@@ -57,6 +57,34 @@ describe("calcularEscalaDePeso", () => {
     }
   });
 
+  it("não dramatiza oscilação pequena: cobre ao menos 2 kg", () => {
+    // 300 g ocupando a altura inteira faria manutenção parecer
+    // transformação. O piso de amplitude é o que segura a percepção
+    // ao trocar 30/90/120.
+    for (const [minKg, maxKg] of [
+      [85, 85.3],
+      [84.9, 85.1],
+      [85, 85],
+    ]) {
+      const escala = calcularEscalaDePeso({ minKg, maxKg });
+      expect(escala.tetoKg - escala.pisoKg).toBeGreaterThanOrEqual(2);
+    }
+  });
+
+  it("expande em torno do centro, sem colar a série numa extremidade", () => {
+    const escala = calcularEscalaDePeso({ minKg: 85, maxKg: 85.3 });
+    const centroDados = (85 + 85.3) / 2;
+    const centroEscala = (escala.pisoKg + escala.tetoKg) / 2;
+
+    expect(Math.abs(centroEscala - centroDados)).toBeLessThanOrEqual(0.5);
+  });
+
+  it("o piso de amplitude não interfere quando a faixa real já é maior", () => {
+    expect(calcularEscalaDePeso({ minKg: 78.1, maxKg: 90.4 }).marcas).toEqual([
+      75, 80, 85, 90, 95,
+    ]);
+  });
+
   it("não colapsa quando peso e meta coincidem", () => {
     const escala = calcularEscalaDePeso({ minKg: 80, maxKg: 80 });
 

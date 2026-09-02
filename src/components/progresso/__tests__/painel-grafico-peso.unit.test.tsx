@@ -16,7 +16,7 @@ const noDia = (dias: number, pesoKg: number) => ({
 const SERIE = [noDia(0, 90), noDia(30, 87), noDia(60, 85)];
 
 const pontos = (container: HTMLElement) =>
-  container.querySelectorAll("circle").length;
+  container.querySelectorAll("circle[data-slot=\"medicao\"]").length;
 
 describe("PainelGraficoPeso", () => {
   it("recorta o gráfico ao trocar o período, sem recarregar a tela", async () => {
