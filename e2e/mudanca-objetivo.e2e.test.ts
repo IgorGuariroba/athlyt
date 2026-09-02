@@ -63,7 +63,15 @@ test("muda o objetivo sem substituir o Plano Ativo antes da Revisão Semanal", a
   await expect(page.getByText("Comparação do plano")).toBeVisible();
   await expect(page.getByText("Recomposição corporal", { exact: true })).toBeVisible();
   await aguardarHidratacao(page);
+  const ativacao = page.waitForResponse((resposta) =>
+    resposta.request().method() === "POST" &&
+    resposta.url().endsWith("/progresso/revisao/experimento"),
+  );
   await page.getByRole("button", { name: "Ativar Experimento de Plano" }).click();
+  await ativacao;
+  // A action redireciona para a própria rota. Recarregar confirma o
+  // estado persistido mesmo se o Router mantiver o payload anterior.
+  await page.reload();
   await expect(page.getByText("Experimento ativo")).toBeVisible({
     timeout: 30_000,
   });
