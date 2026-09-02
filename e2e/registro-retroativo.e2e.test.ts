@@ -153,7 +153,7 @@ test("substituir um consumo já registrado exige aviso, e cancelar preserva o re
 
   // Consumo Real já existente para o Almoço.
   await page.getByRole("button", { name: "Comi como planejado: Almoço" }).click();
-  await expect(macros.getByText("840/2400")).toBeVisible();
+  await expect(macros.getByText("192/2400")).toBeVisible();
 
   await page.goto("/diario/registrar/descricao?refeicao=1-Almo%C3%A7o");
   await page.getByLabel("Descrição da refeição").fill("Duas colheres de arroz e um bife.");
@@ -163,11 +163,11 @@ test("substituir um consumo já registrado exige aviso, e cancelar preserva o re
   // O aviso chega antes da escrita e nomeia o que será perdido.
   await page.getByRole("button", { name: /Registrar no Diário/ }).click();
   const aviso = page.getByRole("alertdialog", { name: "Substituir o registro atual" });
-  await expect(aviso.getByText(/840 kcal/)).toBeVisible();
+  await expect(aviso.getByText(/192 kcal/)).toBeVisible();
 
   await aviso.getByRole("button", { name: "Cancelar" }).click();
   await page.goto("/diario");
-  await expect(macros.getByText("840/2400")).toBeVisible();
+  await expect(macros.getByText("192/2400")).toBeVisible();
 
   // Confirmando, o Consumo Real substitui o anterior em vez de somar.
   await page.goto("/diario/registrar/descricao?refeicao=1-Almo%C3%A7o");
@@ -177,7 +177,7 @@ test("substituir um consumo já registrado exige aviso, e cancelar preserva o re
   await page.getByRole("button", { name: "Substituir" }).click();
 
   await expect(page.getByRole("heading", { name: "Hoje" })).toBeVisible();
-  await expect(macros.getByText("840/2400")).toHaveCount(0);
+  await expect(macros.getByText("192/2400")).toHaveCount(0);
   const linha = page.getByRole("list", { name: "Linha do tempo do dia" });
   await expect(linha.getByText("Almoço", { exact: true })).toBeVisible();
   await expect(linha.getByText("Estimado pela sua descrição")).toBeVisible();

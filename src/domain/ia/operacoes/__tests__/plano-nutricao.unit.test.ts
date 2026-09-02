@@ -21,7 +21,56 @@ const nutricaoValida = {
       percentual: 25,
       calorias: 600,
       proteinaG: 40,
-      itens: ["Aveia 60 g", "Ovos 2 un"],
+      itens: [
+        {
+          nome: "Aveia",
+          porcaoDescrita: "60 g",
+          quantidade: 60,
+          unidade: "g",
+          calorias: 236,
+          proteinaG: 8,
+          carboidratosG: 40,
+          gordurasG: 5,
+          fibrasG: 5,
+          confianca: "alta",
+        },
+        {
+          nome: "Ovos",
+          porcaoDescrita: "2 unidades",
+          quantidade: 100,
+          unidade: "g",
+          calorias: 146,
+          proteinaG: 13,
+          carboidratosG: 1,
+          gordurasG: 10,
+          fibrasG: 0,
+          confianca: "alta",
+        },
+        {
+          nome: "Leite",
+          porcaoDescrita: "250 ml",
+          quantidade: 250,
+          unidade: "ml",
+          calorias: 153,
+          proteinaG: 8,
+          carboidratosG: 12,
+          gordurasG: 8,
+          fibrasG: 0,
+          confianca: "alta",
+        },
+        {
+          nome: "Whey protein",
+          porcaoDescrita: "16 g",
+          quantidade: 16,
+          unidade: "g",
+          calorias: 65,
+          proteinaG: 11,
+          carboidratosG: 1,
+          gordurasG: 1,
+          fibrasG: 0,
+          confianca: "media",
+        },
+      ],
       explicacao: {
         porque: "Trinta minutos de preparo comportam uma refeição simples e barata pela manhã.",
         dadosUsados: [{ campo: "tempoPreparoMin", valor: "30" }],
@@ -114,6 +163,20 @@ describe("gerarPlanoNutricaoComIA", () => {
     const analise = planoNutricaoSchema.safeParse(nutricaoValida);
     expect(analise.error?.issues ?? []).toEqual([]);
     expect(analise.success).toBe(true);
+  });
+
+  it("rejeita item novo sem quantidade nutricional estruturada", () => {
+    const comString = structuredClone(nutricaoValida);
+    comString.nutricao.refeicoes[0].itens = ["Aveia 60 g"] as never;
+
+    expect(planoNutricaoSchema.safeParse(comString).success).toBe(false);
+  });
+
+  it("rejeita composição fora de 10% da energia ou 15% da proteína", () => {
+    const incoerente = structuredClone(nutricaoValida);
+    incoerente.nutricao.refeicoes[0].itens[0].calorias = 100;
+
+    expect(planoNutricaoSchema.safeParse(incoerente).success).toBe(false);
   });
 
   it("rejeita nutrição sem explicação para cada meta", () => {

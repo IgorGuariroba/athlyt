@@ -1,4 +1,9 @@
 import type { MetaNutricional } from "@/domain/plano/tipos";
+import {
+  ehItemPlanejado,
+  interpretarItemPlanejadoLegadoNaBase,
+  itemPlanejadoParaPrato,
+} from "@/domain/plano/item-planejado";
 import type { EntradaPlanejada, ItemAlimentar, Macros } from "./tipos";
 
 export const MACROS_ZERO: Macros = {
@@ -90,11 +95,13 @@ export const CATEGORIAS_DE_REFEICAO: readonly string[] = [
 /**
  * Materializa o Cardápio Diário como Entradas Planejadas.
  *
- * O gerador prescreve macros por refeição e itens como texto; os
- * macros de cada item são a fração igual da refeição. É aproximação
- * declarada, e é o que permite que remover um item na edição reduza
- * o consumo de forma coerente em vez de tudo-ou-nada — a base de
- * alimentos com macros por item chega nos Atalhos de Registro.
+ * Planos novos já trazem Item Planejado completo. Planos antigos são
+ * interpretados aqui, uma única vez, somente quando **todos** os itens
+ * têm alimento e porção inequívocos na base. Se um deles não tiver, a
+ * leitura histórica inteira permanece no formato legado: misturar
+ * linhas verdadeiras com frações artificiais tornaria o subtotal ainda
+ * menos explicável. A edição usa uma Proposta de Edição própria para
+ * resolver o restante por IA antes de permitir confirmação.
  */
 export function entradasPlanejadas(nutricao: MetaNutricional): EntradaPlanejada[] {
   return nutricao.refeicoes.map((refeicao, indice) => {
@@ -106,11 +113,20 @@ export function entradasPlanejadas(nutricao: MetaNutricional): EntradaPlanejada[
       gordurasG: Math.round(nutricao.gordurasG * fracao),
       fibrasG: Math.round(nutricao.fibrasG * fracao),
     };
+    const planejados = refeicao.itens.map((item) =>
+      ehItemPlanejado(item)
+        ? item
+        : typeof item === "string"
+          ? interpretarItemPlanejadoLegadoNaBase(item)
+          : null,
+    );
     const quantidade = Math.max(1, refeicao.itens.length);
-    const itens: ItemAlimentar[] = refeicao.itens.map((descricao) => ({
-      descricao,
-      ...escalarMacros(macros, 1 / quantidade),
-    }));
+    const itens: ItemAlimentar[] = planejados.every((item) => item !== null)
+      ? planejados.map(itemPlanejadoParaPrato)
+      : refeicao.itens.map((item) => ({
+          descricao: typeof item === "string" ? item : `${item.nome} ${item.porcaoDescrita}`,
+          ...escalarMacros(macros, 1 / quantidade),
+        }));
     return {
       refeicaoRef: `${indice}-${refeicao.nome}`,
       nome: refeicao.nome,

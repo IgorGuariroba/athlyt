@@ -13,6 +13,7 @@ import { type ItemPrato } from "@/domain/alimentos/prato";
 import { useRevisaoEstimativa } from "./use-revisao-estimativa";
 import type { Macros } from "@/domain/diario/tipos";
 import { CapturaAudio } from "./captura-audio";
+import type { ResultadoComItens } from "./acrescentar-alimento";
 import { RevisaoEstimativa } from "./revisao-estimativa";
 
 export type OrigemDescricao = "texto" | "audio";
@@ -22,7 +23,8 @@ export interface EstimativaDescrita {
   itens: ItemPrato[];
   porcoesDescritas: string[];
   limitacoes: string[];
-  confianca: "alta" | "media" | "baixa";
+  /** Ausente quando não houve estimativa de conjunto (edição de consumo gravado). */
+  confianca?: "alta" | "media" | "baixa";
   descricaoUsada: string;
   origem: OrigemDescricao;
 }
@@ -76,6 +78,7 @@ export function RegistroPorDescricao({
   horaInicial,
   modoInicial = "texto",
   nomeInicial,
+  estimarFoto,
   refeicaoRef,
   consumoExistente,
   consumoId,
@@ -100,6 +103,11 @@ export function RegistroPorDescricao({
   itensIniciais?: ItemPrato[];
   categorias: readonly string[];
   estimar: (fd: FormData) => Promise<ResultadoEstimativa>;
+  /**
+   * Estima os itens de uma foto tirada durante a revisão. Ausente, o
+   * acréscimo continua servido por escrever e falar.
+   */
+  estimarFoto?: (fd: FormData) => Promise<ResultadoComItens>;
   transcrever: (fd: FormData) => Promise<ResultadoTranscricao>;
   registrar: (fd: FormData) => Promise<ResultadoRegistro>;
   /** Recalcula os macros de um item cujo alimento o atleta corrigiu. */
@@ -114,7 +122,23 @@ export function RegistroPorDescricao({
   const [audio, setAudio] = useState<File | null>(null);
   const [transcrito, setTranscrito] = useState(false);
   const [trechosIncertos, setTrechosIncertos] = useState<string[]>([]);
-  const estimativaExistente: EstimativaDescrita | null = itensIniciais.length ? { nome: nomeInicial, itens: itensIniciais, porcoesDescritas: itensIniciais.map(() => ""), limitacoes: [], confianca: "baixa", descricaoUsada: "Consumo registrado anteriormente", origem: modoInicial } : null;
+  // Ao editar um consumo já gravado não houve estimativa nova, e a
+  // tela não inventa uma: `confianca` fica ausente para que a tarja de
+  // incerteza não seja fabricada. Antes ela vinha fixa em "baixa" e
+  // anunciava "porção não informada, assumida como usual" sobre itens
+  // cuja porção o modelo tinha estimado da foto — um aviso que ninguém
+  // produziu, sobre uma incerteza que não era aquela. A marca **por
+  // item** continua vindo do próprio item, e não daqui.
+  const estimativaExistente: EstimativaDescrita | null = itensIniciais.length
+    ? {
+        nome: nomeInicial,
+        itens: itensIniciais,
+        porcoesDescritas: itensIniciais.map(() => ""),
+        limitacoes: [],
+        descricaoUsada: "Consumo registrado anteriormente",
+        origem: modoInicial,
+      }
+    : null;
   const [estimativa, setEstimativa] = useState<EstimativaDescrita | null>(estimativaExistente);
   const [nome, setNome] = useState(nomeInicial);
   const [diaEscolhido, setDiaEscolhido] = useState(dia);
@@ -346,6 +370,15 @@ export function RegistroPorDescricao({
             limitacoes={estimativa.limitacoes}
             confianca={estimativa.confianca}
             origemEstimativa={estimativa.origem}
+            // O acréscimo reusa a mesma estimativa por descrição da
+            // tela: o que muda é só o destino dos itens — somam ao
+            // prato em vez de substituí-lo — e o nome, descartado.
+            acrescimo={{
+              dia: diaEscolhido,
+              estimarDescricao: estimar,
+              estimarFoto: estimarFoto,
+              transcrever,
+            }}
           />
         )}
 

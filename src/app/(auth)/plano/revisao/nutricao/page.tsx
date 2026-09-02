@@ -17,6 +17,7 @@ import {
   SecoesTela,
   TelaConteudo,
 } from "@/components/tela";
+import { descreverItemDoPlano } from "@/domain/plano/item-planejado";
 import { obterRascunho } from "@/domain/plano/repositorio";
 import { ativarPlanoAction } from "../../actions";
 
@@ -118,14 +119,17 @@ export default async function RevisaoNutricaoPage() {
                 valor={`${refeicao.calorias} kcal`}
               >
                 <ul className="flex flex-wrap gap-2">
-                  {refeicao.itens.map((item) => (
-                    <li
-                      key={item}
-                      className="rounded-md bg-surface-container-high px-2.5 py-1 text-body-sm text-on-surface"
-                    >
-                      {item}
-                    </li>
-                  ))}
+                  {refeicao.itens.map((item) => {
+                    const descricao = descreverItemDoPlano(item);
+                    return (
+                      <li
+                        key={descricao}
+                        className="rounded-md bg-surface-container-high px-2.5 py-1 text-body-sm text-on-surface"
+                      >
+                        {descricao}
+                      </li>
+                    );
+                  })}
                 </ul>
                 <Revelar rotulo="Por que esta refeição?">
                   <PorQueIsso explicacao={refeicao.explicacao} />

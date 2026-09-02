@@ -128,12 +128,13 @@ export function itemManual(entrada: EntradaManual): ItemPrato {
  * alimento e chuta a porção. Guardar a origem é o que permite ao
  * atleta, meses depois, saber qual desconfiança aplicar ao número.
  */
-export type OrigemEstimativa = "foto" | "texto" | "audio";
+export type OrigemEstimativa = "foto" | "texto" | "audio" | "plano";
 
 export const FONTE_ESTIMATIVA: Record<OrigemEstimativa, string> = {
   foto: "Estimativa por foto",
   texto: "Estimativa por descrição",
   audio: "Estimativa por áudio descrito",
+  plano: "Estimativa do plano alimentar",
 };
 
 /**

@@ -1,13 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type ComponentProps } from "react";
 import { Plus, RefreshCw, Trash2, TriangleAlert } from "lucide-react";
+
+import { AcrescentarAlimento } from "./acrescentar-alimento";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
-  adicionarAoPrato,
-  itemManual,
   macrosDesatualizados,
   nomeDoItem,
   origemDaEstimativa,
@@ -51,10 +51,13 @@ import { cn } from "@/lib/utils";
  * — desde que seja uma escolha, e não um número errado que passou
  * despercebido.
  *
- * O item acrescentado à mão entra como entrada do atleta
- * (`origemDado: "usuario"`), não como estimativa da IA: atribuir ao
- * modelo um alimento que ele nunca propôs falsificaria a auditoria na
- * direção mais enganosa possível.
+ * Acrescentar o que faltou usa as **mesmas entradas do registro
+ * inicial** (escrever, falar, fotografar), e não um formulário de
+ * macros: pedir kcal e proteína digitados era o único ponto do app a
+ * exigir do atleta justamente o número que o app calcula. Quem monta
+ * esse acréscimo é `AcrescentarAlimento`, injetado por `acrescimo` —
+ * a revisão não conhece server action nenhuma, e continua servindo
+ * telas que não têm IA por perto.
  *
  * O estado vive no pai: a confirmação pertence à tela, e o que ela
  * confirma precisa ser exatamente o que esta lista mostra.
@@ -68,6 +71,7 @@ export function RevisaoEstimativa({
   limitacoes,
   confianca,
   origemEstimativa,
+  acrescimo,
   className,
 }: {
   itens: readonly ItemPrato[];
@@ -85,8 +89,24 @@ export function RevisaoEstimativa({
    */
   aoRecalcularItem?: (indice: number) => Promise<void>;
   limitacoes: readonly string[];
-  confianca: Confianca;
+  /**
+   * Confiança **do conjunto**. Ausente quando não houve estimativa de
+   * conjunto — ao editar um consumo já gravado, por exemplo. A tarja
+   * some junto: inventá-la fazia a tela anunciar "porção não informada"
+   * sobre uma porção que o modelo estimou da foto. A marca **por item**
+   * não depende disto e permanece sempre.
+   */
+  confianca?: Confianca;
   origemEstimativa: OrigemEstimativa;
+  /**
+   * Como acrescentar o que faltou; ausente, a revisão só corrige o que
+   * já está na lista. `aoAcrescentar` e `aoFechar` ficam de fora porque
+   * são desta revisão: os itens somam ao prato que ela exibe.
+   */
+  acrescimo?: Omit<
+    ComponentProps<typeof AcrescentarAlimento>,
+    "aoAcrescentar" | "aoFechar"
+  >;
   className?: string;
 }) {
   const [adicionando, setAdicionando] = useState(false);
@@ -96,26 +116,29 @@ export function RevisaoEstimativa({
   return (
     <div className={cn("flex flex-col gap-4", className)}>
       {/* A incerteza aparece antes da lista, não em nota de rodapé: é o
-          que impede a estimativa de ser lida como medição. */}
-      <div className="flex gap-3 rounded-xl border border-border bg-surface-container px-4 py-3">
-        <TriangleAlert className="mt-0.5 size-4 shrink-0 text-warning" aria-hidden="true" />
-        <div className="flex flex-col gap-1">
-          <p className="text-label-md text-on-surface-strong">
-            {rotuloDeConfianca(confianca, "estimativa-ia", origemEstimativa)}
-          </p>
-          {limitacoes.length > 0 ? (
-            <ul className="flex flex-col gap-0.5 text-body-sm text-muted-foreground">
-              {limitacoes.map((limitacao) => (
-                <li key={limitacao}>{limitacao}</li>
-              ))}
-            </ul>
-          ) : (
-            <p className="text-body-sm text-muted-foreground">
-              Números aproximados a partir do que você descreveu. Ajuste o que estiver fora.
+          que impede a estimativa de ser lida como medição — mas só
+          quando houve mesmo uma estimativa de conjunto de que falar. */}
+      {confianca ? (
+        <div className="flex gap-3 rounded-xl border border-border bg-surface-container px-4 py-3">
+          <TriangleAlert className="mt-0.5 size-4 shrink-0 text-warning" aria-hidden="true" />
+          <div className="flex flex-col gap-1">
+            <p className="text-label-md text-on-surface-strong">
+              {rotuloDeConfianca(confianca, "estimativa-ia", origemEstimativa)}
             </p>
-          )}
+            {limitacoes.length > 0 ? (
+              <ul className="flex flex-col gap-0.5 text-body-sm text-muted-foreground">
+                {limitacoes.map((limitacao) => (
+                  <li key={limitacao}>{limitacao}</li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-body-sm text-muted-foreground">
+                Números aproximados a partir do que você descreveu. Ajuste o que estiver fora.
+              </p>
+            )}
+          </div>
         </div>
-      </div>
+      ) : null}
 
       <ul className="flex flex-col gap-2">
         {itens.map((item, indice) => {
@@ -227,16 +250,18 @@ export function RevisaoEstimativa({
 
       {/* Acrescentar o que a IA não captou é parte da revisão, não um
           fluxo à parte: sem isso, uma omissão obrigaria a recomeçar a
-          descrição inteira. */}
-      {adicionando ? (
-        <FormularioItemFaltante
-          aoCancelar={() => setAdicionando(false)}
-          aoAdicionar={(item) => {
-            aoMudar(adicionarAoPrato(itens, item));
+          descrição inteira. As entradas são as mesmas do registro
+          inicial, e nenhuma delas pede macro digitado. */}
+      {acrescimo && adicionando ? (
+        <AcrescentarAlimento
+          {...acrescimo}
+          aoFechar={() => setAdicionando(false)}
+          aoAcrescentar={(novos) => {
+            aoMudar([...itens, ...novos]);
             setAdicionando(false);
           }}
         />
-      ) : (
+      ) : acrescimo ? (
         <Button
           type="button"
           variant="ghost"
@@ -246,7 +271,7 @@ export function RevisaoEstimativa({
         >
           <Plus className="size-4" aria-hidden="true" /> Faltou um alimento
         </Button>
-      )}
+      ) : null}
 
       <div className="flex items-baseline justify-between gap-3 rounded-xl bg-surface-container-high px-4 py-3">
         <span className="text-label-lg text-on-surface-strong">Total estimado</span>
@@ -256,106 +281,5 @@ export function RevisaoEstimativa({
         </span>
       </div>
     </div>
-  );
-}
-
-/**
- * Item que o atleta acrescenta à mão. Pede energia e macros porque não
- * há de onde inferi-los: inventar zeros seria pior que pedir — o total
- * ficaria errado sem nada na tela dizendo por quê.
- */
-function FormularioItemFaltante({
-  aoAdicionar,
-  aoCancelar,
-}: {
-  aoAdicionar: (item: ItemPrato) => void;
-  aoCancelar: () => void;
-}) {
-  const [nome, setNome] = useState("");
-  const [gramas, setGramas] = useState("100");
-  const [macros, setMacros] = useState({
-    calorias: "",
-    proteinaG: "",
-    carboidratosG: "",
-    gordurasG: "",
-  });
-
-  const campos = [
-    { chave: "calorias", rotulo: "Energia (kcal)" },
-    { chave: "proteinaG", rotulo: "Proteína (g)" },
-    { chave: "carboidratosG", rotulo: "Carboidratos (g)" },
-    { chave: "gordurasG", rotulo: "Gorduras (g)" },
-  ] as const;
-
-  return (
-    <section
-      aria-label="Acrescentar alimento"
-      className="flex flex-col gap-3 rounded-xl border border-border-strong bg-surface-container p-3"
-    >
-      <div className="flex gap-2">
-        <label className="min-w-0 flex-1 text-caption text-muted-foreground">
-          Alimento
-          <Input
-            value={nome}
-            onChange={(evento) => setNome(evento.target.value)}
-            aria-label="Alimento que faltou"
-            placeholder="Pão de queijo"
-            className="mt-1 h-11"
-          />
-        </label>
-        <label className="shrink-0 text-caption text-muted-foreground">
-          Gramas
-          <Input
-            value={gramas}
-            onChange={(evento) => setGramas(evento.target.value)}
-            inputMode="numeric"
-            aria-label="Gramas do alimento que faltou"
-            className="mt-1 h-11 w-20 text-center tabular-nums"
-          />
-        </label>
-      </div>
-      <div className="grid grid-cols-2 gap-2">
-        {campos.map((campo) => (
-          <label key={campo.chave} className="text-caption text-muted-foreground">
-            {campo.rotulo}
-            <Input
-              value={macros[campo.chave]}
-              onChange={(evento) =>
-                setMacros((atual) => ({ ...atual, [campo.chave]: evento.target.value }))
-              }
-              inputMode="numeric"
-              aria-label={campo.rotulo}
-              className="mt-1 h-11 text-center tabular-nums"
-            />
-          </label>
-        ))}
-      </div>
-      <div className="flex gap-2">
-        <Button type="button" variant="ghost" className="flex-1" onClick={aoCancelar}>
-          Cancelar
-        </Button>
-        <Button
-          type="button"
-          className="flex-1"
-          disabled={nome.trim().length === 0}
-          onClick={() =>
-            aoAdicionar(
-              itemManual({
-                nome: nome.trim(),
-                quantidade: Number(gramas.replace(",", ".")) || 100,
-                unidade: "g",
-                calorias: Number(macros.calorias) || 0,
-                proteinaG: Number(macros.proteinaG) || 0,
-                carboidratosG: Number(macros.carboidratosG) || 0,
-                gordurasG: Number(macros.gordurasG) || 0,
-                fibrasG: 0,
-              }),
-            )
-          }
-        >
-          <Plus className="size-4" aria-hidden="true" /> Acrescentar
-        </Button>
-      </div>
-    </section>
   );
 }

@@ -64,7 +64,9 @@ describe("Registro Retroativo de uma Refeição Planejada", () => {
     await confirmarRefeicao(userId, { refeicaoRef: REF_ALMOCO, dia: DIA, fuso: FUSO });
 
     const antes = await obterConsumoDaRefeicao(userId, { refeicaoRef: REF_ALMOCO, dia: DIA, fuso: FUSO });
-    expect(antes?.macros.calorias).toBe(840);
+    // 150 g de arroz pela base: o consumo não recebe mais a meta de
+    // 840 kcal inteira como se ela fosse composição deste alimento.
+    expect(antes?.macros.calorias).toBe(192);
 
     await registrarConsumoReal(userId, {
       refeicaoRef: REF_ALMOCO,
@@ -95,7 +97,7 @@ describe("Registro Retroativo de uma Refeição Planejada", () => {
 
     // A prescrição original sobrevive ao consumo que a substituiu:
     // o nome identifica o momento alimentar; os itens são os efetivamente registrados.
-    expect(consumo.planejado?.calorias).toBe(840);
+    expect(consumo.planejado?.calorias).toBe(192);
     expect(consumo.nome).toBe("Almoço");
   });
 
@@ -117,7 +119,7 @@ describe("Registro Retroativo de uma Refeição Planejada", () => {
 
     // Cancelar é não chamar a escrita: o estado do banco não muda.
     const depois = await obterConsumoDaRefeicao(userId, { refeicaoRef: REF_ALMOCO, dia: DIA, fuso: FUSO });
-    expect(depois?.macros.calorias).toBe(840);
+    expect(depois?.macros.calorias).toBe(192);
     expect(depois?.origem).toBe("planejado");
   });
 
