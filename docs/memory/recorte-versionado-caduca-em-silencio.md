@@ -2,7 +2,7 @@
 type: Development Learning
 title: "Recorte versionado caduca o consentimento em silêncio e degrada a decisão sem sinal"
 description: "Subir a versão de um Recorte de Contexto invalida o consentimento já dado; se o código não distingue 'defasado' de 'nunca consentiu', a IA passa a decidir sem os dados e ninguém percebe."
-tags: [ia, consentimento, adr-0006, privacidade, degradacao, diagnostico]
+tags: [ia, consentimento, contexto-do-atleta, privacidade, degradacao, diagnostico]
 status: stable
 generated:
   by: agente/claude-code
@@ -43,7 +43,9 @@ Uma lista de ids consentidos colapsa dois estados que exigem respostas opostas:
 - **consentiu numa versão anterior** — pedir reconfirmação do que mudou.
 
 Colapsados, o segundo vira o primeiro e o sistema degrada em silêncio, violando
-o invariante 5 da ADR 0006 justamente no caminho que ele existe para proteger.
+a regra de não-substituição silenciosa documentada no comentário de
+`montarContexto` em `src/domain/ia/contexto/montagem.ts` justamente no caminho
+que ela existe para proteger.
 Pior: `campos_omitidos` fica vazio na Trilha, porque a versão antiga do Recorte
 nem declarava os campos novos — a auditoria não denuncia a perda.
 

@@ -12,8 +12,8 @@ sources:
     resource: https://github.com/IgorGuariroba/athlyt/pull/38
     title: "PR #38 — etapas de peso e objetivo inspiradas no MacroFactor"
   - id: ci-workflow
-    resource: docs/agents/ci.md
-    title: "Fluxo de trabalho com main protegida"
+    resource: .github/workflows/ci.yml
+    title: "Esteira de CI e job estatica com main protegida"
 ---
 
 # Contexto
@@ -24,7 +24,7 @@ Depois do merge do PR #38, o repositório local permaneceu na branch de trabalho
 
 O merge no GitHub não conclui sozinho o ciclo de trabalho local. A conclusão inclui voltar para a branch principal, sincronizá-la por avanço rápido e remover a branch encerrada.
 
-Esse procedimento mantém a `main` local como base confiável e garante que todo trabalho posterior comece em uma branch nova, criada a partir do estado efetivamente mergeado. Como a `main` é protegida, nenhuma mudança nova deve ser desenvolvida diretamente nela.[^ci-workflow]
+Esse procedimento mantém a `main` local como base confiável e garante que todo trabalho posterior comece em uma branch nova, criada a partir do estado efetivamente mergeado. Como a `main` é protegida por um ruleset de `required_status_checks` (ver `.github/workflows/ci.yml`), nenhuma mudança nova deve ser desenvolvida diretamente nela.[^ci-workflow]
 
 # Aplicação futura
 
