@@ -143,6 +143,42 @@ export function calcularEscalaDePeso({
 }
 
 /**
+ * Quantidade de datas rotuladas no eixo do tempo.
+ *
+ * Quatro é o teto de largura: a 10px, "07 de ago." ocupa perto de 55px
+ * dos 320 do desenho, e uma quinta marca encostaria na vizinha no
+ * telefone mais estreito.
+ */
+const MARCAS_DE_TEMPO = 4;
+
+/**
+ * Datas rotuladas do eixo do tempo, das pontas ao meio.
+ *
+ * Divide a janela em partes iguais em vez de buscar datas de calendário
+ * redondas (todo dia 1º, toda segunda-feira). O eixo aqui **é o plano**,
+ * ancorado no dia 0 da primeira medição: um passo de 30 dias a partir
+ * dela é a leitura pretendida — "um terço do caminho" —, enquanto uma
+ * grade de calendário deixaria a primeira e a última marca a distâncias
+ * arbitrárias das bordas, e as pontas do eixo são exatamente o que o
+ * gráfico promete (de onde parti, até quando).
+ *
+ * Inclui as duas extremidades, então `inicio` e `fim` continuam
+ * rotulados como antes — as marcas do meio é que faltavam para que o
+ * espaço entre elas fosse legível como tempo, e não como vazio.
+ */
+export function calcularMarcasDeTempo({
+  inicio,
+  fim,
+}: Pick<PlanoDePeso, "inicio" | "fim">): readonly Date[] {
+  const janela = fim.getTime() - inicio.getTime();
+  return Array.from(
+    { length: MARCAS_DE_TEMPO },
+    (_, i) =>
+      new Date(inicio.getTime() + (janela * i) / (MARCAS_DE_TEMPO - 1)),
+  );
+}
+
+/**
  * Frase de distância até a meta, para leitura imediata do "como estou
  * indo".
  *

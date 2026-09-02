@@ -140,6 +140,39 @@ describe("GraficoPeso", () => {
     expect(Math.max(...marcas)).toBeGreaterThanOrEqual(90);
   });
 
+  it("rotula o eixo do tempo entre as pontas, não só nelas", () => {
+    const { container } = render(
+      <GraficoPeso medicoes={SERIE} pesoMetaKg={78} agora={noDia(60, 0).data} horizonteDias={120} />,
+    );
+
+    const datas = [...container.querySelectorAll("figcaption span")].map(
+      (no) => no.textContent,
+    );
+    // Dia 0, 40, 80 e 120 a partir de 01/01/2026.
+    expect(datas).toEqual([
+      "01 de jan.",
+      "10 de fev.",
+      "22 de mar.",
+      "01 de mai.",
+    ]);
+  });
+
+  it("acompanha o recorte escolhido nas marcas de tempo", () => {
+    const { container } = render(
+      <GraficoPeso medicoes={SERIE} pesoMetaKg={78} agora={noDia(60, 0).data} horizonteDias={30} />,
+    );
+
+    const datas = [...container.querySelectorAll("figcaption span")].map(
+      (no) => no.textContent,
+    );
+    expect(datas).toEqual([
+      "01 de jan.",
+      "11 de jan.",
+      "21 de jan.",
+      "31 de jan.",
+    ]);
+  });
+
   it("marca cada medição com um ponto próprio", () => {
     const { container } = render(
       <GraficoPeso medicoes={SERIE} pesoMetaKg={78} agora={noDia(60, 0).data} horizonteDias={120} />,

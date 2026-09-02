@@ -1,6 +1,7 @@
 import { Card } from "@/components/ui/card";
 import {
   calcularEscalaDePeso,
+  calcularMarcasDeTempo,
   descreverDistanciaAMeta,
   HORIZONTE_META_DIAS,
   montarPlanoDePeso,
@@ -97,17 +98,20 @@ export function GraficoPeso({
   // em vez de extremos crus mais uma folga percentual.
   const escala = calcularEscalaDePeso(plano);
   const janela = plano.fim.getTime() - plano.inicio.getTime() || 1;
+  const marcasDeTempo = calcularMarcasDeTempo(plano);
 
   const alturaDe = (pesoKg: number) =>
     MARGEM_Y +
     (1 - (pesoKg - escala.pisoKg) / (escala.tetoKg - escala.pisoKg)) *
       (ALTURA - MARGEM_Y * 2);
 
+  const larguraDe = (data: Date) =>
+    PLOT_ESQUERDA +
+    ((data.getTime() - plano.inicio.getTime()) / janela) *
+      (PLOT_DIREITA - PLOT_ESQUERDA);
+
   const projetar = ({ data, pesoKg }: MedicaoPeso) => ({
-    x:
-      PLOT_ESQUERDA +
-      ((data.getTime() - plano.inicio.getTime()) / janela) *
-        (PLOT_DIREITA - PLOT_ESQUERDA),
+    x: larguraDe(data),
     y: alturaDe(pesoKg),
   });
 
@@ -245,15 +249,38 @@ export function GraficoPeso({
       </svg>
 
       {/* A faixa de valores saiu daqui: as marcas do eixo Y já a
-          declaram, e repeti-la seria ruído. Sobram as datas das pontas,
-          que o eixo X não rotula. O recuo alinha a primeira data ao
-          início do plot, não à calha dos rótulos. */}
-      <figcaption
-        className="flex items-baseline justify-between gap-3 text-caption tabular-nums text-muted-foreground"
-        style={{ paddingLeft: `${(PLOT_ESQUERDA / LARGURA) * 100}%` }}
-      >
-        <span>{formatarData(plano.inicio)}</span>
-        <span>{formatarData(plano.fim)}</span>
+          declaram, e repeti-la seria ruído. Restam as datas, que o eixo
+          X não desenha.
+
+          Rotular só as pontas fazia o miolo parecer vazio: entre "07 de
+          ago." e "05 de dez." não havia como situar uma data, e num
+          plano de 120 dias quase toda a largura é miolo. As marcas
+          intermediárias dão a escala do tempo, como as do eixo Y dão a
+          do peso.
+
+          Posicionadas por porcentagem sobre a mesma projeção do SVG, e
+          não por `justify-between`: um flex distribuiria os rótulos
+          uniformemente na caixa, deslocando-os do instante que nomeiam.
+          As pontas ancoram por dentro (a primeira pela borda esquerda,
+          a última pela direita) para não vazarem do cartão; as do meio
+          centram no próprio x. */}
+      <figcaption className="relative h-3.5 text-caption tabular-nums text-muted-foreground">
+        {marcasDeTempo.map((data, indice) => {
+          const x = larguraDe(data);
+          const ultima = indice === marcasDeTempo.length - 1;
+          return (
+            <span
+              key={data.getTime()}
+              className={cn(
+                "absolute top-0 whitespace-nowrap",
+                indice === 0 ? null : ultima ? "-translate-x-full" : "-translate-x-1/2",
+              )}
+              style={{ left: `${(x / LARGURA) * 100}%` }}
+            >
+              {formatarData(data)}
+            </span>
+          );
+        })}
       </figcaption>
 
       <ul className="flex flex-wrap gap-x-4 gap-y-1">
