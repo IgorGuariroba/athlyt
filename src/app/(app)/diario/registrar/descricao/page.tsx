@@ -11,6 +11,7 @@ import {
   obterConsumoPorId,
   obterEntradaPlanejada,
 } from "@/domain/diario/repositorio";
+import { estimarRefeicaoAction } from "../foto/actions";
 import {
   estimarPorDescricaoAction,
   recalcularMacrosDoItemAction,
@@ -71,6 +72,7 @@ export default async function RegistrarPorDescricaoPage({
           }
           categorias={CATEGORIAS_DE_REFEICAO}
           estimar={estimarPorDescricaoAction}
+          estimarFoto={estimarRefeicaoAction}
           transcrever={transcreverAudioAction}
           registrar={registrarConsumoRealAction}
           recalcularItem={recalcularMacrosDoItemAction}

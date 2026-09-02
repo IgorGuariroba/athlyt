@@ -4,6 +4,7 @@ import { CabecalhoTela, NotaTela, SecoesTela, TelaConteudo } from "@/components/
 import { FUSO_PADRAO, horaLocal } from "@/domain/diario/dia-alimentar";
 import { hojeDoUsuario, obterEntradaPlanejada } from "@/domain/diario/repositorio";
 import { registrarPratoAction } from "../../actions";
+import { estimarPorDescricaoAction, transcreverAudioAction } from "../descricao/actions";
 import { estimarRefeicaoAction, recalcularMacrosDoItemAction } from "./actions";
 import { RegistroPorFoto } from "./estimativa";
 
@@ -48,6 +49,8 @@ export default async function RegistrarPorFotoPage({
           refeicaoRef={refeicaoRef}
           nomeInicial={planejada?.nome}
           estimar={estimarRefeicaoAction}
+          estimarDescricao={estimarPorDescricaoAction}
+          transcrever={transcreverAudioAction}
           registrar={registrarPratoAction}
           recalcularItem={recalcularMacrosDoItemAction}
         />

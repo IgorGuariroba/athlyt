@@ -11,6 +11,10 @@ import { reduzirImagemParaEnvio } from "@/components/fotos/reduzir-imagem";
 import { RevisaoEstimativa } from "@/components/diario/revisao-estimativa";
 import { useRevisaoEstimativa } from "@/components/diario/use-revisao-estimativa";
 import type {
+  ResultadoComItens,
+  ResultadoTranscricaoAcrescimo,
+} from "@/components/diario/acrescentar-alimento";
+import type {
   RefeicaoEstimadaNaTela,
   ResultadoEstimativa,
   ResultadoMacrosItem,
@@ -46,6 +50,8 @@ export function RegistroPorFoto({
   refeicaoRef,
   nomeInicial,
   estimar,
+  estimarDescricao,
+  transcrever,
   registrar,
   recalcularItem,
 }: {
@@ -55,6 +61,9 @@ export function RegistroPorFoto({
   refeicaoRef?: string | null;
   nomeInicial?: string;
   estimar: (fd: FormData) => Promise<ResultadoEstimativa>;
+  /** Acréscimo por texto durante a revisão; a foto reusa `estimar`. */
+  estimarDescricao?: (fd: FormData) => Promise<ResultadoComItens>;
+  transcrever?: (fd: FormData) => Promise<ResultadoTranscricaoAcrescimo>;
   registrar: (fd: FormData) => Promise<void>;
   /** Recalcula um item cujo alimento o atleta corrigiu na revisão. */
   recalcularItem?: (fd: FormData) => Promise<ResultadoMacrosItem>;
@@ -177,6 +186,18 @@ export function RegistroPorFoto({
           limitacoes={estimativa.limitacoes}
           confianca={estimativa.confianca}
           origemEstimativa="foto"
+          acrescimo={
+            estimarDescricao
+              ? {
+                  dia,
+                  estimarDescricao,
+                  // A mesma leitura de foto do registro inicial: o que
+                  // muda é o destino dos itens, não a pergunta.
+                  estimarFoto: estimar,
+                  transcrever,
+                }
+              : undefined
+          }
         />
       )}
 

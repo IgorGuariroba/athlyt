@@ -37,6 +37,18 @@ const BIFE = itemEstimado({
   confianca: "alta", modelo: "modelo-x", origemEstimativa: "texto",
 });
 
+const PAO_ESTIMADO = itemEstimado({
+  descricao: "Pão de queijo",
+  quantidade: 90,
+  calorias: 270, proteinaG: 8, carboidratosG: 24, gordurasG: 16, fibrasG: 0,
+  confianca: "media", modelo: "modelo-x", origemEstimativa: "texto",
+});
+
+/** Acréscimo por descrição: o caminho que substituiu o formulário de macros. */
+const ACRESCIMO = {
+  estimarDescricao: async () => ({ ok: true as const, estimativa: { itens: [PAO_ESTIMADO] } }),
+};
+
 const ESTIMATIVA: EstimativaDescrita = {
   nome: "Almoço: arroz e bife",
   itens: [ARROZ, BIFE],
@@ -152,18 +164,41 @@ describe("RevisaoEstimativa", () => {
     expect(aoMudar).toHaveBeenCalledWith([ARROZ]);
   });
 
-  it("o alimento acrescentado à mão entra como entrada do atleta, não como estimativa da IA", async () => {
-    const aoMudar = montar();
+  it("acrescentar um alimento nunca pede energia nem macros ao atleta", async () => {
+    // O acréscimo era o único ponto do app que exigia macro digitado à
+    // mão — o número que o app existe para calcular.
+    montar([ARROZ, BIFE], { acrescimo: ACRESCIMO });
 
     await userEvent.click(screen.getByRole("button", { name: /Faltou um alimento/ }));
-    await userEvent.type(screen.getByLabelText("Alimento que faltou"), "Pão de queijo");
-    await userEvent.type(screen.getByLabelText("Energia (kcal)"), "180");
-    await userEvent.click(screen.getByRole("button", { name: /Acrescentar/ }));
 
+    expect(screen.queryByLabelText("Energia (kcal)")).toBeNull();
+    expect(screen.getByLabelText(/O que faltou/)).toBeTruthy();
+  });
+
+  it("o alimento estimado no acréscimo soma ao prato, sem substituí-lo", async () => {
+    const aoMudar = montar([ARROZ, BIFE], { acrescimo: ACRESCIMO });
+
+    await userEvent.click(screen.getByRole("button", { name: /Faltou um alimento/ }));
+    await userEvent.type(screen.getByLabelText(/O que faltou/), "um pão de queijo");
+    await userEvent.click(screen.getByRole("button", { name: /Acrescentar ao prato/ }));
+
+    await waitFor(() => expect(aoMudar).toHaveBeenCalled());
     const itens = aoMudar.mock.calls.at(-1)![0] as ItemPrato[];
     expect(itens).toHaveLength(3);
-    expect(itens[2].origemDado).toBe("usuario");
-    expect(itens[2].calorias).toBe(180);
+    expect(itens.slice(0, 2)).toEqual([ARROZ, BIFE]);
+    expect(itens[2].origemDado).toBe("estimativa-ia");
+  });
+
+  it("sem estimativa de conjunto, não inventa tarja de incerteza", () => {
+    // Ao editar um consumo já gravado não houve estimativa nova: a
+    // tarja ali seria fabricada, e dizia "porção não informada" sobre
+    // uma porção que o modelo estimou da foto.
+    montar([ARROZ], { confianca: undefined, limitacoes: [] });
+
+    expect(screen.queryByText(/Números aproximados a partir do que você descreveu/)).toBeNull();
+    // A marca por item permanece: é ela que impede a estimativa de ser
+    // lida como medição depois de gravada.
+    expect(screen.getAllByText(/Estimativa —/).length).toBeGreaterThan(0);
   });
 
   it("avisa quando o alimento corrigido não corresponde mais aos macros exibidos", () => {

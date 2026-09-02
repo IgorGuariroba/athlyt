@@ -103,6 +103,50 @@ export const SemLimitacoes: Story = {
 };
 
 /**
+ * Edição de um consumo já gravado: não houve estimativa de conjunto,
+ * então não há tarja de incerteza a exibir. Inventá-la anunciava
+ * "porção não informada" sobre porções que o modelo estimou da foto.
+ * A marca por item, essa, permanece — vem do próprio item.
+ */
+export const SemEstimativaDeConjunto: Story = {
+  render: () => <Interativo limitacoes={[]} origemEstimativa="foto" />,
+};
+
+/**
+ * Acrescentar o que faltou pelas mesmas entradas do registro inicial.
+ * Nenhuma delas pede energia ou macros: o formulário que fazia isso
+ * era o único ponto do app a exigir do atleta o número que o app
+ * existe para calcular.
+ */
+export const ComAcrescimoPorEstimativa: Story = {
+  render: (args) => (
+    <Interativo
+      limitacoes={args.limitacoes}
+      confianca={args.confianca}
+      origemEstimativa="texto"
+      acrescimo={{
+        dia: "2026-05-20",
+        estimarDescricao: async () => ({
+          ok: true,
+          estimativa: {
+            itens: [
+              itemEstimado({
+                descricao: "Pão de queijo",
+                quantidade: 90,
+                calorias: 270, proteinaG: 8, carboidratosG: 24, gordurasG: 16, fibrasG: 0,
+                confianca: "media",
+                modelo: "google/gemini-2.5-flash-lite",
+                origemEstimativa: "texto",
+              }),
+            ],
+          },
+        }),
+      }}
+    />
+  ),
+};
+
+/**
  * O atleta corrigiu "Refrigerante de cola" para a versão zero, mas os
  * macros continuam sendo os do refrigerante comum. A linha diz de que
  * alimento os números são e oferece o recálculo daquele item — nunca
