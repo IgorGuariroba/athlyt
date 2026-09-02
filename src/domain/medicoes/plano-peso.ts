@@ -57,6 +57,82 @@ export type PlanoDePeso = {
 const emDias = (inicio: Date, dias: number) =>
   new Date(inicio.getTime() + dias * DIA_EM_MS);
 
+/** Marcas do eixo de peso e os extremos que elas definem. */
+export type EscalaDePeso = {
+  /** Valores rotulados, do menor ao maior, igualmente espaçados. */
+  marcas: readonly number[];
+  pisoKg: number;
+  tetoKg: number;
+};
+
+/** Alvo de marcas; o passo escolhido pode entregar uma a menos ou mais. */
+const MARCAS_ALVO = 4;
+
+/**
+ * Passos aceitos, por ordem de preferência dentro de cada década.
+ *
+ * São os únicos incrementos que se somam de cabeça: contar de 2,5 em
+ * 2,5 ainda é barato; de 3 em 3 já exige aritmética consciente.
+ */
+const PASSOS_LEGIVEIS = [1, 2, 2.5, 5, 10];
+
+/**
+ * Escolhe marcas redondas que enquadram a faixa observada.
+ *
+ * A alternativa — derivar a grade dos próprios extremos mais uma folga
+ * percentual — produz rótulos como "84,2 kg": números que ninguém
+ * reconhece e que **se movem a cada troca de recorte**, porque mudam
+ * junto com o mínimo e o máximo da série visível. A grade existe para
+ * estimar um ponto sem medi-lo, e só se estima rápido contra valores
+ * redondos que permanecem no lugar.
+ *
+ * Arredonda **para fora**: a escala cresce até a próxima marca em vez
+ * de cortar dado. Efeito colateral desejado — a meta deixa de encostar
+ * na borda inferior e passa a flutuar dentro de uma faixa rotulada, o
+ * que informa mais do que uma linha colada no limite do desenho.
+ *
+ * Não inclui o zero: peso corporal oscila numa faixa estreita e longe
+ * da origem; ancorar em zero achataria 6 kg de variação em uma fração
+ * ilegível da altura. O eixo truncado exagera a variação, e é
+ * justamente por isso que as marcas são rotuladas: quem lê vê que a
+ * base é 78, não 0.
+ */
+export function calcularEscalaDePeso({
+  minKg,
+  maxKg,
+}: {
+  minKg: number;
+  maxKg: number;
+}): EscalaDePeso {
+  // Peso e meta iguais dariam amplitude zero e nenhuma escala. Uma
+  // faixa mínima de 1 kg mantém o desenho com altura útil.
+  const amplitude = maxKg - minKg || 1;
+  const passo = escolherPasso(amplitude / MARCAS_ALVO);
+  const pisoKg = Math.floor(minKg / passo) * passo;
+  const tetoKg = Math.ceil((minKg === maxKg ? minKg + 1 : maxKg) / passo) * passo;
+
+  const marcas: number[] = [];
+  // Acumular por multiplicação, e não somando `passo` repetidamente,
+  // evita que o erro de ponto flutuante se acumule e produza 84.00001.
+  const total = Math.round((tetoKg - pisoKg) / passo);
+  for (let i = 0; i <= total; i += 1) {
+    marcas.push(Number((pisoKg + i * passo).toFixed(10)));
+  }
+
+  return { marcas, pisoKg: marcas[0], tetoKg: marcas[marcas.length - 1] };
+}
+
+/**
+ * Menor passo legível maior ou igual ao passo ideal.
+ *
+ * A busca sempre encontra: `ideal` cai em [década, 10 × década) por
+ * construção, e o último candidato é exatamente 10 × década.
+ */
+function escolherPasso(ideal: number): number {
+  const decada = 10 ** Math.floor(Math.log10(ideal));
+  return PASSOS_LEGIVEIS.find((passo) => passo * decada >= ideal)! * decada;
+}
+
 /**
  * Monta o plano exibível.
  *

@@ -18,6 +18,14 @@ const pontos = (container: HTMLElement) =>
   container.querySelectorAll("circle").length;
 
 describe("GraficoPeso", () => {
+  it("não repete a faixa de valores no rodapé — a grade já a declara", () => {
+    render(
+      <GraficoPeso medicoes={SERIE} pesoMetaKg={78} agora={noDia(60, 0).data} horizonteDias={120} />,
+    );
+
+    expect(screen.queryByText(/–\s*90 kg/)).toBeNull();
+  });
+
   it("relata a leitura por texto, sem depender do desenho", () => {
     render(
       <GraficoPeso
@@ -32,6 +40,54 @@ describe("GraficoPeso", () => {
     expect(resumo).toContain("Peso inicial 90 kg");
     expect(resumo).toContain("atual 85 kg");
     expect(resumo).toContain("Meta 78 kg em 120 dias");
+  });
+
+  it("rotula a grade com valores redondos", () => {
+    const { container } = render(
+      <GraficoPeso medicoes={SERIE} pesoMetaKg={78} agora={noDia(60, 0).data} horizonteDias={120} />,
+    );
+
+    const marcas = [...container.querySelectorAll("svg text")].map(
+      (no) => no.textContent,
+    );
+    expect(marcas).toEqual(["75", "80", "85", "90"]);
+  });
+
+  it("desenha uma linha de grade por marca rotulada", () => {
+    const { container } = render(
+      <GraficoPeso medicoes={SERIE} pesoMetaKg={78} agora={noDia(60, 0).data} horizonteDias={120} />,
+    );
+
+    expect(container.querySelectorAll("svg line")).toHaveLength(
+      container.querySelectorAll("svg text").length,
+    );
+  });
+
+  it("declara a escala vertical também para quem lê por voz", () => {
+    render(
+      <GraficoPeso medicoes={SERIE} pesoMetaKg={78} agora={noDia(60, 0).data} horizonteDias={120} />,
+    );
+
+    expect(screen.getByRole("img").getAttribute("aria-label")).toContain(
+      "Eixo vertical de 75 a 90 kg",
+    );
+  });
+
+  it("enquadra meta e medições dentro da escala, sem cortar dado", () => {
+    const { container } = render(
+      <GraficoPeso
+        medicoes={[noDia(0, 90), noDia(30, 88)]}
+        pesoMetaKg={70}
+        agora={noDia(30, 0).data}
+        horizonteDias={120}
+      />,
+    );
+
+    const marcas = [...container.querySelectorAll("svg text")].map((no) =>
+      Number(no.textContent),
+    );
+    expect(Math.min(...marcas)).toBeLessThanOrEqual(70);
+    expect(Math.max(...marcas)).toBeGreaterThanOrEqual(90);
   });
 
   it("marca cada medição com um ponto próprio", () => {

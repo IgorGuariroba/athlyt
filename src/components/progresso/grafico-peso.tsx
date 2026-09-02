@@ -1,5 +1,6 @@
 import { Card } from "@/components/ui/card";
 import {
+  calcularEscalaDePeso,
   montarPlanoDePeso,
   type HorizonteDias,
   type MedicaoPeso,
@@ -32,6 +33,15 @@ const MARGEM_Y = 12;
 // Os pontos das pontas têm raio 3: sem folga lateral, o primeiro e o
 // último seriam cortados ao meio pela borda do viewBox.
 const MARGEM_X = 4;
+// Coluna reservada aos rótulos do eixo Y, à esquerda do plot.
+//
+// Fora da área de desenho, e não sobreposta a ela: a rampa da meta
+// atravessa o gráfico partindo do topo-esquerdo, exatamente onde um
+// rótulo sobreposto cairia. No tema escuro, texto sobre linha
+// tracejada fica ilegível sem halo.
+const CALHA_Y = 34;
+const PLOT_ESQUERDA = CALHA_Y + MARGEM_X;
+const PLOT_DIREITA = LARGURA - MARGEM_X;
 
 const formatarData = (data: Date) =>
   data.toLocaleDateString("pt-BR", { day: "2-digit", month: "short" });
@@ -73,23 +83,22 @@ export function GraficoPeso({
     );
   }
 
-  // Uma folga fixa evita que a linha encoste na borda quando a
-  // amplitude é grande, e impede a divisão por zero quando peso e meta
-  // coincidem — caso em que o gráfico vira uma faixa de 2 kg.
-  const amplitude = plano.maxKg - plano.minKg;
-  const folga = amplitude === 0 ? 1 : amplitude * 0.1;
-  const pisoKg = plano.minKg - folga;
-  const tetoKg = plano.maxKg + folga;
+  // A escala vem do domínio: marcas redondas que enquadram os dados,
+  // em vez de extremos crus mais uma folga percentual.
+  const escala = calcularEscalaDePeso(plano);
   const janela = plano.fim.getTime() - plano.inicio.getTime() || 1;
+
+  const alturaDe = (pesoKg: number) =>
+    MARGEM_Y +
+    (1 - (pesoKg - escala.pisoKg) / (escala.tetoKg - escala.pisoKg)) *
+      (ALTURA - MARGEM_Y * 2);
 
   const projetar = ({ data, pesoKg }: MedicaoPeso) => ({
     x:
-      MARGEM_X +
+      PLOT_ESQUERDA +
       ((data.getTime() - plano.inicio.getTime()) / janela) *
-        (LARGURA - MARGEM_X * 2),
-    y:
-      MARGEM_Y +
-      (1 - (pesoKg - pisoKg) / (tetoKg - pisoKg)) * (ALTURA - MARGEM_Y * 2),
+        (PLOT_DIREITA - PLOT_ESQUERDA),
+    y: alturaDe(pesoKg),
   });
 
   const pontos = plano.medicoes.map((medicao) => ({
@@ -101,6 +110,9 @@ export function GraficoPeso({
 
   const resumo = [
     `Peso em quilogramas de ${formatarData(plano.inicio)} a ${formatarData(plano.fim)}.`,
+    // A grade também é informação: sem isto, quem lê por voz perde a
+    // escala contra a qual as linhas devem ser interpretadas.
+    `Eixo vertical de ${formatarPeso(escala.pisoKg)} a ${formatarPeso(escala.tetoKg)} kg.`,
     `Peso inicial ${formatarPeso(plano.medicoes[0].pesoKg)} kg, atual ${formatarPeso(atual.pesoKg)} kg, em ${plano.medicoes.length} ${plano.medicoes.length === 1 ? "registro" : "registros"}.`,
     pesoMetaKg === undefined
       ? "Sem meta registrada."
@@ -121,18 +133,31 @@ export function GraficoPeso({
         aria-label={resumo}
         className="h-36 w-full"
       >
-        {[MARGEM_Y, ALTURA / 2, ALTURA - MARGEM_Y].map((y) => (
-          <line
-            key={y}
-            x1="0"
-            x2={LARGURA}
-            y1={y}
-            y2={y}
-            className="stroke-border"
-            strokeWidth="1"
-            vectorEffect="non-scaling-stroke"
-          />
-        ))}
+        {escala.marcas.map((marca) => {
+          const y = alturaDe(marca);
+          return (
+            <g key={marca}>
+              <line
+                x1={CALHA_Y}
+                x2={LARGURA}
+                y1={y}
+                y2={y}
+                className="stroke-border"
+                strokeWidth="1"
+                vectorEffect="non-scaling-stroke"
+              />
+              <text
+                x={CALHA_Y - 6}
+                y={y}
+                textAnchor="end"
+                dominantBaseline="middle"
+                className="fill-muted-foreground text-[10px] tabular-nums"
+              >
+                {formatarPeso(marca)}
+              </text>
+            </g>
+          );
+        })}
 
         {linhaMeta ? (
           <polyline
@@ -169,11 +194,15 @@ export function GraficoPeso({
         ))}
       </svg>
 
-      <figcaption className="flex items-baseline justify-between gap-3 text-caption tabular-nums text-muted-foreground">
+      {/* A faixa de valores saiu daqui: as marcas do eixo Y já a
+          declaram, e repeti-la seria ruído. Sobram as datas das pontas,
+          que o eixo X não rotula. O recuo alinha a primeira data ao
+          início do plot, não à calha dos rótulos. */}
+      <figcaption
+        className="flex items-baseline justify-between gap-3 text-caption tabular-nums text-muted-foreground"
+        style={{ paddingLeft: `${(PLOT_ESQUERDA / LARGURA) * 100}%` }}
+      >
         <span>{formatarData(plano.inicio)}</span>
-        <span>
-          {formatarPeso(plano.minKg)}–{formatarPeso(plano.maxKg)} kg
-        </span>
         <span>{formatarData(plano.fim)}</span>
       </figcaption>
 
