@@ -16,10 +16,45 @@ env:
   NODE_VERSION: "24.18.0"
 
 jobs:
+  # O ruleset "main protegida" exige os 5 checks deste workflow. Filtrar
+  # por `paths:` no gatilho deixaria os checks eternamente "pending" e
+  # travaria o merge; job pulado por `if:` reporta "success". Por isso o
+  # escopo é decidido aqui dentro, e não no `on:`.
+  escopo:
+    name: Escopo da mudança
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+    outputs:
+      codigo: ${{ steps.avaliar.outputs.codigo }}
+    steps:
+      - id: avaliar
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if [ "${{ github.event_name }}" != "pull_request" ]; then
+            echo "codigo=true" >> "$GITHUB_OUTPUT"; exit 0
+          fi
+          arquivos=$(gh api --paginate \
+            repos/${{ github.repository }}/pulls/${{ github.event.number }}/files \
+            --jq '.[].filename')
+          # Allowlist curta e explícita do que não pode quebrar o produto.
+          # Qualquer outro caminho — inclusive `.github/**`, para que uma
+          # mudança de workflow se autovalide — roda a esteira inteira.
+          restantes=$(echo "$arquivos" | grep -Ev '^(\.claude/|docs/|\.vscode/)|\.md$' || true)
+          if [ -n "$restantes" ]; then
+            echo "codigo=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "codigo=false" >> "$GITHUB_OUTPUT"
+          fi
+
   # Portão barato: erros de estilo/tipo param a esteira em ~1 min.
   estatica:
     name: Lint e tipos
     runs-on: ubuntu-latest
+    needs: [escopo]
+    if: needs.escopo.outputs.codigo == 'true'
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -42,6 +77,8 @@ jobs:
   unidade:
     name: Testes de unidade
     runs-on: ubuntu-latest
+    needs: [escopo]
+    if: needs.escopo.outputs.codigo == 'true'
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -55,6 +92,8 @@ jobs:
   integracao:
     name: Testes de integração
     runs-on: ubuntu-latest
+    needs: [escopo]
+    if: needs.escopo.outputs.codigo == 'true'
     services:
       postgres:
         image: postgres:16
@@ -84,6 +123,8 @@ jobs:
   build:
     name: Build de produção
     runs-on: ubuntu-latest
+    needs: [escopo]
+    if: needs.escopo.outputs.codigo == 'true'
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -122,6 +163,7 @@ jobs:
     # também `estatica`/`unidade`/`integracao`, o que empurrava o E2E
     # para o minuto 6 de uma esteira de 8. Rodando em paralelo, uma
     # falha barata continua reprovando o PR — apenas não serializa.
+    # Um PR sem código pula `build`, e o skip propaga para cá.
     needs: [build]
     services:
       postgres:
