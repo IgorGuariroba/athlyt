@@ -2,7 +2,7 @@
 type: Development Learning
 title: "Instrução que manda buscar na ferramenta não impede o modelo de copiar o prompt"
 description: "Sem invariante de schema, o agent chama a Ferramenta de Leitura, ignora o resultado e devolve o texto que já estava na instrução — pagando round-trips por nada."
-tags: [ia, ferramentas, tool-calling, prompt, latencia, adr-0006]
+tags: [ia, ferramentas, tool-calling, prompt, latencia, schemas]
 status: stable
 generated:
   by: agente/claude-sonnet-4.6
@@ -32,7 +32,7 @@ catálogo estático, confirmado por MD5. A instrução pedia busca externa; o
 caminho barato era copiar o que já estava no prompt, e foi o que aconteceu.
 
 Instrução em linguagem natural não é invariante. O que torna uma exigência
-mecânica no Athlyt é o schema (ADR 0006) — como `explicacaoAncoradaEm`, que
+mecânica no Athlyt é o schema — como `explicacaoAncoradaEm`, que
 rejeita a saída se a decisão não citar um dado de origem. Não havia nada
 equivalente obrigando `comoExecutar` a diferir do catálogo, então a
 exigência era decorativa e o custo, real: tokens nas duas pontas e até 5

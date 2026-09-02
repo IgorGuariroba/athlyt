@@ -31,7 +31,7 @@ A asserção do smoke precisa ser dupla — **nenhum erro de página e altura ma
 
 Ao adicionar Storybook (ou qualquer galeria de componentes) a um projeto, trate `build` e `render` como dois portões distintos. Rode `npm run storybook:verificar` (`scripts/verificar-stories.ts`): ele lê `index.json`, abre cada story em `iframe.html?id=...` num Chromium de 390×844 e reprova por erro de página ou altura < 4px.
 
-No CI, a verificação vive no job `estatica` de propósito. O ruleset da `main` exige exatamente 6 status checks pelo nome (`docs/agents/ci.md`): um job novo entraria como não-exigido e o portão existiria sem proteger nada. Para servir o estático no runner, use `python3 -m http.server` — já existe na imagem e não baixa pacote fora do lockfile.
+No CI, a verificação vive em `.github/workflows/galeria.yml`, não no job `estatica`: o passo levava 4 min 16 s e atrasava o único portão que exercita o produto de verdade, então migrou para um workflow próprio com `schedule` + `workflow_dispatch` + `pull_request` filtrado por `paths` (ver `check-exigido-com-paths-trava-o-merge.md`, que também registra a exigência de tirar o check da lista de `required_status_checks` do ruleset ao torná-lo condicional). Para servir o estático no runner, use `python3 -m http.server` — já existe na imagem e não baixa pacote fora do lockfile.
 
 Um corolário que vale além do Storybook: quando uma ferramenta desenha o próprio erro na tela, o código de saída dela deixa de ser evidência. Verifique o artefato, não o processo.
 

@@ -2,7 +2,7 @@
 type: Development Learning
 title: "Ferramentas de Leitura do AI SDK usam inputSchema e não aplicam default fora do SDK"
 description: "O executor de decisões (decidir.ts) já aceitava ferramentas, mas é preciso usar inputSchema (não parameters) e não confiar no default do zod ao chamar execute diretamente."
-tags: [ia, ai-sdk, ferramentas, tool-calling, adr-0006, schemas]
+tags: [ia, ai-sdk, ferramentas, tool-calling, schemas]
 status: stable
 generated:
   by: "agente/pi v1 (sessão de implementação da ferramenta ExerciseDB)"
