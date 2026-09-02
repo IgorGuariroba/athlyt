@@ -5,6 +5,7 @@ import { PainelPeso } from "@/components/progresso/painel-peso";
 import { CabecalhoTela, TelaConteudo } from "@/components/tela";
 import { obterPesoEMetaAtuais } from "@/domain/medicoes/repositorio";
 import { salvarPesoEMeta } from "./actions";
+
 export default async function ProgressoPage() {
   const session = await auth();
   if (!session?.user?.id) redirect("/");
@@ -13,7 +14,9 @@ export default async function ProgressoPage() {
   return (
     <TelaConteudo>
       <CabecalhoTela titulo="Progresso" className="pb-4" />
-      <PainelPeso {...pesos} aoSalvar={salvarPesoEMeta} />
+      <div className="px-6">
+        <PainelPeso {...pesos} aoSalvar={salvarPesoEMeta} />
+      </div>
     </TelaConteudo>
   );
 }
