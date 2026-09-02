@@ -102,20 +102,50 @@ export async function registrarPeso(userId: string, pesoKg: number) {
   return linha;
 }
 
+/**
+ * Garante que o peso informado na triagem exista como medição.
+ *
+ * O peso da cascata vive no JSON do perfil, que é um snapshot de
+ * respostas — não uma série temporal. Sem esta gravação o gráfico do
+ * Progresso não teria dia 0: a linha de meta parte do **peso inicial**,
+ * e ele precisa ser uma medição de verdade para aparecer também como
+ * primeiro ponto da polilinha, vindo da mesma fonte que os demais.
+ *
+ * É idempotente por desenho: a etapa pode ser reenviada (correção,
+ * navegação de volta pelo resumo) e isso não é uma nova pesagem. Só
+ * cria a linha de base quando o atleta ainda não tem nenhuma.
+ */
+export async function garantirPesoInicial(userId: string, pesoKg: number) {
+  const [existente] = await db.select().from(weightMeasurements).where(eq(weightMeasurements.userId, userId)).limit(1);
+  if (existente) return existente;
+  return registrarPeso(userId, pesoKg);
+}
+
+/**
+ * Registra a medição de hoje e, **só quando muda**, uma nova versão da
+ * meta.
+ *
+ * A medição é sempre um fato novo: pesar 82,4 kg duas vezes são dois
+ * fatos. A meta não — reenviar o formulário sem tocar no campo não é
+ * uma decisão de mudar de alvo. Gravar assim mesmo encheria
+ * `weightGoals` de duplicatas e faria "a meta vigente" parecer recém
+ * decidida a cada salvamento, apagando quando o atleta de fato mudou
+ * de ideia.
+ */
 export async function registrarPesoEMeta(userId: string, entrada: { pesoAtualKg: number; pesoMetaKg: number }) {
   if (![entrada.pesoAtualKg, entrada.pesoMetaKg].every((peso) => Number.isFinite(peso) && peso >= 30 && peso <= 300)) {
     throw new Error("Informe os pesos entre 30 e 300 kg.");
   }
 
+  const metaGramas = Math.round(entrada.pesoMetaKg * 1000);
   return db.transaction(async (tx) => {
     const [medicao] = await tx.insert(weightMeasurements).values({
       userId,
       pesoGramas: Math.round(entrada.pesoAtualKg * 1000),
     }).returning();
-    const [meta] = await tx.insert(weightGoals).values({
-      userId,
-      pesoGramas: Math.round(entrada.pesoMetaKg * 1000),
-    }).returning();
+    const [vigente] = await tx.select().from(weightGoals).where(eq(weightGoals.userId, userId)).orderBy(desc(weightGoals.createdAt)).limit(1);
+    if (vigente?.pesoGramas === metaGramas) return { medicao, meta: vigente };
+    const [meta] = await tx.insert(weightGoals).values({ userId, pesoGramas: metaGramas }).returning();
     return { medicao, meta };
   });
 }
@@ -128,6 +158,26 @@ export async function obterPesoEMetaAtuais(userId: string) {
   return {
     pesoAtualKg: pesoAtual ? pesoAtual.pesoGramas / 1000 : undefined,
     pesoMetaKg: pesoMeta ? pesoMeta.pesoGramas / 1000 : undefined,
+  };
+}
+
+/**
+ * Série completa de peso mais a meta vigente — a matéria-prima do
+ * gráfico do Progresso.
+ *
+ * Devolve o histórico inteiro, sem recorte por período: o horizonte
+ * exibido é um zoom no cliente (`montarPlanoDePeso`), e filtrar aqui
+ * exigiria uma ida ao servidor a cada toque no seletor. O volume é de
+ * uma medição por dia no pior caso.
+ */
+export async function obterSerieDePeso(userId: string) {
+  const [medicoes, [meta]] = await Promise.all([
+    db.select().from(weightMeasurements).where(eq(weightMeasurements.userId, userId)).orderBy(weightMeasurements.observadoEm),
+    db.select().from(weightGoals).where(eq(weightGoals.userId, userId)).orderBy(desc(weightGoals.createdAt)).limit(1),
+  ]);
+  return {
+    medicoes: medicoes.map((linha) => ({ data: linha.observadoEm, pesoKg: linha.pesoGramas / 1000 })),
+    pesoMetaKg: meta ? meta.pesoGramas / 1000 : undefined,
   };
 }
 
