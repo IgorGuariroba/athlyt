@@ -1,5 +1,4 @@
 import { cleanup, render, screen } from "@testing-library/react";
-import { userEvent } from "@testing-library/user-event";
 import { afterEach, describe, expect, it } from "vitest";
 
 import { GraficoPeso } from "../grafico-peso";
@@ -25,7 +24,7 @@ describe("GraficoPeso", () => {
         medicoes={SERIE}
         pesoMetaKg={78}
         agora={noDia(60, 0).data}
-        horizonteInicial={120}
+        horizonteDias={120}
       />,
     );
 
@@ -37,34 +36,29 @@ describe("GraficoPeso", () => {
 
   it("marca cada medição com um ponto próprio", () => {
     const { container } = render(
-      <GraficoPeso medicoes={SERIE} pesoMetaKg={78} agora={noDia(60, 0).data} horizonteInicial={120} />,
+      <GraficoPeso medicoes={SERIE} pesoMetaKg={78} agora={noDia(60, 0).data} horizonteDias={120} />,
     );
 
     expect(pontos(container)).toBe(3);
   });
 
-  it("troca o horizonte sem recarregar e recorta as medições exibidas", async () => {
+  it("desenha o recorte que recebe, sem guardar período próprio", () => {
     const { container } = render(
-      <GraficoPeso medicoes={SERIE} pesoMetaKg={78} agora={noDia(60, 0).data} horizonteInicial={120} />,
+      <GraficoPeso medicoes={SERIE} pesoMetaKg={78} agora={noDia(60, 0).data} horizonteDias={30} />,
     );
-    expect(pontos(container)).toBe(3);
-
-    await userEvent.click(screen.getByRole("radio", { name: "30 dias" }));
 
     expect(pontos(container)).toBe(2);
-    expect(
-      screen.getByRole("img").getAttribute("aria-label"),
-    ).toContain("atual 87 kg");
+    expect(screen.getByRole("img").getAttribute("aria-label")).toContain(
+      "atual 87 kg",
+    );
   });
 
-  it("oferece os três recortes como grupo de escolha única", () => {
-    render(<GraficoPeso medicoes={SERIE} pesoMetaKg={78} agora={noDia(60, 0).data} />);
+  it("não embute o controle de período — ele é irmão na tela", () => {
+    render(
+      <GraficoPeso medicoes={SERIE} pesoMetaKg={78} agora={noDia(60, 0).data} />,
+    );
 
-    const grupo = screen.getByRole("radiogroup", { name: "Período do gráfico" });
-    expect(grupo).toBeDefined();
-    for (const dias of [30, 90, 120]) {
-      expect(screen.getByRole("radio", { name: `${dias} dias` })).toBeDefined();
-    }
+    expect(screen.queryByRole("radiogroup")).toBeNull();
   });
 
   it("desenha a meta mesmo sem medição depois da inicial", () => {
@@ -73,7 +67,7 @@ describe("GraficoPeso", () => {
         medicoes={[noDia(0, 90)]}
         pesoMetaKg={78}
         agora={noDia(0, 0).data}
-        horizonteInicial={30}
+        horizonteDias={30}
       />,
     );
 
@@ -86,8 +80,6 @@ describe("GraficoPeso", () => {
     render(<GraficoPeso medicoes={[]} pesoMetaKg={78} agora={INICIO} />);
 
     expect(screen.queryByRole("img")).toBeNull();
-    // Um seletor de período sem nada para recortar seria um controle morto.
-    expect(screen.queryByRole("radiogroup")).toBeNull();
     expect(
       screen.getByText("Registre seu peso para acompanhar a evolução até a meta."),
     ).toBeDefined();

@@ -1,11 +1,5 @@
-"use client";
-
-import { useState } from "react";
-
-import { SeletorSegmentado } from "@/components/tela";
 import { Card } from "@/components/ui/card";
 import {
-  HORIZONTES_DISPONIVEIS,
   montarPlanoDePeso,
   type HorizonteDias,
   type MedicaoPeso,
@@ -25,6 +19,12 @@ import { cn } from "@/lib/utils";
  * A rampa é tracejada porque é promessa, não medição; a polilinha é
  * sólida e traz um ponto por medição, para que o desenho não sugira
  * leituras contínuas que ninguém fez.
+ *
+ * **Controlado, e sem `"use client"`.** O recorte chega pronto por
+ * prop: o seletor é irmão na tela, não filho daqui
+ * (`PainelGraficoPeso` é quem guarda o estado). Assim o desenho — que
+ * é pura projeção de dados em SVG — não precisa de interatividade nem
+ * vai para o bundle do cliente por conta própria.
  */
 const LARGURA = 320;
 const ALTURA = 140;
@@ -42,19 +42,17 @@ const formatarPeso = (kg: number) =>
 export function GraficoPeso({
   medicoes,
   pesoMetaKg,
-  horizonteInicial = 30,
+  horizonteDias = 30,
   agora = new Date(),
   className,
 }: {
   medicoes: readonly MedicaoPeso[];
   pesoMetaKg?: number;
-  horizonteInicial?: HorizonteDias;
+  horizonteDias?: HorizonteDias;
   /** Injetável para manter story e teste independentes do relógio. */
   agora?: Date;
   className?: string;
 }) {
-  const [horizonteDias, setHorizonteDias] =
-    useState<HorizonteDias>(horizonteInicial);
   const plano = montarPlanoDePeso({
     medicoes,
     pesoMetaKg,
@@ -62,25 +60,9 @@ export function GraficoPeso({
     agora,
   });
 
-  const seletor = (
-    <SeletorSegmentado
-      rotulo="Período do gráfico"
-      name="horizonte-peso"
-      valor={String(horizonteDias)}
-      opcoes={HORIZONTES_DISPONIVEIS.map((dias) => ({
-        valor: String(dias),
-        rotulo: String(dias),
-        descricao: `${dias} dias`,
-      }))}
-      aoMudar={(valor) => setHorizonteDias(Number(valor) as HorizonteDias)}
-    />
-  );
-
   if (!plano) {
-    // Sem gráfico não há `figure` (não há figura) nem seletor: um
-    // controle de período que não altera nada visto é um botão morto,
-    // e oferecê-lo aqui esconderia a única ação útil, que é registrar
-    // o primeiro peso.
+    // Sem série não há `figure`, porque não há figura. O convite a
+    // registrar o primeiro peso é a única leitura possível aqui.
     return (
       <Card className={cn("gap-3 px-5", className)}>
         <span className="text-label-lg text-on-surface-strong">Peso</span>
@@ -128,7 +110,7 @@ export function GraficoPeso({
   return (
     <Card className={cn("px-5", className)}>
     <figure className="flex flex-col gap-3">
-      <Cabecalho seletor={seletor} valor={atual.pesoKg} />
+      <Cabecalho valor={atual.pesoKg} />
 
       {/* Sem `preserveAspectRatio="none"`: esticar o viewBox achataria
           os pontos das medições em elipses. O gráfico escala
@@ -224,30 +206,21 @@ export function GraficoPeso({
   );
 }
 
-function Cabecalho({
-  seletor,
-  valor,
-}: {
-  seletor: React.ReactNode;
-  valor: number;
-}) {
+function Cabecalho({ valor }: { valor: number }) {
   return (
-    <div className="flex flex-col gap-3">
-      <div className="flex items-baseline justify-between gap-3">
-        {/* Um `figure` admite um único `figcaption`, reservado aqui ao
-            rodapé de eixos. O título é um `span`, como em
-            `GraficoTendencia`. */}
-        <span className="min-w-0 truncate text-label-lg text-on-surface-strong">
-          Peso
+    <div className="flex items-baseline justify-between gap-3">
+      {/* Um `figure` admite um único `figcaption`, reservado aqui ao
+          rodapé de eixos. O título é um `span`, como em
+          `GraficoTendencia`. */}
+      <span className="min-w-0 truncate text-label-lg text-on-surface-strong">
+        Peso
+      </span>
+      <span className="shrink-0 text-label-lg tabular-nums text-on-surface-strong">
+        {formatarPeso(valor)}{" "}
+        <span className="text-body-sm font-normal text-muted-foreground">
+          kg
         </span>
-        <span className="shrink-0 text-label-lg tabular-nums text-on-surface-strong">
-          {formatarPeso(valor)}{" "}
-          <span className="text-body-sm font-normal text-muted-foreground">
-            kg
-          </span>
-        </span>
-      </div>
-      {seletor}
+      </span>
     </div>
   );
 }

@@ -29,7 +29,7 @@ const meta = {
     docs: {
       description: {
         component:
-          "Peso medido contra a rampa da meta. O eixo do tempo é o plano — começa no peso inicial e vai até o horizonte escolhido — e o seletor 30/90/120 é zoom, não outro plano: a inclinação da meta nunca muda.",
+          "Peso medido contra a rampa da meta. O eixo do tempo é o plano — começa no peso inicial e vai até o horizonte escolhido. Componente controlado: o recorte chega por prop; quem o escolhe é `PainelGraficoPeso`.",
       },
     },
   },
@@ -37,7 +37,7 @@ const meta = {
     medicoes: SERIE,
     pesoMetaKg: 78,
     agora: noDia(60, 0).data,
-    horizonteInicial: 120,
+    horizonteDias: 120,
   },
 } satisfies Meta<typeof GraficoPeso>;
 
@@ -48,7 +48,7 @@ export const PlanoCompleto: Story = {};
 
 /** Zoom nos primeiros 30 dias: mesma inclinação de meta, mais detalhe. */
 export const PrimeirosTrintaDias: Story = {
-  args: { horizonteInicial: 30 },
+  args: { horizonteDias: 30 },
 };
 
 /** Recorte sem medições além da inicial: resta a promessa. */

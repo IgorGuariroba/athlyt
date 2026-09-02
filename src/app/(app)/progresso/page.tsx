@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 
 import { auth } from "@/auth";
-import { GraficoPeso } from "@/components/progresso/grafico-peso";
+import { PainelGraficoPeso } from "@/components/progresso/painel-grafico-peso";
 import { PainelPeso } from "@/components/progresso/painel-peso";
 import { CabecalhoTela, TelaConteudo } from "@/components/tela";
 import { obterPesoEMetaAtuais, obterSerieDePeso } from "@/domain/medicoes/repositorio";
@@ -19,8 +19,10 @@ export default async function ProgressoPage() {
     <TelaConteudo>
       <CabecalhoTela titulo="Progresso" className="pb-4" />
       <div className="flex flex-col gap-4 px-6">
+        {/* A leitura vem antes do registro: ao abrir a tela, a
+            pergunta é "como estou indo", não "quanto pesei hoje". */}
+        <PainelGraficoPeso medicoes={serie.medicoes} pesoMetaKg={serie.pesoMetaKg} />
         <PainelPeso {...pesos} aoSalvar={salvarPesoEMeta} />
-        <GraficoPeso medicoes={serie.medicoes} pesoMetaKg={serie.pesoMetaKg} />
       </div>
     </TelaConteudo>
   );
