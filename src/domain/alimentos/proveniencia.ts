@@ -228,7 +228,7 @@ export const ROTULO_CONFIANCA_DESCRICAO: Record<Confianca, string> = {
 export function rotuloDeConfianca(
   confianca: Confianca,
   origem: "base" | "usuario" | "estimativa-ia",
-  estimativa: "foto" | "texto" | "audio" = "foto",
+  estimativa: "foto" | "texto" | "audio" | "plano" = "foto",
 ): string {
   if (origem === "estimativa-ia") {
     return estimativa === "foto"

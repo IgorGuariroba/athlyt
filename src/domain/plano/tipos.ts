@@ -1,4 +1,5 @@
 import type { ConfiancaCorporal, MetaProporcao } from "@/domain/medicoes";
+import type { ItemPlanejado } from "./item-planejado";
 import type { PadraoMovimento } from "./exercicios";
 import type { ModalidadeProtocolo } from "@/domain/sessao/protocolo-execucao";
 
@@ -62,7 +63,12 @@ export interface MetaNutricional {
     percentual: number;
     calorias: number;
     proteinaG: number;
-    itens: string[];
+    /**
+     * `string` mantém planos anteriores legíveis; todo plano novo usa
+     * `ItemPlanejado`. A fronteira do Cardápio é quem discrimina —
+     * telas nunca fazem cast entre os dois formatos.
+     */
+    itens: Array<string | ItemPlanejado>;
     explicacao?: ExplicacaoDecisao;
   }>;
   explicacoes?: {

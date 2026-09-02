@@ -65,6 +65,40 @@ describe("gerarPlanoInicialComIA", () => {
     expect(resultado.valor.dadosUsados).toEqual(["triagem-completa", "linha-base-corporal"]);
   });
 
+  it("materializa itens nutricionais com proveniência antes de publicar o plano", async () => {
+    const item = {
+      nome: "Aveia", porcaoDescrita: "60 g", quantidade: 60, unidade: "g",
+      calorias: 236, proteinaG: 8, carboidratosG: 40, gordurasG: 5, fibrasG: 5,
+      confianca: "alta",
+    };
+    gerarTreino.mockResolvedValue(okTreino);
+    gerarNutricao.mockResolvedValue({
+      ...okNutricao,
+      valor: {
+        ...nutricao,
+        nutricao: {
+          ...nutricao.nutricao,
+          refeicoes: [{
+            nome: "Café da manhã", percentual: 25, calorias: 236, proteinaG: 8,
+            itens: [item], explicacao: { porque: "x".repeat(45), dadosUsados: [] },
+          }],
+        },
+      },
+    });
+
+    const resultado = await gerarPlanoInicialComIA(entrada);
+
+    expect(resultado.status).toBe("ok");
+    if (resultado.status !== "ok") return;
+    expect(resultado.valor.nutricao.refeicoes[0].itens[0]).toMatchObject({
+      nome: "Aveia em flocos",
+      quantidade: 60,
+      calorias: 236,
+      origemDado: "base",
+      alimentoId: "aveia-em-flocos",
+    });
+  });
+
   it("preenche a justificativa a partir do catálogo, não do agent", async () => {
     gerarTreino.mockResolvedValue(okTreino);
     gerarNutricao.mockResolvedValue(okNutricao);

@@ -5,6 +5,7 @@ import { avaliarConfiancaCorporal, gerarMetasProporcao } from "@/domain/medicoes
 import { obterPanoramaCorporal } from "@/domain/medicoes/repositorio";
 import type { RespostasTriagem } from "@/domain/triagem/etapas";
 import { gerarPlano, substituirExercicio } from "./gerador";
+import { refeicoesPlanejadasValidas } from "./item-planejado";
 import type { PlanoGerado } from "./tipos";
 import { montarNucleo } from "@/domain/ia/contexto/nucleo";
 import { gerarPlanoInicialComIA } from "@/domain/ia/operacoes/plano-inicial";
@@ -152,6 +153,10 @@ export async function ativarPlano(userId: string, planoId: string): Promise<Plan
   return db.transaction(async (tx) => {
     const [rascunho] = await tx.select().from(plans).where(and(eq(plans.id, planoId), eq(plans.userId, userId))).limit(1).for("update");
     if (!rascunho || rascunho.estado !== "rascunho") throw new Error("Plano já ativado ou inexistente.");
+    const conteudo = rascunho.conteudo as PlanoGerado;
+    if (!refeicoesPlanejadasValidas(conteudo.nutricao.refeicoes)) {
+      throw new Error("A composição dos alimentos não está coerente com as metas das refeições.");
+    }
     const [ultimo] = await tx.select({ versao: plans.versao }).from(plans).where(and(eq(plans.userId, userId), eq(plans.estado, "ativo"))).orderBy(desc(plans.versao)).limit(1).for("update");
     await tx.update(plans).set({ estado: "arquivado" }).where(and(eq(plans.userId, userId), eq(plans.estado, "ativo")));
     const [ativo] = await tx.update(plans).set({ estado: "ativo", versao: (ultimo?.versao ?? 0) + 1, activatedAt: new Date() }).where(eq(plans.id, planoId)).returning();

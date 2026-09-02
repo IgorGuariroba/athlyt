@@ -15,12 +15,11 @@ import {
   validarDescricaoRefeicao,
 } from "@/domain/alimentos/audio-refeicao";
 import {
-  descricaoSemQuantidade,
   itemEstimado,
   type ItemPrato,
   type OrigemEstimativa,
-  type UnidadeEstimada,
 } from "@/domain/alimentos/prato";
+import { reconstruirItemParaRegistro } from "../item-para-registro";
 import {
   recalcularMacrosDoItem,
   type MacrosRecalculados,
@@ -247,11 +246,11 @@ const HORA = /^([01]\d|2[0-3]):([0-5]\d)$/;
  * Grava o Consumo Real revisado pelo atleta.
  *
  * Os itens chegam serializados porque a revisão acontece no cliente, e
- * o servidor não confia neles: cada item é reconstruído por
- * `itemEstimado`, que recalcula descrição, arredondamento e
- * proveniência. Um payload adulterado não consegue gravar uma
- * estimativa como se fosse valor de tabela, nem inflar macros fora das
- * faixas do schema.
+ * o servidor não confia neles. Cada item é reconstruído conforme sua
+ * origem: dado de base é recalculado pela própria base; estimativa e
+ * entrada do usuário preservam a proveniência que já carregavam. Um
+ * payload adulterado não promove palpite a tabela nem infla macros
+ * fora das faixas aceitas.
  */
 export async function registrarConsumoRealAction(fd: FormData): Promise<ResultadoRegistro> {
   const session = await auth();
@@ -285,28 +284,9 @@ export async function registrarConsumoRealAction(fd: FormData): Promise<Resultad
 
   let itens: ItemPrato[];
   try {
-    itens = (bruto as ItemPrato[]).map((item) => {
-      const quantidade = Number(item.quantidade);
-      const unidade: UnidadeEstimada = item.unidade === "ml" ? "ml" : "g";
-      if (!Number.isFinite(quantidade) || quantidade <= 0 || quantidade > 3000) {
-        throw new Error(`Quantidade fora do intervalo aceito (1 a 3000 ${unidade}).`);
-      }
-      const descricao = descricaoSemQuantidade(String(item.descricao ?? "")).trim();
-      if (descricao.length === 0) throw new Error("Todo item precisa de uma descrição.");
-      return itemEstimado({
-        descricao,
-        quantidade,
-        unidade,
-        calorias: numero(item.calorias, 5000),
-        proteinaG: numero(item.proteinaG, 400),
-        carboidratosG: numero(item.carboidratosG, 700),
-        gordurasG: numero(item.gordurasG, 400),
-        fibrasG: numero(item.fibrasG, 100),
-        confianca: item.confianca ?? "baixa",
-        modelo: item.versaoFonte ?? "modelo não identificado",
-        origemEstimativa: origem,
-      });
-    });
+    itens = (bruto as ItemPrato[]).map((item) =>
+      reconstruirItemParaRegistro(item, origem),
+    );
   } catch (erro) {
     return { ok: false, erro: erro instanceof Error ? erro.message : "Itens inválidos." };
   }
@@ -326,10 +306,4 @@ export async function registrarConsumoRealAction(fd: FormData): Promise<Resultad
   revalidatePath("/treino");
 
   return { ok: true };
-}
-
-function numero(valor: unknown, teto: number): number {
-  const n = Number(valor);
-  if (!Number.isFinite(n) || n < 0) return 0;
-  return Math.min(n, teto);
 }

@@ -42,6 +42,12 @@ export interface Alimento {
   sinonimos: readonly string[];
   /** Macros por 100 g de porção comestível. */
   por100g: Macros;
+  /**
+   * Composição por 100 ml, quando a referência analítica é volume.
+   * Explícita de propósito: copiar `por100g` para um líquido fingiria
+   * uma densidade de 1 g/ml que a fonte não declarou.
+   */
+  por100ml?: Macros;
   porcoes: readonly Porcao[];
   proveniencia: Proveniencia;
   confianca: Confianca;
@@ -163,6 +169,7 @@ export const BASE_ALIMENTOS: readonly Alimento[] = [
     nome: "Leite integral",
     sinonimos: ["leite"],
     por100g: macros(61, 3, 5, 3, 0),
+    por100ml: macros(61, 3, 5, 3, 0),
     porcoes: [
       { unidade: "copo (200 ml)", gramas: 200 },
       { unidade: "xícara (250 ml)", gramas: 250 },
@@ -248,6 +255,18 @@ export function encontrarAlimento(id: string): Alimento | undefined {
   return POR_ID.get(id);
 }
 
+/**
+ * Correspondência segura para cálculo automático. Diferente da busca
+ * da UI, não aceita prefixo nem trecho: uma estimativa assumida é
+ * preferível a atribuir a tabela do alimento errado.
+ */
+export function encontrarAlimentoPorNomeExato(nome: string): Alimento | undefined {
+  const alvo = normalizar(nome);
+  return BASE_ALIMENTOS.find((alimento) =>
+    [alimento.nome, ...alimento.sinonimos].some((termo) => normalizar(termo) === alvo),
+  );
+}
+
 export function porcoesDoAlimento(id: string): readonly Porcao[] {
   const alimento = POR_ID.get(id);
   // Gramas sempre existe como unidade universal; as porções caseiras
@@ -310,6 +329,28 @@ export function macrosDaPorcao(alimento: Alimento, entrada: QuantidadeInformada)
     carboidratosG: Math.round(alimento.por100g.carboidratosG * fator),
     gordurasG: Math.round(alimento.por100g.gordurasG * fator),
     fibrasG: Math.round(alimento.por100g.fibrasG * fator),
+  };
+}
+
+/**
+ * Calcula diretamente na unidade nutricional já padronizada.
+ * Mililitros só são aceitos quando a própria fonte traz `por100ml`;
+ * nunca são convertidos em gramas por densidade implícita.
+ */
+export function macrosPorQuantidadeNutricional(
+  alimento: Alimento,
+  quantidade: number,
+  unidade: "g" | "ml",
+): Macros | null {
+  const referencia = unidade === "ml" ? alimento.por100ml : alimento.por100g;
+  if (!referencia || !Number.isFinite(quantidade) || quantidade <= 0) return null;
+  const fator = quantidade / 100;
+  return {
+    calorias: Math.round(referencia.calorias * fator),
+    proteinaG: Math.round(referencia.proteinaG * fator),
+    carboidratosG: Math.round(referencia.carboidratosG * fator),
+    gordurasG: Math.round(referencia.gordurasG * fator),
+    fibrasG: Math.round(referencia.fibrasG * fator),
   };
 }
 

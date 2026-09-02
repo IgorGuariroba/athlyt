@@ -1,8 +1,9 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { RegistroPorDescricao } from "@/components/diario";
-import { CabecalhoTela, NotaTela, SecoesTela, TelaConteudo } from "@/components/tela";
-import type { ItemPrato } from "@/domain/alimentos/prato";
+import { AvisoAcao, CabecalhoTela, NotaTela, SecoesTela, TelaConteudo } from "@/components/tela";
+import { Button } from "@/components/ui/button";
 import { CATEGORIAS_DE_REFEICAO } from "@/domain/diario/cardapio";
 import { FUSO_PADRAO, horaLocal } from "@/domain/diario/dia-alimentar";
 import {
@@ -12,6 +13,7 @@ import {
   obterEntradaPlanejada,
 } from "@/domain/diario/repositorio";
 import { estimarRefeicaoAction } from "../foto/actions";
+import { prepararItensParaEdicao } from "../preparar-itens-para-edicao";
 import {
   estimarPorDescricaoAction,
   recalcularMacrosDoItemAction,
@@ -48,6 +50,18 @@ export default async function RegistrarPorDescricaoPage({
   const planejada = refeicaoRef ? await obterEntradaPlanejada(userId, refeicaoRef) : null;
   const consumoParaEditar = consumoId ? await obterConsumoPorId(userId, consumoId, fuso) : null;
   const existente = refeicaoRef ? await obterConsumoDaRefeicao(userId, { refeicaoRef, dia, fuso }) : null;
+  const preparacao = consumoParaEditar
+    ? await prepararItensParaEdicao(consumoParaEditar.itens, async (descricoes) => {
+        const corpo = new FormData();
+        corpo.set("descricao", descricoes.join(", "));
+        corpo.set("dia", dia);
+        corpo.set("origem", "texto");
+        const resultado = await estimarPorDescricaoAction(corpo);
+        return resultado.ok
+          ? { ok: true, itens: resultado.estimativa.itens }
+          : { ok: false, erro: resultado.erro };
+      })
+    : { ok: true as const, itens: [] };
 
   return (
     <TelaConteudo>
@@ -59,6 +73,20 @@ export default async function RegistrarPorDescricaoPage({
       />
 
       <SecoesTela>
+        {!preparacao.ok ? (
+          <div className="flex flex-col gap-4">
+            <AvisoAcao tipo="erro">{preparacao.erro}</AvisoAcao>
+            <p className="text-body-sm text-muted-foreground">
+              O registro confirmado continua intacto. Tente preparar os alimentos novamente
+              antes de editar.
+            </p>
+            <Button asChild>
+              <Link href={`/diario/registrar/descricao?dia=${dia}&consumo=${consumoId}`}>
+                Tentar novamente
+              </Link>
+            </Button>
+          </div>
+        ) : (
         <RegistroPorDescricao
           dia={dia}
           horaInicial={consumoParaEditar?.horaLocal ?? planejada?.horaLocal ?? horaLocal(new Date(), fuso)}
@@ -66,7 +94,7 @@ export default async function RegistrarPorDescricaoPage({
           nomeInicial={consumoParaEditar?.nome ?? planejada?.nome ?? ""}
           refeicaoRef={consumoParaEditar?.refeicaoRef ?? refeicaoRef}
           consumoId={consumoParaEditar?.id}
-          itensIniciais={(consumoParaEditar?.itens ?? []) as ItemPrato[]}
+          itensIniciais={preparacao.itens}
           consumoExistente={
             existente ? { nome: existente.nome, macros: existente.macros } : null
           }
@@ -77,6 +105,7 @@ export default async function RegistrarPorDescricaoPage({
           registrar={registrarConsumoRealAction}
           recalcularItem={recalcularMacrosDoItemAction}
         />
+        )}
       </SecoesTela>
 
       <NotaTela>

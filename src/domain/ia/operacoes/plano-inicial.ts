@@ -1,3 +1,7 @@
+import {
+  dentroDaToleranciaDaRefeicao,
+  materializarItemPlanejadoProposto,
+} from "@/domain/plano/item-planejado";
 import type { PlanoGerado } from "@/domain/plano/tipos";
 import { EXERCICIOS } from "@/domain/plano/exercicios";
 import type { ContextoDoAtleta } from "../contexto/montagem";
@@ -36,9 +40,29 @@ export async function gerarPlanoInicialComIA(
   if (treino.status === "indisponivel") return treino;
   if (nutricao.status === "indisponivel") return nutricao;
 
+  const valor = montarPlano(treino.valor, nutricao.valor, nutricao.modeloResolvido);
+  const incoerente = valor.nutricao.refeicoes.some((refeicao) =>
+    !dentroDaToleranciaDaRefeicao(
+      refeicao.itens.filter((item) => typeof item !== "string"),
+      refeicao,
+    ),
+  );
+  // O schema já exige a tolerância sobre a proposta. Esta segunda
+  // defesa roda depois de substituir correspondências exatas pelos
+  // números da tabela — a verdade da base pode revelar que a
+  // composição proposta não cumpre a meta, e nesse caso o plano não é
+  // persistido nem ativado.
+  if (incoerente) {
+    return {
+      status: "indisponivel",
+      contexto: nutricao.contexto,
+      motivo: "A composição dos alimentos não ficou coerente com as metas da refeição.",
+    };
+  }
+
   return {
     status: "ok",
-    valor: montarPlano(treino.valor, nutricao.valor),
+    valor,
     contexto: treino.contexto,
     modeloResolvido: treino.modeloResolvido,
     degradado: treino.degradado || nutricao.degradado,
@@ -54,6 +78,7 @@ export async function gerarPlanoInicialComIA(
 function montarPlano(
   treino: PlanoTreinoGerado,
   nutricao: PlanoNutricaoGerado,
+  modeloNutricional: string,
 ): PlanoGerado {
   return {
     regraVersao: treino.regraVersao,
@@ -71,7 +96,15 @@ function montarPlano(
         })),
       })),
     },
-    nutricao: nutricao.nutricao,
+    nutricao: {
+      ...nutricao.nutricao,
+      refeicoes: nutricao.nutricao.refeicoes.map((refeicao) => ({
+        ...refeicao,
+        itens: refeicao.itens.map((item) =>
+          materializarItemPlanejadoProposto(item, modeloNutricional),
+        ),
+      })),
+    },
     dadosUsados: [...new Set([...treino.dadosUsados, ...nutricao.dadosUsados])],
   };
 }
