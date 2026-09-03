@@ -41,6 +41,7 @@ describe("FichaExercicio", () => {
     const dialogo = screen.getByRole("dialog", { name: "Supino reto com barra" });
     expect(dialogo.textContent).toContain("Peito");
     expect(dialogo.textContent).toContain("Deite no banco e empurre a barra.");
+    expect(dialogo.className).toContain("mb-[calc(5.25rem+var(--safe-bottom))]");
     expect(dialogo.querySelector("svg")).not.toBeNull();
   });
 
