@@ -15,7 +15,9 @@ import { cn } from "@/lib/utils";
  *
  * Flutua acima de `--safe-bottom`, mantendo distância do indicador de
  * início do aparelho. O casco reserva sua altura mais esse afastamento
- * para que a bolha não cubra o fim do conteúdo.
+ * para que a bolha não cubra o fim do conteúdo. A ficha de exercício usa
+ * o mesmo nível de empilhamento e aparece antes dela no casco, mantendo a
+ * navegação visível quando a ficha estiver aberta.
  *
  * Apenas a aba ativa revela o rótulo. As quatro abas ocupam colunas de
  * mesma largura, reservando o espaço da seleção e evitando que a bolha
