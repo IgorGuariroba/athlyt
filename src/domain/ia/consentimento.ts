@@ -1,4 +1,4 @@
-import { and, desc, eq, isNull } from "drizzle-orm";
+import { and, desc, eq, isNull, sql } from "drizzle-orm";
 import { db } from "@/db/client";
 import { consents } from "@/db/schema";
 import { obterRecorte } from "./contexto/recortes";
@@ -130,15 +130,25 @@ export async function conceder(
 
   if (campos.length === 0) return;
 
-  await db.insert(consents).values(
-    campos.map((campo) => ({
-      userId,
-      operacao,
-      campo,
-      recorteVersao: recorte.versao,
-      provedor,
-    })),
-  );
+  // Conceder é idempotente: uma confirmação repetida não cria linhas
+  // duplicadas. O índice parcial e o conflito tratado no banco tornam isso
+  // seguro também quando duas confirmações chegam simultaneamente. Linhas
+  // revogadas podem coexistir com a nova concessão, preservando o histórico.
+  await db
+    .insert(consents)
+    .values(
+      campos.map((campo) => ({
+        userId,
+        operacao,
+        campo,
+        recorteVersao: recorte.versao,
+        provedor,
+      })),
+    )
+    .onConflictDoNothing({
+      target: [consents.userId, consents.operacao, consents.campo, consents.recorteVersao],
+      where: sql`${consents.revogadoEm} IS NULL`,
+    });
 }
 
 /**

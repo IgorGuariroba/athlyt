@@ -56,7 +56,6 @@ export interface SerieRegistrada {
 export interface EntradaCopiloto {
   userId: string;
   nucleo: NucleoContexto;
-  consentimentos: readonly string[];
   exercicio: {
     nome: string;
     seriesHoje: SerieRegistrada[];
@@ -92,7 +91,6 @@ export async function orientarProximaSerie(
     userId: entrada.userId,
     operacao: "copiloto-sessao",
     nucleo: entrada.nucleo,
-    consentimentos: entrada.consentimentos,
     dados: {
       exercicio: entrada.exercicio,
       "historico-exercicio": entrada.historicoExercicio,

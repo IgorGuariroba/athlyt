@@ -76,7 +76,6 @@ export async function estimarRefeicaoPorFoto(entrada: {
     userId: entrada.userId,
     operacao: "refeicao-foto",
     nucleo: entrada.nucleo,
-    consentimentos: ["foto-refeicao", "metas-restantes", "restricoes"],
     dados: {
       "foto-refeicao": {
         enviada: true,

@@ -21,6 +21,7 @@ import { detalhesErroGeracao } from "./detalhes-erro-geracao";
 import { executarComTimeout } from "./timeout-geracao";
 import { logger } from "@/observabilidade/logger";
 import { observarOperacao } from "@/observabilidade/operacao";
+import { estadoConsentimento } from "./consentimento";
 import {
   modeloDe,
   NOME_PROVEDOR,
@@ -52,7 +53,6 @@ export interface EntradaDecisao<T> {
   operacao: OperacaoIA;
   nucleo: NucleoContexto;
   dados: DadosRecorte;
-  consentimentos: readonly string[];
   instrucao: string;
   schema: z.ZodType<T>;
   ferramentas?: ToolSet;
@@ -114,11 +114,15 @@ export async function decidir<T>(
 async function decidirInternamente<T>(
   entrada: EntradaDecisao<T>,
 ): Promise<ResultadoDecisao<T>> {
+  // Consentimento é um fato persistido, não uma afirmação do adapter.
+  // Consultá-lo aqui garante que revogação e versão do Recorte valham para
+  // toda operação que atravessa este executor.
+  const estado = await estadoConsentimento(entrada.userId, entrada.operacao);
   const contexto = montarContexto({
     operacao: entrada.operacao,
     nucleo: entrada.nucleo,
     dados: entrada.dados,
-    consentimentos: entrada.consentimentos,
+    consentimentos: estado.vigentes,
   });
 
   const modeloSolicitado = modeloDe(entrada.operacao);
@@ -143,10 +147,10 @@ async function decidirInternamente<T>(
   };
 
   try {
-    if (entrada.imagens?.length && !("fotos-corporais" in contexto.recorte || "foto-refeicao" in contexto.recorte)) {
+    if (entrada.imagens?.length && contexto.camposOmitidos.some((campo) => campo === "fotos-corporais" || campo === "foto-refeicao")) {
       throw new Error("Imagens omitidas por falta de consentimento para esta operação.");
     }
-    if (entrada.audios?.length && !("audio-refeicao" in contexto.recorte)) {
+    if (entrada.audios?.length && contexto.camposOmitidos.includes("audio-refeicao")) {
       throw new Error("Áudios omitidos por falta de consentimento para esta operação.");
     }
     const conteudo = renderizarContexto(contexto);

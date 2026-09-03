@@ -13,17 +13,6 @@ import type { OperacaoIA } from "@/domain/ia/contexto/tipos";
 /** As duas operações que compõem o plano inicial. */
 const OPERACOES_PLANO: readonly OperacaoIA[] = ["plano-treino", "plano-nutricao"];
 
-/** União dos campos declarados pelas operações do plano. */
-function camposDoPlano(): string[] {
-  return [
-    ...new Set(
-      OPERACOES_PLANO.flatMap((operacao) =>
-        obterRecorte(operacao).campos.map((campo) => campo.id),
-      ),
-    ),
-  ];
-}
-
 async function contexto() {
   const session = await auth();
   if (!session?.user?.id) redirect("/");
@@ -43,19 +32,16 @@ export async function gerarPlanoInicialAction(formData: FormData) {
   // recorte envia hoje, não o que enviava quando o consentimento foi dado.
   // O plano é gerado por duas operações (treino e nutrição), e o consentimento
   // é por operação: a mesma confirmação desta tela cobre as duas.
-  const campos = camposDoPlano();
   for (const operacao of OPERACOES_PLANO) {
-    const estado = await estadoConsentimento(userId, operacao);
-    const declarados = obterRecorte(operacao).campos.map((campo) => campo.id);
     await conceder(
       userId,
       operacao,
-      declarados.filter((campo) => !estado.vigentes.includes(campo)),
+      obterRecorte(operacao).campos.map((campo) => campo.id),
       NOME_PROVEDOR,
     );
   }
 
-  const resultado = await obterOuGerarRascunhoComIA(userId, perfil, campos, {
+  const resultado = await obterOuGerarRascunhoComIA(userId, perfil, {
     tela: "resumo-triagem",
     rota: "/triagem/resumo",
     gatilho: "clique-gerar-meu-plano",
@@ -79,7 +65,6 @@ async function gerarOutroPlano({
   const estados = await Promise.all(
     OPERACOES_PLANO.map((operacao) => estadoConsentimento(userId, operacao)),
   );
-  const vigentes = [...new Set(estados.flatMap((estado) => estado.vigentes))];
 
   // Regenerar com o recorte mais novo que o consentimento produziria um plano
   // cego (só o Núcleo) sem o usuário entender por quê. Manda reconfirmar em
@@ -95,7 +80,6 @@ async function gerarOutroPlano({
   const resultado = await obterOuGerarRascunhoComIA(
     userId,
     perfil,
-    vigentes,
     {
       tela,
       rota,

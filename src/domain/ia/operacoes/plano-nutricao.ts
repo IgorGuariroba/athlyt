@@ -101,7 +101,6 @@ export function gerarPlanoNutricaoComIA(entrada: EntradaPlano): Promise<Resultad
     userId: entrada.userId,
     operacao: "plano-nutricao",
     nucleo: entrada.nucleo,
-    consentimentos: entrada.consentimentos,
     dados: montarDadosPlano(entrada),
     imagens: entrada.fotosCorporais?.map(({ dados, mediaType }) => ({ dados, mediaType })),
     instrucao: INSTRUCAO,
