@@ -42,7 +42,6 @@ export async function transcreverAudioDaRefeicao(entrada: {
     userId: entrada.userId,
     operacao: "refeicao-audio",
     nucleo: entrada.nucleo,
-    consentimentos: ["audio-refeicao"],
     dados: { "audio-refeicao": { enviado: true } },
     audios: [entrada.audio],
     instrucao: INSTRUCAO,

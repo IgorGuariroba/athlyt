@@ -82,7 +82,6 @@ export async function estimarRefeicaoPorDescricao(entrada: {
     userId: entrada.userId,
     operacao: "refeicao-texto",
     nucleo: entrada.nucleo,
-    consentimentos: ["descricao-livre", "metas-restantes", "restricoes"],
     dados: {
       "descricao-livre": {
         texto: entrada.descricao.trim(),

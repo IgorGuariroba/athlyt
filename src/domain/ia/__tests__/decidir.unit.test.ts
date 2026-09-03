@@ -2,6 +2,9 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { z } from "zod";
 
 const decisoesGravadas: unknown[] = [];
+const estadoConsentimento = vi.fn();
+
+vi.mock("../consentimento", () => ({ estadoConsentimento }));
 
 vi.mock("@/domain/ia/trilha", async () => {
   const real = await vi.importActual<typeof import("../trilha")>("../trilha");
@@ -50,7 +53,6 @@ function chamar() {
     userId: "u1",
     operacao: "copiloto-sessao",
     nucleo,
-    consentimentos: ["prontidao-hoje"],
     dados: {
       exercicio: { nome: "Supino" },
       "prontidao-hoje": { energia: 3 },
@@ -64,6 +66,7 @@ beforeEach(() => {
   decisoesGravadas.length = 0;
   gerar.mockReset();
   registrarErro.mockReset();
+  estadoConsentimento.mockResolvedValue({ vigentes: ["prontidao-hoje"] });
 });
 
 describe("decidir", () => {
@@ -258,6 +261,7 @@ describe("decidir", () => {
   });
 
   it("registra na trilha os campos omitidos por falta de consentimento", async () => {
+    estadoConsentimento.mockResolvedValueOnce({ vigentes: [] });
     gerar.mockResolvedValue({
       output: { carga: 60 },
       response: { modelId: "m" },
@@ -268,7 +272,6 @@ describe("decidir", () => {
       userId: "u1",
       operacao: "copiloto-sessao",
       nucleo,
-      consentimentos: [],
       dados: {
         exercicio: { nome: "Supino" },
         "prontidao-hoje": { energia: 3 },

@@ -42,7 +42,6 @@ export type ResultadoGeracaoRascunhoIA =
 export async function obterOuGerarRascunhoComIA(
   userId: string,
   perfil: { version: number; respostas: RespostasTriagem; createdAt: Date },
-  consentimentos: readonly string[],
   origem: { tela: string; rota: string; gatilho: string },
   opcoes: { forcarNovaGeracao?: boolean } = {},
 ): Promise<ResultadoGeracaoRascunhoIA> {
@@ -58,7 +57,7 @@ export async function obterOuGerarRascunhoComIA(
     respondidoEm: perfil.createdAt,
     agora: new Date(),
   });
-  const fotosAutorizadas = consentimentos.includes("fotos-corporais")
+  const fotosAutorizadas = panorama.fotos.length > 0
     ? [...panorama.fotos]
         .sort((a, b) => b.observadoEm.getTime() - a.observadoEm.getTime())
         .slice(0, 4)
@@ -79,7 +78,6 @@ export async function obterOuGerarRascunhoComIA(
   const resultado = await gerarPlanoInicialComIA({
     userId,
     nucleo,
-    consentimentos,
     triagemCompleta: perfil.respostas,
     fotosCorporais,
     linhaBaseCorporal: {

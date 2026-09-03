@@ -96,7 +96,6 @@ async function main() {
     const semConsentimento = await orientarProximaSerie({
       userId: usuario.id,
       nucleo,
-      consentimentos: await consentimentosVigentes(usuario.id, "copiloto-sessao"),
       exercicio: EXERCICIO,
       prontidaoHoje: PRONTIDAO,
     });
@@ -140,7 +139,6 @@ async function main() {
     const comConsentimento = await orientarProximaSerie({
       userId: usuario.id,
       nucleo,
-      consentimentos,
       exercicio: EXERCICIO,
       prontidaoHoje: PRONTIDAO,
       historicoExercicio: [

@@ -19,7 +19,6 @@ export interface FotoCorporalPlano {
 export interface EntradaPlano {
   userId: string;
   nucleo: NucleoContexto;
-  consentimentos: readonly string[];
   triagemCompleta: unknown;
   fotosCorporais?: readonly FotoCorporalPlano[];
   linhaBaseCorporal?: unknown;

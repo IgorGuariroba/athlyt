@@ -35,7 +35,6 @@ export async function analisarFotosCorporais(entrada: {
     userId: entrada.userId,
     operacao: "avaliacao-visual",
     nucleo: entrada.nucleo,
-    consentimentos: ["fotos-corporais", "medicoes-comparaveis", "condicoes-captura"],
     dados: {
       "fotos-corporais": entrada.fotos.map(({ id, pose }) => ({ id, pose })),
       "medicoes-comparaveis": entrada.medicoesComparaveis,

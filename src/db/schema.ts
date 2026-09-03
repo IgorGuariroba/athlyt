@@ -1,3 +1,4 @@
+import { sql } from "drizzle-orm";
 import {
   pgTable,
   text,
@@ -479,4 +480,8 @@ export const consents = pgTable("consent", {
     .notNull()
     .defaultNow(),
   revogadoEm: timestamp("revogado_em", { mode: "date" }),
-});
+}, (tabela) => [
+  uniqueIndex("consent_active_unique_idx")
+    .on(tabela.userId, tabela.operacao, tabela.campo, tabela.recorteVersao)
+    .where(sql`${tabela.revogadoEm} IS NULL`),
+]);

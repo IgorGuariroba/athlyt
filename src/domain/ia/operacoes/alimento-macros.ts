@@ -66,7 +66,6 @@ export async function estimarMacrosDoAlimento(entrada: {
     userId: entrada.userId,
     operacao: "alimento-macros",
     nucleo: entrada.nucleo,
-    consentimentos: ["alimento-corrigido"],
     dados: {
       "alimento-corrigido": {
         alimento: entrada.alimento.trim(),

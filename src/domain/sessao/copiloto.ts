@@ -1,4 +1,3 @@
-import { consentimentosVigentes } from "@/domain/ia/consentimento";
 import { montarNucleo } from "@/domain/ia/contexto/nucleo";
 import {
   orientarProximaSerie,
@@ -34,10 +33,9 @@ export async function solicitarOrientacaoProximaSerie(
   sessionId: string,
   gatilho: GatilhoCopiloto,
 ): Promise<ResultadoCopiloto> {
-  const [sessao, perfil, consentimentos] = await Promise.all([
+  const [sessao, perfil] = await Promise.all([
     obterSessao(userId, sessionId),
     obterPerfilVigente(userId),
-    consentimentosVigentes(userId, "copiloto-sessao"),
   ]);
   if (!sessao || !perfil) {
     return { status: "indisponivel", motivo: "Sessão ou perfil não encontrado." };
@@ -58,7 +56,6 @@ export async function solicitarOrientacaoProximaSerie(
       respondidoEm: perfil.createdAt,
       agora: new Date(),
     }),
-    consentimentos,
     exercicio: {
       nome: exercicio.nome,
       seriesHoje: exercicio.series
