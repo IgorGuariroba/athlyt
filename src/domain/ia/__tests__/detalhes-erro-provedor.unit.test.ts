@@ -2,11 +2,13 @@ import { describe, expect, it } from "vitest";
 import { detalhesErroProvedor } from "../detalhes-erro-provedor";
 
 describe("detalhesErroProvedor", () => {
-  it("preserva status HTTP e corpo da resposta sem expor segredos", () => {
-    expect(detalhesErroProvedor({
-      message: "Provider returned error",
+  it("preserva só o status e nunca o corpo enriquecido", () => {
+    const detalhe = detalhesErroProvedor({
+      message: "Provider returned SEGREDO",
       statusCode: 429,
-      responseBody: '{"error":{"message":"rate limit"}}',
-    })).toBe("Provider returned error (HTTP 429): {\"error\":{\"message\":\"rate limit\"}}");
+      responseBody: '{"foto":"SEGREDO"}',
+    });
+    expect(detalhe).toBe("Falha do provedor (HTTP 429)");
+    expect(detalhe).not.toContain("SEGREDO");
   });
 });

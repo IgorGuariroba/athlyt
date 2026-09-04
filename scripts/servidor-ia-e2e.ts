@@ -58,6 +58,13 @@ const server = createServer((req, res) => {
     // sistema da operação, e não pela imagem — o corpo carrega a foto
     // em base64 e casar contra ela seria frágil.
     if (/quantidade|refeição.*foto|refeicao.*foto|refeicao-foto|image_url|data:image|mediaType|type["']?:["']file/i.test(corpo) || !/cargaKg/.test(corpo)) {
+      const pedido = JSON.parse(corpo) as { model?: string; provider?: { only?: string[] } };
+      // O cenário padrão esgota o primário para exercitar o fallback real da aplicação.
+      if (pedido.provider?.only?.includes("google-vertex/eu")) {
+        res.writeHead(429, { "content-type": "application/json" });
+        res.end(JSON.stringify({ error: { message: "rate limit sintético" } }));
+        return;
+      }
       // A Coca-Cola entra em ml e sem o "Zero": é o caso real — a foto
       // mostra a garrafa, o modelo não lê o rótulo, e só quem bebeu
       // sabe qual era. É o que o E2E exercita na revisão.
@@ -73,15 +80,17 @@ const server = createServer((req, res) => {
         limitacoes: ["O óleo do preparo não é visível na foto", "O rótulo da bebida não está legível na foto"],
         confianca: "media",
       });
-      res.writeHead(200, { "content-type": "application/json" });
-      res.end(JSON.stringify({
-        id: "chatcmpl-athlyt-e2e-foto",
-        object: "chat.completion",
-        created: Math.floor(Date.now() / 1000),
-        model: "athlyt-refeicao-foto-e2e-v1",
-        choices: [{ index: 0, message: { role: "assistant", content: refeicao }, finish_reason: "stop" }],
-        usage: { prompt_tokens: 100, completion_tokens: 80, total_tokens: 180 },
-      }));
+      setTimeout(() => {
+        res.writeHead(200, { "content-type": "application/json" });
+        res.end(JSON.stringify({
+          id: "chatcmpl-athlyt-e2e-foto",
+          object: "chat.completion",
+          created: Math.floor(Date.now() / 1000),
+          model: pedido.model ?? "athlyt-refeicao-foto-e2e-v1",
+          choices: [{ index: 0, message: { role: "assistant", content: refeicao }, finish_reason: "stop" }],
+          usage: { prompt_tokens: 100, completion_tokens: 80, total_tokens: 180 },
+        }));
+      }, 500);
       return;
     }
 

@@ -1,6 +1,8 @@
 import { z } from "zod";
 import type { NucleoContexto } from "../contexto/nucleo";
 import { decidir, type ResultadoDecisao } from "../decidir";
+import type { EventoProgressoFallback } from "../fallback-modelo";
+import { ROTAS_REFEICAO_FOTO } from "../provedor";
 
 /**
  * Estimativa de refeição a partir da foto do prato.
@@ -71,6 +73,8 @@ export async function estimarRefeicaoPorFoto(entrada: {
   restricoes?: readonly string[];
   /** Observação livre do atleta ("o arroz é integral", "comi metade"). */
   observacao?: string;
+  signal?: AbortSignal;
+  aoProgresso?: (evento: EventoProgressoFallback) => void;
 }): Promise<ResultadoDecisao<RefeicaoEstimada>> {
   return decidir({
     userId: entrada.userId,
@@ -87,6 +91,9 @@ export async function estimarRefeicaoPorFoto(entrada: {
     imagens: [entrada.foto],
     instrucao: INSTRUCAO,
     schema: refeicaoFotoSchema,
+    rotas: ROTAS_REFEICAO_FOTO,
+    signal: entrada.signal,
+    aoProgresso: entrada.aoProgresso,
     origem: {
       tela: "Registrar por foto",
       rota: "/diario/registrar/foto",

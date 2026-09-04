@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useTransition } from "react";
-import { Check, Sparkles } from "lucide-react";
+import { useRef, useState, useTransition } from "react";
+import { Check, Sparkles, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -50,6 +50,7 @@ export function RegistroPorFoto({
   refeicaoRef,
   nomeInicial,
   estimar,
+  usarStreaming = false,
   estimarDescricao,
   transcrever,
   registrar,
@@ -60,7 +61,8 @@ export function RegistroPorFoto({
   horaInicial: string;
   refeicaoRef?: string | null;
   nomeInicial?: string;
-  estimar: (fd: FormData) => Promise<ResultadoEstimativa>;
+  estimar?: (fd: FormData) => Promise<ResultadoEstimativa>;
+  usarStreaming?: boolean;
   /** Acréscimo por texto durante a revisão; a foto reusa `estimar`. */
   estimarDescricao?: (fd: FormData) => Promise<ResultadoComItens>;
   transcrever?: (fd: FormData) => Promise<ResultadoTranscricaoAcrescimo>;
@@ -74,6 +76,9 @@ export function RegistroPorFoto({
   const [nome, setNome] = useState("");
   const [erro, setErro] = useState<string | null>(null);
   const [analisando, setAnalisando] = useState(false);
+  const [progresso, setProgresso] = useState("Lendo a foto…");
+  const [podeCancelar, setPodeCancelar] = useState(false);
+  const cancelamento = useRef<AbortController | null>(null);
   const [registrando, iniciarRegistro] = useTransition();
 
   const revisao = useRevisaoEstimativa({ recalcularItem, aoErrar: setErro });
@@ -90,7 +95,9 @@ export function RegistroPorFoto({
       corpo.set("dia", dia);
       corpo.set("observacao", observacao);
 
-      const resultado = await estimar(corpo);
+      const resultado = !usarStreaming && estimar
+        ? await estimar(corpo)
+        : await estimarComProgresso(corpo, (mensagem) => setProgresso(mensagem));
       if (!resultado.ok) {
         setErro(resultado.erro);
         return;
@@ -98,11 +105,55 @@ export function RegistroPorFoto({
       setEstimativa(resultado.estimativa);
       revisao.reiniciar(resultado.estimativa.itens);
       setNome(resultado.estimativa.nome);
-    } catch {
-      setErro("Falha de conexão durante o envio da foto. Tente novamente.");
+    } catch (erro) {
+      if (erro instanceof Error && erro.name === "AbortError") {
+        setErro("Estimativa cancelada. Nada foi registrado.");
+      } else {
+        setErro("A conexão foi interrompida. Nada foi registrado — toque em Tentar novamente para reenviar.");
+      }
     } finally {
+      cancelamento.current = null;
+      setPodeCancelar(false);
       setAnalisando(false);
     }
+  }
+
+  async function estimarComProgresso(
+    corpo: FormData,
+    aoProgresso: (mensagem: string) => void,
+  ): Promise<ResultadoEstimativa> {
+    const controlador = new AbortController();
+    cancelamento.current = controlador;
+    setPodeCancelar(true);
+    const resposta = await fetch("/api/ia/refeicao-foto", {
+      method: "POST",
+      body: corpo,
+      signal: controlador.signal,
+    });
+    if (!resposta.ok || !resposta.body) throw new Error("Falha de conexão");
+
+    const leitor = resposta.body.getReader();
+    const decoder = new TextDecoder();
+    let pendente = "";
+    let final: ResultadoEstimativa | null = null;
+    while (true) {
+      const { done, value } = await leitor.read();
+      pendente += decoder.decode(value, { stream: !done });
+      const linhas = pendente.split("\n");
+      pendente = linhas.pop() ?? "";
+      for (const linha of linhas) {
+        if (!linha) continue;
+        const evento = JSON.parse(linha) as { tipo: string; mensagem?: string; estimativa?: RefeicaoEstimadaNaTela; erro?: string };
+        if (evento.mensagem) aoProgresso(evento.mensagem);
+        if (evento.tipo === "sucesso" && evento.estimativa) final = { ok: true, estimativa: evento.estimativa };
+        if (evento.tipo === "indisponivel" || evento.tipo === "cancelada") {
+          final = { ok: false, erro: evento.erro ?? "Estimativa indisponível." };
+        }
+      }
+      if (done) break;
+    }
+    if (!final) throw new Error("Streaming encerrado sem resultado");
+    return final;
   }
 
   function recomecar() {
@@ -144,10 +195,19 @@ export function RegistroPorFoto({
         {erro ? <AvisoAcao tipo="erro">{erro}</AvisoAcao> : null}
 
         {arquivo ? (
-          <Button size="cta" onClick={analisar} disabled={analisando} className="w-full">
-            <Sparkles className="size-5" aria-hidden="true" />
-            {analisando ? "Lendo a foto…" : "Estimar calorias e macros"}
-          </Button>
+          analisando ? (
+            <div className="flex flex-col gap-2" role="status" aria-live="polite">
+              <p className="text-body-sm text-muted-foreground">{progresso}</p>
+              <Button type="button" variant="outline" onClick={() => cancelamento.current?.abort()} disabled={!podeCancelar}>
+                <X className="size-4" aria-hidden="true" /> Cancelar estimativa
+              </Button>
+            </div>
+          ) : (
+            <Button size="cta" onClick={analisar} className="w-full">
+              <Sparkles className="size-5" aria-hidden="true" />
+              {erro?.includes("conexão foi interrompida") ? "Tentar novamente" : "Estimar calorias e macros"}
+            </Button>
+          )
         ) : null}
 
         <p className="text-body-sm leading-relaxed text-muted-foreground">

@@ -39,6 +39,7 @@
     "ia:verificar": "tsx scripts/verificar-ia.ts",
     "ia:modalidades": "tsx scripts/verificar-modalidades.ts",
     "ia:verificar-visual": "tsx scripts/verificar-avaliacao-visual.ts",
+    "ia:verificar-refeicao-foto": "tsx scripts/verificar-refeicao-foto.ts",
     "storage:verificar": "tsx scripts/verificar-r2.ts",
     "midia:importar": "tsx scripts/importar-midia-exercicios.ts",
     "equipamentos:imagens": "tsx scripts/importar-imagens-equipamentos-repdb.ts",

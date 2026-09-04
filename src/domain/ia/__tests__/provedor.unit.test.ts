@@ -1,5 +1,11 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { ambienteIA, modeloDe, OPCOES_PROVEDOR } from "../provedor";
+import {
+  ambienteIA,
+  modeloDe,
+  OPCOES_PROVEDOR,
+  ROTAS_REFEICAO_FOTO,
+  opcoesDaRota,
+} from "../provedor";
 import { RECORTES } from "../contexto/recortes";
 import type { OperacaoIA } from "../contexto/tipos";
 
@@ -63,6 +69,28 @@ describe("modeloDe", () => {
     for (const operacao of OPERACOES) {
       expect(modeloDe(operacao, "producao")).not.toMatch(/:free$/);
       expect(modeloDe(operacao, "desenvolvimento")).not.toMatch(/:free$/);
+    }
+  });
+});
+
+describe("Fallback de Modelo Controlado da Refeição por Foto", () => {
+  it("mantém cadeia fixa, ordenada e com endpoint pinado", () => {
+    expect(ROTAS_REFEICAO_FOTO).toEqual([
+      { modelo: "google/gemini-2.5-flash-lite", endpoint: "google-vertex/eu" },
+      { modelo: "openai/gpt-5.6-luna", endpoint: "openai" },
+      { modelo: "z-ai/glm-5.3-flash", endpoint: "z-ai/fp8" },
+    ]);
+
+    for (const rota of ROTAS_REFEICAO_FOTO) {
+      expect(opcoesDaRota(rota).openrouter.provider).toMatchObject({
+        order: [rota.endpoint],
+        only: [rota.endpoint],
+        allow_fallbacks: false,
+        require_parameters: true,
+      });
+      expect(opcoesDaRota(rota).openrouter).toMatchObject({
+        reasoning: { effort: "low" },
+      });
     }
   });
 });

@@ -3,6 +3,7 @@ import { db } from "@/db/client";
 import { decisionTrails } from "@/db/schema";
 import type { ContextoDoAtleta } from "./contexto/montagem";
 import type { OperacaoIA } from "./contexto/tipos";
+import type { RotaModeloAprovada, TentativaModelo } from "./fallback-modelo";
 
 /**
  * Trilha de Decisão.
@@ -44,6 +45,9 @@ export interface RegistroDecisao {
   contextoEnviado?: ContextoDoAtleta;
   instrucaoSistema?: string;
   promptEnviado?: string;
+  rotasConfiguradas?: readonly RotaModeloAprovada[];
+  tentativasModelo?: TentativaModelo[];
+  desfecho?: "ok" | "indisponivel" | "cancelada" | "erro";
 }
 
 export async function registrarDecisao(
@@ -69,6 +73,9 @@ export async function registrarDecisao(
     contextoEnviado: registro.contextoEnviado ?? null,
     instrucaoSistema: registro.instrucaoSistema ?? null,
     promptEnviado: registro.promptEnviado ?? null,
+    rotasConfiguradas: registro.rotasConfiguradas ? [...registro.rotasConfiguradas] : [],
+    tentativasModelo: registro.tentativasModelo ?? [],
+    desfecho: registro.desfecho ?? (registro.resultado === null ? "indisponivel" : "ok"),
   });
 }
 

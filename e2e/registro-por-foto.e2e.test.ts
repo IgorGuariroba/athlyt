@@ -1,7 +1,8 @@
 import { expect, test } from "@playwright/test";
 import path from "node:path";
 import { db } from "@/db/client";
-import { plans } from "@/db/schema";
+import { decisionTrails, foodEntries, plans } from "@/db/schema";
+import { eq } from "drizzle-orm";
 import type { PlanoGerado } from "@/domain/plano/tipos";
 import { allowEmail, seedAuthenticatedSession } from "./helpers/seed-session";
 
@@ -62,6 +63,7 @@ test("fotografar o prato registra a refeição sem editar item por item", async 
   await expect(page.getByAltText("Prévia da foto escolhida")).toBeVisible();
 
   await page.getByRole("button", { name: /Estimar calorias e macros/ }).click();
+  await expect(page.getByText(/primeira opção está indisponível/i)).toBeVisible();
 
   // A estimativa chega pronta: nome, itens e total, sem formulário.
   await expect(page.getByRole("heading", { name: "Confira antes de registrar" })).toBeVisible();
@@ -95,6 +97,29 @@ test("fotografar o prato registra a refeição sem editar item por item", async 
   await page.goto("/treino");
   await page.getByRole("link", { name: "Dieta" }).click();
   await expect(macros.getByText("497/2400")).toBeVisible();
+});
+
+test("cancelar durante a alternativa interrompe a cadeia e não registra consumo", async ({ page, context }) => {
+  const email = `e2e-foto-cancelar-${Date.now()}@example.com`;
+  await allowEmail(email);
+  const { cookie, user } = await seedAuthenticatedSession(email);
+  await context.addCookies([cookie]);
+  await page.goto("/diario/registrar/foto");
+  await page.locator("input[type=file]").first().setInputFiles(
+    path.join(process.cwd(), "e2e/fixtures/prato-arroz-feijao-frango.jpg"),
+  );
+
+  await page.getByRole("button", { name: /Estimar calorias e macros/ }).click();
+  await expect(page.getByText(/primeira opção está indisponível/i)).toBeVisible();
+  await page.getByRole("button", { name: "Cancelar estimativa" }).click();
+
+  await expect(page.getByText(/Estimativa cancelada|conexão foi interrompida/i)).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Confira antes de registrar" })).toBeHidden();
+  expect(await db.select().from(foodEntries).where(eq(foodEntries.userId, user.id))).toHaveLength(0);
+  await expect.poll(async () => {
+    const trilhas = await db.select().from(decisionTrails).where(eq(decisionTrails.userId, user.id));
+    return trilhas.map((trilha) => trilha.desfecho);
+  }).toEqual(["cancelada"]);
 });
 
 test("corrigir o alimento na foto recalcula os macros daquele item", async ({ page, context }) => {
