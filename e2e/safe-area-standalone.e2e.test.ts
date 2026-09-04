@@ -1,5 +1,9 @@
 import { expect, test, type Page } from "@playwright/test";
+import { db } from "@/db/client";
+import { plans } from "@/db/schema";
+import type { PlanoGerado } from "@/domain/plano/tipos";
 import { allowEmail, seedAuthenticatedSession } from "./helpers/seed-session";
+import { abrirSessaoEmAndamento, registrarSerie } from "./helpers/sessao";
 
 /**
  * Regressão do app instalado na tela de início do iPhone.
@@ -101,6 +105,67 @@ test("o casco respeita as safe areas do iPhone instalado na tela de início", as
     comInsets.excedenteDoDocumento,
     "o documento inteiro voltou a rolar",
   ).toBeLessThanOrEqual(1);
+});
+
+const planoDoTimer = {
+  regraVersao: "motor-plano-v1", modoConservador: false, perfilVersao: 1, dadosUsados: [],
+  nutricao: { calorias: 2450, proteinaG: 189, carboidratosG: 235, gordurasG: 84, fibrasG: 30, estrategia: "Manutenção", refeicoes: [] },
+  bloco: {
+    duracaoSemanas: 4, divisao: "Empurrar",
+    dias: [{ id: "empurrar", nome: "Empurrar", diaSemana: "segunda", exercicios: [{
+      exercicioId: "supino-reto-barra", nome: "Supino reto com barra", padrao: "empurrar-horizontal",
+      // Descanso longo: o timer precisa continuar aberto durante as medições.
+      series: 2, repeticoes: "6–10", rir: 3, descansoSeg: 600, justificativa: "Base",
+    }] }],
+  },
+} as unknown as PlanoGerado;
+
+/**
+ * Regressão relatada em iPhone: durante o descanso, a `BottomNav`
+ * aparecia por cima do timer, e o timer minimizado ficava cortado atrás
+ * dela. O descanso é a informação que o atleta está olhando entre
+ * séries — ficar sob a nav o torna inútil justo quando importa.
+ *
+ * A checagem é geométrica e de empilhamento, com os insets do iPhone
+ * aplicados: `z-index` declarado não prova ordem de pintura (um
+ * ancestral com contexto de empilhamento próprio anularia o valor), por
+ * isso o teste pergunta ao navegador quem ocupa o pixel.
+ */
+test("o timer de descanso fica acima da barra de navegação", async ({ page, context }) => {
+  const email = `e2e-timer-camada-${Date.now()}@example.com`;
+  await allowEmail(email);
+  const { cookie, user } = await seedAuthenticatedSession(email);
+  await db.insert(plans).values({ userId: user.id, perfilVersao: 1, versao: 1, estado: "ativo", regraVersao: planoDoTimer.regraVersao, modoConservador: false, conteudo: planoDoTimer, activatedAt: new Date() });
+  await context.addCookies([cookie]);
+
+  await abrirSessaoEmAndamento(page);
+  await aplicarInsetsDeIPhone(page);
+
+  await registrarSerie(page, 1);
+  await expect(page.getByRole("dialog", { name: "Timer de descanso" })).toBeVisible();
+
+  // 1) Aberto, o timer cobre a nav: quem ocupa o centro da bolha é o
+  //    diálogo, não a barra.
+  const noCentroDaNav = await page.evaluate(() => {
+    const bolha = document.querySelector('nav[aria-label="Navegação principal"]')!.firstElementChild!;
+    const caixa = bolha.getBoundingClientRect();
+    const pilha = document.elementsFromPoint(caixa.x + caixa.width / 2, caixa.y + caixa.height / 2);
+    return pilha.some((elemento) => elemento.closest('[aria-label="Timer de descanso"]') !== null);
+  });
+  expect(noCentroDaNav, "a barra de navegação cobre o timer aberto").toBe(true);
+
+  // 2) Minimizado, o pill fica inteiramente acima da nav — não basta
+  //    vencer no empilhamento, ele não pode encostar nela.
+  await page.getByRole("button", { name: "Minimizar timer" }).click();
+  const pill = page.getByRole("button", { name: /\d+:\d{2}/ }).last();
+  await expect(pill).toBeVisible();
+
+  const caixaPill = (await pill.boundingBox())!;
+  const caixaNav = (await page.getByRole("navigation", { name: "Navegação principal" }).boundingBox())!;
+  expect(
+    caixaPill.y + caixaPill.height,
+    "o timer minimizado invade a barra de navegação",
+  ).toBeLessThanOrEqual(caixaNav.y);
 });
 
 /**

@@ -1,7 +1,7 @@
 ---
 type: Development Learning
-title: "E2E reusa o `next dev` deixado no ar e falha por overlay, não por bug"
-description: "Com reuseExistingServer, qualquer servidor esquecido na porta 3000 substitui o ambiente sob teste: o dev server oclui a bottom nav com o overlay, e um servidor de produção sem as variaveis do E2E desliga o dublê de IA. Nos dois casos, timeout sem erro algum na aplicação."
+title: "E2E reusa servidor deixado na porta e testa o artefato errado"
+description: "Com reuseExistingServer, qualquer servidor na porta 3000 substitui o ambiente sob teste e pode produzir tanto falha enganosa quanto falso verde contra um build anterior."
 tags: [e2e, playwright, nextjs, dev-server, falso-positivo, diagnostico]
 status: stable
 generated:
@@ -14,6 +14,9 @@ sources:
   - id: app-up-sem-duble-2026-08-30
     resource: "scripts/app-local.sh, playwright.config.ts (OPENROUTER_BASE_URL), /proc/<pid>/environ"
     title: "3 falhas com app:up na porta: servidor de produção correto, sem as variáveis do E2E"
+  - id: timer-descanso-falso-verde-2026-09-04
+    resource: "src/components/sessao/registro-serie.tsx, e2e/safe-area-standalone.e2e.test.ts, .next/static/chunks/app/(app)/sessao/"
+    title: "Teste novo passou verde, e passou verde também com a regressão revertida: build velho na porta"
 ---
 
 # Contexto
@@ -64,6 +67,45 @@ processo na porta foi subido pelo próprio Playwright**. Servidor de
 produção local, container, túnel ou dev server — todos substituem o
 ambiente sob teste, cada um com um sintoma diferente.
 
+## O falso verde é o modo perigoso, e só a contraprova o revela
+
+Os dois episódios acima falham em vermelho, o que ao menos convoca
+investigação. Em 2026-09-04 a mesma armadilha produziu o oposto: um teste
+E2E **novo**, escrito para cobrir o timer de descanso sobreposto pela
+`BottomNav`, passou 3/3 na primeira execução.[^timer-descanso-falso-verde-2026-09-04]
+
+O verde era vazio. Havia um servidor de produção na porta 3000 de um
+build anterior, e `reuseExistingServer` o adotou: a suíte nunca executou
+o código-fonte alterado. O bundle servido provava, com um `grep`:
+
+```
+bundle testado:  bottom-[calc(5.75rem+var(--safe-bottom))] z-[60]
+fonte no disco:  bottom-[calc(7rem+var(--safe-bottom))]    z-[60]
+```
+
+Nenhum valor `5.75rem` existia no repositório — era resíduo de um build
+velho. Um teste que passa contra código que não é o seu não distingue
+correção de coincidência, e o relatório verde encerra a investigação
+precisamente quando ela deveria começar.
+
+O que expôs a fraude não foi ler o log, foi **reverter a correção e
+exigir que o teste falhasse**. Ele continuou verde — prova de que não
+vigiava nada. Só depois de `app:down && app:up` com o defeito no bundle o
+teste finalmente acusou `Expected: <= 723, Received: 743`.
+
+Daí a regra: **um teste de regressão só está pronto quando foi visto
+falhar contra o defeito que ele descreve.** Para mudança que só existe
+depois de compilada — CSS, geometria, layout — a contraprova exige
+rebuildar com o defeito, não apenas editar o fonte.
+
+Essa contraprova tem um segundo rendimento: ela mede o alcance real da
+correção. Aqui, das duas alterações feitas no componente, só a geometria
+do timer minimizado (`bottom-24` → `bottom-[calc(7rem+var(--safe-bottom))]`)
+fez o teste falhar ao ser revertida. A elevação do modal (`z-50` → `z-[70]`)
+não alterou resultado algum, porque `z-50` já vencia o `z-10` da nav — é
+mudança defensável, mas não era o defeito. Sem a contraprova, as duas
+teriam sido relatadas como "correção verificada".
+
 # Aplicação futura
 
 Ao investigar falha de E2E, verifique primeiro **contra o que a suíte rodou**. `curl -s -o /dev/null -w "%{http_code}" http://localhost:3000/` antes de disparar a suíte; se responder, descubra qual processo é o dono antes de interpretar qualquer resultado.
@@ -97,6 +139,18 @@ aplicação fazendo seu trabalho e parecendo defeito do produto. O ciclo
 completo é `app:down && db:up` → suíte → `app:up`, e a última etapa não
 é opcional só porque a validação terminou.
 
+Para mudança que só se manifesta no bundle (CSS, classe utilitária,
+geometria), confirmar a porta não basta: confirme que o **artefato**
+contém a alteração, com um `grep` no chunk servido antes de dar peso ao
+resultado.
+
+```bash
+grep -ro "bottom-\[calc(7rem" ".next/static/chunks/app/(app)/sessao/"
+```
+
+Sem correspondência, a suíte está testando outro código, e tanto o verde
+quanto o vermelho são ruído.
+
 Ao bisseccionar com `git stash` para separar regressão de falha pré-existente, lembre que o resultado só é válido se ambas as execuções usaram o mesmo servidor. Nesta investigação, `registro-por-foto` foi classificado como "pré-existente" justamente porque as duas rodadas da bissecção usaram o dev server — e ele passa normalmente em produção.
 
 # Evidência
@@ -117,6 +171,18 @@ derrubado apenas o cenário novo. A confirmação veio em um comando:
 $ tr '\0' '\n' < /proc/35034/environ | grep -E "OPENROUTER_BASE_URL|AUTH_URL"
 (vazio)
 ```
+
+No episódio de 2026-09-04, a mesma suíte e o mesmo teste em três
+ambientes deixam o falso verde à mostra:[^timer-descanso-falso-verde-2026-09-04]
+
+| build servido | código do timer | resultado |
+| --- | --- | --- |
+| anterior, reusado da porta | `5.75rem z-[60]` (nem o certo, nem o defeito) | `3 passed` — sem valor |
+| rebuild com a regressão | `bottom-24 z-40` | `1 failed`: `o timer minimizado invade a barra de navegação` |
+| rebuild com a correção | `bottom-[calc(7rem+var(--safe-bottom))] z-[60]` | `9 passed` |
+
+A primeira e a terceira linhas são ambas verdes e significam coisas
+opostas. Só a linha do meio dá sentido às outras duas.
 
 Liberada a porta e mantido o banco de pé, os mesmos 3 cenários passaram
 em 6,3 s, e a suíte completa fechou 43/43 sem nenhuma alteração de
