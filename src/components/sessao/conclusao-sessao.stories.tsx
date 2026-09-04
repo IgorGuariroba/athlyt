@@ -12,3 +12,7 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 export const ComSeriesPendentes: Story = {};
 export const Completo: Story = { args: { seriesPendentes: 0 } };
+/** Encerrado offline: o botão sai de cena e nada mais pode ser registrado nesta sessão. */
+export const EncerradaNesteAparelho: Story = {
+  decorators: [(Story) => <div className="max-w-md"><ProvedorConexao sessionId="storybook" seriesConfirmadas={[]} encerradaForcada><Story /></ProvedorConexao></div>],
+};

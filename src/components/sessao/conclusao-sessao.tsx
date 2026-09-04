@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useConexao } from "./estado-conexao";
 
@@ -15,8 +14,7 @@ import { useConexao } from "./estado-conexao";
 export function ConclusaoSessao({ concluirAction, seriesPendentes }: {
   concluirAction: () => Promise<void>; seriesPendentes: number;
 }) {
-  const { registrosLocais, estado, registrar } = useConexao();
-  const [encerradaLocalmente, setEncerrada] = useState(false);
+  const { registrosLocais, estado, registrar, encerradaLocalmente } = useConexao();
   const faltam = Math.max(0, seriesPendentes - registrosLocais.length);
 
   if (encerradaLocalmente) {
@@ -46,10 +44,7 @@ export function ConclusaoSessao({ concluirAction, seriesPendentes }: {
     <Button
       size="lg"
       className="h-14 w-full text-base font-bold"
-      onClick={async () => {
-        setEncerrada(true);
-        await registrar("sessao_concluida", {});
-      }}
+      onClick={async () => { await registrar("sessao_concluida", {}); }}
     >
       Concluir treino
     </Button>

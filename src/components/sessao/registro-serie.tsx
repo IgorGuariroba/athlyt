@@ -36,13 +36,17 @@ export function RegistroSerie({ sessionId, exercicioId, numero, repeticoesSugeri
   const [timerMinimizado, setTimerMinimizado] = useState(false);
   const [enviando, setEnviando] = useState(false);
   const [erroRegistro, setErroRegistro] = useState<string | null>(null);
-  const { registrar: enfileirarEvento, registrosLocais } = useConexao();
+  const { registrar: enfileirarEvento, registrosLocais, encerradaLocalmente } = useConexao();
   // O descanso que vale é o escolhido para este exercício; sem escolha,
   // o prescrito pelo plano.
   const ritmoDescanso = useRitmoDescanso(exercicioId);
   const descansoEfetivoSeg = segundosDeDescanso(descansoSeg, ritmoDescanso);
   const local = registrosLocais.find((r) => r.exercicioId === exercicioId && r.numero === numero);
   const registrada = concluida || local !== undefined;
+  // Encerrado o treino neste aparelho, a série deixa de ser oferecida:
+  // enfileirá-la agora produziria um evento de ordem maior que o
+  // encerramento, que o servidor recebe sobre uma sessão já concluída.
+  const bloqueada = encerradaLocalmente && !registrada;
   // Uma série só está "registrada" aqui via `concluida` (vindo do servidor) ou via
   // `registrosLocais` (recém enviada, ainda não refletida no HTML). Combinar as
   // duas fontes por número deixa dizer, sem esperar o refresh do servidor, se
@@ -151,18 +155,22 @@ export function RegistroSerie({ sessionId, exercicioId, numero, repeticoesSugeri
           <input type="hidden" name="cargaKg" value="0" />
         ) : (
           <label className="text-caption text-muted-foreground">KG
-            <Input name="cargaKg" type="number" inputMode="decimal" step="0.5" min="0" value={cargaExibida} onChange={(evento) => atualizarRascunhoSerie(sessionId, exercicioId, numero, "cargaKg", evento.target.value)} placeholder={String(cargaSugerida)} required disabled={registrada} className="mt-1 h-12 text-center text-lg font-bold tabular-nums" />
+            <Input name="cargaKg" type="number" inputMode="decimal" step="0.5" min="0" value={cargaExibida} onChange={(evento) => atualizarRascunhoSerie(sessionId, exercicioId, numero, "cargaKg", evento.target.value)} placeholder={String(cargaSugerida)} required disabled={registrada || bloqueada} className="mt-1 h-12 text-center text-lg font-bold tabular-nums" />
           </label>
         )}
         <label className="text-caption text-muted-foreground">{rotulos[modoEfetivo]} <span className="sr-only">sugeridas {repeticoesSugeridas}</span>
-          <Input name="repeticoes" type="number" inputMode="numeric" min="0" value={repeticoesExibidas} onChange={(evento) => atualizarRascunhoSerie(sessionId, exercicioId, numero, "repeticoes", evento.target.value)} required disabled={registrada} className="mt-1 h-12 text-center text-lg font-bold tabular-nums" />
+          <Input name="repeticoes" type="number" inputMode="numeric" min="0" value={repeticoesExibidas} onChange={(evento) => atualizarRascunhoSerie(sessionId, exercicioId, numero, "repeticoes", evento.target.value)} required disabled={registrada || bloqueada} className="mt-1 h-12 text-center text-lg font-bold tabular-nums" />
         </label>
         {modoEfetivo === "repeticoes" || modoEfetivo === "unilateral" ? <label className="text-caption text-muted-foreground">RIR <span className="sr-only">prescrito {rirSugerido}</span>
-          <Input name="rir" type="number" inputMode="numeric" min="0" max="10" value={rirExibido} onChange={(evento) => atualizarRascunhoSerie(sessionId, exercicioId, numero, "rir", evento.target.value)} required disabled={registrada} className="mt-1 h-12 text-center text-lg font-bold tabular-nums" />
+          <Input name="rir" type="number" inputMode="numeric" min="0" max="10" value={rirExibido} onChange={(evento) => atualizarRascunhoSerie(sessionId, exercicioId, numero, "rir", evento.target.value)} required disabled={registrada || bloqueada} className="mt-1 h-12 text-center text-lg font-bold tabular-nums" />
         </label> : <input type="hidden" name="rir" value="0" />}
-        <Button type="submit" size="icon" disabled={enviando || registrada} aria-label={`Registrar série ${numero}`} className="mb-0 size-12 rounded-full">
-          <Check className="size-5" />
-        </Button>
+        {/* O espaço do botão é preservado para a grade das séries não
+            se reorganizar ao encerrar o treino. */}
+        {bloqueada ? <span aria-hidden className="mb-0 size-12" /> : (
+          <Button type="submit" size="icon" disabled={enviando || registrada} aria-label={`Registrar série ${numero}`} className="mb-0 size-12 rounded-full">
+            <Check className="size-5" />
+          </Button>
+        )}
         {registrada ? <div className="col-span-5 flex items-center justify-between pl-10 text-caption text-muted-foreground"><span>10RM estimado: {estimativa10Rm ?? "—"} kg</span>{recorde ? <strong className="flex items-center gap-1 text-warning"><Trophy className="size-3" /> {recorde.rotulo}</strong> : null}</div> : null}
       </form>
       {erroRegistro ? <p role="alert" className="pb-3 pl-10 text-body-sm font-semibold text-error">{erroRegistro}</p> : null}

@@ -116,6 +116,45 @@ describe("sincronização da fila offline", () => {
     expect(await listarConflitosPendentes(userId)).toEqual([]);
   });
 
+  it("não deixa série tardia alterar a sessão já concluída", async () => {
+    const { userId, sessionId } = await contexto();
+    // A ordem é a do dispositivo: o atleta encerrou e só depois
+    // registrou mais uma série, tudo offline no mesmo aparelho.
+    const fim = evento(sessionId, 1, {}, "sessao_concluida");
+    const tardia = evento(sessionId, 2, { exercicioId: "supino-reto-halteres", numero: 1, cargaKg: 30, repeticoes: 10, rir: 2 });
+
+    const resultado = await sincronizarEventos(userId, sessionId, [fim, tardia]);
+
+    expect(resultado.aplicados).toEqual([fim.id]);
+    expect(resultado.conflitos).toHaveLength(1);
+    expect(resultado.conflitos[0]).toMatchObject({ motivo: "sessao_ja_encerrada", eventoId: tardia.id });
+
+    // A linha persistida não mudou: nem o resumo daquele treino nem as
+    // cargas sugeridas das próximas sessões são reescritas depois do fato.
+    const sessao = await obterSessao(userId, sessionId);
+    expect(sessao?.estado).toBe("concluida");
+    expect(sessao?.exercicios[0].series.every((s) => !s.concluida)).toBe(true);
+
+    // E o caminho online recusa o mesmo registro pelo mesmo motivo.
+    await expect(registrarSerie(userId, sessionId, { exercicioId: "supino-reto-halteres", numero: 1, cargaKg: 30, repeticoes: 10, rir: 2 }))
+      .rejects.toThrow("Sessão não está em andamento.");
+  });
+
+  it("recusa registro fora de faixa nos dois caminhos de escrita, sem pedir decisão ao atleta", async () => {
+    const { userId, sessionId } = await contexto();
+    const forjado = evento(sessionId, 1, { exercicioId: "supino-reto-halteres", numero: 1, cargaKg: 30, repeticoes: 10, rir: 47 });
+
+    const resultado = await sincronizarEventos(userId, sessionId, [forjado]);
+
+    expect(resultado.aplicados).toEqual([]);
+    expect(resultado.conflitos).toEqual([]);
+    expect(await listarConflitosPendentes(userId)).toEqual([]);
+    expect((await obterSessao(userId, sessionId))?.exercicios[0].series[0].concluida).toBe(false);
+
+    await expect(registrarSerie(userId, sessionId, { exercicioId: "supino-reto-halteres", numero: 1, cargaKg: 30, repeticoes: 10, rir: 47 }))
+      .rejects.toThrow("Valores da série inválidos.");
+  });
+
   it("recusa fila de sessão de outro usuário", async () => {
     const { sessionId } = await contexto();
     const [outro] = await db.insert(users).values({ email: `intruso-${randomUUID()}@example.com` }).returning();

@@ -18,6 +18,10 @@ const eventoSchema = z.object({
   tipo: z.enum(["sessao_iniciada", "serie_registrada", "exercicio_substituido", "sessao_concluida", "sessao_abandonada"]),
   ocorridoEm: z.iso.datetime(),
   ordem: z.number().int().nonnegative(),
+  // A forma do conteúdo continua aberta aqui: quem decide se um
+  // registro de série é admissível é o merge, que é o único que tem o
+  // estado persistido da sessão em mãos. Enrijecer o schema resolveria
+  // faixa e tipo, mas devolveria a regra a dois lugares.
   dados: z.record(z.string(), z.unknown()),
 });
 
@@ -40,6 +44,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
       aplicados: resultado.aplicados,
       duplicados: resultado.duplicados,
       conflitos: resultado.conflitos.map((conflito) => ({ id: conflito.eventoId, motivo: conflito.motivo })),
+      inadmissiveis: resultado.inadmissiveis.map((registro) => ({ id: registro.eventoId, motivo: registro.motivo })),
     });
   } catch {
     return NextResponse.json({ erro: "Sessão não encontrada." }, { status: 404 });

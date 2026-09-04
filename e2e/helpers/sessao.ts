@@ -138,6 +138,11 @@ export async function concluirTreino(
   }).toPass({ timeout: 30_000 });
 }
 
+/** A série deixou de ser oferecida nesta tela — não há como registrá-la. */
+export async function esperarRegistroIndisponivel(page: Page, numero: number) {
+  await expect(page.getByRole("button", { name: `Registrar série ${numero}` })).toHaveCount(0);
+}
+
 /**
  * Conclui esperando o servidor confirmar a série antes.
  *

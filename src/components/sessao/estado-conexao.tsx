@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useCallback, useContext, useEffect, useSyncExternalStore } from "react";
+import { createContext, useCallback, useContext, useEffect, useState, useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
 import { AlertTriangle, CircleDot, CloudOff, RefreshCw, TriangleAlert } from "lucide-react";
 import Link from "next/link";
@@ -24,6 +24,14 @@ interface Contexto {
   fila: number;
   conflitos: number;
   registrosLocais: SerieRegistrada[];
+  /**
+   * O treino foi encerrado neste aparelho, mesmo que o servidor ainda
+   * não saiba. É fato compartilhado da sessão, e não estado privado do
+   * botão: quem oferece registrar uma série precisa parar de oferecer.
+   * Uma série enfileirada depois do encerramento tem ordem maior, chega
+   * ao servidor sobre uma sessão já concluída e vira conflito.
+   */
+  encerradaLocalmente: boolean;
   /** Enfileira o evento localmente e tenta drenar em seguida. */
   registrar: (tipo: TipoEventoOutbox, dados: Record<string, unknown>) => Promise<void>;
 }
@@ -40,6 +48,7 @@ export function ProvedorConexao({
   sessionId,
   seriesConfirmadas,
   estadoForcado,
+  encerradaForcada,
   children,
 }: {
   sessionId: string;
@@ -47,6 +56,8 @@ export function ProvedorConexao({
   seriesConfirmadas: Array<{ exercicioId: string; numero: number }>;
   /** Permite demonstrar e testar estados determinísticos sem manipular a rede do navegador. */
   estadoForcado?: EstadoConexao;
+  /** Mesma razão: demonstrar a sessão já encerrada neste aparelho sem encená-la. */
+  encerradaForcada?: boolean;
   children: React.ReactNode;
 }) {
   const router = useRouter();
@@ -55,6 +66,7 @@ export function ProvedorConexao({
   // de vida é exatamente a janela em que a tela deve ficar acesa.
   useTelaAtiva();
   const outbox = useSyncExternalStore(assinarOutbox, lerOutbox, lerOutboxServidor);
+  const [encerradaLocalmente, setEncerrada] = useState(false);
 
   /**
    * Rebusca o HTML do servidor — nunca sem rede.
@@ -104,7 +116,9 @@ export function ProvedorConexao({
       fila: outbox.fila.length,
       conflitos: outbox.conflitos,
       registrosLocais: outbox.registrosLocais,
+      encerradaLocalmente: encerradaForcada ?? encerradaLocalmente,
       registrar: async (tipo, dados) => {
+        if (tipo === "sessao_concluida" || tipo === "sessao_abandonada") setEncerrada(true);
         await registrarNaFila(sessionId, tipo, dados);
 
         const { aplicou } = await drenarFila(sessionId);

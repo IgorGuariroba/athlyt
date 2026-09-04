@@ -71,7 +71,7 @@ export const COMPONENTES_SEM_TESTE_DE_CONTRATO = new Set([
   "CartaoSessaoDoDiaCorpo", "CartaoSessaoDoDiaAcao", "CartaoPlanoAtivo",
   "CabecalhoPlanoAtivo", "CartaoPlanoAtivoCabecalho", "MetricasPlanoAtivo",
   "CartaoPlanoAtivoSecao", "ResumoMacros", "MetaNutricional",
-  "AjusteDescanso", "ConclusaoSessao", "EstadoConexao", "ProvedorConexao",
+  "AjusteDescanso", "EstadoConexao", "ProvedorConexao",
   "BadgeConexao", "RegistroSerie",
 ]);
 

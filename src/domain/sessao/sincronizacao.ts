@@ -1,7 +1,8 @@
 import { and, asc, desc, eq, isNull } from "drizzle-orm";
 import { db } from "@/db/client";
 import { syncConflicts, workoutEvents, workoutSessions } from "@/db/schema";
-import { mesclarEventos, ordenarEventos, type ConflitoSincronizacao, type EstadoLocalSessao, type EventoOutbox } from "./outbox";
+import { mesclarEventos, ordenarEventos, type ConflitoSincronizacao, type EstadoLocalSessao, type EventoOutbox, type RegistroInadmissivel } from "./outbox";
+import { logger } from "@/observabilidade/logger";
 import type { ExercicioSessao } from "./repositorio";
 
 /**
@@ -24,6 +25,13 @@ export interface ResultadoSincronizacao {
   aplicados: string[];
   duplicados: string[];
   conflitos: ConflitoPendente[];
+  /**
+   * Eventos que nenhum humano pode resolver — dado impossível vindo do
+   * nosso próprio cliente. Não viram conflito na tela: viram sinal de
+   * defeito. O cliente os tira da fila porque nenhum reenvio os torna
+   * válidos.
+   */
+  inadmissiveis: RegistroInadmissivel[];
 }
 
 function estadoDe(linha: typeof workoutSessions.$inferSelect): EstadoLocalSessao {
@@ -78,10 +86,18 @@ export async function sincronizarEventos(userId: string, sessionId: string, even
       }))).onConflictDoNothing({ target: syncConflicts.clientEventId });
     }
 
+    if (merge.inadmissiveis.length > 0) {
+      logger.error({
+        sessionId,
+        inadmissiveis: merge.inadmissiveis.map((r) => r.motivo),
+      }, "fila offline enviou registro de série inadmissível");
+    }
+
     return {
       aplicados: merge.aplicados,
       duplicados: merge.duplicados,
       conflitos: await listarConflitosDaSessao(tx, sessionId),
+      inadmissiveis: merge.inadmissiveis,
     };
   });
 }

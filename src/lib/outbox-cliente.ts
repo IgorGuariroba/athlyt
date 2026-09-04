@@ -109,6 +109,12 @@ export interface RespostaSincronizacao {
   aplicados: string[];
   duplicados: string[];
   conflitos: Array<{ id: string; motivo: string }>;
+  /**
+   * Recusados por defeito do cliente. Saem da fila porque nenhum
+   * reenvio os torna válidos — mantê-los só travaria a drenagem de
+   * tudo o que vem depois.
+   */
+  inadmissiveis?: Array<{ id: string; motivo: string }>;
 }
 
 /**
@@ -128,7 +134,10 @@ export async function sincronizar(sessionId: string): Promise<RespostaSincroniza
   if (!resposta.ok) throw new Error(`Sincronização falhou (${resposta.status}).`);
 
   const resultado = (await resposta.json()) as RespostaSincronizacao;
-  const conflitados = new Set(resultado.conflitos.map((c) => c.id));
-  await confirmar([...resultado.aplicados, ...resultado.duplicados, ...fila.map((e) => e.id).filter((id) => conflitados.has(id))]);
+  const resolvidos = new Set([
+    ...resultado.conflitos.map((c) => c.id),
+    ...(resultado.inadmissiveis ?? []).map((r) => r.id),
+  ]);
+  await confirmar([...resultado.aplicados, ...resultado.duplicados, ...fila.map((e) => e.id).filter((id) => resolvidos.has(id))]);
   return resultado;
 }

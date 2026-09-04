@@ -5,6 +5,7 @@ import { encontrarExercicio, regioesLesionadas } from "@/domain/plano/exercicios
 import { alternativasEquivalentes, motivoPersistente, type Alternativa, type MotivoSubstituicao } from "@/domain/plano/substituicoes";
 import { obterPerfilVigente } from "@/domain/triagem/perfil";
 import type { DiaTreino, ExplicacaoDecisao, PlanoGerado } from "@/domain/plano/tipos";
+import { aplicarRegistroSerie, avaliarRegistroSerie, type EstadoLocalSessao } from "./outbox";
 import type { ModalidadeProtocolo } from "./protocolo-execucao";
 import { MARCA_ZERO, avaliarRecorde, combinarMarcas, melhorMarca, type MarcaExercicio, type TipoRecorde } from "./recorde";
 
@@ -175,16 +176,33 @@ export async function obterSessao(userId: string, sessionId: string): Promise<Se
   return linha ? mapear(linha) : null;
 }
 
+/**
+ * Escrita síncrona de uma série.
+ *
+ * As regras do que é um registro admissível não moram aqui: são as
+ * mesmas que a fila offline atravessa, e viviam duplicadas nos dois
+ * caminhos. Este adapter mantém sua transação e seu `FOR UPDATE`, e
+ * traduz o veredito para o contrato de erro que os chamadores já
+ * conhecem.
+ */
 export async function registrarSerie(userId: string, sessionId: string, entrada: { exercicioId: string; numero: number; cargaKg: number; repeticoes: number; rir: number }): Promise<SessaoTreino> {
-  if (entrada.cargaKg < 0 || entrada.repeticoes < 0 || entrada.rir < 0 || entrada.rir > 10) throw new Error("Valores da série inválidos.");
   return db.transaction(async (tx) => {
     const [linha] = await tx.select().from(workoutSessions).where(and(eq(workoutSessions.id, sessionId), eq(workoutSessions.userId, userId))).limit(1).for("update");
-    if (!linha || linha.estado !== "em_andamento") throw new Error("Sessão não está em andamento.");
-    const exercicios = structuredClone(linha.exercicios as ExercicioSessao[]);
-    const exercicio = exercicios.find((item) => item.exercicioId === entrada.exercicioId);
-    const serie = exercicio?.series.find((item) => item.numero === entrada.numero);
-    if (!exercicio || !serie) throw new Error("Série não pertence à sessão.");
-    Object.assign(serie, { cargaKg: entrada.cargaKg, repeticoes: entrada.repeticoes, rir: entrada.rir, concluida: true });
+    if (!linha) throw new Error("Sessão não está em andamento.");
+    const estado: EstadoLocalSessao = {
+      estado: linha.estado, exercicios: linha.exercicios as ExercicioSessao[], motivoAbandono: linha.motivoAbandono,
+    };
+
+    const veredito = avaliarRegistroSerie(estado, { ...entrada });
+    if (veredito.situacao === "inadmissivel") throw new Error("Valores da série inválidos.");
+    if (veredito.situacao === "conflito") {
+      // Sem fila no meio não há conflito a persistir: o chamador está
+      // online e recebe a recusa na hora, pela mesma razão que o merge
+      // registraria.
+      throw new Error(veredito.motivo === "sessao_ja_encerrada" ? "Sessão não está em andamento." : "Série não pertence à sessão.");
+    }
+
+    const { exercicios } = aplicarRegistroSerie(estado, veredito.registro);
     const [atualizada] = await tx.update(workoutSessions).set({ exercicios }).where(eq(workoutSessions.id, sessionId)).returning();
     await tx.insert(workoutEvents).values({ sessionId, userId, tipo: "serie_registrada", dados: entrada });
     return mapear(atualizada);
