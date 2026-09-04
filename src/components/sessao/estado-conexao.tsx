@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useCallback, useContext, useEffect, useReducer, useRef, useSyncExternalStore } from "react";
+import { createContext, useCallback, useContext, useEffect, useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
 import { AlertTriangle, CircleDot, CloudOff, RefreshCw, TriangleAlert } from "lucide-react";
 import Link from "next/link";
@@ -8,12 +8,6 @@ import { assinarOutbox, drenarFila, lerOutbox, lerOutboxServidor, liberarRegistr
 import { useOnline } from "@/lib/use-online";
 import { useTelaAtiva } from "@/lib/use-tela-ativa";
 import type { SerieRegistrada, TipoEventoOutbox } from "@/domain/sessao/outbox";
-import type { GatilhoCopiloto, ResultadoCopiloto } from "@/domain/sessao/copiloto";
-import {
-  ESTADO_INICIAL_COPILOTO,
-  reduzirEstadoCopiloto,
-  type EstadoCopilotoCliente,
-} from "@/domain/sessao/copiloto-cliente";
 
 /**
  * Os cinco estados de conexão e sincronização são distintos de
@@ -30,10 +24,8 @@ interface Contexto {
   fila: number;
   conflitos: number;
   registrosLocais: SerieRegistrada[];
-  copiloto: EstadoCopilotoCliente;
-  confirmarAlertaCautela: (exercicioId: string) => Promise<void>;
   /** Enfileira o evento localmente e tenta drenar em seguida. */
-  registrar: (tipo: TipoEventoOutbox, dados: Record<string, unknown>, proximaSerie?: number) => Promise<void>;
+  registrar: (tipo: TipoEventoOutbox, dados: Record<string, unknown>) => Promise<void>;
 }
 
 const ContextoConexao = createContext<Contexto | null>(null);
@@ -47,16 +39,12 @@ export function useConexao(): Contexto {
 export function ProvedorConexao({
   sessionId,
   seriesConfirmadas,
-  solicitarOrientacao = async () => ({ status: "indisponivel", motivo: "ação não configurada" }),
-  continuarAposAlerta = async () => undefined,
   estadoForcado,
   children,
 }: {
   sessionId: string;
   /** Séries que o servidor já tem como registradas, no HTML atual. */
   seriesConfirmadas: Array<{ exercicioId: string; numero: number }>;
-  solicitarOrientacao?: (sessionId: string, gatilho: Omit<GatilhoCopiloto, "origem">) => Promise<ResultadoCopiloto>;
-  continuarAposAlerta?: (sessionId: string, entrada: { exercicioId: string; proximaSerie: number; alerta: string }) => Promise<unknown>;
   /** Permite demonstrar e testar estados determinísticos sem manipular a rede do navegador. */
   estadoForcado?: EstadoConexao;
   children: React.ReactNode;
@@ -67,8 +55,6 @@ export function ProvedorConexao({
   // de vida é exatamente a janela em que a tela deve ficar acesa.
   useTelaAtiva();
   const outbox = useSyncExternalStore(assinarOutbox, lerOutbox, lerOutboxServidor);
-  const [copiloto, despacharCopiloto] = useReducer(reduzirEstadoCopiloto, ESTADO_INICIAL_COPILOTO);
-  const sequenciaCopiloto = useRef(0);
 
   /**
    * Rebusca o HTML do servidor — nunca sem rede.
@@ -118,49 +104,11 @@ export function ProvedorConexao({
       fila: outbox.fila.length,
       conflitos: outbox.conflitos,
       registrosLocais: outbox.registrosLocais,
-      copiloto,
-      confirmarAlertaCautela: async (exercicioId) => {
-        if (copiloto.estado !== "orientacao" || !copiloto.orientacao.alertaCautela) return;
-        await continuarAposAlerta(sessionId, {
-          exercicioId,
-          proximaSerie: copiloto.proximaSerie,
-          alerta: copiloto.orientacao.alertaCautela,
-        });
-        despacharCopiloto({ tipo: "cautela-confirmada", proximaSerie: copiloto.proximaSerie });
-      },
-      registrar: async (tipo, dados, proximaSerie) => {
+      registrar: async (tipo, dados) => {
         await registrarNaFila(sessionId, tipo, dados);
-
-        const requisicao = ++sequenciaCopiloto.current;
-        if (tipo === "serie_registrada") {
-          despacharCopiloto({ tipo: "serie-registrada", requisicao, proximaSerie: proximaSerie ?? null });
-          if (!navigator.onLine && proximaSerie !== undefined) {
-            despacharCopiloto({ tipo: "indisponivel", requisicao, proximaSerie, motivo: "offline" });
-          }
-        }
 
         const { aplicou } = await drenarFila(sessionId);
         if (aplicou) atualizarDoServidor();
-        if (tipo !== "serie_registrada" || proximaSerie === undefined || !navigator.onLine) return;
-
-        void solicitarOrientacao(sessionId, {
-          exercicioId: String(dados.exercicioId),
-          serieRegistrada: Number(dados.numero),
-        }).then((resultado) => {
-          if (resultado.status === "ok") {
-            despacharCopiloto({
-              tipo: "resposta-recebida",
-              requisicao,
-              proximaSerie: resultado.proximaSerie,
-              orientacao: resultado.orientacao,
-              versao: resultado.versao,
-            });
-          } else if (resultado.status === "indisponivel") {
-            despacharCopiloto({ tipo: "indisponivel", requisicao, proximaSerie, motivo: "provedor-indisponivel" });
-          }
-        }).catch(() => {
-          despacharCopiloto({ tipo: "indisponivel", requisicao, proximaSerie, motivo: "provedor-indisponivel" });
-        });
       },
     }}>
       {children}

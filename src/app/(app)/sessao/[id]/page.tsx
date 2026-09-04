@@ -11,14 +11,11 @@ import { MARCA_ZERO, combinarMarcas, marcaDaSerie, type MarcaExercicio } from "@
 import {
   abandonarSessaoAction,
   concluirSessaoAction,
-  continuarAposAlertaCautelaAction,
-  solicitarOrientacaoCopilotoAction,
 } from "../actions";
 import {
   AjusteDescanso,
   BadgeConexao,
   ConclusaoSessao,
-  PainelCoach,
   ProvedorConexao,
   RegistroSerie,
 } from "@/components/sessao";
@@ -61,8 +58,6 @@ export default async function SessaoPage({ params, searchParams }: { params: Pro
     <ProvedorConexao
       sessionId={sessao.id}
       seriesConfirmadas={sessao.exercicios.flatMap((item) => item.series.filter((s) => s.concluida).map((s) => ({ exercicioId: item.exercicioId, numero: s.numero })))}
-      solicitarOrientacao={solicitarOrientacaoCopilotoAction}
-      continuarAposAlerta={continuarAposAlertaCautelaAction}
     >
     <TelaConteudo className="gap-5 p-4 pb-28">
     <div className="flex flex-col gap-5">
@@ -140,11 +135,10 @@ export default async function SessaoPage({ params, searchParams }: { params: Pro
             />
           </div>
         ) : null}
-        <PainelCoach exercicio={exercicio} />
         <AjusteDescanso exercicioId={exercicio.exercicioId} descansoPrescritoSeg={exercicio.descansoSeg} />
         <details className="border-b border-border px-4 py-3 text-body-sm"><summary className="cursor-pointer font-semibold">O que é RIR?</summary><p className="mt-2 text-muted-foreground">É quantas repetições você ainda conseguiria fazer com boa técnica ao encerrar a série. Quanto menor o RIR, mais difícil foi a série.</p></details>
         <div className="px-3">
-          {exercicio.series.map((serie, indice) => <RegistroSerie key={`${sessao.id}:${exercicio.exercicioId}:${serie.numero}`} sessionId={sessao.id} exercicioId={exercicio.exercicioId} numero={serie.numero} repeticoesSugeridas={serie.repeticoesSugeridas} rirInicial={serie.rir} rirSugerido={serie.rirPrescrito ?? serie.rir} descansoSeg={exercicio.descansoSeg} concluida={serie.concluida} cargaInicial={serie.cargaKg} cargaSugerida={serie.cargaSugeridaKg ?? 0} melhorCargaAnterior={serie.melhorCargaAnteriorKg ?? 0} marcaAnterior={marcasPorSerie[indice]} repeticoesIniciais={serie.repeticoes} temProximaSerie={indice < exercicio.series.length - 1} modo={exercicio.protocolo ?? (definicaoExercicio?.id === "prancha" ? "tempo" : "repeticoes")} seriesDoExercicio={exercicio.series.map((s) => ({ numero: s.numero, concluida: s.concluida }))} />)}
+          {exercicio.series.map((serie, indice) => <RegistroSerie key={`${sessao.id}:${exercicio.exercicioId}:${serie.numero}`} sessionId={sessao.id} exercicioId={exercicio.exercicioId} numero={serie.numero} repeticoesSugeridas={serie.repeticoesSugeridas} rirInicial={serie.rir} rirSugerido={serie.rirPrescrito ?? serie.rir} descansoSeg={exercicio.descansoSeg} concluida={serie.concluida} cargaInicial={serie.cargaKg} cargaSugerida={serie.cargaSugeridaKg ?? 0} melhorCargaAnterior={serie.melhorCargaAnteriorKg ?? 0} marcaAnterior={marcasPorSerie[indice]} repeticoesIniciais={serie.repeticoes} modo={exercicio.protocolo ?? (definicaoExercicio?.id === "prancha" ? "tempo" : "repeticoes")} seriesDoExercicio={exercicio.series.map((s) => ({ numero: s.numero, concluida: s.concluida }))} />)}
         </div>
       </section>
 

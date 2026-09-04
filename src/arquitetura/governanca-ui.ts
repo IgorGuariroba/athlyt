@@ -72,7 +72,7 @@ export const COMPONENTES_SEM_TESTE_DE_CONTRATO = new Set([
   "CabecalhoPlanoAtivo", "CartaoPlanoAtivoCabecalho", "MetricasPlanoAtivo",
   "CartaoPlanoAtivoSecao", "ResumoMacros", "MetaNutricional",
   "AjusteDescanso", "ConclusaoSessao", "EstadoConexao", "ProvedorConexao",
-  "BadgeConexao", "PainelCoach", "RegistroSerie",
+  "BadgeConexao", "RegistroSerie",
 ]);
 
 /**

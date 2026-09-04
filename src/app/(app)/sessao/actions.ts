@@ -4,8 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import type { MotivoSubstituicao } from "@/domain/plano/substituicoes";
-import { solicitarOrientacaoProximaSerie, type GatilhoCopiloto } from "@/domain/sessao/copiloto";
-import { abandonarSessao, concluirSessao, iniciarSessao, registrarOverrideAlertaCautela, registrarSerie, substituirExercicioNaSessao, type MotivoAbandono } from "@/domain/sessao/repositorio";
+import { abandonarSessao, concluirSessao, iniciarSessao, registrarSerie, substituirExercicioNaSessao, type MotivoAbandono } from "@/domain/sessao/repositorio";
 
 async function usuario() {
   const session = await auth();
@@ -28,25 +27,6 @@ export async function registrarSerieAction(sessionId: string, formData: FormData
     rir: Number(formData.get("rir")),
   });
   revalidatePath(`/sessao/${sessionId}`);
-}
-
-export async function solicitarOrientacaoCopilotoAction(sessionId: string, gatilho: Omit<GatilhoCopiloto, "origem">) {
-  return solicitarOrientacaoProximaSerie(await usuario(), sessionId, {
-    ...gatilho,
-    origem: {
-      tela: "Sessão de Treino",
-      rota: `/sessao/${sessionId}`,
-      gatilho: "serie-registrada",
-    },
-  });
-}
-
-export async function continuarAposAlertaCautelaAction(sessionId: string, entrada: {
-  exercicioId: string;
-  proximaSerie: number;
-  alerta: string;
-}) {
-  await registrarOverrideAlertaCautela(await usuario(), sessionId, entrada);
 }
 
 export async function substituirExercicioAction(sessionId: string, formData: FormData) {

@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { db } from "@/db/client";
-import { plans, profileVersions } from "@/db/schema";
+import { plans } from "@/db/schema";
 import type { PlanoGerado } from "@/domain/plano/tipos";
 import {
   concluirSessao as concluirSessaoNoDominio,
@@ -27,17 +27,6 @@ const plano: PlanoGerado = {
         explicacao: { porque: "Halteres poupam seu ombro direito e estão na sua academia.", dadosUsados: [{ campo: "lesoes", valor: "ombro direito" }] } }] },
     { id: "inferior-a", nome: "Inferior A", diaSemana: "quinta", exercicios: [{ exercicioId: "agachamento-peso-corpo", nome: "Agachamento com peso do corpo", padrao: "agachar", series: 1, repeticoes: "10–15", rir: 2, descansoSeg: 2, justificativa: "Base de pernas" }] },
   ] },
-};
-
-const planoCopiloto: PlanoGerado = {
-  ...plano,
-  bloco: {
-    ...plano.bloco,
-    dias: [{
-      ...plano.bloco.dias[0],
-      exercicios: [{ ...plano.bloco.dias[0].exercicios[0], series: 3, descansoSeg: 30 }],
-    }],
-  },
 };
 
 const planoComExercicioDoCatalogo: PlanoGerado = {
@@ -218,77 +207,6 @@ test("executa o treino do dia, usa o timer e consulta o resumo no histórico", a
   await expect(page.getByText("1 de 2 treinos concluídos nos últimos 7 dias")).toBeVisible();
   await expect(page.getByRole("link", { name: /Superior A/ })).toBeVisible();
   await expect(page.getByRole("link", { name: /Inferior A/ })).toBeVisible();
-});
-
-test("mostra orientação assíncrona do Copiloto e cai para o Coach Local ao perder a rede", async ({ page, context }) => {
-  const email = `e2e-copiloto-${Date.now()}@example.com`;
-  await allowEmail(email);
-  const { cookie, user } = await seedAuthenticatedSession(email);
-  await db.insert(profileVersions).values({
-    userId: user.id,
-    version: 1,
-    respostas: { experienciaTreino: "intermediario", equipamentos: ["halteres"] },
-  });
-  await db.insert(plans).values({
-    userId: user.id,
-    perfilVersao: 1,
-    versao: 1,
-    estado: "ativo",
-    regraVersao: planoCopiloto.regraVersao,
-    modoConservador: false,
-    conteudo: planoCopiloto,
-    activatedAt: new Date(),
-  });
-  await context.addCookies([cookie]);
-
-  await abrirSessaoEmAndamento(page);
-
-  // A sincronização alimenta o Copiloto, mas o descanso é relógio do atleta:
-  // mesmo com a rede lenta, o modal precisa abrir sem aguardar esse POST.
-  await page.route("**/api/sessao/*/sincronizar", async (rota) => {
-    await new Promise((resolve) => setTimeout(resolve, 2_000));
-    await rota.continue();
-  }, { times: 1 });
-  await registrarSerie(page, 1);
-  await expect(page.getByRole("dialog", { name: "Timer de descanso" })).toBeVisible({ timeout: 500 });
-  await fecharTimer(page);
-
-  await expect(page.getByRole("region", { name: "Orientação do Copiloto" })).toContainText("Copiloto (IA)");
-  await expect(page.getByRole("region", { name: "Orientação do Copiloto" })).toContainText("26 kg · 9 reps · RIR 2");
-
-  await context.setOffline(true);
-  await registrarSerie(page, 2);
-  await fecharTimer(page);
-  await expect(page.getByRole("region", { name: "Orientações do Coach Local" })).toContainText("Coach Local (regra)");
-  await expect(page.getByRole("region", { name: "Orientações do Coach Local" })).toContainText("nenhuma sugestão de IA");
-});
-
-test("usa o Coach Local sem simular IA quando o provedor está indisponível", async ({ page, context }) => {
-  const email = `e2e-copiloto-indisponivel-${Date.now()}@example.com`;
-  await allowEmail(email);
-  const { cookie, user } = await seedAuthenticatedSession(email);
-  await db.insert(profileVersions).values({ userId: user.id, version: 1, respostas: { experienciaTreino: "intermediario" } });
-  await db.insert(plans).values({
-    userId: user.id,
-    perfilVersao: 1,
-    versao: 1,
-    estado: "ativo",
-    regraVersao: planoCopiloto.regraVersao,
-    modoConservador: false,
-    conteudo: planoCopiloto,
-    activatedAt: new Date(),
-  });
-  await context.addCookies([cookie]);
-
-  await abrirSessaoEmAndamento(page);
-  await registrarSerie(page, 1, { carga: "13" });
-  await fecharTimer(page);
-
-  const local = page.getByRole("region", { name: "Orientações do Coach Local" });
-  // O SDK tenta o provedor novamente antes de declarar indisponibilidade;
-  // o fallback precisa cobrir a janela completa dessa política de retry.
-  await expect(local).toContainText("Coach Local (regra)");
-  await expect(local).toContainText("Copiloto indisponível: nenhuma sugestão de IA");
 });
 
 test("mostra o fallback em texto da ficha do exercício quando não há Mídia de Execução disponível", async ({ page, context }) => {

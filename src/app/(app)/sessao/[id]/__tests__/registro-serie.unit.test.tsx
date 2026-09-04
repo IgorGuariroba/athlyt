@@ -7,7 +7,6 @@ vi.mock("@/components/sessao/estado-conexao", () => ({
   useConexao: () => ({
     registrar: registrarEvento,
     registrosLocais: [],
-    copiloto: { estado: "inativo" },
   }),
 }));
 
@@ -45,11 +44,10 @@ const propriedades = {
   cargaSugerida: 40,
   melhorCargaAnterior: 35,
   repeticoesIniciais: 10,
-  temProximaSerie: true,
 };
 
 describe("RegistroSerie", () => {
-  it("inicia o descanso sem aguardar a sincronização e o Copiloto", async () => {
+  it("inicia o descanso sem aguardar a sincronização", async () => {
     const pendente = promessaPendente();
     registrarEvento.mockReturnValue(pendente.promessa);
 
@@ -64,7 +62,7 @@ describe("RegistroSerie", () => {
       cargaKg: 40,
       repeticoes: 10,
       rir: 2,
-    }, 2);
+    });
     expect(screen.getByRole("dialog", { name: "Timer de descanso" })).toBeDefined();
     expect(screen.getByText("1:30")).toBeDefined();
 
