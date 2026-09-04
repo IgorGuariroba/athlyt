@@ -167,9 +167,23 @@ export function RegistroSerie({ sessionId, exercicioId, numero, repeticoesSugeri
       </form>
       {erroRegistro ? <p role="alert" className="pb-3 pl-10 text-body-sm font-semibold text-error">{erroRegistro}</p> : null}
 
-      {restante !== null && timerMinimizado ? <button type="button" onClick={() => setTimerMinimizado(false)} className="fixed right-4 bottom-24 z-40 flex h-14 items-center gap-2 rounded-full bg-success px-5 font-bold text-background shadow-xl"><TimerReset className="size-5" /> {Math.floor(Math.max(restante, 0) / 60)}:{String(Math.max(restante, 0) % 60).padStart(2, "0")}</button> : null}
+      {/*
+        * O descanso é a razão de o atleta olhar a tela entre séries, então
+        * nem o timer aberto nem o minimizado podem ficar sob a `BottomNav`.
+        *
+        * Geometria: a nav flutua entre `1rem` e `1rem + 4.125rem` acima de
+        * `--safe-bottom` (`src/components/navigation/bottom-nav.tsx`), e o
+        * casco reserva `5.25rem` para ela (`src/app/(app)/layout.tsx`). O
+        * `7rem` do pill é essa reserva mais uma folga, medida a partir da
+        * mesma origem — por isso soma `--safe-bottom`, e não um valor fixo.
+        *
+        * Camada: a nav é `z-10` e o menu do kit é `z-50`. Como o descanso
+        * deve permanecer visível sobre a sessão, o pill fica acima de ambos
+        * (`z-[60]`) e o modal bloqueante ocupa a camada seguinte (`z-[70]`).
+      */}
+      {restante !== null && timerMinimizado ? <button type="button" onClick={() => setTimerMinimizado(false)} className="fixed right-4 bottom-[calc(7rem+var(--safe-bottom))] z-[60] flex h-14 items-center gap-2 rounded-full bg-success px-5 font-bold text-background shadow-xl"><TimerReset className="size-5" /> {Math.floor(Math.max(restante, 0) / 60)}:{String(Math.max(restante, 0) % 60).padStart(2, "0")}</button> : null}
       {restante !== null && !timerMinimizado ? (
-        <div role="dialog" aria-label="Timer de descanso" className="fixed inset-0 z-50 flex items-end bg-black/60 backdrop-blur-sm">
+        <div role="dialog" aria-label="Timer de descanso" className="fixed inset-0 z-[70] flex items-end bg-black/60 backdrop-blur-sm">
           <section className="w-full rounded-t-2xl border-t border-border bg-surface-container p-6 pb-8 text-center">
             <div className="mb-6 flex items-center justify-between">
               <div className="flex items-center gap-2 text-label-lg text-muted-foreground"><TimerReset className="size-5" /> Descanso</div>

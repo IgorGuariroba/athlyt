@@ -66,6 +66,13 @@ describe("RegistroSerie", () => {
     expect(screen.getByRole("dialog", { name: "Timer de descanso" })).toBeDefined();
     expect(screen.getByText("1:30")).toBeDefined();
 
+    // Minimizar preserva a contagem: o pill continua o mesmo descanso.
+    // Que ele fique acima da `BottomNav` é geometria, e jsdom não faz
+    // layout — essa parte é verificada em `e2e/safe-area-standalone.e2e.test.ts`.
+    fireEvent.click(screen.getByRole("button", { name: "Minimizar timer" }));
+    expect(screen.queryByRole("dialog", { name: "Timer de descanso" })).toBeNull();
+    expect(screen.getByRole("button", { name: /1:30/ })).toBeDefined();
+
     await act(async () => pendente.resolver());
   });
 
