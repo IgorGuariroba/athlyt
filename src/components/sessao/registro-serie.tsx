@@ -12,7 +12,7 @@ import { useConexao } from "./estado-conexao";
 
 const FECHAR_TIMERS_DE_DESCANSO = "athlyt:fechar-timers-de-descanso";
 
-export function RegistroSerie({ sessionId, exercicioId, numero, repeticoesSugeridas, rirInicial, rirSugerido, descansoSeg, concluida, cargaInicial, cargaSugerida, melhorCargaAnterior, marcaAnterior, repeticoesIniciais, temProximaSerie, modo, seriesDoExercicio }: {
+export function RegistroSerie({ sessionId, exercicioId, numero, repeticoesSugeridas, rirInicial, rirSugerido, descansoSeg, concluida, cargaInicial, cargaSugerida, melhorCargaAnterior, marcaAnterior, repeticoesIniciais, modo, seriesDoExercicio }: {
   sessionId: string; exercicioId: string; numero: number; repeticoesSugeridas: string; rirInicial: number; rirSugerido: number;
   descansoSeg: number; concluida: boolean; cargaInicial: number | null; cargaSugerida: number; melhorCargaAnterior: number; repeticoesIniciais: number | null;
   /**
@@ -21,7 +21,6 @@ export function RegistroSerie({ sessionId, exercicioId, numero, repeticoesSugeri
    * avaliado; sem ela, não há recorde a anunciar.
    */
   marcaAnterior?: MarcaExercicio;
-  temProximaSerie: boolean;
   modo?: "repeticoes" | "tempo" | "distancia" | "duracao" | "calorias" | "ritmo" | "unilateral" | "circuito";
   /**
    * Número e estado (do servidor) de todas as séries do exercício, na
@@ -37,7 +36,7 @@ export function RegistroSerie({ sessionId, exercicioId, numero, repeticoesSugeri
   const [timerMinimizado, setTimerMinimizado] = useState(false);
   const [enviando, setEnviando] = useState(false);
   const [erroRegistro, setErroRegistro] = useState<string | null>(null);
-  const { registrar: enfileirarEvento, registrosLocais, copiloto } = useConexao();
+  const { registrar: enfileirarEvento, registrosLocais } = useConexao();
   // O descanso que vale é o escolhido para este exercício; sem escolha,
   // o prescrito pelo plano.
   const ritmoDescanso = useRitmoDescanso(exercicioId);
@@ -54,9 +53,6 @@ export function RegistroSerie({ sessionId, exercicioId, numero, repeticoesSugeri
     const registradaLa = serie.concluida || registrosLocais.some((r) => r.exercicioId === exercicioId && r.numero === serie.numero);
     return registradaLa;
   });
-  const bloqueadaPorCautela = copiloto.estado === "orientacao"
-    && copiloto.proximaSerie === numero
-    && !copiloto.alertaConfirmado;
   const carga = local?.cargaKg ?? cargaInicial;
   const reps = local?.repeticoes ?? repeticoesIniciais;
   const rascunho = useRascunhoSerie(sessionId, exercicioId, numero);
@@ -113,7 +109,7 @@ export function RegistroSerie({ sessionId, exercicioId, numero, repeticoesSugeri
       cargaKg: Number(formData.get("cargaKg")),
       repeticoes: Number(formData.get("repeticoes")),
       rir: Number(formData.get("rir")),
-    }, temProximaSerie ? numero + 1 : undefined);
+    });
     void promessa.then(
       () => {
         removerRascunhoSerie(sessionId, exercicioId, numero);
@@ -164,7 +160,7 @@ export function RegistroSerie({ sessionId, exercicioId, numero, repeticoesSugeri
         {modoEfetivo === "repeticoes" || modoEfetivo === "unilateral" ? <label className="text-caption text-muted-foreground">RIR <span className="sr-only">prescrito {rirSugerido}</span>
           <Input name="rir" type="number" inputMode="numeric" min="0" max="10" value={rirExibido} onChange={(evento) => atualizarRascunhoSerie(sessionId, exercicioId, numero, "rir", evento.target.value)} required disabled={registrada} className="mt-1 h-12 text-center text-lg font-bold tabular-nums" />
         </label> : <input type="hidden" name="rir" value="0" />}
-        <Button type="submit" size="icon" disabled={enviando || registrada || bloqueadaPorCautela} aria-label={`Registrar série ${numero}`} className="mb-0 size-12 rounded-full">
+        <Button type="submit" size="icon" disabled={enviando || registrada} aria-label={`Registrar série ${numero}`} className="mb-0 size-12 rounded-full">
           <Check className="size-5" />
         </Button>
         {registrada ? <div className="col-span-5 flex items-center justify-between pl-10 text-caption text-muted-foreground"><span>10RM estimado: {estimativa10Rm ?? "—"} kg</span>{recorde ? <strong className="flex items-center gap-1 text-warning"><Trophy className="size-3" /> {recorde.rotulo}</strong> : null}</div> : null}

@@ -8,7 +8,7 @@ const meta = {
   args: {
     sessionId: "storybook", exercicioId: "puxada-polia", numero: 1, repeticoesSugeridas: "8", rirInicial: 2, rirSugerido: 3,
     descansoSeg: 120, concluida: false, cargaInicial: null, cargaSugerida: 47.5,
-    melhorCargaAnterior: 45, repeticoesIniciais: null, temProximaSerie: true, modo: "repeticoes",
+    melhorCargaAnterior: 45, repeticoesIniciais: null, modo: "repeticoes",
   },
   decorators: [(Story) => <div className="max-w-md bg-surface-container px-3"><ProvedorConexao sessionId="storybook" seriesConfirmadas={[]}><Story /></ProvedorConexao></div>],
 } satisfies Meta<typeof RegistroSerie>;

@@ -16,6 +16,15 @@ Run `npm run ui:verificar` to enforce these requirements; failures report the ex
 
 Run `npm run storybook:verificar` to ensure every story actually renders. `storybook build` verifies compilation but not rendering. See `docs/memory/galeria-compila-mas-nao-renderiza.md`.
 
+## Fluxo de validação local
+
+Para validar alterações na aplicação web:
+
+1. Execute `npm run app:down`.
+2. Execute `npm run app:up`.
+3. Acesse `http://localhost:3000` usando `playwright-cli` e confira o fluxo e o resultado visual.
+4. Ao terminar, feche o navegador com `playwright-cli close`.
+
 ## Web Test Evidence
 
 When running Playwright E2E tests, save evidence to `/home/movida/Downloads/evidencias-e2e/`.
