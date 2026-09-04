@@ -24,7 +24,7 @@ vi.mock("ai", async () => {
 
 const registrarErro = vi.fn();
 vi.mock("@/observabilidade/logger", () => ({
-  logger: { error: registrarErro },
+  logger: { error: registrarErro, warn: vi.fn() },
 }));
 
 vi.mock("../provedor", () => ({
@@ -32,6 +32,9 @@ vi.mock("../provedor", () => ({
   NOME_PROVEDOR: "OpenRouter",
   openrouter: () => ({ chatModel: (id: string) => ({ id }) }),
   OPCOES_PROVEDOR: {},
+  opcoesDaRota: (rota: { endpoint: string }) => ({
+    openrouter: { provider: { only: [rota.endpoint], allow_fallbacks: false } },
+  }),
 }));
 
 const { decidir } = await import("../decidir");
@@ -238,26 +241,75 @@ describe("decidir", () => {
   });
 
   it("grava a trilha mesmo quando a chamada falha", async () => {
-    gerar.mockRejectedValue(new Error("provedor fora do ar"));
+    gerar.mockRejectedValue(Object.assign(new Error("provedor fora do ar SEGREDO_ERRO"), {
+      responseBody: '{"foto":"SEGREDO_ERRO"}',
+      cause: new Error("SEGREDO_ERRO"),
+    }));
 
     const resultado = await chamar();
 
     expect(resultado.status).toBe("indisponivel");
     if (resultado.status !== "indisponivel") return;
-    expect(resultado.motivo).toContain("provedor fora do ar");
+    expect(resultado.motivo).toBe("Falha do provedor.");
     expect(decisoesGravadas[0]).toMatchObject({
       auditavel: false,
-      erro: "provedor fora do ar",
+      erro: "Falha do provedor.",
     });
     expect(registrarErro).toHaveBeenCalledWith(
       expect.objectContaining({
+        categoria: "erro",
         operacao: "copiloto-sessao",
-        modeloSolicitado: "openai/gpt-5-mini",
+        rotaSolicitada: "openai/gpt-5-mini",
         err: expect.any(Error),
       }),
       "decisão de IA indisponível",
     );
     expect(registrarErro.mock.calls[0]?.[0]).not.toHaveProperty("userId");
+    expect(JSON.stringify(decisoesGravadas[0])).not.toContain("SEGREDO_ERRO");
+  });
+
+  it("executa cadeia aprovada com o mesmo Recorte e grava uma única decisão", async () => {
+    const erro429 = Object.assign(new Error("rate limit"), { statusCode: 429 });
+    gerar
+      .mockRejectedValueOnce(erro429)
+      .mockRejectedValueOnce(erro429)
+      .mockResolvedValueOnce({
+        output: { carga: 60 },
+        response: { modelId: "modelo-2" },
+        steps: [],
+      });
+
+    const resultado = await decidir({
+      userId: "u1",
+      operacao: "copiloto-sessao",
+      nucleo,
+      dados: { exercicio: { nome: "Supino" }, "prontidao-hoje": { energia: 3 } },
+      instrucao: "instrução",
+      schema,
+      rotas: [
+        { modelo: "modelo-1", endpoint: "endpoint-1" },
+        { modelo: "modelo-2", endpoint: "endpoint-2" },
+      ],
+    });
+
+    expect(resultado.status).toBe("ok");
+    expect(gerar).toHaveBeenCalledTimes(3);
+    expect(gerar.mock.calls.map(([chamada]) => chamada.maxOutputTokens)).toEqual([4096, 4096, 4096]);
+    expect(gerar.mock.calls.map(([chamada]) => chamada.providerOptions.openrouter.provider.only)).toEqual([
+      ["endpoint-1"], ["endpoint-1"], ["endpoint-2"],
+    ]);
+    expect(gerar.mock.calls.map(([chamada]) => chamada.prompt)).toEqual([
+      expect.any(String), expect.any(String), expect.any(String),
+    ]);
+    expect(decisoesGravadas).toHaveLength(1);
+    expect(decisoesGravadas[0]).toMatchObject({
+      desfecho: "ok",
+      modeloResolvido: "modelo-2",
+      tentativasModelo: [
+        { ordem: 1, chamadas: 2, desfecho: "limite-taxa" },
+        { ordem: 2, chamadas: 1, desfecho: "ok" },
+      ],
+    });
   });
 
   it("registra na trilha os campos omitidos por falta de consentimento", async () => {

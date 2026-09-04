@@ -1,5 +1,6 @@
 import { createOpenAICompatible } from "@ai-sdk/openai-compatible";
 import type { OperacaoIA } from "./contexto/tipos";
+import type { RotaModeloAprovada } from "./fallback-modelo";
 
 /**
  * Conexão com o OpenRouter.
@@ -38,6 +39,13 @@ const MODELO_BASE = "google/gemini-2.5-flash-lite";
  * — as fotos corporais vão nas duas operações do plano.
  */
 const MODELO_PLANO = "openai/gpt-5.6-luna";
+
+/** Cadeia v1 aprovada exclusivamente para Refeição por Foto. */
+export const ROTAS_REFEICAO_FOTO = [
+  { modelo: MODELO_BASE, endpoint: "google-vertex/eu" },
+  { modelo: MODELO_PLANO, endpoint: "openai" },
+  { modelo: "z-ai/glm-5.3-flash", endpoint: "z-ai/fp8" },
+] as const satisfies readonly RotaModeloAprovada[];
 
 const MODELOS_PRODUCAO: Record<OperacaoIA, string> = {
   "copiloto-sessao": MODELO_BASE,
@@ -161,3 +169,17 @@ export const OPCOES_PROVEDOR = {
     reasoning: { effort: "low" },
   },
 } as const;
+
+/** Fixa um único endpoint; `only` impede candidatos fora da rota aprovada. */
+export function opcoesDaRota(rota: RotaModeloAprovada) {
+  return {
+    openrouter: {
+      ...OPCOES_PROVEDOR.openrouter,
+      provider: {
+        ...OPCOES_PROVEDOR.openrouter.provider,
+        order: [rota.endpoint],
+        only: [rota.endpoint],
+      },
+    },
+  } as const;
+}

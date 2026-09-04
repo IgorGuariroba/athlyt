@@ -39,6 +39,7 @@
     "ia:verificar": "tsx scripts/verificar-ia.ts",
     "ia:modalidades": "tsx scripts/verificar-modalidades.ts",
     "ia:verificar-visual": "tsx scripts/verificar-avaliacao-visual.ts",
+    "ia:verificar-refeicao-foto": "tsx scripts/verificar-refeicao-foto.ts",
     "storage:verificar": "tsx scripts/verificar-r2.ts",
     "midia:importar": "tsx scripts/importar-midia-exercicios.ts",
     "equipamentos:imagens": "tsx scripts/importar-imagens-equipamentos-repdb.ts",
@@ -46,6 +47,7 @@
   },
   "overrides": {
     "postcss": "^8.5.25",
+    "browserslist": "^4.28.9",
     "nanoid": "^3.3.17",
     "sharp": "^0.35.3",
     "@hono/node-server": "^2.0.5"

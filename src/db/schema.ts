@@ -246,6 +246,9 @@ export const decisionTrails = pgTable("decision_trail", {
   contextoEnviado: jsonb("contexto_enviado"),
   instrucaoSistema: text("instrucao_sistema"),
   promptEnviado: text("prompt_enviado"),
+  rotasConfiguradas: jsonb("rotas_configuradas").notNull().default(sql`'[]'::jsonb`),
+  tentativasModelo: jsonb("tentativas_modelo").notNull().default(sql`'[]'::jsonb`),
+  desfecho: text("desfecho").$type<"ok" | "indisponivel" | "cancelada" | "erro">().notNull().default("ok"),
   createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
 });
 

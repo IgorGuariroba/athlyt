@@ -17,6 +17,17 @@ const total = meter.createCounter("athlyt.operacao.total", {
   description: "Quantidade de operações concluídas",
 });
 
+type DesfechoObservavel = "ok" | "indisponivel" | "cancelada" | "erro";
+
+function desfechoDoResultado(resultado: unknown): DesfechoObservavel {
+  if (!resultado || typeof resultado !== "object") return "ok";
+  const valor = resultado as { status?: unknown; cancelada?: unknown; erroInesperado?: unknown };
+  if (valor.status !== "indisponivel") return "ok";
+  if (valor.cancelada === true) return "cancelada";
+  if (valor.erroInesperado === true) return "erro";
+  return "indisponivel";
+}
+
 function atributosSeguros(
   nome: string,
   atributos: Attributes,
@@ -38,19 +49,28 @@ export async function observarOperacao<T>(
   return tracer.startActiveSpan(nome, { attributes: atributosComuns }, async (span) => {
     try {
       const resultado = await executar();
-      const metricas = { ...atributosComuns, status: "ok" };
+      const status = desfechoDoResultado(resultado);
+      const metricas = { ...atributosComuns, status };
       total.add(1, metricas);
       duracao.record(performance.now() - inicio, metricas);
-      span.setStatus({ code: SpanStatusCode.OK });
-      logger.info(atributosComuns, "operação concluída");
+      span.setAttribute("operation.status", status);
+      span.setStatus(status === "ok" || status === "cancelada"
+        ? { code: SpanStatusCode.OK }
+        : { code: SpanStatusCode.ERROR, message: status });
+      logger[status === "ok" ? "info" : status === "cancelada" ? "info" : "warn"](
+        { ...atributosComuns, status },
+        status === "ok" ? "operação concluída" : status === "cancelada" ? "operação cancelada" : "operação indisponível",
+      );
       return resultado;
     } catch (erro) {
       const metricas = { ...atributosComuns, status: "erro" };
       total.add(1, metricas);
       duracao.record(performance.now() - inicio, metricas);
       span.setStatus({ code: SpanStatusCode.ERROR });
-      if (erro instanceof Error) span.recordException(erro);
-      logger.error({ ...atributosComuns, err: erro }, "operação falhou");
+      span.addEvent("operation.error", {
+        "error.type": erro instanceof Error ? erro.constructor.name.slice(0, 80) : typeof erro,
+      });
+      logger.error({ ...atributosComuns, status: "erro", err: erro }, "operação falhou");
       throw erro;
     } finally {
       span.end();

@@ -49,6 +49,7 @@ export default async function RegistrarPorFotoPage({
           refeicaoRef={refeicaoRef}
           nomeInicial={planejada?.nome}
           estimar={estimarRefeicaoAction}
+          usarStreaming
           estimarDescricao={estimarPorDescricaoAction}
           transcrever={transcreverAudioAction}
           registrar={registrarPratoAction}
