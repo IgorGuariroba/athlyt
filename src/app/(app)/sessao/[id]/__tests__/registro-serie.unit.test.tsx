@@ -2,11 +2,13 @@ import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-libra
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 const registrarEvento = vi.fn<() => Promise<void>>();
+const conexao = { encerradaLocalmente: false };
 
 vi.mock("@/components/sessao/estado-conexao", () => ({
   useConexao: () => ({
     registrar: registrarEvento,
     registrosLocais: [],
+    encerradaLocalmente: conexao.encerradaLocalmente,
   }),
 }));
 
@@ -25,6 +27,7 @@ function promessaPendente() {
 
 afterEach(() => {
   cleanup();
+  conexao.encerradaLocalmente = false;
   registrarEvento.mockReset();
   reiniciarDescanso();
   reiniciarRascunhosSerie();
@@ -130,6 +133,16 @@ describe("RegistroSerie", () => {
 
     expect(screen.queryAllByText("Novo recorde de forca", { exact: false })).toHaveLength(0);
     expect(screen.getAllByText("Novo recorde de força")).toHaveLength(1);
+  });
+
+  it("deixa de oferecer o registro depois de o treino ser encerrado neste aparelho", () => {
+    // Uma série enfileirada aqui teria ordem maior que o encerramento e
+    // chegaria ao servidor sobre uma sessão já concluída.
+    conexao.encerradaLocalmente = true;
+    render(<RegistroSerie {...propriedades} />);
+
+    expect(screen.queryByRole("button", { name: "Registrar série 1" })).toBeNull();
+    expect(registrarEvento).not.toHaveBeenCalled();
   });
 
   it("avisa quando nem a persistência local consegue salvar a série", async () => {

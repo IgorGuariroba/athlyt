@@ -16,3 +16,7 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 export const Pendente: Story = {};
 export const Registrada: Story = { args: { concluida: true, cargaInicial: 50, repeticoesIniciais: 8 } };
+/** Treino encerrado neste aparelho: a série não registrada deixa de ser oferecida. */
+export const AposEncerrarNesteAparelho: Story = {
+  decorators: [(Story) => <div className="max-w-md bg-surface-container px-3"><ProvedorConexao sessionId="storybook" seriesConfirmadas={[]} encerradaForcada><Story /></ProvedorConexao></div>],
+};

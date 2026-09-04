@@ -6,6 +6,7 @@ import { allowEmail, seedAuthenticatedSession } from "./helpers/seed-session";
 import {
   abrirSessaoEmAndamento,
   concluirTreino,
+  esperarRegistroIndisponivel,
   pularDescanso,
   registrarSerie,
 } from "./helpers/sessao";
@@ -74,4 +75,46 @@ test("mantém a sessão viva sem rede e sincroniza a fila ao reconectar", async 
   await page.goto("/sessao/historico");
   await expect(page.getByText("Concluída", { exact: true })).toBeVisible();
   await expect(page.getByText("3 séries")).toBeVisible();
+});
+
+/**
+ * O caso de um aparelho só, sem corrida: encerrar offline e só então
+ * tentar registrar. A série teria ordem maior que o encerramento e
+ * entraria numa sessão já concluída — mudando o resumo daquele treino
+ * depois do fato.
+ */
+test("não oferece registro depois de encerrar offline, e o resumo não muda ao reconectar", async ({ page, context }) => {
+  const email = `e2e-offline-fim-${Date.now()}@example.com`;
+  await allowEmail(email);
+  const { cookie, user } = await seedAuthenticatedSession(email);
+  await db.insert(plans).values({ userId: user.id, perfilVersao: 1, versao: 1, estado: "ativo", regraVersao: plano.regraVersao, modoConservador: false, conteudo: plano, activatedAt: new Date() });
+  await context.addCookies([cookie]);
+
+  await abrirSessaoEmAndamento(page);
+  await registrarSerie(page, 1);
+  await pularDescanso(page);
+
+  await context.setOffline(true);
+  await expect(page.getByLabel(/Estado da conexão: Offline/)).toBeVisible();
+  await registrarSerie(page, 2);
+  await pularDescanso(page);
+
+  await concluirTreino(page, { confirmacao: "Treino encerrado neste aparelho" });
+
+  // A terceira série deixa de ser oferecida: a regra de UI é o que para
+  // de *produzir* o evento tardio.
+  await esperarRegistroIndisponivel(page, 3);
+
+  await context.setOffline(false);
+  await expect(page.getByLabel(/Estado da conexão: Online$/)).toBeVisible();
+
+  await page.goto("/mais/sincronizacao");
+  await expect(page.getByRole("heading", { name: "Pendências (0)" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Conflitos (0)" })).toBeVisible();
+
+  // Fecha o ciclo por navegação real: o resumo persistido contém as duas
+  // séries de fato executadas, nem uma a mais.
+  await page.goto("/sessao/historico");
+  await expect(page.getByText("Concluída", { exact: true })).toBeVisible();
+  await expect(page.getByText("2 séries")).toBeVisible();
 });
