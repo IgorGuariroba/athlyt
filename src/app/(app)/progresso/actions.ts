@@ -1,9 +1,9 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 import { auth } from "@/auth";
+import { invalidarLeituras } from "@/app/_invalidacao";
 import type { EstadoRegistroPeso } from "@/components/progresso/painel-peso";
 import { registrarPesoEMeta } from "@/domain/medicoes/repositorio";
 
@@ -22,7 +22,7 @@ export async function salvarPesoEMeta(
 
   try {
     await registrarPesoEMeta(session.user.id, { pesoAtualKg, pesoMetaKg });
-    revalidatePath("/progresso");
+    invalidarLeituras([{ fato: "medicoes" }]);
     return { sucesso: "Peso atual e nova meta salvos." };
   } catch {
     return { erro: "Não foi possível salvar os pesos." };

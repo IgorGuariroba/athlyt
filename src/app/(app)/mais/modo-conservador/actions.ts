@@ -2,6 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
+import { invalidarLeituras } from "@/app/_invalidacao";
 import { registrarRespostas } from "@/domain/triagem/perfil";
 
 export async function alterarModoConservador(formData: FormData) {
@@ -12,5 +13,7 @@ export async function alterarModoConservador(formData: FormData) {
     modoConservadorManual: formData.get("modoConservador") === "on",
   });
 
-  redirect("/mais/modo-conservador?sucesso=1");
+  const destino = "/mais/modo-conservador?sucesso=1";
+  invalidarLeituras([{ fato: "perfil" }], { destino });
+  redirect(destino);
 }

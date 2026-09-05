@@ -1,8 +1,8 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
+import { invalidarLeituras } from "@/app/_invalidacao";
 import type { MotivoSubstituicao } from "@/domain/plano/substituicoes";
 import { abandonarSessao, concluirSessao, iniciarSessao, registrarSerie, substituirExercicioNaSessao, type MotivoAbandono } from "@/domain/sessao/repositorio";
 
@@ -14,8 +14,9 @@ async function usuario() {
 
 export async function iniciarSessaoAction(formData: FormData) {
   const sessao = await iniciarSessao(await usuario(), String(formData.get("diaId")));
-  revalidatePath("/treino");
-  redirect(`/sessao/${sessao.id}`);
+  const destino = `/sessao/${sessao.id}`;
+  invalidarLeituras([{ fato: "sessao", sessaoId: sessao.id }], { destino });
+  redirect(destino);
 }
 
 export async function registrarSerieAction(sessionId: string, formData: FormData) {
@@ -26,7 +27,7 @@ export async function registrarSerieAction(sessionId: string, formData: FormData
     repeticoes: Number(formData.get("repeticoes")),
     rir: Number(formData.get("rir")),
   });
-  revalidatePath(`/sessao/${sessionId}`);
+  invalidarLeituras([{ fato: "sessao", sessaoId: sessionId }]);
 }
 
 export async function substituirExercicioAction(sessionId: string, formData: FormData) {
@@ -38,21 +39,21 @@ export async function substituirExercicioAction(sessionId: string, formData: For
     observacao: observacao || undefined,
   });
   const indice = sessao.exercicios.findIndex((item) => item.exercicioId === String(formData.get("novoExercicioId")));
-  revalidatePath(`/sessao/${sessionId}`);
-  redirect(`/sessao/${sessionId}?exercicio=${Math.max(indice, 0)}`);
+  const destino = `/sessao/${sessionId}?exercicio=${Math.max(indice, 0)}`;
+  invalidarLeituras([{ fato: "sessao", sessaoId: sessionId }], { destino });
+  redirect(destino);
 }
 
 export async function concluirSessaoAction(sessionId: string) {
   await concluirSessao(await usuario(), sessionId);
-  // O card "Treino do dia" do Início deriva do histórico de sessões:
-  // sem revalidar, o usuário volta e vê o treino que acabou de fazer
-  // como se nada tivesse acontecido.
-  revalidatePath("/treino");
-  redirect(`/sessao/${sessionId}/resumo`);
+  const destino = `/sessao/${sessionId}/resumo`;
+  invalidarLeituras([{ fato: "sessao", sessaoId: sessionId }], { destino });
+  redirect(destino);
 }
 
 export async function abandonarSessaoAction(sessionId: string, formData: FormData) {
   await abandonarSessao(await usuario(), sessionId, String(formData.get("motivo")) as MotivoAbandono);
-  revalidatePath("/treino");
-  redirect(`/sessao/${sessionId}/resumo`);
+  const destino = `/sessao/${sessionId}/resumo`;
+  invalidarLeituras([{ fato: "sessao", sessaoId: sessionId }], { destino });
+  redirect(destino);
 }

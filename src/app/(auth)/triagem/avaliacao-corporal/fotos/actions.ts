@@ -3,8 +3,8 @@
 import { randomUUID } from "node:crypto";
 import { and, eq, isNull } from "drizzle-orm";
 import { redirect } from "next/navigation";
-import { revalidatePath } from "next/cache";
 import { auth } from "@/auth";
+import { invalidarLeituras } from "@/app/_invalidacao";
 import { db } from "@/db/client";
 import { consents } from "@/db/schema";
 import { LIMITE_FOTO_CORPORAL_BYTES, prepararFotoCorporal, TIPOS_FOTO_CORPORAL } from "@/domain/medicoes/fotos";
@@ -25,8 +25,9 @@ export async function excluirFotoCorporal(fd: FormData) {
   if (!foto) redirect("/triagem/avaliacao-corporal/fotos?erro=Foto não encontrada.");
   await criarStorageR2().excluir(foto.objectKey);
   await excluirFotoProgresso(session.user.id, foto.id);
-  revalidatePath("/triagem/avaliacao-corporal/fotos"); revalidatePath("/progresso"); revalidatePath("/treino");
-  redirect("/triagem/avaliacao-corporal/fotos?sucesso=Foto excluída do storage privado.");
+  const destino = "/triagem/avaliacao-corporal/fotos?sucesso=Foto excluída do storage privado.";
+  invalidarLeituras([{ fato: "medicoes" }], { destino });
+  redirect(destino);
 }
 
 export async function excluirTodasFotosCorporais() {
@@ -36,8 +37,9 @@ export async function excluirTodasFotosCorporais() {
   if (exclusoes.some((resultado) => resultado.status === "rejected")) redirect("/triagem/avaliacao-corporal/fotos?erro=Algumas fotos não puderam ser excluídas; os registros foram preservados para nova tentativa.");
   await excluirFotosProgresso(session.user.id, panorama.fotos.map((foto) => foto.id));
   await db.update(consents).set({ revogadoEm: new Date() }).where(and(eq(consents.userId, session.user.id), eq(consents.operacao, "foto-corporal-armazenamento"), isNull(consents.revogadoEm)));
-  revalidatePath("/triagem/avaliacao-corporal/fotos"); revalidatePath("/progresso");
-  redirect("/triagem/avaliacao-corporal/fotos?sucesso=Todas as fotos foram excluídas do storage privado.");
+  const destino = "/triagem/avaliacao-corporal/fotos?sucesso=Todas as fotos foram excluídas do storage privado.";
+  invalidarLeituras([{ fato: "medicoes" }, { fato: "consentimento" }], { destino });
+  redirect(destino);
 }
 
 /**
@@ -120,8 +122,6 @@ export async function enviarFotoCorporal(
     return { ok: false, erro: "Não foi possível registrar esta foto. Tente novamente." };
   }
 
-  revalidatePath("/triagem/avaliacao-corporal/fotos");
-  revalidatePath("/progresso");
-  revalidatePath("/treino");
+  invalidarLeituras([{ fato: "medicoes" }, { fato: "consentimento" }]);
   return { ok: true };
 }

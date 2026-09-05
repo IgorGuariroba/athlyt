@@ -1,12 +1,12 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
 import { execFile } from "node:child_process";
 import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { promisify } from "node:util";
 import { auth } from "@/auth";
+import { invalidarLeituras } from "@/app/_invalidacao";
 import {
   LIMITE_AUDIO_REFEICAO_BYTES,
   precisaConverterAudio,
@@ -301,9 +301,7 @@ export async function registrarConsumoRealAction(fd: FormData): Promise<Resultad
     fuso,
   });
 
-  revalidatePath("/diario");
-  revalidatePath("/dieta");
-  revalidatePath("/treino");
+  invalidarLeituras([{ fato: "diario" }]);
 
   return { ok: true };
 }

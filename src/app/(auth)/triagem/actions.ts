@@ -1,8 +1,8 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
+import { invalidarLeituras } from "@/app/_invalidacao";
 import { garantirPesoInicial } from "@/domain/medicoes/repositorio";
 import { registrarRespostas } from "@/domain/triagem/perfil";
 import {
@@ -60,11 +60,7 @@ export async function salvarEquipamentosPersonalizados(entrada: {
   if (!etapa.ok) return { ok: false, erro: etapa.erro };
 
   await registrarRespostas(userId, etapa.dados);
-  revalidatePath("/triagem", "layout");
-  // O perfil também decide o Modo Conservador e os pendentes exibidos
-  // no Início: invalidar só a cascata deixaria a outra aba mostrando o
-  // estado anterior à gravação.
-  revalidatePath("/treino");
+  invalidarLeituras([{ fato: "perfil" }]);
   return { ok: true };
 }
 
@@ -96,23 +92,24 @@ export async function submeterEtapaTriagem(
     await garantirPesoInicial(userId, resultado.dados.pesoKg as number);
   }
 
-  // A cascata permite avançar e retornar. Sem invalidação explícita, o
-  // App Router pode reutilizar o payload RSC que montou a etapa antes
-  // da gravação e esconder respostas recém-persistidas — especialmente
-  // listas adicionadas no cliente, como equipamentos personalizados.
-  revalidatePath("/triagem", "layout");
-  revalidatePath("/treino");
-  revalidatePath("/mais/perfil");
-
   const retorno = formData.get("retorno");
-  if (retorno === "/mais/perfil" || retorno === "/triagem/resumo") {
-    redirect(retorno);
-  }
-
-  if (etapaAtual === "peso") redirect("/triagem/avaliacao-corporal");
-
-  const destino: EtapaId | "resumo" = isEtapaId(proximaEtapa)
+  const proxima: EtapaId | "resumo" = isEtapaId(proximaEtapa)
     ? proximaEtapa
     : "resumo";
-  redirect(destino === "resumo" ? "/triagem/resumo" : `/triagem/${destino}`);
+  const destino =
+    retorno === "/mais/perfil" || retorno === "/triagem/resumo"
+      ? retorno
+      : etapaAtual === "peso"
+        ? "/triagem/avaliacao-corporal"
+        : proxima === "resumo"
+          ? "/triagem/resumo"
+          : `/triagem/${proxima}`;
+
+  // O peso registrado também é medição: a linha de base do gráfico do
+  // Progresso muda junto com a resposta do perfil.
+  invalidarLeituras(
+    etapaAtual === "peso" ? [{ fato: "perfil" }, { fato: "medicoes" }] : [{ fato: "perfil" }],
+    { destino },
+  );
+  redirect(destino);
 }
