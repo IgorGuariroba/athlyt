@@ -99,7 +99,7 @@ function metadadosTecnicosDoErro(erro: unknown, profundidade = 0, vistos = new W
   vistos.add(erro);
   const registro = erro as Record<string, unknown>;
   const status = Number(registro.statusCode ?? registro.status ?? 0);
-  const codigo = String(registro.code ?? "");
+  const codigo = typeof registro.code === "string" || typeof registro.code === "number" ? String(registro.code) : "";
   if (status || codigo) return { status, codigo };
   // `Array.isArray` afina `unknown` para `any[]`: sem este recast o spread
   // reinfetaria `any` no array de filhos e a recursão perderia o tipo.

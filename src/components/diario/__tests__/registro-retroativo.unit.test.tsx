@@ -413,7 +413,7 @@ describe("RegistroPorDescricao", () => {
     await userEvent.click(screen.getByRole("button", { name: /Registrar no Diário/ }));
     await waitFor(() => expect(fns.registrar).toHaveBeenCalledOnce());
     const gravados = JSON.parse(
-      String(fns.registrar.mock.calls[0][0].get("itens")),
+      (fns.registrar.mock.calls[0][0].get("itens") as string | null) ?? "[]",
     ) as ItemPrato[];
     expect(gravados[0].descricao).toBe("Arroz integral cozido 100 g");
     expect(gravados[0].calorias).toBe(0);

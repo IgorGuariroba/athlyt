@@ -10,7 +10,7 @@ function obterIniciais(nome: string) {
   if (partes.length === 0) return "A";
   if (partes.length === 1) return partes[0].slice(0, 2).toLocaleUpperCase("pt-BR");
 
-  return `${partes[0][0]}${partes.at(-1)?.[0]}`.toLocaleUpperCase("pt-BR");
+  return `${partes[0][0]}${partes.at(-1)?.[0] ?? ""}`.toLocaleUpperCase("pt-BR");
 }
 
 /**

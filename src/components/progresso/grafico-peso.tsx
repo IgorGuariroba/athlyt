@@ -153,7 +153,7 @@ export function GraficoPeso({
     `Peso inicial ${formatarPeso(plano.medicoes[0].pesoKg)} kg, atual ${formatarPeso(atual.pesoKg)} kg, em ${plano.medicoes.length} ${plano.medicoes.length === 1 ? "registro" : "registros"}.`,
     pesoMetaKg === undefined
       ? "Sem meta registrada."
-      : `Ritmo médio até a meta de ${formatarPeso(pesoMetaKg)} kg em 120 dias. ${distancia}.`,
+      : `Ritmo médio até a meta de ${formatarPeso(pesoMetaKg)} kg em 120 dias. ${distancia ?? ""}.`,
   ].join(" ");
 
   return (

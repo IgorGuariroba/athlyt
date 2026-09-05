@@ -3,9 +3,10 @@ import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { invalidarLeituras } from "@/app/_invalidacao";
 import { registrarCircunferencia, registrarGorduraCorporal, registrarPeso, recalcularMetasProporcao } from "@/domain/medicoes/repositorio";
+import { campoTexto, campoTextoOpcional } from "@/lib/form-data";
 
 const n = (fd: FormData, key: string) => {
-  const bruto = String(fd.get(key) ?? "").trim();
+  const bruto = campoTexto(fd, key).trim();
   return bruto ? Number(bruto.replace(",", ".")) : NaN;
 };
 export async function registrarCheckinCorporal(fd: FormData) {
@@ -22,7 +23,7 @@ export async function registrarCheckinCorporal(fd: FormData) {
     await recalcularMetasProporcao(userId);
   }
   const gordura = n(fd, "gordura");
-  if (Number.isFinite(gordura)) await registrarGorduraCorporal(userId, { percentual: gordura, metodo: String(fd.get("metodo") ?? "outro"), protocolo: String(fd.get("protocolo") ?? "") || undefined });
+  if (Number.isFinite(gordura)) await registrarGorduraCorporal(userId, { percentual: gordura, metodo: campoTexto(fd, "metodo", "outro"), protocolo: campoTextoOpcional(fd, "protocolo") ?? undefined });
   const destino = "/progresso";
   invalidarLeituras([{ fato: "medicoes" }], { destino });
   redirect(destino);

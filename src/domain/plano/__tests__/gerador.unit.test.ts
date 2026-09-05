@@ -61,7 +61,13 @@ describe("gerarPlano — tabela de cenários", () => {
 
   it("cardápio respeita restrição vegetariana e traz quantidades", () => {
     const plano = gerarPlano({ perfilVersao: 1, respostas: { ...completo, restricoesAlimentares: ["Vegetariano"] }, agora: new Date("2025-06-01") });
-    const itens = plano.nutricao.refeicoes.flatMap((r) => r.itens).join(" ");
+    const itens = plano.nutricao.refeicoes
+      .flatMap((r) =>
+        r.itens.map((i) =>
+          typeof i === "string" ? i : `${i.nome} ${i.porcaoDescrita}`,
+        ),
+      )
+      .join(" ");
     expect(itens).not.toMatch(/frango|peixe/i);
     expect(itens).toMatch(/tofu|lentilha|feijão/i);
     expect(itens).toMatch(/\d+ (g|ml|un)/);

@@ -8,6 +8,7 @@ import { metodoGorduraValido } from "@/domain/medicoes/catalogo-gordura";
 import { avaliarLoteCircunferencias, mensagemDoLote } from "@/domain/medicoes/lote-circunferencias";
 import { COMPLETAS, ESSENCIAIS, medidaPorPrefixo, type ItemMedida } from "@/domain/medicoes/catalogo-regioes";
 import { obterOuCriarAvaliacaoInicial, recalcularMetasProporcao, registrarGorduraCorporal, salvarCircunferenciaDaAvaliacaoInicial } from "@/domain/medicoes/repositorio";
+import { campoTexto, campoTextoOpcional } from "@/lib/form-data";
 
 async function usuario() {
   const session = await auth();
@@ -16,7 +17,7 @@ async function usuario() {
 }
 
 function numero(fd: FormData, nome: string) {
-  const bruto = String(fd.get(nome) ?? "").trim();
+  const bruto = campoTexto(fd, nome).trim();
   if (!bruto) return NaN;
   const valor = Number(bruto.replace(",", "."));
   return Number.isFinite(valor) ? valor : NaN;
@@ -106,7 +107,7 @@ function destinoComErro(
   const params = new URLSearchParams({ erro: mensagem });
   if (comFalha.length > 0) params.set("falhas", comFalha.join(","));
   for (const prefixo of prefixos) {
-    const valor = String(fd.get(prefixo) ?? "").trim();
+    const valor = campoTexto(fd, prefixo).trim();
     if (valor) params.set(prefixo, valor);
   }
   return `${rota}?${params}`;
@@ -172,7 +173,7 @@ export async function salvarGordura(fd: FormData) {
     "profissional",
   ] as const;
   const percentual = numero(fd, "percentual");
-  const metodo = String(fd.get("metodo") ?? "");
+  const metodo = campoTexto(fd, "metodo");
 
   if (!Number.isFinite(percentual) || percentual < 2 || percentual > 70) {
     redirect(
@@ -196,9 +197,9 @@ export async function salvarGordura(fd: FormData) {
     assessmentId: avaliacao.id,
     percentual,
     metodo,
-    protocolo: String(fd.get("protocolo") ?? "") || undefined,
-    equipamento: String(fd.get("equipamento") ?? "") || undefined,
-    profissional: String(fd.get("profissional") ?? "") || undefined,
+    protocolo: campoTextoOpcional(fd, "protocolo") ?? undefined,
+    equipamento: campoTextoOpcional(fd, "equipamento") ?? undefined,
+    profissional: campoTextoOpcional(fd, "profissional") ?? undefined,
   });
   const destino = "/triagem/avaliacao-corporal/fotos";
   invalidarLeituras([{ fato: "medicoes" }], { destino });

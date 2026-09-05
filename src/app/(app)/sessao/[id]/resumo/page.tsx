@@ -120,11 +120,14 @@ export default async function ResumoPage({
                       .filter((serie) => serie.concluida)
                       .map((serie) => {
                         const modalidade = exercicio.protocolo ?? "repeticoes";
-                        if (modalidade === "tempo") return `${serie.repeticoes} s`;
-                        if (modalidade === "distancia") return `${serie.repeticoes} m`;
-                        if (modalidade === "duracao") return `${serie.repeticoes} min`;
-                        if (modalidade === "calorias") return `${serie.repeticoes} kcal`;
-                        return `${serie.repeticoes}×${serie.cargaKg} kg · RIR ${serie.rir}`;
+                        const repeticoes = serie.repeticoes ?? 0;
+                        const cargaKg = serie.cargaKg ?? 0;
+                        const rir = serie.rir;
+                        if (modalidade === "tempo") return `${repeticoes} s`;
+                        if (modalidade === "distancia") return `${repeticoes} m`;
+                        if (modalidade === "duracao") return `${repeticoes} min`;
+                        if (modalidade === "calorias") return `${repeticoes} kcal`;
+                        return `${repeticoes}×${cargaKg} kg · RIR ${rir}`;
                       })
                       .join(" · ") || "Sem séries registradas"
                   }

@@ -20,6 +20,7 @@ import {
   registrarConsumoReal,
 } from "@/domain/diario/repositorio";
 import type { ItemAlimentar } from "@/domain/diario/tipos";
+import { campoNumero, campoTexto, campoTextoOpcional } from "@/lib/form-data";
 
 async function usuario() {
   const session = await auth();
@@ -29,9 +30,9 @@ async function usuario() {
 
 function contexto(formData: FormData) {
   return {
-    dia: String(formData.get("dia")),
-    fuso: String(formData.get("fuso")),
-    refeicaoRef: String(formData.get("refeicaoRef")),
+    dia: campoTexto(formData, "dia"),
+    fuso: campoTexto(formData, "fuso"),
+    refeicaoRef: campoTexto(formData, "refeicaoRef"),
   };
 }
 
@@ -43,7 +44,7 @@ export async function confirmarRefeicaoAction(formData: FormData) {
 }
 
 export async function excluirConsumoAction(formData: FormData) {
-  await excluirConsumo(await usuario(), String(formData.get("consumoId")));
+  await excluirConsumo(await usuario(), campoTexto(formData, "consumoId"));
   invalidarLeituras([{ fato: "diario" }]);
 }
 
@@ -65,7 +66,7 @@ export async function confirmarRefeicaoEditadaAction(formData: FormData) {
   if (!planejada) throw new Error("Refeição não pertence ao Cardápio Diário.");
 
   const itens: ItemAlimentar[] = planejada.itens.flatMap((item, indice) => {
-    const fator = Number(formData.get(`porcao-${indice}`) ?? 1);
+    const fator = campoNumero(formData, `porcao-${indice}`, 1);
     if (!Number.isFinite(fator) || fator <= 0) return [];
     return [
       {
@@ -90,10 +91,10 @@ export async function confirmarRefeicaoEditadaAction(formData: FormData) {
  * não consiga inventar macros para um alimento conhecido.
  */
 export async function registrarPratoAction(formData: FormData) {
-  const dia = String(formData.get("dia"));
-  const fuso = String(formData.get("fuso"));
-  const nome = String(formData.get("nome") ?? "").trim();
-  const bruto: unknown = JSON.parse(String(formData.get("itens") ?? "[]"));
+  const dia = campoTexto(formData, "dia");
+  const fuso = campoTexto(formData, "fuso");
+  const nome = campoTexto(formData, "nome").trim();
+  const bruto: unknown = JSON.parse(campoTexto(formData, "itens", "[]"));
   if (!Array.isArray(bruto) || bruto.length === 0) {
     throw new Error("Um registro precisa de ao menos um item no Prato.");
   }
@@ -125,8 +126,8 @@ export async function registrarPratoAction(formData: FormData) {
   });
 
   const userId = await usuario();
-  const hora = String(formData.get("hora") ?? "");
-  const refeicaoRef = String(formData.get("refeicaoRef") ?? "").trim() || null;
+  const hora = campoTexto(formData, "hora");
+  const refeicaoRef = campoTextoOpcional(formData, "refeicaoRef");
   if (/^([01]\d|2[0-3]):[0-5]\d$/.test(hora)) {
     await registrarConsumoReal(userId, { nome: nome || "Refeição extra", itens, dia, fuso, horaLocal: hora, refeicaoRef });
   } else {
@@ -139,7 +140,7 @@ export async function registrarPratoAction(formData: FormData) {
 
 /** Marca/desmarca um alimento da base como favorito. */
 export async function favoritarAction(formData: FormData) {
-  await alternarFavorito(await usuario(), String(formData.get("alimentoId")));
+  await alternarFavorito(await usuario(), campoTexto(formData, "alimentoId"));
   invalidarLeituras([{ fato: "diario" }]);
 }
 
@@ -151,13 +152,13 @@ export async function favoritarAction(formData: FormData) {
  * vez, que é exatamente o atrito que os Atalhos existem para remover.
  */
 export async function salvarAlimentoProprioAction(formData: FormData) {
-  const gramasPorcao = Number(formData.get("gramasPorcao")) || 100;
-  const numero = (campo: string) => Number(formData.get(campo)) || 0;
+  const gramasPorcao = campoNumero(formData, "gramasPorcao", 100) || 100;
+  const numero = (campo: string) => campoNumero(formData, campo, 0);
   // Os macros chegam para a porção informada; a biblioteca guarda por
   // 100 g, que é a base comum de toda a base nutricional.
   const fator = 100 / gramasPorcao;
   await salvarAlimentoProprio(await usuario(), {
-    nome: String(formData.get("nome")).trim(),
+    nome: campoTexto(formData, "nome").trim(),
     por100g: {
       calorias: Math.round(numero("calorias") * fator),
       proteinaG: Math.round(numero("proteinaG") * fator),
@@ -165,7 +166,7 @@ export async function salvarAlimentoProprioAction(formData: FormData) {
       gordurasG: Math.round(numero("gordurasG") * fator),
       fibrasG: Math.round(numero("fibrasG") * fator),
     },
-    porcoes: [{ unidade: String(formData.get("unidade") || "porção"), gramas: gramasPorcao }],
+    porcoes: [{ unidade: campoTexto(formData, "unidade", "porção") || "porção", gramas: gramasPorcao }],
   });
   invalidarLeituras([{ fato: "diario" }]);
 }

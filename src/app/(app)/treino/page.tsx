@@ -173,7 +173,7 @@ export default async function TreinoPage() {
                 <CartaoSessaoDoDiaAcao>
                   <Button asChild size="lg" className="h-14 w-full rounded-none text-label-lg font-bold">
                     {treinoDoDia.estado === "em_andamento" ? (
-                      <Link href={`/sessao/${treinoDoDia.sessaoId}`}>Retomar treino <ArrowRight className="size-5" /></Link>
+                      <Link href={`/sessao/${treinoDoDia.sessaoId ?? ""}`}>Retomar treino <ArrowRight className="size-5" /></Link>
                     ) : (
                       <Link href={`/sessao/previa/${treinoDoDia.dia.id}`}>Ver treino <ArrowRight className="size-5" /></Link>
                     )}

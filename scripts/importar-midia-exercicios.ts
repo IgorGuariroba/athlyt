@@ -75,7 +75,7 @@ async function sugerir(
         console.log(`  ${candidato.exerciseId} | ${candidato.nome} | ${candidato.equipamentos.join(", ")}`);
       }
     } catch (erro) {
-      console.log(`  falha na busca: ${erro instanceof Error ? erro.message : erro}`);
+      console.log(`  falha na busca: ${erro instanceof Error ? erro.message : String(erro)}`);
     }
     // Respeita o rate limit do tier gratuito da ExerciseDB.
     await new Promise((resolve) => setTimeout(resolve, 1200));
@@ -120,7 +120,7 @@ async function espelhar(
       console.log(`espelhado: ${exercicioId} (${midia.chaveObjeto})`);
       espelhados++;
     } catch (erro) {
-      console.error(`falhou: ${exercicioId} — ${erro instanceof Error ? erro.message : erro}`);
+      console.error(`falhou: ${exercicioId} — ${erro instanceof Error ? erro.message : String(erro)}`);
       falhos++;
     }
   }

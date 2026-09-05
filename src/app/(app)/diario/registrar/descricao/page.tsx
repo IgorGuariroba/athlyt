@@ -81,7 +81,7 @@ export default async function RegistrarPorDescricaoPage({
               antes de editar.
             </p>
             <Button asChild>
-              <Link href={`/diario/registrar/descricao?dia=${dia}&consumo=${consumoId}`}>
+              <Link href={`/diario/registrar/descricao?dia=${dia}&consumo=${consumoId ?? ""}`}>
                 Tentar novamente
               </Link>
             </Button>

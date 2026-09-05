@@ -41,6 +41,17 @@ const eslintConfig = defineConfig([...nextVitals, ...nextTs,
         caughtErrorsIgnorePattern: "^_",
       },
     ],
+    // Permite interpolação de números em template literals (IDs de rotas, calorias, métricas).
+    "@typescript-eslint/restrict-template-expressions": [
+      "error",
+      {
+        allowNumber: true,
+        allowBoolean: false,
+        allowAny: false,
+        allowNullish: false,
+        allowNever: false,
+      },
+    ],
   },
 },
 // `core-web-vitals` habilita só 6 regras de jsx-a11y. O conjunto recommended

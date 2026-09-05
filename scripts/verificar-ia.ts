@@ -182,7 +182,7 @@ async function main() {
     verificar(
       maisRecente?.modeloResolvido === modeloSolicitado,
       "trilha registra o modelo resolvido, não o nome lógico",
-      `${maisRecente?.modeloResolvido}`,
+      maisRecente?.modeloResolvido ?? "",
     );
     verificar(
       maisRecente?.recorteVersao === obterRecorte("copiloto-sessao").versao,

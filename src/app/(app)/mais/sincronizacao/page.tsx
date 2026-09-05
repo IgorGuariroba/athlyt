@@ -70,7 +70,7 @@ export default async function SincronizacaoPage() {
               <p className="text-label-lg font-semibold">{ROTULO_MOTIVO[conflito.motivo] ?? conflito.motivo}</p>
               <p className="text-body-sm text-muted-foreground">
                 {typeof conflito.dispositivo.exercicioId === "string"
-                  ? `${conflito.dispositivo.exercicioId} · série ${conflito.dispositivo.numero}`
+                  ? `${conflito.dispositivo.exercicioId} · série ${typeof conflito.dispositivo.numero === "number" || typeof conflito.dispositivo.numero === "string" ? String(conflito.dispositivo.numero) : ""}`
                   : `Sessão ${conflito.sessionId.slice(0, 8)}`}
               </p>
             </div>

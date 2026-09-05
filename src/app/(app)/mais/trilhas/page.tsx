@@ -75,9 +75,11 @@ function coletarExplicacoes(
   const bloco = resultado.bloco as Record<string, unknown> | undefined;
   adicionar("Por que esta divisão?", bloco?.explicacao);
   for (const dia of (bloco?.dias ?? []) as Array<Record<string, unknown>>) {
-    adicionar(`Por que o dia ${dia.nome}?`, dia.explicacao);
+    const nomeDia = typeof dia.nome === "string" ? dia.nome : "";
+    adicionar(`Por que o dia ${nomeDia}?`, dia.explicacao);
     for (const exercicio of (dia.exercicios ?? []) as Array<Record<string, unknown>>) {
-      adicionar(`Por que ${exercicio.nome}?`, exercicio.explicacao);
+      const nomeExercicio = typeof exercicio.nome === "string" ? exercicio.nome : "";
+      adicionar(`Por que ${nomeExercicio}?`, exercicio.explicacao);
     }
   }
 
@@ -87,7 +89,8 @@ function coletarExplicacoes(
     adicionar(PERGUNTA_META[chave] ?? `Por que ${formatarRotulo(chave)}?`, valor);
   }
   for (const refeicao of (nutricao?.refeicoes ?? []) as Array<Record<string, unknown>>) {
-    adicionar(`Por que a refeição ${refeicao.nome}?`, refeicao.explicacao);
+    const nomeRefeicao = typeof refeicao.nome === "string" ? refeicao.nome : "";
+    adicionar(`Por que a refeição ${nomeRefeicao}?`, refeicao.explicacao);
   }
 
   return coletadas;
@@ -112,7 +115,7 @@ function resumir(valor: unknown): string {
     const chaves = Object.keys(valor as Record<string, unknown>);
     return `${chaves.length} ${chaves.length === 1 ? "campo" : "campos"}`;
   }
-  const texto = String(valor ?? "");
+  const texto = typeof valor === "string" || typeof valor === "number" || typeof valor === "boolean" ? String(valor) : "";
   return texto.length > 40 ? `${texto.slice(0, 40)}…` : texto;
 }
 
@@ -128,8 +131,8 @@ function ValorAuditavel({
   }
 
   if (typeof valor === "boolean") return <span>{valor ? "Sim" : "Não"}</span>;
-  if (typeof valor !== "object") {
-    return <span className="whitespace-pre-wrap break-words">{String(valor)}</span>;
+  if (typeof valor === "string" || typeof valor === "number") {
+    return <span className="whitespace-pre-wrap break-words">{valor}</span>;
   }
 
   if (Array.isArray(valor)) {

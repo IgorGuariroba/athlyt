@@ -25,6 +25,7 @@ import {
   type MacrosRecalculados,
   type ResultadoMacrosItem,
 } from "../recalculo-de-item";
+import { campoTexto, campoTextoOpcional } from "@/lib/form-data";
 import { FUSO_PADRAO } from "@/domain/diario/dia-alimentar";
 import {
   hojeDoUsuario,
@@ -172,14 +173,14 @@ export async function estimarPorDescricaoAction(fd: FormData): Promise<Resultado
 
   let descricao: string;
   try {
-    descricao = validarDescricaoRefeicao(String(fd.get("descricao") ?? ""));
+    descricao = validarDescricaoRefeicao(campoTexto(fd, "descricao"));
   } catch (erro) {
     return { ok: false, erro: erro instanceof Error ? erro.message : "Descrição inválida." };
   }
 
   const origem = fd.get("origem") === "audio" ? "audio" : "texto";
   const fuso = FUSO_PADRAO;
-  const dia = String(fd.get("dia") ?? "") || hojeDoUsuario(fuso);
+  const dia = campoTexto(fd, "dia") || hojeDoUsuario(fuso);
 
   const nucleo = await contextoDoAtleta(userId);
   const diario = await montarDiarioDoDia(userId, { dia, fuso });
@@ -258,23 +259,23 @@ export async function registrarConsumoRealAction(fd: FormData): Promise<Resultad
   const userId = session.user.id;
 
   const fuso = FUSO_PADRAO;
-  const dia = String(fd.get("dia") ?? "") || hojeDoUsuario(fuso);
-  const hora = String(fd.get("hora") ?? "");
+  const dia = campoTexto(fd, "dia") || hojeDoUsuario(fuso);
+  const hora = campoTexto(fd, "hora");
   if (!HORA.test(hora)) {
     return { ok: false, erro: "Informe o horário da refeição no formato HH:MM." };
   }
-  const nome = String(fd.get("nome") ?? "").trim();
+  const nome = campoTexto(fd, "nome").trim();
   if (nome.length === 0 || nome.length > 60) {
     return { ok: false, erro: "Dê à refeição um nome de até 60 caracteres." };
   }
 
-  const refeicaoRef = String(fd.get("refeicaoRef") ?? "").trim() || null;
-  const consumoId = String(fd.get("consumoId") ?? "").trim() || null;
+  const refeicaoRef = campoTextoOpcional(fd, "refeicaoRef");
+  const consumoId = campoTextoOpcional(fd, "consumoId");
   const origem = (fd.get("origem") === "audio" ? "audio" : "texto") as OrigemEstimativa;
 
   let bruto: unknown;
   try {
-    bruto = JSON.parse(String(fd.get("itens") ?? "[]"));
+    bruto = JSON.parse(campoTexto(fd, "itens", "[]"));
   } catch {
     return { ok: false, erro: "Não consegui ler os itens revisados. Refaça a estimativa." };
   }

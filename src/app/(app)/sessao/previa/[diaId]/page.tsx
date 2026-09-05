@@ -38,7 +38,7 @@ export default async function PreviaSessaoPage({
   return (
     <TelaConteudo>
       <CabecalhoTela
-        contexto={`${plano.conteudo.bloco.divisao} · bloco v${plano.versao}`}
+        contexto={`${plano.conteudo.bloco.divisao} · bloco v${plano.versao ?? 1}`}
         titulo={dia.nome}
         descricao={`${dia.exercicios.length} exercícios · ${totalSeries} séries`}
         voltar={{ href: "/treino", rotulo: "Voltar ao Treino" }}

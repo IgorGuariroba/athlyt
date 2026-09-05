@@ -4,8 +4,9 @@ import sharp from "sharp";
 import { ROTAS_REFEICAO_FOTO } from "../src/domain/ia/provedor";
 
 const BASE = process.env.OPENROUTER_BASE_URL ?? "https://openrouter.ai/api/v1";
-const CHAVE = process.env.OPENROUTER_API_KEY;
-if (!CHAVE) throw new Error("OPENROUTER_API_KEY não definida");
+const CHAVE_RAW = process.env.OPENROUTER_API_KEY;
+if (!CHAVE_RAW) throw new Error("OPENROUTER_API_KEY não definida");
+const CHAVE: string = CHAVE_RAW;
 
 async function endpointAprovado(modelo: string, tag: string): Promise<string> {
   const [autor, ...slug] = modelo.split("/");

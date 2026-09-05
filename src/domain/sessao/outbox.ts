@@ -213,7 +213,12 @@ function aplicarSerie(estado: EstadoLocalSessao, evento: EventoOutbox, resultado
 
 function aplicarEncerramento(estado: EstadoLocalSessao, evento: EventoOutbox, resultado: ResultadoMerge): EstadoLocalSessao {
   const novoEstado: EstadoSessao = evento.tipo === "sessao_concluida" ? "concluida" : "abandonada";
-  const motivo = evento.tipo === "sessao_abandonada" ? String(evento.dados.motivo ?? "outro") : null;
+  const motivo =
+    evento.tipo === "sessao_abandonada"
+      ? typeof evento.dados.motivo === "string"
+        ? evento.dados.motivo
+        : "outro"
+      : null;
 
   if (estado.estado !== "em_andamento") {
     // Já encerrada do mesmo jeito: reenvio benigno, não é conflito.

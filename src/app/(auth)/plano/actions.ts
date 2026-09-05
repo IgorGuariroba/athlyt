@@ -9,6 +9,7 @@ import { conceder, estadoConsentimento } from "@/domain/ia/consentimento";
 import { obterRecorte } from "@/domain/ia/contexto/recortes";
 import { NOME_PROVEDOR } from "@/domain/ia/provedor";
 import type { OperacaoIA } from "@/domain/ia/contexto/tipos";
+import { campoTexto } from "@/lib/form-data";
 
 /** As duas operações que compõem o plano inicial. */
 const OPERACOES_PLANO: readonly OperacaoIA[] = ["plano-treino", "plano-nutricao"];
@@ -126,17 +127,17 @@ export async function gerarNovoPlanoAtivoAction() {
 export async function substituirExercicioAction(formData: FormData) {
   const { userId, perfil } = await contexto();
   await substituirNoRascunho(userId, {
-    planoId: String(formData.get("planoId")),
-    diaId: String(formData.get("diaId")),
-    exercicioId: String(formData.get("exercicioId")),
-    novoExercicioId: String(formData.get("novoExercicioId")),
+    planoId: campoTexto(formData, "planoId"),
+    diaId: campoTexto(formData, "diaId"),
+    exercicioId: campoTexto(formData, "exercicioId"),
+    novoExercicioId: campoTexto(formData, "novoExercicioId"),
   }, perfil.respostas);
   invalidarLeituras([{ fato: "plano" }]);
 }
 
 export async function ativarPlanoAction(formData: FormData) {
   const { userId } = await contexto();
-  await ativarPlano(userId, String(formData.get("planoId")));
+  await ativarPlano(userId, campoTexto(formData, "planoId"));
   const destino = "/treino";
   invalidarLeituras([{ fato: "plano" }], { destino });
   redirect(destino);
