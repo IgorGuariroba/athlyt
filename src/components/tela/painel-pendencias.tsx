@@ -2,11 +2,11 @@ import { ShieldCheck } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 
-export type ItemPendencia = {
+export interface ItemPendencia {
   id: string;
   titulo: string;
   descricao: string;
-};
+}
 
 /**
  * Estado persistente que explica por que uma capacidade ainda está limitada

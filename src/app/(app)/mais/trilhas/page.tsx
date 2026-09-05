@@ -64,9 +64,9 @@ const PERGUNTA_META: Record<string, string> = {
 
 function coletarExplicacoes(
   resultado: Record<string, unknown> | null,
-): Array<{ pergunta: string; explicacao: ExplicacaoDecisao }> {
+): { pergunta: string; explicacao: ExplicacaoDecisao }[] {
   if (!resultado) return [];
-  const coletadas: Array<{ pergunta: string; explicacao: ExplicacaoDecisao }> = [];
+  const coletadas: { pergunta: string; explicacao: ExplicacaoDecisao }[] = [];
   const adicionar = (pergunta: string, valor: unknown) => {
     const explicacao = explicacaoDe(valor);
     if (explicacao) coletadas.push({ pergunta, explicacao });
@@ -74,10 +74,10 @@ function coletarExplicacoes(
 
   const bloco = resultado.bloco as Record<string, unknown> | undefined;
   adicionar("Por que esta divisão?", bloco?.explicacao);
-  for (const dia of (bloco?.dias ?? []) as Array<Record<string, unknown>>) {
+  for (const dia of (bloco?.dias ?? []) as Record<string, unknown>[]) {
     const nomeDia = typeof dia.nome === "string" ? dia.nome : "";
     adicionar(`Por que o dia ${nomeDia}?`, dia.explicacao);
-    for (const exercicio of (dia.exercicios ?? []) as Array<Record<string, unknown>>) {
+    for (const exercicio of (dia.exercicios ?? []) as Record<string, unknown>[]) {
       const nomeExercicio = typeof exercicio.nome === "string" ? exercicio.nome : "";
       adicionar(`Por que ${nomeExercicio}?`, exercicio.explicacao);
     }
@@ -88,7 +88,7 @@ function coletarExplicacoes(
   for (const [chave, valor] of Object.entries(explicacoes ?? {})) {
     adicionar(PERGUNTA_META[chave] ?? `Por que ${formatarRotulo(chave)}?`, valor);
   }
-  for (const refeicao of (nutricao?.refeicoes ?? []) as Array<Record<string, unknown>>) {
+  for (const refeicao of (nutricao?.refeicoes ?? []) as Record<string, unknown>[]) {
     const nomeRefeicao = typeof refeicao.nome === "string" ? refeicao.nome : "";
     adicionar(`Por que a refeição ${nomeRefeicao}?`, refeicao.explicacao);
   }
@@ -112,7 +112,7 @@ function resumir(valor: unknown): string {
     return `${valor.length} ${valor.length === 1 ? "item" : "itens"}`;
   }
   if (valor && typeof valor === "object") {
-    const chaves = Object.keys(valor as Record<string, unknown>);
+    const chaves = Object.keys(valor);
     return `${chaves.length} ${chaves.length === 1 ? "campo" : "campos"}`;
   }
   const texto = typeof valor === "string" || typeof valor === "number" || typeof valor === "boolean" ? String(valor) : "";
@@ -242,11 +242,11 @@ export default async function TrilhasPage() {
               > | null;
               const campos =
                 (trilha.camposEnviados as string[]).join(", ") || "nenhum";
-              const ferramentas = trilha.ferramentasConsultadas as Array<{
+              const ferramentas = trilha.ferramentasConsultadas as {
                 nome: string;
                 argumentos: unknown;
                 resultado?: unknown;
-              }>;
+              }[];
               const explicacoes = coletarExplicacoes(resultado);
 
               return (

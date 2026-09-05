@@ -176,7 +176,7 @@ async function main() {
     const [maisRecente, maisAntiga] = trilhas;
 
     verificar(
-      maisRecente?.auditavel === true,
+      maisRecente?.auditavel,
       "decisão marcada como auditável (modelo identificado)",
     );
     verificar(

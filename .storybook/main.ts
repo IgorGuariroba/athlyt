@@ -28,7 +28,7 @@ const config: StorybookConfig = {
   // `public/` serve as imagens que os componentes referenciam por
   // caminho absoluto (`/equipamentos/*.svg`), como no produto.
   staticDirs: ["../public"],
-  async viteFinal(config) {
+  viteFinal(config) {
     // Tailwind v4 não tem arquivo de configuração: os tokens vivem em
     // `@theme` dentro de `globals.css` e só existem se o plugin
     // processar essa folha. Sem isto, toda story renderiza

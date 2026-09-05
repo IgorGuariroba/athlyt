@@ -27,7 +27,7 @@ export function RegistroSerie({ sessionId, exercicioId, numero, repeticoesSugeri
    * depende do exercício inteiro, não desta série: a marca a bater
    * acumula as anteriores, e só a mais recente registrada ostenta.
    */
-  seriesDoExercicio: Array<{ numero: number; cargaKg: number | null; repeticoes: number | null; concluida: boolean }>;
+  seriesDoExercicio: { numero: number; cargaKg: number | null; repeticoes: number | null; concluida: boolean }[];
 }) {
   const modoEfetivo = modo ?? "repeticoes";
   const rotulos = { repeticoes: "REPS", tempo: "TEMPO (S)", distancia: "DISTÂNCIA (M)", duracao: "DURAÇÃO (MIN)", calorias: "CALORIAS", ritmo: "RITMO", unilateral: "LADOS", circuito: "RODADAS" } as const;

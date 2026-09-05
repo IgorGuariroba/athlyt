@@ -41,12 +41,12 @@ export function rotuloVistaDoGrupo(grupo: GrupoMuscular): string {
   return ROTULO_VISTA[VISTA_POR_GRUPO[grupo]];
 }
 
-type Forma = {
+interface Forma {
   grupo: GrupoMuscular | null;
   d?: string;
   rect?: { x: number; y: number; width: number; height: number; rx: number };
   circle?: { cx: number; cy: number; r: number };
-};
+}
 
 const CABECA_PESCOCO: Forma[] = [
   { grupo: null, circle: { cx: 50, cy: 14, r: 10 } },

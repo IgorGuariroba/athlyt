@@ -9,8 +9,8 @@ function Tela() {
 }
 
 function instalarWakeLock() {
-  const release = vi.fn(async () => undefined);
-  const request = vi.fn(async () => ({ release }) as unknown as WakeLockSentinel);
+  const release = vi.fn(() => Promise.resolve(undefined));
+  const request = vi.fn(() => Promise.resolve({ release } as unknown as WakeLockSentinel));
   Object.defineProperty(navigator, "wakeLock", { value: { request }, configurable: true });
   return { request, release };
 }

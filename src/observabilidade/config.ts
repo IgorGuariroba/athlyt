@@ -11,9 +11,9 @@ export function observabilidadeAtiva(): boolean {
 }
 
 export function nomeDoServico(): string {
-  return process.env.OTEL_SERVICE_NAME || "athlyt";
+  return process.env.OTEL_SERVICE_NAME ?? "athlyt";
 }
 
 export function ambienteDaAplicacao(): string {
-  return process.env.APP_ENV || process.env.NODE_ENV;
+  return process.env.APP_ENV ?? process.env.NODE_ENV;
 }

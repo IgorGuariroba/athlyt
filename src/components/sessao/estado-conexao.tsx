@@ -53,7 +53,7 @@ export function ProvedorConexao({
 }: {
   sessionId: string;
   /** Séries que o servidor já tem como registradas, no HTML atual. */
-  seriesConfirmadas: Array<{ exercicioId: string; numero: number }>;
+  seriesConfirmadas: { exercicioId: string; numero: number }[];
   /** Permite demonstrar e testar estados determinísticos sem manipular a rede do navegador. */
   estadoForcado?: EstadoConexao;
   /** Mesma razão: demonstrar a sessão já encerrada neste aparelho sem encená-la. */

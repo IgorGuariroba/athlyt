@@ -138,7 +138,7 @@ export async function obterRascunho(userId: string): Promise<PlanoPersistido | n
 export async function substituirNoRascunho(userId: string, entrada: { planoId: string; diaId: string; exercicioId: string; novoExercicioId: string }, respostas: RespostasTriagem): Promise<PlanoPersistido> {
   return db.transaction(async (tx) => {
     const [linha] = await tx.select().from(plans).where(and(eq(plans.id, entrada.planoId), eq(plans.userId, userId))).limit(1).for("update");
-    if (!linha || linha.estado !== "rascunho") throw new Error("Somente um rascunho pode ser alterado.");
+    if (linha?.estado !== "rascunho") throw new Error("Somente um rascunho pode ser alterado.");
     const conteudo = substituirExercicio(linha.conteudo as PlanoGerado, entrada, respostas);
     const [atualizado] = await tx.update(plans).set({ conteudo }).where(eq(plans.id, linha.id)).returning();
     await tx.insert(decisionTrails).values({ userId, operacao: "plano-treino", recorteVersao: 1, perfilVersao: linha.perfilVersao, modeloSolicitado: "motor-adaptativo", modeloResolvido: "motor-plano-v2", auditavel: true, degradado: false, camposEnviados: ["equipamentos", "lesoes", "experienciaTreino"], camposOmitidos: [], ferramentasConsultadas: [], resultado: { tipo: "substituicao-pre-ativacao", planoId: linha.id, diaId: entrada.diaId, de: entrada.exercicioId, para: entrada.novoExercicioId } });
@@ -150,7 +150,7 @@ export async function substituirNoRascunho(userId: string, entrada: { planoId: s
 export async function ativarPlano(userId: string, planoId: string): Promise<PlanoPersistido> {
   return db.transaction(async (tx) => {
     const [rascunho] = await tx.select().from(plans).where(and(eq(plans.id, planoId), eq(plans.userId, userId))).limit(1).for("update");
-    if (!rascunho || rascunho.estado !== "rascunho") throw new Error("Plano já ativado ou inexistente.");
+    if (rascunho?.estado !== "rascunho") throw new Error("Plano já ativado ou inexistente.");
     const conteudo = rascunho.conteudo as PlanoGerado;
     if (!refeicoesPlanejadasValidas(conteudo.nutricao.refeicoes)) {
       throw new Error("A composição dos alimentos não está coerente com as metas das refeições.");

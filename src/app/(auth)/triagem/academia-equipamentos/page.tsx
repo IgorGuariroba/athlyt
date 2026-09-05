@@ -1,5 +1,4 @@
 import { posicaoNaCascata, proximoDestinoCascata } from "@/domain/triagem/etapas";
-import type { LocalTreinoId } from "@/domain/triagem/equipamentos";
 import { CascataShell } from "@/components/tela/cascata-shell";
 import { carregarRespostasTriagem } from "../_lib/carregar-respostas";
 import { EtapaForm } from "../_components/etapa-form";
@@ -22,7 +21,7 @@ export default async function AcademiaEquipamentosPage() {
         proximaEtapa={proximoDestinoCascata("academia-equipamentos")}
       >
         <SelecaoEquipamentos
-          localInicial={respostas.localTreino as LocalTreinoId | undefined}
+          localInicial={respostas.localTreino}
           equipamentosIniciais={respostas.equipamentos}
           equipamentosPersonalizadosIniciais={
             respostas.equipamentosPersonalizados

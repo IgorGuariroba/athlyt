@@ -271,11 +271,11 @@ describe("SeletorSegmentado", () => {
     renderizar();
 
     expect(
-      (screen.getByRole("radio", { name: "Descanso do plano: 1:30" }) as HTMLInputElement)
+      screen.getByRole<HTMLInputElement>("radio", { name: "Descanso do plano: 1:30" })
         .checked,
     ).toBe(true);
     expect(
-      (screen.getByRole("radio", { name: "Descanso curto: 1:00" }) as HTMLInputElement).checked,
+      screen.getByRole<HTMLInputElement>("radio", { name: "Descanso curto: 1:00" }).checked,
     ).toBe(false);
   });
 

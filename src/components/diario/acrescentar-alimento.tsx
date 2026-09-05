@@ -57,7 +57,7 @@ export type ResultadoTranscricaoAcrescimo =
 
 type Modo = "texto" | "audio" | "foto";
 
-const MODOS: ReadonlyArray<{ id: Modo; rotulo: string; Icone: typeof PencilLine }> = [
+const MODOS: readonly { id: Modo; rotulo: string; Icone: typeof PencilLine }[] = [
   { id: "texto", rotulo: "Escrever", Icone: PencilLine },
   { id: "audio", rotulo: "Falar", Icone: Mic },
   { id: "foto", rotulo: "Fotografar", Icone: Camera },

@@ -130,13 +130,13 @@ export async function confirmar(ids: readonly string[]): Promise<void> {
 export interface RespostaSincronizacao {
   aplicados: string[];
   duplicados: string[];
-  conflitos: Array<{ id: string; motivo: string }>;
+  conflitos: { id: string; motivo: string }[];
   /**
    * Recusados por defeito do cliente. Saem da fila porque nenhum
    * reenvio os torna válidos — mantê-los só travaria a drenagem de
    * tudo o que vem depois.
    */
-  inadmissiveis?: Array<{ id: string; motivo: string }>;
+  inadmissiveis?: { id: string; motivo: string }[];
 }
 
 /**

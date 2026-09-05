@@ -24,7 +24,7 @@ import type { ItemBiblioteca, Recorrente } from "@/domain/alimentos/repositorio"
 
 type Aba = "busca" | "manual" | "favoritos";
 
-const ABAS: ReadonlyArray<{ id: Aba; rotulo: string; Icone: typeof Search }> = [
+const ABAS: readonly { id: Aba; rotulo: string; Icone: typeof Search }[] = [
   { id: "busca", rotulo: "Buscar", Icone: Search },
   { id: "manual", rotulo: "Manual", Icone: Plus },
   { id: "favoritos", rotulo: "Favoritos", Icone: Heart },

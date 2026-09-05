@@ -17,7 +17,7 @@ import type { DimensoesScorecard } from "@/domain/medicoes/revisao-corporal";
 import type { EstadoConfianca } from "@/domain/medicoes";
 import { obterRevisaoAtual } from "../dados";
 
-const ROTULOS: Array<[keyof DimensoesScorecard, string]> = [
+const ROTULOS: [keyof DimensoesScorecard, string][] = [
   ["aderencia", "Aderência"],
   ["desempenho", "Desempenho"],
   ["tendenciaCorporal", "Tendência corporal"],

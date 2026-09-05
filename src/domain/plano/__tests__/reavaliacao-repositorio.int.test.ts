@@ -200,7 +200,7 @@ describe("mudança de objetivo durante um Plano Ativo", () => {
     }).returning();
     await incorporarReavaliacaoNaRevisao(
       atleta.userId,
-      vigente!.id,
+      vigente.id,
       revisao.id,
     );
     expect(await obterReavaliacaoPendente(atleta.userId)).toBeNull();

@@ -23,11 +23,13 @@ afterEach(() => vi.useRealTimers());
 
 describe("executarFallbackDeModelo", () => {
   it("conclui no primário sem iniciar alternativas", async () => {
-    const executar = vi.fn<ChamadaExecutar>(async () => ({
-      tipo: "sucesso" as const,
-      valor: { refeicao: "almoço" },
-      modeloResolvido: "modelo-1@2026",
-    }));
+    const executar = vi.fn<ChamadaExecutar>(() =>
+      Promise.resolve({
+        tipo: "sucesso" as const,
+        valor: { refeicao: "almoço" },
+        modeloResolvido: "modelo-1@2026",
+      }),
+    );
 
     const resultado = await executarFallbackDeModelo({ rotas: ROTAS, executar });
 

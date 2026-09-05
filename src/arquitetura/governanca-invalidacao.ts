@@ -54,7 +54,7 @@ export function actionsSemDestinoDeclarado(
           const invalidacao = corpo.indexOf("invalidarLeituras(");
           if (invalidacao === -1) return false;
           if (corpo.includes("destino")) return false;
-          return corpo.indexOf("redirect(", invalidacao) !== -1;
+          return corpo.includes("redirect(", invalidacao);
         })
         .map(
           ({ nome }) =>

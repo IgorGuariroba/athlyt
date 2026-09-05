@@ -65,7 +65,7 @@ export default async function SessaoPage({ params, searchParams }: { params: Pro
         className="scrollbar-hidden flex snap-x gap-2 overflow-x-auto overscroll-x-contain pb-1 pr-6"
       >
         {sessao.exercicios.map((item, indice) => {
-          const concluido = item.interrompido || item.series.every((serie) => serie.concluida);
+          const concluido = item.interrompido ?? item.series.every((serie) => serie.concluida);
           return <Link key={`${item.exercicioId}-${indice}`} href={`/sessao/${sessao.id}?exercicio=${indice}`} aria-label={`Abrir ${item.nome}`} aria-current={indice === indiceAtual ? "step" : undefined} className={`flex size-14 shrink-0 snap-start items-center justify-center rounded-xl border ${indice === indiceAtual ? "border-on-surface-strong bg-on-surface-strong text-background" : "border-border bg-surface-container"}`}>
             {concluido ? <Check className="size-5 text-success" /> : <span className="text-label-lg font-bold">{indice + 1}</span>}
           </Link>;

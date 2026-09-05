@@ -152,7 +152,7 @@ export function calcularPendenciasCadencia(entrada: { agora: Date; ultimoPeso?: 
 
 export function detectarAssimetriaSuspeita(entrada: { direitoMm: number; esquerdoMm: number; dor?: boolean; inchaco?: boolean; perdaForca?: boolean }) {
   const diferencaMm = Math.abs(entrada.direitoMm - entrada.esquerdoMm);
-  const sintomas = Boolean(entrada.dor || entrada.inchaco || entrada.perdaForca);
+  const sintomas = Boolean(entrada.dor) || Boolean(entrada.inchaco) || Boolean(entrada.perdaForca);
   return {
     diferencaMm,
     confirmavel: diferencaMm > 10 && !sintomas,

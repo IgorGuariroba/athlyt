@@ -12,7 +12,7 @@ import type { DiaTreino, ExercicioPlanejado, PlanoGerado } from "./tipos";
 
 export const REGRA_PLANO_VERSAO = "motor-plano-v2";
 
-const PADROES: Record<number, Array<{ nome: string; padroes: PadraoMovimento[] }>> = {
+const PADROES: Record<number, { nome: string; padroes: PadraoMovimento[] }[]> = {
   1: [{ nome: "Corpo inteiro", padroes: ["agachar", "empurrar-horizontal", "puxar-horizontal", "dobradica", "elevacao-lateral", "core"] }],
   2: [
     { nome: "Corpo inteiro A", padroes: ["agachar", "empurrar-horizontal", "puxar-horizontal", "elevacao-lateral", "flexao-cotovelo"] },

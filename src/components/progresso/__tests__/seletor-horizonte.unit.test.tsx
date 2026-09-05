@@ -22,7 +22,7 @@ describe("SeletorHorizonte", () => {
     render(<SeletorHorizonte valor={90} aoMudar={vi.fn()} />);
 
     expect(
-      (screen.getByRole("radio", { name: "90 dias" }) as HTMLInputElement).checked,
+      screen.getByRole<HTMLInputElement>("radio", { name: "90 dias" }).checked,
     ).toBe(true);
   });
 

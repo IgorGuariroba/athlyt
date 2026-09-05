@@ -96,7 +96,7 @@ function avaliarRecorde(serie: SerieExecutada, anterior: MarcaExercicio): Record
   // exercício é uma linha de base, não uma conquista.
   if (anterior.e1rmKg === 0) return null;
 
-  const candidatos: Array<[TipoRecorde, number, number]> = [
+  const candidatos: [TipoRecorde, number, number][] = [
     ["e1rm", marca.e1rmKg, anterior.e1rmKg],
     ["carga", marca.cargaKg, anterior.cargaKg],
     ["volume", marca.volumeKg, anterior.volumeKg],

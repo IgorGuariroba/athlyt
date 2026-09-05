@@ -19,7 +19,7 @@ import { chromium } from "playwright";
  */
 const BASE = process.env.STORYBOOK_URL ?? "http://localhost:6006";
 
-type Entrada = { id: string; type: string; title: string; name: string };
+interface Entrada { id: string; type: string; title: string; name: string }
 
 async function main() {
   const resposta = await fetch(`${BASE}/index.json`);

@@ -673,7 +673,7 @@ export function equipamentosDesconhecidos(): string[] {
  * é por palavra-chave e deliberadamente generoso: diante da dúvida, o
  * plano prefere evitar o exercício a arriscar a articulação.
  */
-const TERMOS_REGIAO: ReadonlyArray<[RegiaoCorporal, readonly string[]]> = [
+const TERMOS_REGIAO: readonly [RegiaoCorporal, readonly string[]][] = [
   ["ombro", ["ombro", "ombros", "manguito", "deltoide", "clavicula", "clavícula"]],
   ["cotovelo", ["cotovelo", "cotovelos", "epicondilite", "tendinite no braço"]],
   ["punho", ["punho", "punhos", "pulso", "pulsos", "tunel do carpo", "túnel do carpo"]],

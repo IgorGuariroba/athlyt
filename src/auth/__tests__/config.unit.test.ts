@@ -15,7 +15,7 @@ describe("callback signIn (fronteira de allowlist)", () => {
 
     const result = await config.callbacks!.signIn!({
       user: { email: "igor@example.com" },
-    } as Parameters<NonNullable<NonNullable<typeof config.callbacks>["signIn"]>>[0]);
+    });
 
     expect(result).toBe(true);
     expect(loadAllowlist).toHaveBeenCalledOnce();
@@ -27,7 +27,7 @@ describe("callback signIn (fronteira de allowlist)", () => {
 
     const result = await config.callbacks!.signIn!({
       user: { email: "estranho@example.com" },
-    } as Parameters<NonNullable<NonNullable<typeof config.callbacks>["signIn"]>>[0]);
+    });
 
     expect(result).toBe(
       `${ACCESS_DENIED_ROUTE}?email=estranho%40example.com`,
@@ -45,7 +45,7 @@ describe("callback signIn (fronteira de allowlist)", () => {
 
     const result = await config.callbacks!.signIn!({
       user: { email: "qualquer@example.com" },
-    } as Parameters<NonNullable<NonNullable<typeof config.callbacks>["signIn"]>>[0]);
+    });
 
     expect(typeof result).toBe("string");
     expect(result).toContain(ACCESS_DENIED_ROUTE);

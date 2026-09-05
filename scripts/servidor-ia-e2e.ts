@@ -14,11 +14,11 @@ const server = createServer((req, res) => {
   }
 
   let corpo = "";
-  req.on("data", (parte) => { corpo += parte; });
+  req.on("data", (parte) => { corpo += String(parte); });
   req.on("end", () => {
     // Transcrição do áudio da refeição: reconhecida pelo campo
     // `trechosIncertos` do schema, que nenhuma outra operação pede.
-    if (/trechosIncertos/.test(corpo)) {
+    if (corpo.includes('trechosIncertos')) {
       responder(res, "athlyt-refeicao-audio-e2e-v1", {
         transcricao: "Duas colheres de arroz, um bife médio e um copo de suco.",
         trechosIncertos: ["um copo de suco"],
@@ -30,7 +30,7 @@ const server = createServer((req, res) => {
     // `alimento-corrigido` do Recorte, que só esta operação envia.
     // Responde como a versão zero do refrigerante, que é o caso que
     // motivou a operação: mesmo nome, composição inteiramente outra.
-    if (/alimento-corrigido/.test(corpo)) {
+    if (corpo.includes('alimento-corrigido')) {
       responder(res, "athlyt-alimento-macros-e2e-v1", {
         calorias: 0, proteinaG: 0, carboidratosG: 0, gordurasG: 0, fibrasG: 0,
         confianca: "alta",
@@ -40,7 +40,7 @@ const server = createServer((req, res) => {
 
     // Estimativa por descrição: distinguida da foto por `porcaoDescrita`,
     // que só o schema de `refeicao-texto` declara.
-    if (/porcaoDescrita/.test(corpo)) {
+    if (corpo.includes('porcaoDescrita')) {
       responder(res, "athlyt-refeicao-texto-e2e-v1", {
         nome: "Almoço: arroz, bife e suco",
         itens: [
@@ -57,7 +57,7 @@ const server = createServer((req, res) => {
     // Estimativa de refeição por foto: reconhecida pela instrução de
     // sistema da operação, e não pela imagem — o corpo carrega a foto
     // em base64 e casar contra ela seria frágil.
-    if (/quantidade|refeição.*foto|refeicao.*foto|refeicao-foto|image_url|data:image|mediaType|type["']?:["']file/i.test(corpo) || !/cargaKg/.test(corpo)) {
+    if (/quantidade|refeição.*foto|refeicao.*foto|refeicao-foto|image_url|data:image|mediaType|type["']?:["']file/i.test(corpo) || !corpo.includes('cargaKg')) {
       const pedido = JSON.parse(corpo) as { model?: string; provider?: { only?: string[] } };
       // O cenário padrão esgota o primário para exercitar o fallback real da aplicação.
       if (pedido.provider?.only?.includes("google-vertex/eu")) {

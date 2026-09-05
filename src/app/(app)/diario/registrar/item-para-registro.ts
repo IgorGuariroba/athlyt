@@ -24,12 +24,12 @@ export function reconstruirItemParaRegistro(
   bruto: ItemPrato,
   origemPadrao: OrigemEstimativa,
 ): ItemPrato {
-  const quantidade = Number(bruto.quantidade);
+  const quantidade = bruto.quantidade;
   const unidade: UnidadeEstimada = bruto.unidade === "ml" ? "ml" : "g";
   if (!Number.isFinite(quantidade) || quantidade <= 0 || quantidade > 3000) {
     throw new Error(`Quantidade fora do intervalo aceito (1 a 3000 ${unidade}).`);
   }
-  const nome = descricaoSemQuantidade(String(bruto.descricao)).trim();
+  const nome = descricaoSemQuantidade(bruto.descricao).trim();
   if (nome.length === 0) throw new Error("Todo item precisa de uma descrição.");
 
   if (bruto.origemDado === "base" && bruto.alimentoId) {

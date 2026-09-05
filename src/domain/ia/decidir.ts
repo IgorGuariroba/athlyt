@@ -263,7 +263,7 @@ async function decidirInternamente<T>(
             if (modeloResolvido !== rota.modelo) {
               return { tipo: "erro", motivo: "Modelo resolvido fora da rota aprovada." };
             }
-            return { tipo: "sucesso", valor: respostaRota.output as T, modeloResolvido };
+            return { tipo: "sucesso", valor: respostaRota.output, modeloResolvido };
           } catch (erro) {
             if (entrada.signal?.aborted || (erro instanceof Error && erro.name === "AbortError")) throw erro;
             const falha = classificarFalhaDeModelo<T>(erro);
@@ -390,7 +390,7 @@ ${erro.text}`);
 
     return {
       status: "ok",
-      valor: resposta.output as T,
+      valor: resposta.output,
       contexto,
       modeloResolvido,
       degradado: contexto.degradado,
@@ -398,7 +398,7 @@ ${erro.text}`);
   } catch (erro) {
     const motivo = erro instanceof Error && NoObjectGeneratedError.isInstance(erro)
       ? detalhesErroGeracao(erro)
-      : detalhesErroProvedor(erro instanceof Error ? erro as Error & { statusCode?: number; responseBody?: string } : { message: String(erro) });
+      : detalhesErroProvedor(erro instanceof Error ? erro : { message: String(erro) });
 
     const falha = classificarFalhaDeModelo<T>(erro);
     const statusHttp = metadadosTecnicosDoErro(erro).status || undefined;

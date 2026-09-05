@@ -82,8 +82,8 @@ export default async function AvaliacaoVisualPage({
                     {criterios.map(([nome, nota]) => (
                       <MedidorScore
                         key={nome}
-                        rotulo={String(nome).replace("vTaper", "V-taper")}
-                        valor={Number(nota)}
+                        rotulo={nome.replace("vTaper", "V-taper")}
+                        valor={nota}
                       />
                     ))}
                   </div>

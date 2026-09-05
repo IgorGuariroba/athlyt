@@ -11,10 +11,8 @@ const MIDIA_SUPINO = {
 /** Storage cujo objeto ainda não foi espelhado — o miss que aciona o download. */
 function storageVazio(overrides: Partial<StoragePrivado> = {}): StoragePrivado {
   return storageFake({
-    existe: async () => false,
-    ler: async () => {
-      throw new Error("NoSuchKey");
-    },
+    existe: () => Promise.resolve(false),
+    ler: () => Promise.reject(new Error("NoSuchKey")),
     ...overrides,
   });
 }
@@ -27,11 +25,11 @@ function storageVazio(overrides: Partial<StoragePrivado> = {}): StoragePrivado {
  */
 function storageFake(overrides: Partial<StoragePrivado> = {}): StoragePrivado {
   return {
-    gravar: async () => {},
-    existe: async () => true,
-    ler: async () => ({ corpo: new Uint8Array([1, 2, 3]), contentType: "image/gif" }),
-    urlLeitura: async () => "https://exemplo.invalido/assinada",
-    excluir: async () => {},
+    gravar: () => Promise.resolve(),
+    existe: () => Promise.resolve(true),
+    ler: () => Promise.resolve({ corpo: new Uint8Array([1, 2, 3]), contentType: "image/gif" }),
+    urlLeitura: () => Promise.resolve("https://exemplo.invalido/assinada"),
+    excluir: () => Promise.resolve(),
     ...overrides,
   };
 }
@@ -39,10 +37,10 @@ function storageFake(overrides: Partial<StoragePrivado> = {}): StoragePrivado {
 describe("GET /api/midia-execucao/[exercicioId]", () => {
   it("devolve 200 com os bytes do GIF quando há mapeamento e o objeto existe no storage", async () => {
     const handler = criarHandlerMidiaExecucao({
-      autenticado: async () => true,
+      autenticado: () => Promise.resolve(true),
       midiaDoExercicio: () => MIDIA_SUPINO,
       obterStorage: () => storageFake(),
-      baixarGifDeOrigem: async () => null,
+      baixarGifDeOrigem: () => Promise.resolve(null),
     });
 
     const resposta = await handler("supino-barra");
@@ -60,15 +58,16 @@ describe("GET /api/midia-execucao/[exercicioId]", () => {
   it("espelha o GIF de origem e o serve quando o objeto ainda não está no bucket", async () => {
     const gravados: { chave: string; contentType: string }[] = [];
     const handler = criarHandlerMidiaExecucao({
-      autenticado: async () => true,
+      autenticado: () => Promise.resolve(true),
       midiaDoExercicio: () => MIDIA_SUPINO,
       obterStorage: () =>
         storageVazio({
-          gravar: async ({ chave, contentType }) => {
+          gravar: ({ chave, contentType }) => {
             gravados.push({ chave, contentType });
+            return Promise.resolve();
           },
         }),
-      baixarGifDeOrigem: async () => new Uint8Array([7, 7, 7]),
+      baixarGifDeOrigem: () => Promise.resolve(new Uint8Array([7, 7, 7])),
     });
 
     const resposta = await handler("supino-barra");
@@ -82,12 +81,12 @@ describe("GET /api/midia-execucao/[exercicioId]", () => {
   it("usa o exerciseId do mapa curado ao baixar, não o id do catálogo Athlyt", async () => {
     const pedidos: string[] = [];
     const handler = criarHandlerMidiaExecucao({
-      autenticado: async () => true,
+      autenticado: () => Promise.resolve(true),
       midiaDoExercicio: () => MIDIA_SUPINO,
       obterStorage: () => storageVazio(),
-      baixarGifDeOrigem: async (exerciseId) => {
+      baixarGifDeOrigem: (exerciseId) => {
         pedidos.push(exerciseId);
-        return new Uint8Array([7]);
+        return Promise.resolve(new Uint8Array([7]));
       },
     });
 
@@ -98,10 +97,10 @@ describe("GET /api/midia-execucao/[exercicioId]", () => {
 
   it("devolve 404 quando o objeto falta e a origem está indisponível", async () => {
     const handler = criarHandlerMidiaExecucao({
-      autenticado: async () => true,
+      autenticado: () => Promise.resolve(true),
       midiaDoExercicio: () => MIDIA_SUPINO,
       obterStorage: () => storageVazio(),
-      baixarGifDeOrigem: async () => null,
+      baixarGifDeOrigem: () => Promise.resolve(null),
     });
 
     const resposta = await handler("supino-barra");
@@ -111,15 +110,13 @@ describe("GET /api/midia-execucao/[exercicioId]", () => {
 
   it("serve o GIF baixado mesmo se a gravação no R2 falhar", async () => {
     const handler = criarHandlerMidiaExecucao({
-      autenticado: async () => true,
+      autenticado: () => Promise.resolve(true),
       midiaDoExercicio: () => MIDIA_SUPINO,
       obterStorage: () =>
         storageVazio({
-          gravar: async () => {
-            throw new Error("AccessDenied");
-          },
+          gravar: () => Promise.reject(new Error("AccessDenied")),
         }),
-      baixarGifDeOrigem: async () => new Uint8Array([7, 7, 7]),
+      baixarGifDeOrigem: () => Promise.resolve(new Uint8Array([7, 7, 7])),
     });
 
     const resposta = await handler("supino-barra");
@@ -130,10 +127,10 @@ describe("GET /api/midia-execucao/[exercicioId]", () => {
 
   it("devolve 404 quando o exercício não tem mídia mapeada", async () => {
     const handler = criarHandlerMidiaExecucao({
-      autenticado: async () => true,
+      autenticado: () => Promise.resolve(true),
       midiaDoExercicio: () => undefined,
       obterStorage: () => storageFake(),
-      baixarGifDeOrigem: async () => new Uint8Array([7]),
+      baixarGifDeOrigem: () => Promise.resolve(new Uint8Array([7])),
     });
 
     const resposta = await handler("id-sem-mapeamento");
@@ -143,10 +140,10 @@ describe("GET /api/midia-execucao/[exercicioId]", () => {
 
   it("devolve 404 (falha fechada) quando o R2 não está configurado, sem 500", async () => {
     const handler = criarHandlerMidiaExecucao({
-      autenticado: async () => true,
+      autenticado: () => Promise.resolve(true),
       midiaDoExercicio: () => MIDIA_SUPINO,
       obterStorage: () => null,
-      baixarGifDeOrigem: async () => new Uint8Array([7]),
+      baixarGifDeOrigem: () => Promise.resolve(new Uint8Array([7])),
     });
 
     const resposta = await handler("supino-barra");
@@ -156,10 +153,10 @@ describe("GET /api/midia-execucao/[exercicioId]", () => {
 
   it("devolve 401 quando não há sessão autenticada", async () => {
     const handler = criarHandlerMidiaExecucao({
-      autenticado: async () => false,
+      autenticado: () => Promise.resolve(false),
       midiaDoExercicio: () => MIDIA_SUPINO,
       obterStorage: () => storageFake(),
-      baixarGifDeOrigem: async () => new Uint8Array([7]),
+      baixarGifDeOrigem: () => Promise.resolve(new Uint8Array([7])),
     });
 
     const resposta = await handler("supino-barra");

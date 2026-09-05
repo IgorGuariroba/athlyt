@@ -119,19 +119,17 @@ function exigirEnv(nome: string): string {
 let cache: ReturnType<typeof createOpenAICompatible> | null = null;
 
 export function openrouter() {
-  if (!cache) {
-    cache = createOpenAICompatible({
-      name: "openrouter",
-      baseURL: exigirEnv("OPENROUTER_BASE_URL"),
-      apiKey: exigirEnv("OPENROUTER_API_KEY"),
-      // Sem isto o provider assume `false`, descarta o `json_schema` e
-      // passa a pedir JSON por instrução no prompt. O modelo responde
-      // JSON — mas com os campos que quiser, e a validação Zod falha
-      // com "response did not match schema". O OpenRouter suporta
-      // structured outputs; quem precisa saber disso é o cliente.
-      supportsStructuredOutputs: true,
-    });
-  }
+  cache ??= createOpenAICompatible({
+    name: "openrouter",
+    baseURL: exigirEnv("OPENROUTER_BASE_URL"),
+    apiKey: exigirEnv("OPENROUTER_API_KEY"),
+    // Sem isto o provider assume `false`, descarta o `json_schema` e
+    // passa a pedir JSON por instrução no prompt. O modelo responde
+    // JSON — mas com os campos que quiser, e a validação Zod falha
+    // com "response did not match schema". O OpenRouter suporta
+    // structured outputs; quem precisa saber disso é o cliente.
+    supportsStructuredOutputs: true,
+  });
   return cache;
 }
 

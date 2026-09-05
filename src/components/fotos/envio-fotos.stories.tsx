@@ -20,7 +20,7 @@ type Story = StoryObj<typeof meta>;
 
 export const Sucesso: Story = {
   args: {
-    action: async () => ({ ok: true }),
+    action: () => Promise.resolve({ ok: true }),
     // Sem redirecionar para fora do canvas ao concluir.
     destinoSucesso: "#",
   },
@@ -28,10 +28,11 @@ export const Sucesso: Story = {
 
 export const Falha: Story = {
   args: {
-    action: async () => ({
-      ok: false,
-      erro: "Não foi possível enviar as fotos. Verifique a conexão.",
-    }),
+    action: () =>
+      Promise.resolve({
+        ok: false,
+        erro: "Não foi possível enviar as fotos. Verifique a conexão.",
+      }),
     destinoSucesso: "#",
   },
 };

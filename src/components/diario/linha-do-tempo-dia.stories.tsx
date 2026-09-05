@@ -42,7 +42,7 @@ const ITENS: ItemLinhaDoTempo[] = [
   },
 ] as ItemLinhaDoTempo[];
 
-const acao = async () => {};
+const acao = () => Promise.resolve();
 
 const meta = {
   title: "Diário/LinhaDoTempoDia",

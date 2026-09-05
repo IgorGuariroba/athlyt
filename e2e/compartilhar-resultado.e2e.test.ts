@@ -187,7 +187,7 @@ async function gerarEvidencia(
   void baixarSuprimido;
 
   const base64 = await page.evaluate(
-    () => (window as unknown as { __cardPng?: string }).__cardPng as string,
+    () => (window as unknown as { __cardPng?: string }).__cardPng!,
   );
   const png = Buffer.from(base64, "base64");
   const destino = `${EVIDENCIAS}/card-compartilhamento-${cenario}-1080x1920.png`;

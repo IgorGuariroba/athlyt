@@ -14,8 +14,8 @@ const BASE = process.env.STORYBOOK_URL ?? "http://localhost:6006";
 const require = createRequire(import.meta.url);
 const axeSource = readFileSync(require.resolve("axe-core"), "utf8");
 
-type Entrada = { id: string; type: string; title: string; name: string };
-type Violacao = { id: string; impact: string | null; help: string; nodes: { target: string[] }[] };
+interface Entrada { id: string; type: string; title: string; name: string }
+interface Violacao { id: string; impact: string | null; help: string; nodes: { target: string[] }[] }
 
 async function main() {
   const resposta = await fetch(`${BASE}/index.json`);

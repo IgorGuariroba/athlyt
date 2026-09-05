@@ -50,8 +50,7 @@ export function atualizarRascunhoSerie(sessionId: string, exercicioId: string, n
 export function removerRascunhoSerie(sessionId: string, exercicioId: string, numero: number): void {
   const id = chave(sessionId, exercicioId, numero);
   if (!(id in estado)) return;
-  const restantes = { ...estado };
-  delete restantes[id];
+  const { [id]: _removido, ...restantes } = estado;
   estado = Object.keys(restantes).length ? restantes : VAZIO;
   notificar();
 }

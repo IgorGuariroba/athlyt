@@ -19,13 +19,13 @@ import {
 
 export type MotivoSubstituicao = "equipamento" | "dor" | "preferencia";
 
-export const MOTIVOS_SUBSTITUICAO: ReadonlyArray<{
+export const MOTIVOS_SUBSTITUICAO: readonly {
   id: MotivoSubstituicao;
   rotulo: string;
   descricao: string;
   /** Motivo persistente vale para as próximas sessões do bloco. */
   persistente: boolean;
-}> = [
+}[] = [
   {
     id: "equipamento",
     rotulo: "Equipamento indisponível",

@@ -46,7 +46,8 @@ const PAO_ESTIMADO = itemEstimado({
 
 /** Acréscimo por descrição: o caminho que substituiu o formulário de macros. */
 const ACRESCIMO = {
-  estimarDescricao: async () => ({ ok: true as const, estimativa: { itens: [PAO_ESTIMADO] } }),
+  estimarDescricao: () =>
+    Promise.resolve({ ok: true as const, estimativa: { itens: [PAO_ESTIMADO] } }),
 };
 
 const ESTIMATIVA: EstimativaDescrita = {
@@ -103,7 +104,7 @@ describe("RevisaoEstimativa", () => {
     expect(screen.getByText(/378 kcal/)).toBeTruthy();
   });
 
-  it("corrigir a porção reescala o item sem promover a estimativa", async () => {
+  it("corrigir a porção reescala o item sem promover a estimativa", () => {
     const aoMudar = montar();
 
     fireEvent.change(screen.getByLabelText("Quantidade de Arroz branco cozido em g"), {
@@ -115,7 +116,7 @@ describe("RevisaoEstimativa", () => {
     expect(itens[0].origemDado).toBe("estimativa-ia");
   });
 
-  it("corrigir o alimento preserva os macros: dizer o que era não é dizer quanto era", async () => {
+  it("corrigir o alimento preserva os macros: dizer o que era não é dizer quanto era", () => {
     const aoMudar = montar();
 
     fireEvent.change(screen.getByLabelText("Alimento 1"), {
@@ -228,7 +229,7 @@ describe("RevisaoEstimativa", () => {
   });
 
   it("recalcular é por item e sob comando: nunca durante a digitação", async () => {
-    const aoRecalcularItem = vi.fn(async () => {});
+    const aoRecalcularItem = vi.fn(() => Promise.resolve());
     const editado = renomearItem(ARROZ, "Arroz integral cozido");
     render(
       <RevisaoEstimativa
@@ -271,16 +272,22 @@ describe("RevisaoEstimativa", () => {
 
 describe("RegistroPorDescricao", () => {
   const acoes = () => ({
-    estimar: vi.fn<(fd: FormData) => Promise<ResultadoEstimativa>>(async () => ({
-      ok: true,
-      estimativa: ESTIMATIVA,
-    })),
-    transcrever: vi.fn<(fd: FormData) => Promise<ResultadoTranscricao>>(async () => ({
-      ok: true,
-      transcricao: "Duas colheres de arroz e um bife médio.",
-      trechosIncertos: ["bife médio"],
-    })),
-    registrar: vi.fn<(fd: FormData) => Promise<ResultadoRegistro>>(async () => ({ ok: true })),
+    estimar: vi.fn<(fd: FormData) => Promise<ResultadoEstimativa>>(() =>
+      Promise.resolve({
+        ok: true,
+        estimativa: ESTIMATIVA,
+      }),
+    ),
+    transcrever: vi.fn<(fd: FormData) => Promise<ResultadoTranscricao>>(() =>
+      Promise.resolve({
+        ok: true,
+        transcricao: "Duas colheres de arroz e um bife médio.",
+        trechosIncertos: ["bife médio"],
+      }),
+    ),
+    registrar: vi.fn<(fd: FormData) => Promise<ResultadoRegistro>>(() =>
+      Promise.resolve({ ok: true }),
+    ),
   });
 
   function montar(props = {}) {
@@ -318,10 +325,12 @@ describe("RegistroPorDescricao", () => {
 
   it("falha na estimativa preserva a descrição digitada", async () => {
     const fns = acoes();
-    fns.estimar = vi.fn<(fd: FormData) => Promise<ResultadoEstimativa>>(async () => ({
-      ok: false,
-      erro: "Indisponível agora.",
-    }));
+    fns.estimar = vi.fn<(fd: FormData) => Promise<ResultadoEstimativa>>(() =>
+      Promise.resolve({
+        ok: false,
+        erro: "Indisponível agora.",
+      }),
+    );
     render(
       <RegistroPorDescricao
         dia="2026-05-20" horaInicial="12:30" nomeInicial="Almoço"
@@ -366,13 +375,15 @@ describe("RegistroPorDescricao", () => {
     // número do refrigerante comum sob o nome do zero.
     const fns = {
       ...acoes(),
-      recalcularItem: vi.fn<(fd: FormData) => Promise<ResultadoMacrosItem>>(async () => ({
-        ok: true,
-        macros: {
-          calorias: 0, proteinaG: 0, carboidratosG: 0, gordurasG: 0, fibrasG: 0,
-          confianca: "alta" as const, modelo: "modelo-y",
-        },
-      })),
+      recalcularItem: vi.fn<(fd: FormData) => Promise<ResultadoMacrosItem>>(() =>
+        Promise.resolve({
+          ok: true,
+          macros: {
+            calorias: 0, proteinaG: 0, carboidratosG: 0, gordurasG: 0, fibrasG: 0,
+            confianca: "alta" as const, modelo: "modelo-y",
+          },
+        }),
+      ),
     };
     render(
       <RegistroPorDescricao
@@ -423,10 +434,12 @@ describe("RegistroPorDescricao", () => {
   it("falha ao recalcular preserva os números que estavam na tela", async () => {
     const fns = {
       ...acoes(),
-      recalcularItem: vi.fn<(fd: FormData) => Promise<ResultadoMacrosItem>>(async () => ({
-        ok: false,
-        erro: "Não consegui recalcular agora.",
-      })),
+      recalcularItem: vi.fn<(fd: FormData) => Promise<ResultadoMacrosItem>>(() =>
+        Promise.resolve({
+          ok: false,
+          erro: "Não consegui recalcular agora.",
+        }),
+      ),
     };
     render(
       <RegistroPorDescricao
@@ -526,7 +539,7 @@ describe("RegistroPorDescricao", () => {
 
 describe("CapturaAudio", () => {
   it("orienta a gravar e não expõe controle de reprodução antes de existir áudio", () => {
-    render(<CapturaAudio audio={null} aoGravar={() => {}} dica="Diga o que comeu." />);
+    render(<CapturaAudio audio={null} aoGravar={() => undefined} dica="Diga o que comeu." />);
 
     expect(screen.getByRole("button", { name: /Gravar descrição/ })).toBeTruthy();
     expect(screen.getByText("Diga o que comeu.")).toBeTruthy();
@@ -535,7 +548,7 @@ describe("CapturaAudio", () => {
 
   it("com áudio gravado, oferece ouvir antes de enviar e regravar", () => {
     const arquivo = new File([new Uint8Array([1])], "descricao", { type: "audio/webm" });
-    render(<CapturaAudio audio={arquivo} aoGravar={() => {}} />);
+    render(<CapturaAudio audio={arquivo} aoGravar={() => undefined} />);
 
     expect(screen.getByLabelText("Áudio gravado")).toBeTruthy();
     expect(screen.getByRole("button", { name: /Gravar de novo/ })).toBeTruthy();

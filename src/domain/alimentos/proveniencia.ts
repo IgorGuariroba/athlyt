@@ -109,7 +109,7 @@ export function pontuarFonte(
   valor: ValorDeFonte,
   contexto: { hoje: Date; valores: readonly ValorDeFonte[] },
 ): number {
-  const notas: Array<[string, number]> = [
+  const notas: [string, number][] = [
     ["credencial", CREDENCIAL[valor.tipo]],
     ["metodo", valor.metodoAnalitico ? 1 : 0],
     ["reprodutibilidade", valor.reprodutivel ? 1 : 0],

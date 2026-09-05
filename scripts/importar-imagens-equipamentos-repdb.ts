@@ -39,7 +39,7 @@ const ALIASES: Record<string, string[]> = {
   shoulder_press_machine: ["shoulder_press_machine"], standing_calf_raise_machine: ["standing_calf_raise_machine"], trap_bar: ["trap_bar"], tricep_extension_machine: ["tricep_extension_machine"],
 };
 
-type Registro = { equipment?: string; images?: { flat?: { start?: string; peak?: string; main?: string } } };
+interface Registro { equipment?: string; images?: { flat?: { start?: string; peak?: string; main?: string } } }
 
 async function principal() {
   const resposta = await fetch(URL_DATASET);

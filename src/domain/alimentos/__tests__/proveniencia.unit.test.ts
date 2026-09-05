@@ -131,12 +131,12 @@ describe("escolha entre fontes conflitantes", () => {
 describe("tabela de decisão entre fontes", () => {
   const hoje = new Date("2024-10-01");
 
-  const CASOS: ReadonlyArray<{
+  const CASOS: readonly {
     cenario: string;
     fontes: ValorDeFonte[];
     vencedora: string;
     divergente: boolean;
-  }> = [
+  }[] = [
     {
       cenario: "oficial recente vs colaborativa recente",
       fontes: [tabelaOficial, colaborativa],

@@ -22,16 +22,16 @@ beforeEach(() => {
 describe("POST /api/ia/refeicao-foto", () => {
   it("autentica e transmite progresso até uma única estimativa final", async () => {
     auth.mockResolvedValue({ user: { id: "u1" } });
-    estimarRefeicao.mockImplementation(async (_fd, opcoes) => {
+    estimarRefeicao.mockImplementation((_fd, opcoes) => {
       opcoes.aoProgresso?.({ tipo: "inicio" });
       opcoes.aoProgresso?.({ tipo: "alternativa" });
       opcoes.aoProgresso?.({ tipo: "ultima-alternativa" });
-      return { ok: true, estimativa: { nome: "Almoço", itens: [] } };
+      return Promise.resolve({ ok: true, estimativa: { nome: "Almoço", itens: [] } });
     });
     const form = new FormData();
     form.set("foto", new File(["foto"], "foto.webp", { type: "image/webp" }));
     const resposta = await POST({
-      formData: async () => form,
+      formData: () => Promise.resolve(form),
       signal: new AbortController().signal,
     } as unknown as Request);
 

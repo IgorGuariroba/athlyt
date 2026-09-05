@@ -6,7 +6,7 @@ import {
   observabilidadeAtiva,
 } from "./config";
 
-const nivel = process.env.LOG_LEVEL || "info";
+const nivel = process.env.LOG_LEVEL ?? "info";
 
 /**
  * Defesa central: erros de SDK são objetos extensíveis e podem carregar

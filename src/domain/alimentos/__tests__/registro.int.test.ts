@@ -89,7 +89,7 @@ describe("registro avulso pelo Prato", () => {
     const diario = await montarDiarioDoDia(userId, { dia: DIA, fuso: FUSO });
     const consumo = diario.linhaDoTempo.find((i) => i.tipo === "consumo");
     if (consumo?.tipo !== "consumo") throw new Error("Consumo ausente.");
-    const itens = consumo.consumo.itens as Array<{ fonte?: string; origemDado?: string; confianca?: string }>;
+    const itens = consumo.consumo.itens as { fonte?: string; origemDado?: string; confianca?: string }[];
     expect(itens[0].fonte).toMatch(/TBCA/);
     expect(itens[0].origemDado).toBe("base");
     expect(itens[1].origemDado).toBe("usuario");

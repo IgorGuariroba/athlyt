@@ -20,15 +20,15 @@ import { cn } from "@/lib/utils";
  *    gráficos com escalas próprias, uma assimetria de 5 mm parece
  *    idêntica a uma de 5 cm.
  */
-export type PontoSerie = { data: Date; valor: number };
+export interface PontoSerie { data: Date; valor: number }
 
-export type Serie = {
+export interface Serie {
   /** Rótulo da série; obrigatório quando há mais de uma. */
   nome?: string;
   valores: readonly PontoSerie[];
   /** Classe de cor da série — use um token da paleta de dados. */
   cor?: string;
-};
+}
 
 const LARGURA = 300;
 const ALTURA = 100;

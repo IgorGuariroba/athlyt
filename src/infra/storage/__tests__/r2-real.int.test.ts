@@ -24,7 +24,7 @@ describe.skipIf(!config)("Cloudflare R2 real", () => {
       expect(resposta.status).toBe(200);
       expect(await resposta.text()).toBe("athlyt-storage-real");
     } finally {
-      await storage.excluir(chave).catch(() => {});
+      await storage.excluir(chave).catch(() => undefined);
     }
     expect(await storage.existe(chave)).toBe(false);
   });

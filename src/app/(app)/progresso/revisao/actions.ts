@@ -60,7 +60,7 @@ export async function gerarRevisaoSemanal(fd: FormData) {
     confiancas,
     evidencias,
     semanasObservadas,
-    riscoSaude: Boolean(respostas.lesoes?.trim() || respostas.condicoes?.trim()),
+    riscoSaude: Boolean(respostas.lesoes?.trim()) || Boolean(respostas.condicoes?.trim()),
     reavaliacaoPendente: reavaliacaoPendente ? {
       gatilho: reavaliacaoPendente.gatilho,
       impacto: reavaliacaoPendente.impacto,

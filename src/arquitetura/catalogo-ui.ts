@@ -9,7 +9,7 @@
 import { readdirSync, readFileSync, statSync } from "node:fs";
 import { join, relative, sep } from "node:path";
 
-export type ComponenteCatalogo = {
+export interface ComponenteCatalogo {
   /** Caminho relativo à raiz do projeto. */
   arquivo: string;
   /** Alias de import (`@/components/...`). */
@@ -24,7 +24,7 @@ export type ComponenteCatalogo = {
   variantes: Record<string, string[]>;
   /** Primeiro bloco de documentação do arquivo, quando existe. */
   doc?: string;
-};
+}
 
 const RAIZ_COMPONENTES = join("src", "components");
 
@@ -112,7 +112,7 @@ function extrairVariantes(fonte: string): Record<string, string[]> {
   while (j < texto.length) {
     const abre = texto.indexOf("{", j);
     if (abre === -1) break;
-    const rotulo = texto.slice(j, abre).match(/([A-Za-z0-9_]+)\s*:\s*$/);
+    const rotulo = /([A-Za-z0-9_]+)\s*:\s*$/.exec(texto.slice(j, abre));
     let prof = 1;
     let k = abre + 1;
     const inner: string[] = [];
@@ -136,7 +136,7 @@ function extrairVariantes(fonte: string): Record<string, string[]> {
 }
 
 function extrairDoc(fonte: string): string | undefined {
-  const m = fonte.match(/\/\*\*([\s\S]*?)\*\//);
+  const m = /\/\*\*([\s\S]*?)\*\//.exec(fonte);
   if (!m) return undefined;
   return m[1]
     .split("\n")

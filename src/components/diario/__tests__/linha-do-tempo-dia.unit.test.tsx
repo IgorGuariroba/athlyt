@@ -29,7 +29,7 @@ const ITENS = [
   },
 ] as unknown as ItemLinhaDoTempo[];
 
-const acao = async () => {};
+const acao = () => Promise.resolve();
 
 /**
  * O contrato desta camada é a separação entre extrato (Diário) e foco

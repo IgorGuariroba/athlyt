@@ -77,7 +77,10 @@ describe("RegistroSerie", () => {
     expect(screen.queryByRole("dialog", { name: "Timer de descanso" })).toBeNull();
     expect(screen.getByRole("button", { name: /1:30/ })).toBeDefined();
 
-    await act(async () => pendente.resolver());
+    await act(async () => {
+      pendente.resolver();
+      await pendente.promessa;
+    });
   });
 
   it("conta o descanso escolhido para o exercício, e não o prescrito", async () => {
@@ -91,7 +94,10 @@ describe("RegistroSerie", () => {
     // 90s prescritos, ritmo longo: 135s.
     expect(screen.getByText("2:15")).toBeDefined();
 
-    await act(async () => pendente.resolver());
+    await act(async () => {
+      pendente.resolver();
+      await pendente.promessa;
+    });
   });
 
   it("mantém a validação nativa antes de iniciar o fluxo", () => {

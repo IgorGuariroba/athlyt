@@ -72,7 +72,7 @@ export interface SessaoTreino {
 }
 export interface ResumoSessao extends SessaoTreino {
   totalSeries: number; volumeKg: number;
-  recordes: Array<{ exercicioId: string; nome: string; tipo: TipoRecorde; valor: number; rotulo: string }>;
+  recordes: { exercicioId: string; nome: string; tipo: TipoRecorde; valor: number; rotulo: string }[];
 }
 
 type UltimaSerie = Pick<SerieSessao, "cargaKg" | "repeticoes" | "rir">;
@@ -211,7 +211,7 @@ export async function registrarOverrideAlertaCautela(userId: string, sessionId: 
 }): Promise<void> {
   const sessao = await obterSessao(userId, sessionId);
   const exercicio = sessao?.exercicios.find((item) => item.exercicioId === entrada.exercicioId);
-  if (!sessao || sessao.estado !== "em_andamento" || !exercicio?.series.some((serie) => serie.numero === entrada.proximaSerie && !serie.concluida)) {
+  if (sessao?.estado !== "em_andamento" || !exercicio?.series.some((serie) => serie.numero === entrada.proximaSerie && !serie.concluida)) {
     throw new Error("Alerta de Cautela não corresponde à próxima série.");
   }
   await db.insert(workoutEvents).values({
@@ -288,7 +288,7 @@ export async function abandonarSessao(userId: string, sessionId: string, motivo:
 async function encerrar(userId: string, sessionId: string, estado: "concluida" | "abandonada", motivo?: MotivoAbandono): Promise<SessaoTreino> {
   const atualizada = await db.transaction(async (tx) => {
     const [linha] = await tx.select().from(workoutSessions).where(and(eq(workoutSessions.id, sessionId), eq(workoutSessions.userId, userId))).limit(1).for("update");
-    if (!linha || linha.estado !== "em_andamento") throw new Error("Sessão não está em andamento.");
+    if (linha?.estado !== "em_andamento") throw new Error("Sessão não está em andamento.");
     const [encerrada] = await tx.update(workoutSessions).set({ estado, endedAt: new Date(), motivoAbandono: motivo ?? null }).where(eq(workoutSessions.id, sessionId)).returning();
     await tx.insert(workoutEvents).values({ sessionId, userId, tipo: estado === "concluida" ? "sessao_concluida" : "sessao_abandonada", dados: motivo ? { motivo } : {} });
     return encerrada;
@@ -458,7 +458,7 @@ export async function substituirExercicioNaSessao(userId: string, sessionId: str
 
   const atualizada = await db.transaction(async (tx) => {
     const [linha] = await tx.select().from(workoutSessions).where(and(eq(workoutSessions.id, sessionId), eq(workoutSessions.userId, userId))).limit(1).for("update");
-    if (!linha || linha.estado !== "em_andamento") throw new Error("Sessão não está em andamento.");
+    if (linha?.estado !== "em_andamento") throw new Error("Sessão não está em andamento.");
     const exercicios = structuredClone(linha.exercicios as ExercicioSessao[]);
     const indice = exercicios.findIndex((item) => item.exercicioId === entrada.exercicioId);
     if (indice < 0) throw new Error("Exercício não pertence à sessão.");

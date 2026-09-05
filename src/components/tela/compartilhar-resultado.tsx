@@ -5,14 +5,14 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { AvisoAcao } from "./aviso-acao";
 
-type Props = {
+interface Props {
   nome: string;
   duracaoMin: number;
   totalSeries: number;
   volumeKg: number;
-  recordes: Array<{ nome: string; valor: number }>;
-  exercicios: Array<{ nome: string }>;
-};
+  recordes: { nome: string; valor: number }[];
+  exercicios: { nome: string }[];
+}
 
 type Simbolo = "tempo" | "series" | "volume" | "estrela" | "marca";
 
@@ -268,7 +268,7 @@ async function gerarCard(props: Props) {
 
   // Métricas empilhadas: disco com ícone, rótulo espaçado, valor enorme e
   // unidade em acento, separadas por divisórias finas.
-  const metricas: Array<[string, string, string, Simbolo]> = [
+  const metricas: [string, string, string, Simbolo][] = [
     [
       "VOLUME TOTAL",
       props.volumeKg.toLocaleString("pt-BR"),

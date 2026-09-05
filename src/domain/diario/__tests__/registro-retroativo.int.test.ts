@@ -206,7 +206,7 @@ describe("Registro Retroativo sem planejamento", () => {
     const diario = await montarDiarioDoDia(userId, { dia: DIA, fuso: FUSO });
     const consumo = diario.linhaDoTempo.find((i) => i.tipo === "consumo");
     if (consumo?.tipo !== "consumo") throw new Error("Consumo ausente.");
-    const itens = consumo.consumo.itens as Array<{ fonte?: string; origemDado?: string }>;
+    const itens = consumo.consumo.itens as { fonte?: string; origemDado?: string }[];
     expect(itens[0].origemDado).toBe("estimativa-ia");
     expect(itens[0].fonte).toBe("Estimativa por descrição");
   });

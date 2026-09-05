@@ -13,7 +13,7 @@ process.env.AUTH_GOOGLE_SECRET ??= "test-google-secret";
 // tem relação com o que estava sendo verificado.
 if (typeof Element !== "undefined" && !("scrollIntoView" in Element.prototype)) {
   Object.defineProperty(Element.prototype, "scrollIntoView", {
-    value: () => {},
+    value: () => undefined,
     writable: true,
     configurable: true,
   });

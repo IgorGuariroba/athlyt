@@ -23,7 +23,7 @@ export async function prepararItensParaEdicao(
   itens: readonly ItemAlimentar[],
   estimarRestantes: (descricoes: readonly string[]) => Promise<ResultadoPreparacaoItens>,
 ): Promise<ResultadoPreparacaoItens> {
-  const preparados: Array<ItemPrato | null> = itens.map((item) => {
+  const preparados: (ItemPrato | null)[] = itens.map((item) => {
     if (ehItemPrato(item)) return item;
     const planejado = interpretarItemPlanejadoLegadoNaBase(item.descricao);
     return planejado ? itemPlanejadoParaPrato(planejado) : null;

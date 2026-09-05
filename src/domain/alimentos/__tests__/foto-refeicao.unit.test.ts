@@ -15,7 +15,7 @@ describe("preparo da foto do prato", () => {
 
     expect(saida.contentType).toBe("image/webp");
     // Orientação 6 gira 90°: o lado maior passa a ser a altura.
-    expect(Math.max(metadata.width!, metadata.height!)).toBe(1024);
+    expect(Math.max(metadata.width, metadata.height)).toBe(1024);
     expect(metadata.exif).toBeUndefined();
   });
 

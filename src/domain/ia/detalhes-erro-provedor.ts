@@ -1,8 +1,8 @@
-type ErroProvedor = {
+interface ErroProvedor {
   message?: string;
   statusCode?: number;
   responseBody?: string;
-};
+}
 
 /** Diagnóstico seguro: o corpo e a mensagem do SDK podem conter o request inteiro. */
 export function detalhesErroProvedor(erro: ErroProvedor): string {
