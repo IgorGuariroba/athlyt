@@ -57,7 +57,6 @@ function series(quantidade: number, cargaKg: number, repeticoes: number) {
     repeticoesSugeridas: "8–10",
     cargaKg,
     cargaSugeridaKg: cargaKg,
-    melhorCargaAnteriorKg: 0,
     repeticoes,
     rir: 2,
     concluida: true,

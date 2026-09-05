@@ -45,8 +45,9 @@ const propriedades = {
   concluida: false,
   cargaInicial: 40,
   cargaSugerida: 40,
-  melhorCargaAnterior: 35,
+  marcaHistorica: MARCA_ZERO,
   repeticoesIniciais: 10,
+  seriesDoExercicio: [{ numero: 1, cargaKg: 40, repeticoes: 10, concluida: false }],
 };
 
 describe("RegistroSerie", () => {
@@ -105,33 +106,23 @@ describe("RegistroSerie", () => {
   });
 
   it("mostra o selo de recorde apenas na última série registrada do exercício", () => {
+    // A regra de qual série ostenta e contra que marca cada uma é
+    // medida é do domínio (`linhaDeMarcas`); aqui só se verifica que a
+    // tela exibe um único selo, na série que o domínio apontou.
     registrarEvento.mockResolvedValue();
-    const marcaAnterior = { ...MARCA_ZERO, e1rmKg: 40, cargaKg: 40, volumeKg: 400 };
+    const marcaHistorica = { e1rmKg: 40, cargaKg: 40, volumeKg: 400 };
+    const series = [
+      { numero: 1, cargaKg: 80, repeticoes: 5, concluida: true },
+      { numero: 2, cargaKg: 90, repeticoes: 4, concluida: true },
+    ];
 
     render(
       <>
-        <RegistroSerie
-          {...propriedades}
-          numero={1}
-          concluida
-          cargaInicial={80}
-          repeticoesIniciais={5}
-          marcaAnterior={marcaAnterior}
-          seriesDoExercicio={[{ numero: 1, concluida: true }, { numero: 2, concluida: true }]}
-        />
-        <RegistroSerie
-          {...propriedades}
-          numero={2}
-          concluida
-          cargaInicial={90}
-          repeticoesIniciais={4}
-          marcaAnterior={{ e1rmKg: 93.3, cargaKg: 80, volumeKg: 400 }}
-          seriesDoExercicio={[{ numero: 1, concluida: true }, { numero: 2, concluida: true }]}
-        />
+        <RegistroSerie {...propriedades} numero={1} concluida cargaInicial={80} repeticoesIniciais={5} marcaHistorica={marcaHistorica} seriesDoExercicio={series} />
+        <RegistroSerie {...propriedades} numero={2} concluida cargaInicial={90} repeticoesIniciais={4} marcaHistorica={marcaHistorica} seriesDoExercicio={series} />
       </>,
     );
 
-    expect(screen.queryAllByText("Novo recorde de forca", { exact: false })).toHaveLength(0);
     expect(screen.getAllByText("Novo recorde de força")).toHaveLength(1);
   });
 

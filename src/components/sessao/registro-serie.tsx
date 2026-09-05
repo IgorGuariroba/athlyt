@@ -5,30 +5,29 @@ import { Check, ChevronDown, Minus, Plus, TimerReset, Trophy, X } from "lucide-r
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { segundosDeDescanso } from "@/domain/sessao/descanso";
-import { MARCA_ZERO, avaliarRecorde, estimativaRm, type MarcaExercicio } from "@/domain/sessao/recorde";
+import { estimativaRm, linhaDeMarcas, type MarcaExercicio } from "@/domain/sessao/recorde";
 import { useRitmoDescanso } from "@/lib/store-descanso";
 import { atualizarRascunhoSerie, removerRascunhoSerie, useRascunhoSerie } from "@/lib/store-rascunho-serie";
 import { useConexao } from "./estado-conexao";
 
 const FECHAR_TIMERS_DE_DESCANSO = "athlyt:fechar-timers-de-descanso";
 
-export function RegistroSerie({ sessionId, exercicioId, numero, repeticoesSugeridas, rirInicial, rirSugerido, descansoSeg, concluida, cargaInicial, cargaSugerida, melhorCargaAnterior, marcaAnterior, repeticoesIniciais, modo, seriesDoExercicio }: {
+export function RegistroSerie({ sessionId, exercicioId, numero, repeticoesSugeridas, rirInicial, rirSugerido, descansoSeg, concluida, cargaInicial, cargaSugerida, marcaHistorica, repeticoesIniciais, modo, seriesDoExercicio }: {
   sessionId: string; exercicioId: string; numero: number; repeticoesSugeridas: string; rirInicial: number; rirSugerido: number;
-  descansoSeg: number; concluida: boolean; cargaInicial: number | null; cargaSugerida: number; melhorCargaAnterior: number; repeticoesIniciais: number | null;
+  descansoSeg: number; concluida: boolean; cargaInicial: number | null; cargaSugerida: number; repeticoesIniciais: number | null;
   /**
-   * Melhor marca do mesmo exercício antes desta série — histórico do
-   * atleta mais as séries já feitas hoje. É contra ela que o recorde é
-   * avaliado; sem ela, não há recorde a anunciar.
+   * Melhor marca histórica do exercício antes desta sessão. O que valia
+   * imediatamente antes *desta* série não vem pronto: é o domínio quem
+   * acumula as séries já registradas hoje sobre ela.
    */
-  marcaAnterior?: MarcaExercicio;
+  marcaHistorica: MarcaExercicio;
   modo?: "repeticoes" | "tempo" | "distancia" | "duracao" | "calorias" | "ritmo" | "unilateral" | "circuito";
   /**
-   * Número e estado (do servidor) de todas as séries do exercício, na
-   * ordem em que aparecem na tela. Usado só para decidir se esta é a
-   * última série já registrada — o selo de recorde não deve conviver
-   * com o de uma série posterior, que é quem de fato vale agora.
+   * Todas as séries do exercício como o servidor as conhece. O selo
+   * depende do exercício inteiro, não desta série: a marca a bater
+   * acumula as anteriores, e só a mais recente registrada ostenta.
    */
-  seriesDoExercicio?: Array<{ numero: number; concluida: boolean }>;
+  seriesDoExercicio: Array<{ numero: number; cargaKg: number | null; repeticoes: number | null; concluida: boolean }>;
 }) {
   const modoEfetivo = modo ?? "repeticoes";
   const rotulos = { repeticoes: "REPS", tempo: "TEMPO (S)", distancia: "DISTÂNCIA (M)", duracao: "DURAÇÃO (MIN)", calorias: "CALORIAS", ritmo: "RITMO", unilateral: "LADOS", circuito: "RODADAS" } as const;
@@ -47,16 +46,6 @@ export function RegistroSerie({ sessionId, exercicioId, numero, repeticoesSugeri
   // enfileirá-la agora produziria um evento de ordem maior que o
   // encerramento, que o servidor recebe sobre uma sessão já concluída.
   const bloqueada = encerradaLocalmente && !registrada;
-  // Uma série só está "registrada" aqui via `concluida` (vindo do servidor) ou via
-  // `registrosLocais` (recém enviada, ainda não refletida no HTML). Combinar as
-  // duas fontes por número deixa dizer, sem esperar o refresh do servidor, se
-  // existe alguma série posterior já registrada — e por isso o selo desta é
-  // obsoleto.
-  const existeSerieRegistradaDepois = (seriesDoExercicio ?? []).some((serie) => {
-    if (serie.numero <= numero) return false;
-    const registradaLa = serie.concluida || registrosLocais.some((r) => r.exercicioId === exercicioId && r.numero === serie.numero);
-    return registradaLa;
-  });
   const carga = local?.cargaKg ?? cargaInicial;
   const reps = local?.repeticoes ?? repeticoesIniciais;
   const rascunho = useRascunhoSerie(sessionId, exercicioId, numero);
@@ -129,20 +118,25 @@ export function RegistroSerie({ sessionId, exercicioId, numero, repeticoesSugeri
     }
   }
 
-  /**
-   * Recorde compara esta série ao histórico do mesmo exercício em
-   * intensidade, carga e volume. A regra antiga olhava só o peso, e
-   * por isso marcava recorde em toda série com a mesma carga — 60 kg
-   * × 5 aparecia como recorde depois de 60 kg × 9.
-   */
-  const referencia = marcaAnterior
-    ?? (melhorCargaAnterior > 0 ? { ...MARCA_ZERO, cargaKg: melhorCargaAnterior } : MARCA_ZERO);
-  // O recorde vale como conquista da sessão — só a marca mais recente
-  // deve ostentar o selo. Senão duas séries mostram "Novo recorde" ao
-  // mesmo tempo, e a mais antiga já foi superada pela própria sessão.
-  const recorde = registrada && !existeSerieRegistradaDepois
-    ? avaliarRecorde({ cargaKg: carga, repeticoes: reps }, referencia)
-    : null;
+  // Uma série está registrada via `concluida` (servidor) ou via
+  // `registrosLocais` (recém enviada, ainda não refletida no HTML).
+  // Combinar as duas fontes *antes* de perguntar ao domínio é o que faz
+  // o selo visto no treino offline sobreviver à sincronização: sem isso
+  // a referência de cada série ignoraria as anteriores ainda na fila.
+  const linha = linhaDeMarcas({
+    historico: marcaHistorica,
+    series: seriesDoExercicio.map((serie) => {
+      const registroLocal = registrosLocais.find((r) => r.exercicioId === exercicioId && r.numero === serie.numero);
+      return {
+        numero: serie.numero,
+        cargaKg: registroLocal?.cargaKg ?? serie.cargaKg,
+        repeticoes: registroLocal?.repeticoes ?? serie.repeticoes,
+        registrada: serie.concluida || registroLocal !== undefined,
+      };
+    }),
+  });
+  const marcaDestaSerie = linha.find((entrada) => entrada.numero === numero);
+  const recorde = marcaDestaSerie?.ostentaSelo ? marcaDestaSerie.recorde : null;
   const estimativa10Rm = registrada && carga && reps ? estimativaRm(carga, reps, 10) : null;
 
   return (

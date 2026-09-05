@@ -12,7 +12,7 @@ function estadoInicial(seriesPorExercicio = 3): EstadoLocalSessao {
       descansoSeg: 90,
       series: Array.from({ length: seriesPorExercicio }, (_, i) => ({
         numero: i + 1, repeticoesSugeridas: "8–10", cargaKg: null, cargaSugeridaKg: 20,
-        melhorCargaAnteriorKg: 20, repeticoes: null, rir: 2, concluida: false,
+        repeticoes: null, rir: 2, concluida: false,
       })),
     }],
   };

@@ -89,7 +89,7 @@ const ROTULOS: Record<TipoRecorde, string> = {
  * Devolve no máximo um recorde — o de maior significado — para a tela
  * não virar uma parede de troféus.
  */
-export function avaliarRecorde(serie: SerieExecutada, anterior: MarcaExercicio): Recorde | null {
+function avaliarRecorde(serie: SerieExecutada, anterior: MarcaExercicio): Recorde | null {
   const marca = marcaDaSerie(serie);
   if (marca.e1rmKg === 0) return null;
   // Sem histórico não há o que superar: a primeira série de um
@@ -107,4 +107,78 @@ export function avaliarRecorde(serie: SerieExecutada, anterior: MarcaExercicio):
     }
   }
   return null;
+}
+
+/**
+ * Uma série do exercício como a linha de marcas precisa conhecê-la.
+ *
+ * `registrada` é onde as duas fontes de verdade se encontram: o
+ * servidor (`concluida`) e a fila local ainda não sincronizada. Ela
+ * entra na interface de propósito — é o que faz o selo visto durante o
+ * treino e o recorde listado no resumo responderem a mesma coisa.
+ */
+export interface SerieDaLinha extends SerieExecutada {
+  numero: number;
+  registrada: boolean;
+}
+
+export interface MarcaDaLinha {
+  numero: number;
+  /** Marca vigente do exercício imediatamente antes desta série. */
+  referencia: MarcaExercicio;
+  recorde: Recorde | null;
+  /**
+   * Esta é a série que exibe o selo agora. Só a marca mais recente
+   * ostenta: duas séries anunciando "Novo recorde" ao mesmo tempo
+   * significaria que a mais antiga já foi superada pela própria sessão.
+   */
+  ostentaSelo: boolean;
+}
+
+/**
+ * Responde, para todas as séries de um exercício de uma vez, qual marca
+ * valia antes de cada uma, qual delas marcou recorde e qual ostenta o
+ * selo agora.
+ *
+ * É o único dono dessa acumulação: o resumo, a tela da sessão e o
+ * componente de registro chamam por aqui em vez de cada um manter o
+ * próprio loop e escolher o próprio fallback — foi essa duplicação que
+ * fez a tela negar o recorde que o resumo listava.
+ *
+ * Puro e idempotente: não há ordem de chamadas a respeitar.
+ */
+export function linhaDeMarcas({ historico = MARCA_ZERO, series }: {
+  historico?: MarcaExercicio;
+  series: readonly SerieDaLinha[];
+}): MarcaDaLinha[] {
+  const ordenadas = [...series].sort((a, b) => a.numero - b.numero);
+  const ultimaRegistrada = ordenadas.filter((serie) => serie.registrada).at(-1)?.numero;
+  let referencia = historico;
+  return ordenadas.map((serie) => {
+    const recorde = serie.registrada ? avaliarRecorde(serie, referencia) : null;
+    const entrada: MarcaDaLinha = {
+      numero: serie.numero,
+      referencia,
+      recorde,
+      ostentaSelo: recorde !== null && serie.numero === ultimaRegistrada,
+    };
+    if (serie.registrada) referencia = combinarMarcas(referencia, marcaDaSerie(serie));
+    return entrada;
+  });
+}
+
+const PRIORIDADE: Record<TipoRecorde, number> = { e1rm: 3, carga: 2, volume: 1 };
+
+/**
+ * O recorde que representa o exercício na sessão: o de maior
+ * significado entre os da linha, com o maior valor como desempate.
+ */
+export function melhorRecordeDaLinha(linha: readonly MarcaDaLinha[]): Recorde | null {
+  let melhor: Recorde | null = null;
+  for (const { recorde } of linha) {
+    if (!recorde) continue;
+    if (!melhor || PRIORIDADE[recorde.tipo] > PRIORIDADE[melhor.tipo]
+      || (PRIORIDADE[recorde.tipo] === PRIORIDADE[melhor.tipo] && recorde.valor > melhor.valor)) melhor = recorde;
+  }
+  return melhor;
 }

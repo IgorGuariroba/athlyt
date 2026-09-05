@@ -6,7 +6,7 @@ import type { ExercicioSessao, SerieSessao } from "../repositorio";
 function serie(numero: number, valores: Partial<SerieSessao> = {}): SerieSessao {
   return {
     numero, repeticoesSugeridas: "8–10", cargaKg: null, cargaSugeridaKg: 40,
-    melhorCargaAnteriorKg: 40, repeticoes: null, rir: 2, concluida: false, ...valores,
+    repeticoes: null, rir: 2, concluida: false, ...valores,
   };
 }
 
