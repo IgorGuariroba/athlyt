@@ -74,6 +74,19 @@ globalIgnores([
   // minificados que o lint tentaria analisar como fonte.
   "storybook-static/**",
 ]),
+// Os matchers assimétricos do vitest são tipados como `any` no próprio
+// vitest (`objectContaining<T> => any`, `stringContaining => any`), então
+// qualquer `expect.any(...)` dentro de um matcher vira
+// `no-unsafe-assignment` inevitável — não é `any` do código, é limite da
+// tipagem da ferramenta de teste. As outras regras `no-unsafe-*` seguem
+// ativas nos testes: são elas que pegam mock sem tipo e `JSON.parse`
+// sem cast.
+{
+  files: ["**/*.test.ts", "**/*.test.tsx"],
+  rules: {
+    "@typescript-eslint/no-unsafe-assignment": "off",
+  },
+},
 // Arquivos de configuração em JS puro não estão no `tsconfig.json`; sem isso o
 // `projectService` falha ao tentar carregar um programa para eles.
 {

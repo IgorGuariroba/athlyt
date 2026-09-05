@@ -4,9 +4,9 @@ import { db } from "@/db/client";
 import { plans, profileVersions, users } from "@/db/schema";
 import type { PlanoGerado } from "@/domain/plano/tipos";
 
-const orientarProximaSerie = vi.fn();
+const orientarProximaSerie = vi.fn<(entrada: unknown) => Promise<unknown>>();
 vi.mock("@/domain/ia/operacoes/copiloto-sessao", () => ({
-  orientarProximaSerie: (...args: unknown[]) => orientarProximaSerie(...args),
+  orientarProximaSerie: (entrada: unknown) => orientarProximaSerie(entrada),
 }));
 
 const { iniciarSessao, registrarOverrideAlertaCautela, registrarSerie } = await import("../repositorio");

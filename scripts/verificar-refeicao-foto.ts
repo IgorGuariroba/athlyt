@@ -46,7 +46,10 @@ async function sondar(modelo: string, endpoint: string, imagem: Buffer) {
   const corpo = await resposta.json() as { model?: string; provider?: string; choices?: { message?: { content?: string } }[] };
   if (!corpo.model?.startsWith(modelo)) throw new Error(`${modelo}@${endpoint}: modelo resolvido divergiu`);
   if (corpo.provider && corpo.provider !== providerName) throw new Error(`${modelo}@${endpoint}: fornecedor resolvido divergiu`);
-  const objeto = JSON.parse(corpo.choices?.[0]?.message?.content ?? "");
+  // A sonda existe para validar o que o provedor devolve; o cast declara
+  // o que o contrato JSON Schema promete, e o typeof abaixo é o que de
+  // fato recusa resposta fora do contrato.
+  const objeto = JSON.parse(corpo.choices?.[0]?.message?.content ?? "") as { cor?: unknown };
   if (typeof objeto.cor !== "string" || !objeto.cor) throw new Error(`${modelo}@${endpoint}: JSON Schema não foi respeitado`);
   console.log(`ok ${modelo}@${endpoint}`);
 }

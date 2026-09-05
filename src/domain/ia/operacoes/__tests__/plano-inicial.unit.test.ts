@@ -1,9 +1,9 @@
 import { describe, expect, it, vi } from "vitest";
 
-const gerarTreino = vi.fn();
-const gerarNutricao = vi.fn();
-vi.mock("../plano-treino", () => ({ gerarPlanoTreinoComIA: (...a: unknown[]) => gerarTreino(...a) }));
-vi.mock("../plano-nutricao", () => ({ gerarPlanoNutricaoComIA: (...a: unknown[]) => gerarNutricao(...a) }));
+const gerarTreino = vi.fn<(entrada: unknown) => Promise<unknown>>();
+const gerarNutricao = vi.fn<(entrada: unknown) => Promise<unknown>>();
+vi.mock("../plano-treino", () => ({ gerarPlanoTreinoComIA: (entrada: unknown) => gerarTreino(entrada) }));
+vi.mock("../plano-nutricao", () => ({ gerarPlanoNutricaoComIA: (entrada: unknown) => gerarNutricao(entrada) }));
 
 const { gerarPlanoInicialComIA } = await import("../plano-inicial");
 

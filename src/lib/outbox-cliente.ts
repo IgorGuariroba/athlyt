@@ -54,7 +54,10 @@ export async function enfileirar(sessionId: string, tipo: TipoEventoOutbox, dado
     const tx = bd.transaction([LOJA, META], "readwrite");
     const meta = tx.objectStore(META);
     const chave = `ordem:${sessionId}`;
-    const ordem = ((await promessa<number | undefined>(meta.get(chave))) ?? 0) + 1;
+    // A loja META é sem schema (`createObjectStore(META)` sem keyPath), então
+    // `get` devolve `IDBRequest<any>`. O recast tipa o contrato de escrita
+    // deste módulo: só ele grava nela, sempre números.
+    const ordem = ((await promessa<number | undefined>(meta.get(chave) as IDBRequest<number | undefined>)) ?? 0) + 1;
     const evento: EventoOutbox = {
       id: crypto.randomUUID(), sessionId, tipo, ordem,
       ocorridoEm: new Date().toISOString(), dados,
@@ -75,7 +78,10 @@ export async function pendentes(sessionId?: string): Promise<EventoOutbox[]> {
   const bd = await abrir();
   try {
     const loja = bd.transaction(LOJA, "readonly").objectStore(LOJA);
-    const todos = await promessa<EventoOutbox[]>(loja.getAll());
+    // Mesmo contrato: a loja de eventos só recebe `EventoOutbox` gravado
+    // por `enfileirar`, então o `getAll` genérico (`any[]`) é afinado ao
+    // tipo que este módulo garante.
+    const todos = await promessa<EventoOutbox[]>(loja.getAll() as IDBRequest<EventoOutbox[]>);
     const filtrados = sessionId ? todos.filter((e) => e.sessionId === sessionId) : todos;
     return filtrados.sort((a, b) => a.ordem - b.ordem || a.id.localeCompare(b.id));
   } finally {

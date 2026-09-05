@@ -1,7 +1,14 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const auth = vi.fn();
-const estimarRefeicao = vi.fn();
+/**
+ * Assinatura só do que o teste usa do serviço mockado. Tipar o `vi.fn`
+ * é o que dá checagem de compilação aos eventos de progresso emitidos
+ * e às leituras da chamada registrada.
+ */
+const estimarRefeicao = vi.fn<
+  (fd: FormData, opcoes: { userId: string; signal?: AbortSignal; aoProgresso?: (evento: { tipo: string }) => void }) => Promise<unknown>
+>();
 vi.mock("@/auth", () => ({ auth }));
 vi.mock("@/app/(app)/diario/registrar/foto/servico", () => ({ estimarRefeicao }));
 
@@ -16,9 +23,9 @@ describe("POST /api/ia/refeicao-foto", () => {
   it("autentica e transmite progresso até uma única estimativa final", async () => {
     auth.mockResolvedValue({ user: { id: "u1" } });
     estimarRefeicao.mockImplementation(async (_fd, opcoes) => {
-      opcoes.aoProgresso({ tipo: "inicio", total: 3 });
-      opcoes.aoProgresso({ tipo: "alternativa", tentativa: 2, total: 3 });
-      opcoes.aoProgresso({ tipo: "ultima-alternativa", tentativa: 3, total: 3 });
+      opcoes.aoProgresso?.({ tipo: "inicio" });
+      opcoes.aoProgresso?.({ tipo: "alternativa" });
+      opcoes.aoProgresso?.({ tipo: "ultima-alternativa" });
       return { ok: true, estimativa: { nome: "Almoço", itens: [] } };
     });
     const form = new FormData();
@@ -28,7 +35,10 @@ describe("POST /api/ia/refeicao-foto", () => {
       signal: new AbortController().signal,
     } as unknown as Request);
 
-    const eventos = (await resposta.text()).trim().split("\n").map((linha) => JSON.parse(linha));
+    // Cada linha do SSE é um JSON do próprio endpoint; o recast declara
+    // o campo que o teste afirma, e o payload completo segue verificado
+    // pelos toEqual abaixo.
+    const eventos = (await resposta.text()).trim().split("\n").map((linha) => JSON.parse(linha) as { tipo?: string });
 
     expect(eventos.map((evento) => evento.tipo)).toEqual([
       "inicio",

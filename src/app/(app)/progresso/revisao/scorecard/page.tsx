@@ -14,6 +14,7 @@ import {
   TelaConteudo,
 } from "@/components/tela";
 import type { DimensoesScorecard } from "@/domain/medicoes/revisao-corporal";
+import type { EstadoConfianca } from "@/domain/medicoes";
 import { obterRevisaoAtual } from "../dados";
 
 const ROTULOS: Array<[keyof DimensoesScorecard, string]> = [
@@ -65,7 +66,10 @@ export default async function ScorecardPage() {
           />
           <CartaoLista>
             <LinhasCartaoLista>
-              {Object.entries(revisao.confiancas).map(([nome, estado]) => (
+              {/* `Object.entries` sobre interface sem index signature cai no
+                  overload `[string, any][]` do lib.es5; o recast recupera o
+                  tipo da entrada sem recorrer a `any` na JSX. */}
+              {(Object.entries(revisao.confiancas) as [string, EstadoConfianca][]).map(([nome, estado]) => (
                 <LinhaCartaoLista
                   key={nome}
                   titulo={legivel(nome)}

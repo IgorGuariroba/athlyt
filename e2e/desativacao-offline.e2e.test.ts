@@ -89,7 +89,9 @@ test("mantém instalação e autenticação sem instalar worker em uma visita no
   await expect(page.locator('link[rel="manifest"]')).toHaveAttribute("href", "/manifest.webmanifest");
   const manifestResponse = await page.request.get("/manifest.webmanifest");
   expect(manifestResponse.ok()).toBe(true);
-  const manifest = await manifestResponse.json();
+  const manifest = (await manifestResponse.json()) as {
+    display: string; name: string; icons: { src: string }[];
+  };
   expect(manifest.display).toBe("standalone");
   expect(manifest.name).toContain("Athlyt");
   expect(manifest.icons.length).toBeGreaterThan(0);
@@ -97,7 +99,7 @@ test("mantém instalação e autenticação sem instalar worker em uma visita no
     expect((await page.request.get(icon.src)).ok()).toBe(true);
   }
   const session = await page.request.get("/api/auth/session");
-  expect((await session.json()).user.email).toBe(user.email);
+  expect(((await session.json()) as { user: { email: string } }).user.email).toBe(user.email);
   await expect(page.locator('script[src="/desativar-sw.js"]')).toBeAttached();
   expect(await page.evaluate(async () => (await navigator.serviceWorker.getRegistrations()).length)).toBe(0);
 });

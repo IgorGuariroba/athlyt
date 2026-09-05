@@ -12,7 +12,10 @@
  */
 import { readFileSync } from "node:fs";
 
-type Supressoes = Record<string, Record<string, { count: number }>>;
+// O `| undefined` no valor é deliberado: sem `noUncheckedIndexedAccess`, o
+// TypeScript afirmaria que toda chave existe, e a checagem de regra ausente
+// (o caso comum ao filtrar) pareceria código morto para o lint.
+type Supressoes = Record<string, Record<string, { count: number } | undefined>>;
 
 const ARQUIVO = "eslint-suppressions.json";
 
@@ -31,11 +34,12 @@ const filtro = process.argv[2];
 if (filtro) {
   const arquivos = Object.entries(supressoes)
     .map(([arquivo, regras]) => [arquivo, regras[filtro]?.count ?? 0] as const)
+
     .filter(([, quantidade]) => quantidade > 0)
     .sort((a, b) => b[1] - a[1]);
 
   const total = arquivos.reduce((soma, [, quantidade]) => soma + quantidade, 0);
-  console.log(`${filtro}: ${total} em ${arquivos.length} arquivo(s)\n`);
+  console.log(`${filtro}: ${String(total)} em ${String(arquivos.length)} arquivo(s)\n`);
   for (const [arquivo, quantidade] of arquivos) {
     console.log(`${String(quantidade).padStart(4)}  ${arquivo}`);
   }
@@ -46,17 +50,23 @@ const porRegra = new Map<string, { total: number; arquivos: number }>();
 let total = 0;
 
 for (const regras of Object.values(supressoes)) {
-  for (const [regra, { count }] of Object.entries(regras)) {
+  for (const [regra, entrada] of Object.entries(regras)) {
+    if (!entrada) continue;
     const atual = porRegra.get(regra) ?? { total: 0, arquivos: 0 };
-    porRegra.set(regra, { total: atual.total + count, arquivos: atual.arquivos + 1 });
-    total += count;
+    porRegra.set(regra, {
+      total: atual.total + entrada.count,
+      arquivos: atual.arquivos + 1,
+    });
+    total += entrada.count;
   }
 }
 
-console.log(`${total} achados suprimidos em ${Object.keys(supressoes).length} arquivos\n`);
+console.log(
+  `${String(total)} achados suprimidos em ${String(Object.keys(supressoes).length)} arquivos\n`,
+);
 for (const [regra, { total: quantidade, arquivos }] of [...porRegra].sort(
   (a, b) => b[1].total - a[1].total,
 )) {
-  console.log(`${String(quantidade).padStart(4)}  ${regra}  (${arquivos} arquivos)`);
+  console.log(`${String(quantidade).padStart(4)}  ${regra}  (${String(arquivos)} arquivos)`);
 }
 console.log(`\nDetalhe de uma regra: npm run lint:pendencias -- <regra>`);

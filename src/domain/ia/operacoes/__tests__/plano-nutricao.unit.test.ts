@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 
-const decidir = vi.fn();
-vi.mock("../../decidir", () => ({ decidir: (...args: unknown[]) => decidir(...args) }));
+const decidir = vi.fn<(entrada: unknown) => Promise<unknown>>();
+vi.mock("../../decidir", () => ({ decidir: (entrada: unknown) => decidir(entrada) }));
 
 const { gerarPlanoNutricaoComIA, planoNutricaoSchema } = await import("../plano-nutricao");
 const { montarDadosPlano } = await import("../plano-dados");

@@ -101,7 +101,10 @@ function metadadosTecnicosDoErro(erro: unknown, profundidade = 0, vistos = new W
   const status = Number(registro.statusCode ?? registro.status ?? 0);
   const codigo = String(registro.code ?? "");
   if (status || codigo) return { status, codigo };
-  for (const filho of [registro.cause, registro.lastError, ...(Array.isArray(registro.errors) ? registro.errors : [])]) {
+  // `Array.isArray` afina `unknown` para `any[]`: sem este recast o spread
+  // reinfetaria `any` no array de filhos e a recursão perderia o tipo.
+  const errosAgregados = Array.isArray(registro.errors) ? (registro.errors as unknown[]) : [];
+  for (const filho of [registro.cause, registro.lastError, ...errosAgregados]) {
     const encontrado = metadadosTecnicosDoErro(filho, profundidade + 1, vistos);
     if (encontrado.status || encontrado.codigo) return encontrado;
   }

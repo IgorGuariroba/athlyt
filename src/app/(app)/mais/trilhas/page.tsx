@@ -29,9 +29,18 @@ function explicacaoDe(valor: unknown): ExplicacaoDecisao | null {
   const registro = valor as Record<string, unknown> | null;
   if (!registro || typeof registro !== "object") return null;
   const { porque, dadosUsados } = registro;
-  return typeof porque === "string" && Array.isArray(dadosUsados)
-    ? ({ porque, dadosUsados } as ExplicacaoDecisao)
-    : null;
+  if (typeof porque !== "string" || !Array.isArray(dadosUsados)) return null;
+  // A forma dos itens ({ campo, valor }) vem do prompt que produziu o
+  // JSON; aqui entra a fronteira de leitura. Item fora da forma vira
+  // `{ campo: "", valor: "" }` em vez de vazar `any` para a tela.
+  const itens = (dadosUsados as unknown[]).map((item) => {
+    const registroItem = (item ?? {}) as Record<string, unknown>;
+    return {
+      campo: typeof registroItem.campo === "string" ? registroItem.campo : "",
+      valor: typeof registroItem.valor === "string" ? registroItem.valor : "",
+    };
+  });
+  return { porque, dadosUsados: itens };
 }
 
 /**
@@ -125,9 +134,12 @@ function ValorAuditavel({
 
   if (Array.isArray(valor)) {
     if (valor.length === 0) return <span className="text-muted-foreground">Nenhum item</span>;
+    // `Array.isArray` sobre `unknown` entrega `any[]`; a atribuição para
+    // `unknown[]` recupera o tipo sem mentir sobre o conteúdo.
+    const itens: unknown[] = valor;
     return (
       <ol className="flex flex-col gap-2">
-        {valor.map((item, indice) => (
+        {itens.map((item, indice) => (
           <li key={indice} className="min-w-0 rounded-md border border-border bg-surface-container px-3 py-2">
             <Revelar rotulo={`Item ${indice + 1}`} meta={resumir(item)}>
               <ValorAuditavel valor={item} profundidade={profundidade + 1} />
