@@ -39,11 +39,14 @@ export function useTelaAtiva(ativo = true): void {
     };
 
     void adquirir();
-    document.addEventListener("visibilitychange", adquirir);
+    // Handler síncrono que descarta explicitamente a Promise de adquirir:
+    // addEventListener ignora o retorno e uma rejeição viraria unhandled.
+    const aoMudarVisibilidade = () => void adquirir();
+    document.addEventListener("visibilitychange", aoMudarVisibilidade);
 
     return () => {
       cancelado = true;
-      document.removeEventListener("visibilitychange", adquirir);
+      document.removeEventListener("visibilitychange", aoMudarVisibilidade);
       void sentinela?.release().catch(() => undefined);
     };
   }, [ativo]);

@@ -44,7 +44,7 @@ export function ConclusaoSessao({ concluirAction, seriesPendentes }: {
     <Button
       size="lg"
       className="h-14 w-full text-base font-bold"
-      onClick={async () => { await registrar("sessao_concluida", {}); }}
+      onClick={() => void registrar("sessao_concluida", {})}
     >
       Concluir treino
     </Button>

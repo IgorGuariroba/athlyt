@@ -203,7 +203,7 @@ export function RegistroPorFoto({
               </Button>
             </div>
           ) : (
-            <Button size="cta" onClick={analisar} className="w-full">
+            <Button size="cta" onClick={() => void analisar()} className="w-full">
               <Sparkles className="size-5" aria-hidden="true" />
               {erro?.includes("conexão foi interrompida") ? "Tentar novamente" : "Estimar calorias e macros"}
             </Button>

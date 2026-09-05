@@ -433,7 +433,7 @@ export function CompartilharResultado(props: Props) {
         size="icon-lg"
         className="size-12"
         aria-label="Compartilhar no Instagram"
-        onClick={compartilhar}
+        onClick={() => void compartilhar()}
       >
         <Share2 aria-hidden="true" />
       </Button>

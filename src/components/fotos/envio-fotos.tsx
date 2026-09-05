@@ -132,7 +132,7 @@ export function EnvioFotos({
   }
 
   return (
-    <form onSubmit={aoEnviar} className="flex flex-1 flex-col gap-6">
+    <form onSubmit={(evento) => void aoEnviar(evento)} className="flex flex-1 flex-col gap-6">
       <section className="overflow-hidden rounded-2xl border border-border bg-surface-container">
         <div className="flex flex-col gap-1.5 px-5 pt-4 pb-3">
           <strong className="text-title text-on-surface-strong">

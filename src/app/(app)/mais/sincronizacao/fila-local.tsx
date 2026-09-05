@@ -106,7 +106,7 @@ export function FilaLocal() {
               ))}
             </LinhasCartaoLista>
           </CartaoLista>
-          <Button onClick={sincronizarTudo} disabled={ocupado || !online} className="w-full">
+          <Button onClick={() => void sincronizarTudo()} disabled={ocupado || !online} className="w-full">
             {ocupado ? "Sincronizando…" : online ? "Sincronizar agora" : "Sem conexão"}
           </Button>
         </>

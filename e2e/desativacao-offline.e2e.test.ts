@@ -10,23 +10,25 @@ test("retira o worker antigo e seus caches sem apagar dados locais ou outro work
     self.addEventListener('install', () => self.skipWaiting());
     self.addEventListener('activate', event => event.waitUntil(self.clients.claim()));
   `;
-  const server = createServer(async (request, response) => {
-    response.setHeader("Cache-Control", "no-store");
-    if (request.url === "/sw.js" || request.url === "/outro/sw.js") {
-      response.setHeader("Content-Type", "application/javascript");
-      response.end(migrado && request.url === "/sw.js"
-        ? await readFile("public/sw.js", "utf8") : legado);
-    } else if (request.url === "/desativar-sw.js") {
-      response.setHeader("Content-Type", "application/javascript");
-      try {
-        response.end(await readFile("public/desativar-sw.js", "utf8"));
-      } catch {
-        response.writeHead(404).end();
+  const server = createServer((request, response) => {
+    void (async () => {
+      response.setHeader("Cache-Control", "no-store");
+      if (request.url === "/sw.js" || request.url === "/outro/sw.js") {
+        response.setHeader("Content-Type", "application/javascript");
+        response.end(migrado && request.url === "/sw.js"
+          ? await readFile("public/sw.js", "utf8") : legado);
+      } else if (request.url === "/desativar-sw.js") {
+        response.setHeader("Content-Type", "application/javascript");
+        try {
+          response.end(await readFile("public/desativar-sw.js", "utf8"));
+        } catch {
+          response.writeHead(404).end();
+        }
+      } else {
+        response.setHeader("Content-Type", "text/html");
+        response.end(`<html><body>Migração${migrado ? '<script src="/desativar-sw.js"></script>' : ''}</body></html>`);
       }
-    } else {
-      response.setHeader("Content-Type", "text/html");
-      response.end(`<html><body>Migração${migrado ? '<script src="/desativar-sw.js"></script>' : ''}</body></html>`);
-    }
+    })();
   });
   await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
   const address = server.address() as { port: number };

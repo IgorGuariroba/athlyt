@@ -134,7 +134,7 @@ export function CapturaAudio({
           <Square className="size-5" aria-hidden="true" /> Parar de gravar · {relogio}
         </Button>
       ) : (
-        <Button type="button" size="cta" className="w-full" onClick={iniciar}>
+        <Button type="button" size="cta" className="w-full" onClick={() => void iniciar()}>
           <Mic className="size-5" aria-hidden="true" /> Gravar descrição
         </Button>
       )}

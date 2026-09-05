@@ -125,7 +125,7 @@ async function instalarCapturaDoCard(page: import("@playwright/test").Page) {
     (window as unknown as { __cardPng?: string }).__cardPng = undefined;
     URL.createObjectURL = (objeto: Blob | MediaSource) => {
       if (objeto instanceof Blob && objeto.type === "image/png") {
-        objeto.arrayBuffer().then((buffer) => {
+        void objeto.arrayBuffer().then((buffer) => {
           let binario = "";
           for (const byte of new Uint8Array(buffer)) {
             binario += String.fromCharCode(byte);

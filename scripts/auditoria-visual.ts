@@ -119,4 +119,7 @@ async function main() {
   process.exit(0);
 }
 
-main();
+main().catch((erro: unknown) => {
+  console.error(erro);
+  process.exit(1);
+});
