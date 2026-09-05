@@ -50,8 +50,9 @@ export async function prepararItensParaEdicao(
 export function ehItemPrato(item: ItemAlimentar): item is ItemPrato {
   const candidato = item as Partial<ItemPrato>;
   return (
+    typeof candidato.quantidade === "number" &&
     Number.isFinite(candidato.quantidade) &&
-    candidato.quantidade! > 0 &&
+    candidato.quantidade > 0 &&
     (candidato.unidade === "g" || candidato.unidade === "ml") &&
     (candidato.origemDado === "base" ||
       candidato.origemDado === "usuario" ||

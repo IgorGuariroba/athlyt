@@ -27,12 +27,13 @@ export default async function ResumoPage({
 }) {
   const { id } = await params;
   const session = await auth();
-  const encontrada = session?.user?.id
-    ? await obterSessao(session.user.id, id)
-    : null;
+  const userId = session?.user?.id;
+  if (!userId) notFound();
+
+  const encontrada = await obterSessao(userId, id);
   if (!encontrada || encontrada.estado === "em_andamento") notFound();
 
-  const resumo = await obterResumoSessao(session!.user!.id!, encontrada);
+  const resumo = await obterResumoSessao(userId, encontrada);
   // Ignora pausas longas entre eventos: uma sessão pode ficar aberta
   // enquanto o atleta se ausenta, mas isso não é duração de treino.
   const tempos = [resumo.startedAt, ...resumo.eventos.map((evento) => evento.createdAt)]

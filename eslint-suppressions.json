@@ -45,9 +45,6 @@
     }
   },
   "e2e/diario.e2e.test.ts": {
-    "@typescript-eslint/no-non-null-assertion": {
-      "count": 1
-    },
     "@typescript-eslint/restrict-template-expressions": {
       "count": 1
     }
@@ -79,9 +76,6 @@
     }
   },
   "e2e/navbar-visivel.e2e.test.ts": {
-    "@typescript-eslint/no-non-null-assertion": {
-      "count": 3
-    },
     "@typescript-eslint/restrict-template-expressions": {
       "count": 1
     }
@@ -107,17 +101,11 @@
     }
   },
   "e2e/safe-area-standalone.e2e.test.ts": {
-    "@typescript-eslint/no-non-null-assertion": {
-      "count": 8
-    },
     "@typescript-eslint/restrict-template-expressions": {
       "count": 4
     }
   },
   "e2e/sessao.e2e.test.ts": {
-    "@typescript-eslint/no-non-null-assertion": {
-      "count": 2
-    },
     "@typescript-eslint/no-unused-vars": {
       "count": 1
     },
@@ -134,9 +122,6 @@
     }
   },
   "e2e/triagem.e2e.test.ts": {
-    "@typescript-eslint/no-non-null-assertion": {
-      "count": 1
-    },
     "@typescript-eslint/restrict-template-expressions": {
       "count": 1
     }
@@ -307,9 +292,6 @@
     "@typescript-eslint/no-confusing-void-expression": {
       "count": 15
     },
-    "@typescript-eslint/no-non-null-assertion": {
-      "count": 6
-    },
     "@typescript-eslint/restrict-template-expressions": {
       "count": 4
     },
@@ -362,9 +344,6 @@
   },
   "src/app/(app)/diario/registrar/preparar-itens-para-edicao.ts": {
     "@typescript-eslint/array-type": {
-      "count": 1
-    },
-    "@typescript-eslint/no-non-null-assertion": {
       "count": 1
     }
   },
@@ -516,17 +495,11 @@
     }
   },
   "src/app/(app)/sessao/[id]/resumo/page.tsx": {
-    "@typescript-eslint/no-non-null-assertion": {
-      "count": 3
-    },
     "@typescript-eslint/restrict-template-expressions": {
       "count": 8
     }
   },
   "src/app/(app)/sessao/[id]/substituir/page.tsx": {
-    "@typescript-eslint/no-non-null-assertion": {
-      "count": 3
-    },
     "@typescript-eslint/restrict-template-expressions": {
       "count": 1
     }
@@ -627,9 +600,6 @@
   "src/app/(auth)/triagem/avaliacao-corporal/actions.ts": {
     "@typescript-eslint/no-base-to-string": {
       "count": 6
-    },
-    "@typescript-eslint/no-non-null-assertion": {
-      "count": 1
     }
   },
   "src/app/(auth)/triagem/avaliacao-corporal/fotos/actions.ts": {
@@ -693,9 +663,6 @@
     }
   },
   "src/auth/__tests__/config.unit.test.ts": {
-    "@typescript-eslint/no-non-null-assertion": {
-      "count": 6
-    },
     "@typescript-eslint/no-unnecessary-type-assertion": {
       "count": 3
     }
@@ -714,11 +681,6 @@
   "src/components/diario/__tests__/diario.unit.test.tsx": {
     "@typescript-eslint/restrict-template-expressions": {
       "count": 2
-    }
-  },
-  "src/components/diario/__tests__/item-para-registro.unit.test.ts": {
-    "@typescript-eslint/no-non-null-assertion": {
-      "count": 1
     }
   },
   "src/components/diario/__tests__/linha-do-tempo-dia.unit.test.tsx": {
@@ -740,9 +702,6 @@
     },
     "@typescript-eslint/no-empty-function": {
       "count": 3
-    },
-    "@typescript-eslint/no-non-null-assertion": {
-      "count": 4
     },
     "@typescript-eslint/require-await": {
       "count": 9
@@ -897,15 +856,7 @@
       "count": 1
     }
   },
-  "src/components/progresso/__tests__/grafico-peso.unit.test.tsx": {
-    "@typescript-eslint/no-non-null-assertion": {
-      "count": 1
-    }
-  },
   "src/components/progresso/__tests__/painel-grafico-peso.unit.test.tsx": {
-    "@typescript-eslint/no-non-null-assertion": {
-      "count": 2
-    },
     "@typescript-eslint/restrict-template-expressions": {
       "count": 1
     }
@@ -995,11 +946,6 @@
       "count": 1
     },
     "jsx-a11y/label-has-associated-control": {
-      "count": 1
-    }
-  },
-  "src/components/tela/__tests__/ficha-exercicio.unit.test.tsx": {
-    "@typescript-eslint/no-non-null-assertion": {
       "count": 1
     }
   },
@@ -1146,15 +1092,7 @@
       "count": 2
     }
   },
-  "src/domain/alimentos/__tests__/base.unit.test.ts": {
-    "@typescript-eslint/no-non-null-assertion": {
-      "count": 6
-    }
-  },
   "src/domain/alimentos/__tests__/foto-refeicao.unit.test.ts": {
-    "@typescript-eslint/no-non-null-assertion": {
-      "count": 2
-    },
     "@typescript-eslint/no-unnecessary-type-assertion": {
       "count": 2
     }
@@ -1182,19 +1120,11 @@
   "src/domain/alimentos/proveniencia.ts": {
     "@typescript-eslint/array-type": {
       "count": 1
-    },
-    "@typescript-eslint/no-non-null-assertion": {
-      "count": 1
     }
   },
   "src/domain/alimentos/repositorio.ts": {
     "@typescript-eslint/no-unnecessary-condition": {
       "count": 5
-    }
-  },
-  "src/domain/diario/__tests__/jornada.int.test.ts": {
-    "@typescript-eslint/no-non-null-assertion": {
-      "count": 1
     }
   },
   "src/domain/diario/__tests__/registro-retroativo.int.test.ts": {
@@ -1281,11 +1211,6 @@
       "count": 1
     }
   },
-  "src/domain/ia/operacoes/avaliacao-visual.ts": {
-    "@typescript-eslint/no-non-null-assertion": {
-      "count": 1
-    }
-  },
   "src/domain/ia/operacoes/refeicao-foto.ts": {
     "@typescript-eslint/prefer-nullish-coalescing": {
       "count": 1
@@ -1308,11 +1233,6 @@
     },
     "@typescript-eslint/use-unknown-in-catch-callback-variable": {
       "count": 1
-    }
-  },
-  "src/domain/medicoes/__tests__/plano-peso.unit.test.ts": {
-    "@typescript-eslint/no-non-null-assertion": {
-      "count": 8
     }
   },
   "src/domain/medicoes/__tests__/repositorio.int.test.ts": {
@@ -1342,9 +1262,6 @@
     "@typescript-eslint/consistent-type-definitions": {
       "count": 3
     },
-    "@typescript-eslint/no-non-null-assertion": {
-      "count": 1
-    },
     "@typescript-eslint/no-unnecessary-condition": {
       "count": 1
     }
@@ -1359,28 +1276,12 @@
       "count": 2
     }
   },
-  "src/domain/plano/__tests__/exercicios.unit.test.ts": {
-    "@typescript-eslint/no-non-null-assertion": {
-      "count": 3
-    }
-  },
   "src/domain/plano/__tests__/gerador.unit.test.ts": {
     "@typescript-eslint/no-base-to-string": {
-      "count": 1
-    },
-    "@typescript-eslint/no-non-null-assertion": {
-      "count": 2
-    }
-  },
-  "src/domain/plano/__tests__/item-planejado.unit.test.ts": {
-    "@typescript-eslint/no-non-null-assertion": {
       "count": 1
     }
   },
   "src/domain/plano/__tests__/reavaliacao-repositorio.int.test.ts": {
-    "@typescript-eslint/no-non-null-assertion": {
-      "count": 2
-    },
     "@typescript-eslint/no-unnecessary-condition": {
       "count": 2
     },
@@ -1389,9 +1290,6 @@
     }
   },
   "src/domain/plano/__tests__/repositorio.int.test.ts": {
-    "@typescript-eslint/no-non-null-assertion": {
-      "count": 2
-    },
     "@typescript-eslint/no-unnecessary-condition": {
       "count": 1
     }
@@ -1423,9 +1321,6 @@
     }
   },
   "src/domain/plano/repositorio.ts": {
-    "@typescript-eslint/no-non-null-assertion": {
-      "count": 1
-    },
     "@typescript-eslint/no-unnecessary-condition": {
       "count": 18
     },
@@ -1444,9 +1339,6 @@
     }
   },
   "src/domain/sessao/__tests__/coach-local.unit.test.ts": {
-    "@typescript-eslint/no-non-null-assertion": {
-      "count": 2
-    },
     "@typescript-eslint/no-unnecessary-condition": {
       "count": 2
     }
@@ -1493,9 +1385,6 @@
     "@typescript-eslint/array-type": {
       "count": 1
     },
-    "@typescript-eslint/no-non-null-assertion": {
-      "count": 1
-    },
     "@typescript-eslint/no-unnecessary-condition": {
       "count": 6
     },
@@ -1507,9 +1396,6 @@
     }
   },
   "src/domain/sessao/sincronizacao.ts": {
-    "@typescript-eslint/no-non-null-assertion": {
-      "count": 1
-    },
     "@typescript-eslint/no-unnecessary-condition": {
       "count": 2
     }

@@ -74,17 +74,20 @@ globalIgnores([
   // minificados que o lint tentaria analisar como fonte.
   "storybook-static/**",
 ]),
-// Os matchers assimétricos do vitest são tipados como `any` no próprio
-// vitest (`objectContaining<T> => any`, `stringContaining => any`), então
-// qualquer `expect.any(...)` dentro de um matcher vira
-// `no-unsafe-assignment` inevitável — não é `any` do código, é limite da
-// tipagem da ferramenta de teste. As outras regras `no-unsafe-*` seguem
-// ativas nos testes: são elas que pegam mock sem tipo e `JSON.parse`
-// sem cast.
+// Em arquivos de teste e E2E:
+// 1. Os matchers assimétricos do vitest são tipados como `any` no próprio
+//    vitest (`objectContaining<T> => any`, `stringContaining => any`), então
+//    qualquer `expect.any(...)` dentro de um matcher vira
+//    `no-unsafe-assignment` inevitável — limite da tipagem da ferramenta.
+// 2. Asserções não-nulas (`!`) são idiomáticas em testes para expressar
+//    precondição que deve falhar ruidosamente o teste caso ausente
+//    (ex.: boundingBox do Playwright, primeiro item de array mockado).
+// No código de produção (`src/**`), ambas permanecem estritamente ativas.
 {
-  files: ["**/*.test.ts", "**/*.test.tsx"],
+  files: ["**/*.test.ts", "**/*.test.tsx", "e2e/**/*.ts"],
   rules: {
     "@typescript-eslint/no-unsafe-assignment": "off",
+    "@typescript-eslint/no-non-null-assertion": "off",
   },
 },
 // Arquivos de configuração em JS puro não estão no `tsconfig.json`; sem isso o

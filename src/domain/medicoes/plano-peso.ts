@@ -220,7 +220,8 @@ export function descreverDistanciaAMeta({
  */
 function escolherPasso(ideal: number): number {
   const decada = 10 ** Math.floor(Math.log10(ideal));
-  return PASSOS_LEGIVEIS.find((passo) => passo * decada >= ideal)! * decada;
+  const passoEscolhido = PASSOS_LEGIVEIS.find((passo) => passo * decada >= ideal) ?? 10;
+  return passoEscolhido * decada;
 }
 
 /**

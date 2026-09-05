@@ -30,7 +30,7 @@ export async function analisarFotosCorporais(entrada: {
   nucleo: NucleoContexto;
   fotos: readonly { id: string; pose: string; condicoes?: string | null; dados: Uint8Array; mediaType: string }[];
   medicoesComparaveis: unknown;
-}) {
+}): Promise<ResultadoDecisao<z.infer<typeof avaliacaoVisualSchema>>> {
   const decisao = {
     userId: entrada.userId,
     operacao: "avaliacao-visual",
@@ -44,10 +44,11 @@ export async function analisarFotosCorporais(entrada: {
     instrucao: INSTRUCAO,
     schema: avaliacaoVisualSchema,
   } as const;
-  let resultado: ResultadoDecisao<z.infer<typeof avaliacaoVisualSchema>> | undefined;
-  for (let tentativa = 0; tentativa < 3; tentativa += 1) {
+  let resultado = await decidir(decisao);
+  if (resultado.status === "ok") return resultado;
+  for (let tentativa = 1; tentativa < 3; tentativa += 1) {
     resultado = await decidir(decisao);
     if (resultado.status === "ok") return resultado;
   }
-  return resultado!;
+  return resultado;
 }

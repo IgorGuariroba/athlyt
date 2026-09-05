@@ -101,7 +101,7 @@ function concordancia(valor: ValorDeFonte, valores: readonly ValorDeFonte[]): nu
 }
 
 function peso(id: string): number {
-  return CRITERIOS_FONTE.find((c) => c.id === id)!.peso;
+  return CRITERIOS_FONTE.find((c) => c.id === id)?.peso ?? 0;
 }
 
 /** Pontuação 0–100 da fonte, pelos seis critérios ponderados. */

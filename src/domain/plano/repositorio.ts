@@ -62,10 +62,10 @@ export async function obterOuGerarRascunhoComIA(
         .sort((a, b) => b.observadoEm.getTime() - a.observadoEm.getTime())
         .slice(0, 4)
     : [];
-  const storage = fotosAutorizadas.length > 0 ? criarStorageR2() : null;
   const fotosCorporais = await Promise.all(
     fotosAutorizadas.map(async (foto) => {
-      const arquivo = await storage!.ler(foto.objectKey);
+      const storage = criarStorageR2();
+      const arquivo = await storage.ler(foto.objectKey);
       return {
         id: foto.id,
         pose: foto.pose,

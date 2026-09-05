@@ -70,12 +70,13 @@ export async function sincronizarEventos(userId: string, sessionId: string, even
         endedAt: merge.estado.estado === "em_andamento" ? linha.endedAt : (linha.endedAt ?? new Date()),
       }).where(eq(workoutSessions.id, sessionId));
 
-      await tx.insert(workoutEvents).values(merge.aplicados.map((id) => {
-        const evento = porId.get(id)!;
-        return {
+      await tx.insert(workoutEvents).values(merge.aplicados.flatMap((id) => {
+        const evento = porId.get(id);
+        if (!evento) return [];
+        return [{
           sessionId, userId, tipo: evento.tipo, dados: evento.dados,
           clientEventId: evento.id, ocorridoEm: new Date(evento.ocorridoEm), ordem: evento.ordem,
-        };
+        }];
       })).onConflictDoNothing({ target: workoutEvents.clientEventId });
     }
 

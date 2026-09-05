@@ -447,7 +447,8 @@ export async function substituirExercicioNaSessao(userId: string, sessionId: str
   const alternativas = await alternativasParaSessao(userId, sessionId, { exercicioId: entrada.exercicioId, motivo: entrada.motivo, relatoDor: entrada.observacao });
   const escolhida = alternativas.find((a) => a.exercicioId === entrada.novoExercicioId);
   if (!escolhida) throw new Error("Alternativa não preserva o estímulo ou não é viável para o seu perfil.");
-  const novo = encontrarExercicio(entrada.novoExercicioId)!;
+  const novo = encontrarExercicio(entrada.novoExercicioId);
+  if (!novo) throw new Error("Exercício não encontrado.");
   const [marcas, ultimasSeries] = await Promise.all([
     marcasDoHistorico(userId),
     ultimasSeriesDoHistorico(userId),

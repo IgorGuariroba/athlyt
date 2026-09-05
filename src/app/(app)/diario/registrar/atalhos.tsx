@@ -75,7 +75,10 @@ export function Atalhos({
   // Alimentos criados na entrada manual vivem na mesma
   // biblioteca dos favoritos e precisam ser reutilizáveis com um
   // toque — senão "salvar" não produziria efeito algum.
-  const proprios = favoritos.filter((f) => f.alimentoId === null && f.por100g);
+  const proprios = favoritos.filter(
+    (f): f is typeof f & { por100g: NonNullable<typeof f.por100g> } =>
+      f.alimentoId === null && f.por100g !== null,
+  );
 
   function adicionar(alimento: Alimento, quantidade: number, unidade: string) {
     setPrato((atual) => adicionarAoPrato(atual, itemDeAlimento(alimento.id, { quantidade, unidade })));
@@ -213,11 +216,11 @@ export function Atalhos({
                             nome: proprio.nome,
                             quantidade: 1,
                             unidade: porcao?.unidade ?? "porção",
-                            calorias: Math.round((proprio.por100g!.calorias * gramas) / 100),
-                            proteinaG: Math.round((proprio.por100g!.proteinaG * gramas) / 100),
-                            carboidratosG: Math.round((proprio.por100g!.carboidratosG * gramas) / 100),
-                            gordurasG: Math.round((proprio.por100g!.gordurasG * gramas) / 100),
-                            fibrasG: Math.round((proprio.por100g!.fibrasG * gramas) / 100),
+                            calorias: Math.round((proprio.por100g.calorias * gramas) / 100),
+                            proteinaG: Math.round((proprio.por100g.proteinaG * gramas) / 100),
+                            carboidratosG: Math.round((proprio.por100g.carboidratosG * gramas) / 100),
+                            gordurasG: Math.round((proprio.por100g.gordurasG * gramas) / 100),
+                            fibrasG: Math.round((proprio.por100g.fibrasG * gramas) / 100),
                           }),
                         ),
                       );
@@ -226,7 +229,7 @@ export function Atalhos({
                   >
                     <p className="text-title font-bold text-on-surface-strong">{proprio.nome}</p>
                     <p className="text-body-sm tabular-nums text-muted-foreground">
-                      {proprio.por100g!.calorias} kcal por 100 g · seu alimento
+                      {proprio.por100g.calorias} kcal por 100 g · seu alimento
                     </p>
                   </button>
                 </li>

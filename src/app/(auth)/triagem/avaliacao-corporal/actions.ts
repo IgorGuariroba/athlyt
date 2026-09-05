@@ -69,10 +69,14 @@ function preparar(fd: FormData, itens: readonly ItemMedida[]) {
 
   const { validos, falhas } = avaliarLoteCircunferencias(entradas);
   return {
-    validos: validos.map((entrada) => ({
-      ...porPrefixo.get(entrada.prefixo)!,
-      leituras: entrada.leituras,
-    })),
+    validos: validos.flatMap((entrada) => {
+      const base = porPrefixo.get(entrada.prefixo);
+      if (!base) return [];
+      return [{
+        ...base,
+        leituras: entrada.leituras,
+      }];
+    }),
     falhas,
   };
 }
