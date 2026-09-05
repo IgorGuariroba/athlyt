@@ -1,8 +1,8 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import { revalidatePath } from "next/cache";
 import { auth } from "@/auth";
+import { invalidarLeituras } from "@/app/_invalidacao";
 import { consolidarCircunferencia } from "@/domain/medicoes";
 import { metodoGorduraValido } from "@/domain/medicoes/catalogo-gordura";
 import { avaliarLoteCircunferencias, mensagemDoLote } from "@/domain/medicoes/lote-circunferencias";
@@ -49,19 +49,8 @@ export async function salvarMedidaDaRegiao(
     leiturasCm: [valorCm],
   });
   await recalcularMetasProporcao(userId);
-  invalidarLeitores();
+  invalidarLeituras([{ fato: "medicoes" }]);
   return { ok: true };
-}
-
-function invalidarLeitores() {
-  revalidatePath("/treino");
-  revalidatePath("/progresso");
-  // As próprias etapas repõem os campos a partir do banco: sem
-  // invalidá-las, voltar reapresenta o payload RSC anterior à gravação
-  // e os campos aparecem vazios
-  // (docs/memory/persistencia-visivel-apos-retorno.md).
-  revalidatePath("/triagem/avaliacao-corporal/essenciais");
-  revalidatePath("/triagem/avaliacao-corporal/completas");
 }
 
 /**
@@ -94,7 +83,6 @@ async function persistir(userId: string, itens: readonly (ItemMedida & { leitura
     await salvarCircunferenciaDaAvaliacaoInicial(userId, { assessmentId: avaliacao.id, regiao: item.regiao, lado: item.lado, leiturasCm: item.leituras });
   }
   await recalcularMetasProporcao(userId);
-  invalidarLeitores();
 }
 
 /**
@@ -142,7 +130,9 @@ export async function salvarMedidasEssenciais(fd: FormData) {
   }
 
   await persistir(userId, validos);
-  redirect("/triagem/avaliacao-corporal/completas");
+  const destino = "/triagem/avaliacao-corporal/completas";
+  invalidarLeituras([{ fato: "medicoes" }], { destino });
+  redirect(destino);
 }
 
 export async function salvarMedidasCompletas(fd: FormData) {
@@ -163,7 +153,9 @@ export async function salvarMedidasCompletas(fd: FormData) {
   }
 
   await persistir(userId, validos);
-  redirect("/triagem/avaliacao-corporal/gordura");
+  const destino = "/triagem/avaliacao-corporal/gordura";
+  invalidarLeituras([{ fato: "medicoes" }], { destino });
+  redirect(destino);
 }
 
 export async function salvarGordura(fd: FormData) {
@@ -204,6 +196,7 @@ export async function salvarGordura(fd: FormData) {
     equipamento: String(fd.get("equipamento") ?? "") || undefined,
     profissional: String(fd.get("profissional") ?? "") || undefined,
   });
-  revalidatePath(rota);
-  redirect("/triagem/avaliacao-corporal/fotos");
+  const destino = "/triagem/avaliacao-corporal/fotos";
+  invalidarLeituras([{ fato: "medicoes" }], { destino });
+  redirect(destino);
 }

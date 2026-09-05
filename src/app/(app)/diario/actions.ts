@@ -1,8 +1,8 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
+import { invalidarLeituras } from "@/app/_invalidacao";
 import { escalarMacros } from "@/domain/diario/cardapio";
 import { alternarFavorito, registrarPrato, salvarAlimentoProprio } from "@/domain/alimentos/repositorio";
 import {
@@ -39,24 +39,18 @@ function contexto(formData: FormData) {
 export async function confirmarRefeicaoAction(formData: FormData) {
   const { dia, fuso, refeicaoRef } = contexto(formData);
   await confirmarRefeicao(await usuario(), { refeicaoRef, dia, fuso });
-  revalidatePath("/diario");
-  revalidatePath("/dieta");
-  revalidatePath("/treino");
+  invalidarLeituras([{ fato: "diario" }]);
 }
 
 export async function excluirConsumoAction(formData: FormData) {
   await excluirConsumo(await usuario(), String(formData.get("consumoId")));
-  revalidatePath("/diario");
-  revalidatePath("/dieta");
-  revalidatePath("/treino");
+  invalidarLeituras([{ fato: "diario" }]);
 }
 
 export async function desfazerConfirmacaoAction(formData: FormData) {
   const { dia, fuso, refeicaoRef } = contexto(formData);
   await desfazerConfirmacao(await usuario(), { refeicaoRef, dia, fuso });
-  revalidatePath("/diario");
-  revalidatePath("/dieta");
-  revalidatePath("/treino");
+  invalidarLeituras([{ fato: "diario" }]);
 }
 
 /**
@@ -82,10 +76,9 @@ export async function confirmarRefeicaoEditadaAction(formData: FormData) {
   });
 
   await confirmarRefeicao(userId, { refeicaoRef, itens, dia, fuso });
-  revalidatePath("/diario");
-  revalidatePath("/dieta");
-  revalidatePath("/treino");
-  redirect(`/diario?dia=${dia}`);
+  const destino = `/diario?dia=${dia}`;
+  invalidarLeituras([{ fato: "diario" }], { destino });
+  redirect(destino);
 }
 
 /**
@@ -139,16 +132,15 @@ export async function registrarPratoAction(formData: FormData) {
   } else {
     await registrarPrato(userId, { nome: nome || "Registro avulso", itens, dia, fuso });
   }
-  revalidatePath("/diario");
-  revalidatePath("/dieta");
-  revalidatePath("/treino");
-  redirect(`/diario?dia=${dia}`);
+  const destino = `/diario?dia=${dia}`;
+  invalidarLeituras([{ fato: "diario" }], { destino });
+  redirect(destino);
 }
 
 /** Marca/desmarca um alimento da base como favorito. */
 export async function favoritarAction(formData: FormData) {
   await alternarFavorito(await usuario(), String(formData.get("alimentoId")));
-  revalidatePath("/diario/registrar");
+  invalidarLeituras([{ fato: "diario" }]);
 }
 
 /**
@@ -175,5 +167,5 @@ export async function salvarAlimentoProprioAction(formData: FormData) {
     },
     porcoes: [{ unidade: String(formData.get("unidade") || "porção"), gramas: gramasPorcao }],
   });
-  revalidatePath("/diario/registrar");
+  invalidarLeituras([{ fato: "diario" }]);
 }

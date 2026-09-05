@@ -1,9 +1,9 @@
 "use server";
 
 import { and, eq, inArray } from "drizzle-orm";
-import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
+import { invalidarLeituras } from "@/app/_invalidacao";
 import { db } from "@/db/client";
 import { progressPhotos } from "@/db/schema";
 import { conceder, revogar } from "@/domain/ia/consentimento";
@@ -35,8 +35,9 @@ export async function executarAvaliacaoVisual(fd: FormData) {
   if (resultado.status !== "ok") redirect("/progresso/avaliacao-visual?erro=A análise está temporariamente indisponível. Nenhuma conclusão foi salva.");
   const consolidada = consolidarAvaliacaoVisual(resultado.valor);
   await registrarAvaliacaoVisual(userId, { photoIds: ids, criterios: consolidada.criterios, gorduraMinBasisPoints: consolidada.gorduraVisual.minimoBasisPoints, gorduraMaxBasisPoints: consolidada.gorduraVisual.maximoBasisPoints, observacoes: consolidada.observacoes, limitacoes: consolidada.limitacoes, confianca: consolidada.confianca, metodologiaVersao: consolidada.metodologiaVersao, modeloResolvido: resultado.modeloResolvido });
-  revalidatePath("/progresso"); revalidatePath("/progresso/avaliacao-visual");
-  redirect("/progresso/avaliacao-visual?sucesso=Avaliação visual concluída.");
+  const destino = "/progresso/avaliacao-visual?sucesso=Avaliação visual concluída.";
+  invalidarLeituras([{ fato: "medicoes" }, { fato: "consentimento" }], { destino });
+  redirect(destino);
 }
 
 export async function revogarConsentimentoVisual() {
@@ -44,6 +45,7 @@ export async function revogarConsentimentoVisual() {
   const userId = session.user.id;
   await Promise.all(CAMPOS.map((campo) => revogar(userId, "avaliacao-visual", campo)));
   await revogarAvaliacoesVisuais(userId);
-  revalidatePath("/progresso"); revalidatePath("/progresso/avaliacao-visual");
-  redirect("/progresso/avaliacao-visual?sucesso=Consentimento revogado e projeção visual removida do uso ativo.");
+  const destino = "/progresso/avaliacao-visual?sucesso=Consentimento revogado e projeção visual removida do uso ativo.";
+  invalidarLeituras([{ fato: "consentimento" }, { fato: "medicoes" }], { destino });
+  redirect(destino);
 }

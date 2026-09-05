@@ -1,8 +1,8 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
+import { invalidarLeituras } from "@/app/_invalidacao";
 import { obterPerfilVigente } from "@/domain/triagem/perfil";
 import { ativarPlano, obterOuGerarRascunhoComIA, substituirNoRascunho } from "@/domain/plano/repositorio";
 import { conceder, estadoConsentimento } from "@/domain/ia/consentimento";
@@ -49,7 +49,13 @@ export async function gerarPlanoInicialAction(formData: FormData) {
   if (resultado.status === "indisponivel") {
     redirect(`/triagem/resumo?erro=${encodeURIComponent("O agent não conseguiu gerar seu plano agora. Tente novamente.")}`);
   }
-  redirect("/plano/revisao");
+  const destino = "/plano/revisao";
+  // A geração registra consentimento e rascunho, e deixa a Trilha de
+  // Decisão do agent como subproduto audível.
+  invalidarLeituras([{ fato: "plano" }, { fato: "consentimento" }, { fato: "trilha" }], {
+    destino,
+  });
+  redirect(destino);
 }
 
 async function gerarOutroPlano({
@@ -96,8 +102,9 @@ async function gerarOutroPlano({
     );
   }
 
-  revalidatePath("/plano/revisao");
-  redirect("/plano/revisao");
+  const destino = "/plano/revisao";
+  invalidarLeituras([{ fato: "plano" }, { fato: "trilha" }], { destino });
+  redirect(destino);
 }
 
 export async function regenerarPlanoInicialAction() {
@@ -124,12 +131,13 @@ export async function substituirExercicioAction(formData: FormData) {
     exercicioId: String(formData.get("exercicioId")),
     novoExercicioId: String(formData.get("novoExercicioId")),
   }, perfil.respostas);
-  revalidatePath("/plano/revisao/treino");
+  invalidarLeituras([{ fato: "plano" }]);
 }
 
 export async function ativarPlanoAction(formData: FormData) {
   const { userId } = await contexto();
   await ativarPlano(userId, String(formData.get("planoId")));
-  revalidatePath("/treino");
-  redirect("/treino");
+  const destino = "/treino";
+  invalidarLeituras([{ fato: "plano" }], { destino });
+  redirect(destino);
 }

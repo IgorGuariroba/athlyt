@@ -1,7 +1,7 @@
 "use server";
 import { redirect } from "next/navigation";
-import { revalidatePath } from "next/cache";
 import { auth } from "@/auth";
+import { invalidarLeituras } from "@/app/_invalidacao";
 import { registrarCircunferencia, registrarGorduraCorporal, registrarPeso, recalcularMetasProporcao } from "@/domain/medicoes/repositorio";
 
 const n = (fd: FormData, key: string) => {
@@ -23,6 +23,7 @@ export async function registrarCheckinCorporal(fd: FormData) {
   }
   const gordura = n(fd, "gordura");
   if (Number.isFinite(gordura)) await registrarGorduraCorporal(userId, { percentual: gordura, metodo: String(fd.get("metodo") ?? "outro"), protocolo: String(fd.get("protocolo") ?? "") || undefined });
-  revalidatePath("/treino"); revalidatePath("/progresso"); revalidatePath("/diario"); revalidatePath("/dieta");
-  redirect("/progresso");
+  const destino = "/progresso";
+  invalidarLeituras([{ fato: "medicoes" }], { destino });
+  redirect(destino);
 }

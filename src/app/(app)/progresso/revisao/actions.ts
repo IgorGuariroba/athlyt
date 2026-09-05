@@ -1,9 +1,9 @@
 "use server";
 
 import { and, eq, gte } from "drizzle-orm";
-import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
+import { invalidarLeituras } from "@/app/_invalidacao";
 import { db } from "@/db/client";
 import { foodEntries, workoutSessions } from "@/db/schema";
 import { avaliarConfiancaCorporal } from "@/domain/medicoes";
@@ -15,20 +15,6 @@ import type { ExercicioSessao } from "@/domain/sessao/repositorio";
 import { obterPerfilVigente } from "@/domain/triagem/perfil";
 
 const limitar = (valor: number) => Math.max(0, Math.min(100, Math.round(valor)));
-
-/**
- * Invalida a Revisão Semanal inteira, não só a etapa de origem.
- *
- * As telas do fluxo (revisão, scorecard, evidências, proposta e
- * experimento) leem o mesmo registro, e cada action redireciona para
- * uma etapa **diferente** da que revalidava. Como o Router serve a
- * etapa de destino do cache do cliente, a escrita acabava invisível:
- * ativar o Experimento voltava para a tela do formulário, e aprovar a
- * proposta reexibia "pendente" — o usuário lê isso como dado perdido e
- * repete a ação. O segundo argumento "layout" alcança o subtree, então
- * a etapa de destino também é invalidada.
- */
-const revalidarRevisao = () => revalidatePath("/progresso/revisao", "layout");
 
 export async function gerarRevisaoSemanal(fd: FormData) {
   const session = await auth(); if (!session?.user?.id) redirect("/");
@@ -91,7 +77,9 @@ export async function gerarRevisaoSemanal(fd: FormData) {
     const ajuste = await aplicarReducaoVolumeAutomatica(session.user.id, linha.id);
     if (ajuste) await vincularAjusteAutomatico(session.user.id, linha.id, ajuste);
   }
-  revalidarRevisao(); redirect("/progresso/revisao/scorecard");
+  const destino = "/progresso/revisao/scorecard";
+  invalidarLeituras([{ fato: "plano" }, { fato: "medicoes" }], { destino });
+  redirect(destino);
 }
 
 export async function decidirPropostaRevisao(fd: FormData) {
@@ -100,24 +88,32 @@ export async function decidirPropostaRevisao(fd: FormData) {
   if (decisao === "aprovar") {
     const perfil = await obterPerfilVigente(session.user.id); if (!perfil) redirect("/triagem");
     await obterOuGerarRascunho(session.user.id, perfil);
-    revalidatePath("/plano/revisao"); revalidarRevisao(); redirect("/progresso/revisao/experimento");
+    const aprovado = "/progresso/revisao/experimento";
+    invalidarLeituras([{ fato: "plano" }], { destino: aprovado });
+    redirect(aprovado);
   }
   await atualizarEstadoRevisaoCorporal(session.user.id, reviewId, "rejeitada");
   await rejeitarReavaliacaoDaRevisao(session.user.id, reviewId);
-  revalidarRevisao(); redirect("/progresso/revisao/proposta");
+  const destino = "/progresso/revisao/proposta";
+  invalidarLeituras([{ fato: "plano" }], { destino });
+  redirect(destino);
 }
 
 export async function iniciarExperimento(fd: FormData) {
   const session = await auth(); if (!session?.user?.id) redirect("/");
   const variaveis = fd.getAll("variaveis").map(String);
   await ativarExperimentoPlano(session.user.id, { planoId: String(fd.get("planoId")), reavaliacaoId: String(fd.get("reavaliacaoId") ?? "") || undefined, hipotese: String(fd.get("hipotese") ?? ""), variaveis, criterioSucesso: String(fd.get("criterioSucesso") ?? ""), criterioInterrupcao: String(fd.get("criterioInterrupcao") ?? ""), janelaMinimaSemanas: Number(fd.get("janelaMinimaSemanas") ?? 2) });
-  revalidatePath("/treino"); revalidatePath("/progresso"); revalidatePath("/progresso/revisao/experimento"); revalidarRevisao(); redirect("/progresso/revisao/experimento");
+  const destino = "/progresso/revisao/experimento";
+  invalidarLeituras([{ fato: "plano" }], { destino });
+  redirect(destino);
 }
 
 export async function executarRollback(fd: FormData) {
   const session = await auth(); if (!session?.user?.id) redirect("/");
   await reverterAoPlanoEstavel(session.user.id, String(fd.get("experimentId")));
-  revalidatePath("/treino"); revalidatePath("/progresso"); revalidarRevisao(); redirect("/progresso/revisao/experimento?sucesso=Plano Estável restaurado como nova versão.");
+  const destino = "/progresso/revisao/experimento?sucesso=Plano Estável restaurado como nova versão.";
+  invalidarLeituras([{ fato: "plano" }], { destino });
+  redirect(destino);
 }
 
 export async function desfazerRevisao(fd: FormData) {
@@ -128,5 +124,7 @@ export async function desfazerRevisao(fd: FormData) {
     const rollback = await desfazerAjusteAutomatico(session.user.id, { reviewId, baselinePlanId: revisao.baselinePlanId });
     await atualizarEstadoRevisaoCorporal(session.user.id, reviewId, "desfeita", rollback.id);
   } else await atualizarEstadoRevisaoCorporal(session.user.id, reviewId, "desfeita");
-  revalidarRevisao(); redirect("/progresso/revisao/proposta");
+  const destino = "/progresso/revisao/proposta";
+  invalidarLeituras([{ fato: "plano" }], { destino });
+  redirect(destino);
 }

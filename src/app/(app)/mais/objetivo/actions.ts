@@ -1,8 +1,8 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
+import { invalidarLeituras } from "@/app/_invalidacao";
 import { solicitarMudancaDeObjetivo } from "@/domain/plano/reavaliacao";
 import { parseRespostaEtapa } from "@/domain/triagem/validacao";
 
@@ -23,11 +23,11 @@ export async function alterarObjetivoAtual(formData: FormData) {
     redirect(`/mais/objetivo?aviso=${encodeURIComponent("Este já é seu objetivo atual.")}`);
   }
 
-  revalidatePath("/mais/objetivo");
-  revalidatePath("/progresso");
-  revalidatePath("/treino");
   const mensagem = resultado.planoJaAlinhado
     ? "Objetivo atualizado. Seu Plano Ativo já está alinhado a essa escolha."
     : "Objetivo atualizado. Seu Plano Ativo será reavaliado na próxima Revisão Semanal.";
-  redirect(`/mais/objetivo?sucesso=${encodeURIComponent(mensagem)}`);
+  const destino = `/mais/objetivo?sucesso=${encodeURIComponent(mensagem)}`;
+  // A mudança de objetivo grava no perfil e abre uma reavaliação do plano.
+  invalidarLeituras([{ fato: "perfil" }, { fato: "plano" }], { destino });
+  redirect(destino);
 }
