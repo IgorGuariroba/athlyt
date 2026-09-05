@@ -5,8 +5,9 @@ import { baixarGifDaExerciseDB, criarHandlerMidiaExecucao } from "./handler";
 
 /**
  * Serve o GIF espelhado no R2 da Mídia de Execução por uma rota
- * same-origin — não por URL assinada — para caber de forma
- * estável no cache do service worker (ver `src/app/sw.ts`).
+ * same-origin — não por URL assinada — para que a URL seja estável e
+ * cacheável pelo navegador. URL assinada expira e muda a cada leitura,
+ * o que invalidaria o cache a cada abertura da ficha.
  *
  * Falha fechada em qualquer ausência (sem mapeamento, sem R2, origem
  * indisponível): 404, nunca 500. A ficha do exercício sempre tem o

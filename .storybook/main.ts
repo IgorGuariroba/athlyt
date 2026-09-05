@@ -9,10 +9,8 @@ import tailwindcss from "@tailwindcss/vite";
  * referência visual a um `npm run dev` do produto inteiro, com banco e
  * sessão. Aqui a demonstração vive ao lado do componente.
  *
- * Framework `nextjs-vite`, não `nextjs`: o builder webpack ainda não
- * acompanha Next 16, e o produto compila com `next build --webpack`
- * justamente porque o Turbopack não é o caminho aqui. Storybook e
- * aplicação usam bundlers diferentes de propósito — a galeria não
+ * Framework `nextjs-vite`, não `nextjs`: Storybook usa Vite e a
+ * aplicação usa Turbopack. Os bundlers são diferentes — a galeria não
  * precisa reproduzir o pipeline de produção, precisa renderizar o
  * componente.
  */

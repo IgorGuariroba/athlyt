@@ -21,7 +21,7 @@ function storageVazio(overrides: Partial<StoragePrivado> = {}): StoragePrivado {
 
 /**
  * A rota de Mídia de Execução serve o GIF espelhado no R2 same-origin,
- * para caber no cache do service worker. Precisa
+ * por uma URL estável que o navegador consegue cachear. Precisa
  * falhar fechada — nunca 500 — porque a ficha do exercício depende do
  * fallback em texto continuar acessível mesmo sem storage configurado.
  */

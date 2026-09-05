@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { SerwistProvider } from "@serwist/next/react";
+import Script from "next/script";
 import { archivo, dmSans } from "./fonts";
 import "./globals.css";
 
@@ -70,9 +70,8 @@ export default function RootLayout({
       className={`${dmSans.variable} ${archivo.variable} h-full`}
     >
       <body className="min-h-dvh flex flex-col">
-        <SerwistProvider swUrl="/sw.js" disable={process.env.NODE_ENV !== "production"}>
-          {children}
-        </SerwistProvider>
+        {children}
+        <Script src="/desativar-sw.js" strategy="afterInteractive" />
       </body>
     </html>
   );

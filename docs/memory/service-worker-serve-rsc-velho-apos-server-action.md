@@ -13,6 +13,14 @@ sources:
     title: "E2E mobile reprovando de forma reprodutível na Revisão Semanal"
 ---
 
+> **Nota de 2026-09-05.** O Serwist saiu do projeto na migração do build
+> para Turbopack: `src/app/sw.ts` não existe mais e `public/sw.js` hoje só
+> desregistra o worker antigo. A metade do Service Worker deste aprendizado
+> vira histórico — o que continua vivo é a segunda causa, o
+> `revalidatePath` apontando para rota diferente do `redirect`, e o método
+> de leitura: duas causas somam no mesmo sintoma, e vítimas fixas entre
+> execuções não são flakiness.
+
 # Contexto
 
 O job `E2E mobile` reprovava em `mudanca-objetivo` (`Experimento ativo` não

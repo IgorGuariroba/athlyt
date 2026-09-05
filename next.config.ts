@@ -1,6 +1,4 @@
 import type { NextConfig } from "next";
-import withBundleAnalyzer from "@next/bundle-analyzer";
-import withSerwistInit from "@serwist/next";
 
 const nextConfig: NextConfig = {
   /**
@@ -28,15 +26,12 @@ const nextConfig: NextConfig = {
     ],
   },
 
-  /**
-   * @serwist/next injeta um `webpack()` no config mesmo com `disable`
-   * ativo (ver node_modules/@serwist/next/src/index.ts). A partir do
-   * Next.js 16, Turbopack (padrão em dev) recusa iniciar quando existe
-   * um `webpack` config sem `turbopack` explícito. Como o build de
-   * produção roda via `next build --webpack` (script "build"), este
-   * objeto vazio só destrava o `next dev` com Turbopack.
-   */
-  turbopack: {},
+  // A mesma raiz em dev e build, sem inferir lockfiles fora do projeto.
+  turbopack: { root: __dirname },
+
+  async headers() {
+    return [{ source: "/sw.js", headers: [{ key: "Cache-Control", value: "no-store" }] }];
+  },
 
   /**
    * O envio de fotos corporais (`/triagem/avaliacao-corporal/fotos`) faz
@@ -51,21 +46,4 @@ const nextConfig: NextConfig = {
   },
 };
 
-/**
- * @serwist/next ainda não suporta Turbopack (ver comentário em
- * src/app/sw.ts). Desativado em dev; o build de produção roda com
- * `next build --webpack` (ver script "build" em package.json) para
- * que o service worker seja de fato gerado.
- */
-const withSerwist = withSerwistInit({
-  swSrc: "src/app/sw.ts",
-  swDest: "public/sw.js",
-  disable: process.env.NODE_ENV !== "production",
-});
-
-const withAnalyzer = withBundleAnalyzer({
-  enabled: process.env.ANALYZE === "true",
-  openAnalyzer: false,
-});
-
-export default withAnalyzer(withSerwist(nextConfig));
+export default nextConfig;
