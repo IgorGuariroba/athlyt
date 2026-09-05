@@ -4,8 +4,43 @@ import storybook from "eslint-plugin-storybook";
 import { defineConfig, globalIgnores } from "eslint/config";
 import nextVitals from "eslint-config-next/core-web-vitals";
 import nextTs from "eslint-config-next/typescript";
+import tseslint from "typescript-eslint";
+import jsxA11y from "eslint-plugin-jsx-a11y";
 
-const eslintConfig = defineConfig([...nextVitals, ...nextTs, {
+// `eslint-config-next` já registra o plugin `jsx-a11y`; redeclará-lo aborta o
+// ESLint com "Cannot redefine plugin". Aqui só acrescentamos as regras que
+// faltam, reaproveitando o registro que veio de lá.
+const regrasA11yRecomendadas = jsxA11y.configs.recommended.rules;
+
+const eslintConfig = defineConfig([...nextVitals, ...nextTs,
+// Regras que dependem do type checker. `eslint-config-next/typescript` só
+// habilita as sintáticas; as type-aware são as únicas capazes de ver que uma
+// Promise foi descartada, que um `any` atravessou a borda de I/O ou que uma
+// condição já é impossível pelo tipo. Custam uma passada do programa
+// TypeScript inteiro (lint sai de ~11s para ~26s), custo aceito de propósito.
+...tseslint.configs.strictTypeChecked,
+...tseslint.configs.stylisticTypeChecked,
+{
+  languageOptions: {
+    parserOptions: {
+      projectService: true,
+      tsconfigRootDir: import.meta.dirname,
+    },
+  },
+},
+// `core-web-vitals` habilita só 6 regras de jsx-a11y. O conjunto recommended
+// cobre o resto — sobretudo label sem controle associado, o defeito mais
+// comum nos formulários de triagem e diário.
+{
+  files: ["**/*.tsx"],
+  rules: {
+    ...regrasA11yRecomendadas,
+    // Deprecated no próprio plugin e redundante com
+    // `label-has-associated-control`: gerava 38 achados sobrepostos.
+    "jsx-a11y/label-has-for": "off",
+  },
+},
+{
   files: ["src/app/**/*.{ts,tsx}"],
   rules: {
     "no-restricted-imports": [
@@ -38,6 +73,13 @@ globalIgnores([
   // .gitignore). Mesmo caso do relatório do Playwright: são bundles
   // minificados que o lint tentaria analisar como fonte.
   "storybook-static/**",
-]), ...storybook.configs["flat/recommended"]]);
+]),
+// Arquivos de configuração em JS puro não estão no `tsconfig.json`; sem isso o
+// `projectService` falha ao tentar carregar um programa para eles.
+{
+  files: ["**/*.{js,mjs,cjs}"],
+  extends: [tseslint.configs.disableTypeChecked],
+},
+...storybook.configs["flat/recommended"]]);
 
 export default eslintConfig;

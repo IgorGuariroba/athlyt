@@ -16,6 +16,24 @@ Run `npm run ui:verificar` to enforce these requirements; failures report the ex
 
 Run `npm run storybook:verificar` to ensure every story actually renders. `storybook build` verifies compilation but not rendering. See `docs/memory/galeria-compila-mas-nao-renderiza.md`.
 
+## Dívida de lint em lotes
+
+`eslint.config.mjs` roda o preset máximo: `strictTypeChecked` + `stylisticTypeChecked` do `typescript-eslint` (regras type-aware, exigem o programa TypeScript) e o `jsx-a11y` recommended completo. O lint sai de ~11 s para ~26 s; o custo é aceito de propósito.
+
+Ligar o preset revelou 1024 achados pré-existentes. Eles estão registrados em `eslint-suppressions.json`, o recurso nativo do ESLint 9.24+: `npm run lint` fica verde e o CI continua barrando **qualquer achado novo**, inclusive de regra já suprimida em outro arquivo.
+
+O arquivo de supressões é dívida, não gabarito. Fluxo por lote:
+
+1. `npm run lint:pendencias` lista o que falta, agrupado por regra.
+2. `npm run lint:pendencias -- <regra>` mostra os arquivos daquela regra.
+3. Numa branch por lote, corrija os achados escolhidos.
+4. `npm run lint:lote` (`eslint --prune-suppressions`) remove do arquivo as supressões que deixaram de ser necessárias.
+5. Faça commit do código **e** do `eslint-suppressions.json` reduzido.
+
+Um lote é uma regra, ou um grupo coeso de regras. Não misture lotes de corretude com lotes de estilo: o diff de estilo é grande e esconde a revisão do que muda comportamento.
+
+Nunca zere supressões com `--suppress-all` para "passar o CI" — isso reabre a dívida em silêncio. O comando só se justifica ao adotar uma regra nova, num commit que faça apenas isso.
+
 ## Fluxo de validação local
 
 Para validar alterações na aplicação web:

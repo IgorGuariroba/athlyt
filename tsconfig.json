@@ -24,6 +24,12 @@
   },
   "include": [
     "next-env.d.ts",
+    // Os globs do TypeScript pulam diretórios iniciados por ponto, então
+    // `**/*.ts` não alcança a configuração do Storybook. Sem estas duas
+    // entradas, as regras de lint type-aware não conseguem montar um
+    // programa para `.storybook/*` e falham com erro de parsing.
+    ".storybook/**/*.ts",
+    ".storybook/**/*.tsx",
     "**/*.ts",
     "**/*.tsx",
     ".next/types/**/*.ts",
