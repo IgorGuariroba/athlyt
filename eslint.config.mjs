@@ -38,6 +38,25 @@ const eslintConfig = defineConfig([...nextVitals, ...nextTs,
     // Deprecated no próprio plugin e redundante com
     // `label-has-associated-control`: gerava 38 achados sobrepostos.
     "jsx-a11y/label-has-for": "off",
+    // Permite que regiões roláveis e o container principal recebam foco de
+    // teclado para rolagem acessível com setas e leitores de tela.
+    "jsx-a11y/no-noninteractive-tabindex": [
+      "error",
+      {
+        roles: ["region", "tabpanel"],
+        tags: ["main"],
+      },
+    ],
+    // Reconhece nossos componentes de UI como controles e aceita tanto
+    // htmlFor apontando para o controle quanto aninhamento dentro do label.
+    "jsx-a11y/label-has-associated-control": [
+      "error",
+      {
+        controlComponents: ["Input", "Textarea"],
+        assert: "either",
+        depth: 25,
+      },
+    ],
   },
 },
 {

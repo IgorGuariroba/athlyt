@@ -117,7 +117,9 @@ export function CapturaAudio({
       <div className={cn("flex flex-col gap-3", className)}>
         {/* Sem legenda: é a fala que o próprio usuário acabou de gravar,
             e a transcrição dela é o passo seguinte do fluxo. */}
-        <audio src={previa.url} controls aria-label="Áudio gravado" className="w-full" />
+        <audio src={previa.url} controls aria-label="Áudio gravado" className="w-full">
+          <track kind="captions" />
+        </audio>
         <Button type="button" variant="ghost" size="sm" onClick={descartar} className="self-start">
           <Trash2 className="size-4" aria-hidden="true" /> Gravar de novo
         </Button>

@@ -277,9 +277,6 @@
   "src/app/(app)/diario/refeicao/[refeicaoRef]/page.tsx": {
     "@typescript-eslint/restrict-template-expressions": {
       "count": 1
-    },
-    "jsx-a11y/label-has-associated-control": {
-      "count": 1
     }
   },
   "src/app/(app)/diario/registrar/atalhos.tsx": {
@@ -291,12 +288,6 @@
     },
     "@typescript-eslint/restrict-template-expressions": {
       "count": 4
-    },
-    "jsx-a11y/label-has-associated-control": {
-      "count": 5
-    },
-    "jsx-a11y/no-noninteractive-tabindex": {
-      "count": 1
     }
   },
   "src/app/(app)/diario/registrar/descricao/actions.ts": {
@@ -318,9 +309,6 @@
     },
     "@typescript-eslint/no-unnecessary-condition": {
       "count": 1
-    },
-    "jsx-a11y/label-has-associated-control": {
-      "count": 3
     }
   },
   "src/app/(app)/diario/registrar/foto/servico.ts": {
@@ -346,18 +334,8 @@
       "count": 2
     }
   },
-  "src/app/(app)/layout.tsx": {
-    "jsx-a11y/no-noninteractive-tabindex": {
-      "count": 1
-    }
-  },
   "src/app/(app)/mais/consentimentos/page.tsx": {
     "@typescript-eslint/restrict-template-expressions": {
-      "count": 1
-    }
-  },
-  "src/app/(app)/mais/modo-conservador/page.tsx": {
-    "jsx-a11y/label-has-associated-control": {
       "count": 1
     }
   },
@@ -451,9 +429,6 @@
     },
     "@typescript-eslint/restrict-template-expressions": {
       "count": 1
-    },
-    "jsx-a11y/label-has-associated-control": {
-      "count": 4
     }
   },
   "src/app/(app)/progresso/revisao/scorecard/page.tsx": {
@@ -604,9 +579,6 @@
   "src/app/(auth)/triagem/avaliacao-corporal/gordura/page.tsx": {
     "@typescript-eslint/no-unnecessary-condition": {
       "count": 6
-    },
-    "jsx-a11y/label-has-associated-control": {
-      "count": 4
     }
   },
   "src/app/(auth)/triagem/peso/_components/seletor-peso.tsx": {
@@ -731,9 +703,6 @@
     },
     "@typescript-eslint/no-misused-promises": {
       "count": 1
-    },
-    "jsx-a11y/media-has-caption": {
-      "count": 1
     }
   },
   "src/components/diario/cartoes-diario.tsx": {
@@ -766,9 +735,6 @@
       "count": 7
     },
     "@typescript-eslint/no-misused-promises": {
-      "count": 2
-    },
-    "jsx-a11y/label-has-associated-control": {
       "count": 2
     }
   },
@@ -829,9 +795,6 @@
     },
     "@typescript-eslint/restrict-template-expressions": {
       "count": 3
-    },
-    "jsx-a11y/label-has-associated-control": {
-      "count": 1
     }
   },
   "src/components/fotos/reduzir-imagem.ts": {
@@ -924,19 +887,11 @@
     },
     "@typescript-eslint/restrict-template-expressions": {
       "count": 1
-    },
-    "jsx-a11y/label-has-associated-control": {
-      "count": 1
     }
   },
   "src/components/tela/__tests__/tela.unit.test.tsx": {
     "@typescript-eslint/no-unnecessary-type-assertion": {
       "count": 2
-    }
-  },
-  "src/components/tela/barra-acao-fixa.stories.tsx": {
-    "jsx-a11y/no-noninteractive-tabindex": {
-      "count": 1
     }
   },
   "src/components/tela/barra-faixa.tsx": {

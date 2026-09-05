@@ -27,6 +27,7 @@ export const Padrao: Story = {
     // entre a barra e o conteúdo que passa por baixo dela.
     <div className="relative h-96 translate-x-0 overflow-hidden rounded-lg border border-border">
       <div
+        role="region"
         className="h-full overflow-y-auto p-4 pb-24"
         tabIndex={0}
         aria-label="Conteúdo rolável da etapa"
