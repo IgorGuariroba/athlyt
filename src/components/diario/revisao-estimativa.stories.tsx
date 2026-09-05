@@ -157,7 +157,7 @@ export const AlimentoCorrigidoSemRecalculo: Story = {
   render: function Render() {
     const [itens, setItens] = useState<ItemPrato[]>([
       renomearItem(REFRIGERANTE, "Refrigerante de cola zero"),
-      ITENS[1],
+      ...(ITENS[1] ? [ITENS[1]] : []),
     ]);
     return (
       <RevisaoEstimativa

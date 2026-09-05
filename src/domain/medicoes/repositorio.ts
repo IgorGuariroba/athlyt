@@ -9,6 +9,7 @@ export async function obterOuCriarAvaliacaoInicial(userId: string) {
   const [existente] = await db.select().from(bodyAssessments).where(and(eq(bodyAssessments.userId, userId), eq(bodyAssessments.tipo, "inicial"))).orderBy(desc(bodyAssessments.createdAt)).limit(1);
   if (existente) return existente;
   const [criada] = await db.insert(bodyAssessments).values({ userId, tipo: "inicial" }).returning();
+  if (!criada) throw new Error("Falha ao criar avaliação inicial: linha não retornada.");
   return criada;
 }
 
@@ -284,6 +285,7 @@ export async function revogarAvaliacoesVisuais(userId: string) {
 export async function registrarRevisaoCorporal(userId: string, entrada: { periodoInicio: Date; periodoFim: Date; revisao: ReturnType<typeof produzirRevisaoCorporal>; perfilVersao?: number }) {
   return db.transaction(async (tx) => {
     const [linha] = await tx.insert(weeklyBodyReviews).values({ userId, periodoInicio: entrada.periodoInicio, periodoFim: entrada.periodoFim, scorecard: entrada.revisao.scorecard, confiancas: entrada.revisao.confiancas, evidencias: entrada.revisao.evidencias, proposta: entrada.revisao.proposta, metodologiaVersao: entrada.revisao.scorecard.metodologiaVersao }).returning();
+    if (!linha) throw new Error("Falha ao registrar revisão: linha não retornada.");
     await tx.insert(decisionTrails).values({ userId, operacao: "revisao-semanal", recorteVersao: 2, perfilVersao: entrada.perfilVersao ?? 0, modeloSolicitado: "motor-adaptativo", modeloResolvido: "motor-scorecard-v1", auditavel: true, degradado: Object.values(entrada.revisao.confiancas).some((valor) => valor !== "confiavel"), camposEnviados: ["aderencia-semana", "desempenho-semana", "tendencia-corporal", "metas-proporcao", "conflitos-medicao", "recuperacao", "utilidade-recomendacoes"], camposOmitidos: [], ferramentasConsultadas: [], resultado: { reviewId: linha.id, ...entrada.revisao } });
     return linha;
   });

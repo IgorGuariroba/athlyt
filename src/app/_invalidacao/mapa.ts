@@ -111,7 +111,7 @@ function rotasDinamicas(fato: FatoMudado): readonly Invalidacao[] {
 
 /** Caminho sem querystring nem fragmento, que é o que o App Router indexa. */
 export function rotaDoDestino(destino: string): string {
-  return destino.split(/[?#]/)[0] || "/";
+  return destino.split(/[?#]/)[0] ?? "/";
 }
 
 /**

@@ -26,7 +26,7 @@ const plano: PlanoGerado = {
 
 const planoTresSeries: PlanoGerado = {
   ...plano,
-  bloco: { ...plano.bloco, dias: [{ ...plano.bloco.dias[0], exercicios: [{ ...plano.bloco.dias[0].exercicios[0], series: 3 }] }] },
+  bloco: { ...plano.bloco, dias: [{ ...plano.bloco.dias[0]!, exercicios: [{ ...plano.bloco.dias[0]!.exercicios[0]!, series: 3 }] }] },
 };
 
 test("substitui exercício por equipamento indisponível preservando o estímulo", async ({ page, context }) => {

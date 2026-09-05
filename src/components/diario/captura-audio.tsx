@@ -84,8 +84,9 @@ export function CapturaAudio({
         for (const canal of trilha.getTracks()) canal.stop();
         const tipo = instancia.mimeType || "audio/webm";
         const blob = new Blob(partes, { type: tipo });
+        const extensao = tipo.split(";")[0]?.trim() ?? "webm";
         aoGravar(
-          new File([blob], "descricao-refeicao", { type: tipo.split(";")[0].trim() }),
+          new File([blob], "descricao-refeicao", { type: extensao }),
         );
         setGravando(false);
       };

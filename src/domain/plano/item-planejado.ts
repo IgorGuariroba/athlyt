@@ -45,7 +45,10 @@ export function interpretarItemPlanejadoLegadoNaBase(
   const partes = ITEM_COM_PORCAO.exec(descricao.trim());
   if (!partes) return null;
 
-  const [, nome, quantidadeTexto, unidadeTexto] = partes;
+  const nome = partes[1];
+  const quantidadeTexto = partes[2];
+  const unidadeTexto = partes[3];
+  if (!nome || !quantidadeTexto || !unidadeTexto) return null;
   const alimento = encontrarAlimentoPorNomeExato(nome);
   if (!alimento) return null;
 

@@ -11,6 +11,7 @@ async function main() {
   config({ path: ".env" });
   const [{ db }, { users }, { analisarFotosCorporais }] = await Promise.all([import("../src/db/client"), import("../src/db/schema"), import("../src/domain/ia/operacoes/avaliacao-visual")]);
   const email = `visual-real-${randomUUID()}@example.com`; const [usuario] = await db.insert(users).values({ email }).returning();
+  if (!usuario) throw new Error("Falha ao criar usuário de verificação.");
   try {
     const [frente, costas] = await Promise.all([silhueta("#527a9d"), silhueta("#5f819f")]);
     const entrada = { userId: usuario.id, nucleo: { perfilVersao: 0, modoConservador: true }, fotos: [{ id: randomUUID(), pose: "frente", condicoes: "imagem sintética uniforme", dados: frente, mediaType: "image/webp" }, { id: randomUUID(), pose: "costas", condicoes: "imagem sintética uniforme", dados: costas, mediaType: "image/webp" }], medicoesComparaveis: [] } as const;

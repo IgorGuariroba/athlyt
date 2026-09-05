@@ -81,7 +81,9 @@ export function GraficoPeso({
     agora,
   });
 
-  if (!plano) {
+  const atual = plano?.medicoes[plano.medicoes.length - 1];
+  const inicial = plano?.medicoes[0];
+  if (!plano || !atual || !inicial) {
     // Sem série não há `figure`, porque não há figura. O convite a
     // registrar o primeiro peso é a única leitura possível aqui.
     return (
@@ -119,7 +121,6 @@ export function GraficoPeso({
     ...medicao,
     ...projetar(medicao),
   }));
-  const atual = plano.medicoes[plano.medicoes.length - 1];
   const linhaMeta = plano.linhaMeta?.map(projetar) ?? null;
 
   // O alvo só é marcável quando o dia 120 cabe na janela. Nos recortes
@@ -140,7 +141,7 @@ export function GraficoPeso({
     pesoMetaKg === undefined
       ? null
       : descreverDistanciaAMeta({
-          pesoInicialKg: plano.medicoes[0].pesoKg,
+          pesoInicialKg: inicial.pesoKg,
           pesoAtualKg: atual.pesoKg,
           pesoMetaKg,
         });
@@ -150,7 +151,7 @@ export function GraficoPeso({
     // A grade também é informação: sem isto, quem lê por voz perde a
     // escala contra a qual as linhas devem ser interpretadas.
     `Eixo vertical de ${formatarPeso(escala.pisoKg)} a ${formatarPeso(escala.tetoKg)} kg.`,
-    `Peso inicial ${formatarPeso(plano.medicoes[0].pesoKg)} kg, atual ${formatarPeso(atual.pesoKg)} kg, em ${plano.medicoes.length} ${plano.medicoes.length === 1 ? "registro" : "registros"}.`,
+    `Peso inicial ${formatarPeso(inicial.pesoKg)} kg, atual ${formatarPeso(atual.pesoKg)} kg, em ${plano.medicoes.length} ${plano.medicoes.length === 1 ? "registro" : "registros"}.`,
     pesoMetaKg === undefined
       ? "Sem meta registrada."
       : `Ritmo médio até a meta de ${formatarPeso(pesoMetaKg)} kg em 120 dias. ${distancia ?? ""}.`,

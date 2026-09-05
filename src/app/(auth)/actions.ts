@@ -26,6 +26,7 @@ export async function entrarComoUsuarioDev() {
   const [usuario] = existente
     ? [existente]
     : await db.insert(users).values({ email: DEV_SESSION_EMAIL, name: "Usuário de desenvolvimento" }).returning();
+  if (!usuario) throw new Error("Falha ao criar usuário de desenvolvimento.");
 
   const sessionToken = randomUUID();
   await db.insert(sessions).values({

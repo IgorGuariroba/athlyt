@@ -42,12 +42,12 @@ const plano: PlanoGerado = {
 async function contexto() {
   const [user] = await db.insert(users).values({ email: `copiloto-${randomUUID()}@example.com` }).returning();
   await db.insert(profileVersions).values({
-    userId: user.id,
+    userId: user!.id,
     version: 1,
     respostas: { experienciaTreino: "intermediario", equipamentos: ["halteres"] },
   });
   await db.insert(plans).values({
-    userId: user.id,
+    userId: user!.id,
     perfilVersao: 1,
     versao: 1,
     estado: "ativo",
@@ -56,7 +56,7 @@ async function contexto() {
     conteudo: plano,
     activatedAt: new Date(),
   });
-  return user.id;
+  return user!.id;
 }
 
 describe("Copiloto de Sessão", () => {

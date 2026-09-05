@@ -56,6 +56,7 @@ export async function registrarPrato(
       consumidoEm,
     })
     .returning();
+  if (!linha) throw new Error("Falha ao registrar consumo: linha não retornada.");
 
   return {
     id: linha.id,
@@ -105,6 +106,7 @@ export async function salvarAlimentoProprio(
       porcoes: entrada.porcoes,
     })
     .returning();
+  if (!linha) throw new Error("Falha ao registrar alimento: linha não retornada.");
   return mapearBiblioteca(linha);
 }
 

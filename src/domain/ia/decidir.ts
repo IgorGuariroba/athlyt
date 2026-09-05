@@ -288,7 +288,7 @@ async function decidirInternamente<T>(
       }
       await registrarDecisao({
         ...registroBase,
-        modeloSolicitado: entrada.rotas[0].modelo,
+        modeloSolicitado: entrada.rotas[0]?.modelo ?? "desconhecido",
         modeloResolvido: fallback.status === "ok" ? fallback.modeloResolvido : null,
         auditavel: fallback.status === "ok",
         resultado: resultadoFallback,

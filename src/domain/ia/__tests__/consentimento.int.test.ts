@@ -11,16 +11,16 @@ describe("consentimento persistido", () => {
       email: `consentimento-${randomUUID()}@example.com`,
     }).returning();
 
-    await conceder(user.id, "avaliacao-visual", ["fotos-corporais"], "OpenRouter");
-    await conceder(user.id, "avaliacao-visual", ["fotos-corporais"], "OpenRouter");
+    await conceder(user!.id, "avaliacao-visual", ["fotos-corporais"], "OpenRouter");
+    await conceder(user!.id, "avaliacao-visual", ["fotos-corporais"], "OpenRouter");
 
-    const antesDeRevogar = await db.select().from(consents).where(eq(consents.userId, user.id));
+    const antesDeRevogar = await db.select().from(consents).where(eq(consents.userId, user!.id));
     expect(antesDeRevogar).toHaveLength(1);
 
-    await revogar(user.id, "avaliacao-visual", "fotos-corporais");
-    await conceder(user.id, "avaliacao-visual", ["fotos-corporais"], "OpenRouter");
+    await revogar(user!.id, "avaliacao-visual", "fotos-corporais");
+    await conceder(user!.id, "avaliacao-visual", ["fotos-corporais"], "OpenRouter");
 
-    const depoisDeReconceder = await db.select().from(consents).where(eq(consents.userId, user.id));
+    const depoisDeReconceder = await db.select().from(consents).where(eq(consents.userId, user!.id));
     expect(depoisDeReconceder).toHaveLength(2);
     expect(depoisDeReconceder.filter((consent) => consent.revogadoEm)).toHaveLength(1);
     expect(depoisDeReconceder.filter((consent) => !consent.revogadoEm)).toHaveLength(1);

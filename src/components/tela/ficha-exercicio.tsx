@@ -89,6 +89,7 @@ export function FichaExercicio({
 
       const primeiro = focaveis[0];
       const ultimo = focaveis[focaveis.length - 1];
+      if (!primeiro || !ultimo) return;
       if (evento.shiftKey && document.activeElement === primeiro) {
         evento.preventDefault();
         ultimo.focus();

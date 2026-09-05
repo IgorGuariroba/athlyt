@@ -142,6 +142,7 @@ export async function resolverConflito(userId: string, conflitoId: string, escol
 
     if (escolha === "dispositivo" && conflito.motivo === "serie_divergente") {
       const [linha] = await tx.select().from(workoutSessions).where(eq(workoutSessions.id, conflito.sessionId)).limit(1).for("update");
+      if (!linha) throw new Error("Sessão do conflito não encontrada.");
       const dados = conflito.dispositivo as { exercicioId?: string; numero?: number; cargaKg: number; repeticoes: number; rir: number };
       const exercicios = (linha.exercicios as ExercicioSessao[]).map((exercicio) => {
         if (exercicio.exercicioId !== dados.exercicioId) return exercicio;

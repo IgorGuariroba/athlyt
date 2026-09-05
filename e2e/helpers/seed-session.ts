@@ -14,6 +14,7 @@ export async function seedAuthenticatedSession(email: string) {
     .insert(users)
     .values({ email, name: email.split("@")[0] })
     .returning();
+  if (!user) throw new Error("Falha ao criar usuário de teste.");
 
   const sessionToken = randomUUID();
   const expires = new Date(Date.now() + 1000 * 60 * 60 * 24);

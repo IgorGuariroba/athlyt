@@ -112,8 +112,8 @@ describe("RevisaoEstimativa", () => {
     });
 
     const itens = aoMudar.mock.calls.at(-1)![0] as ItemPrato[];
-    expect(itens[0].quantidade).toBe(50);
-    expect(itens[0].origemDado).toBe("estimativa-ia");
+    expect(itens[0]!.quantidade).toBe(50);
+    expect(itens[0]!.origemDado).toBe("estimativa-ia");
   });
 
   it("corrigir o alimento preserva os macros: dizer o que era não é dizer quanto era", () => {
@@ -124,8 +124,8 @@ describe("RevisaoEstimativa", () => {
     });
 
     const itens = aoMudar.mock.calls.at(-1)![0] as ItemPrato[];
-    expect(itens[0].descricao).toBe("Arroz integral cozido 100 g");
-    expect(itens[0].calorias).toBe(ARROZ.calorias);
+    expect(itens[0]!.descricao).toBe("Arroz integral cozido 100 g");
+    expect(itens[0]!.calorias).toBe(ARROZ.calorias);
   });
 
   it("aceita nome composto digitado tecla a tecla", async () => {
@@ -154,7 +154,7 @@ describe("RevisaoEstimativa", () => {
     await userEvent.type(campo, "Coca cola zero");
 
     expect((campo as HTMLInputElement).value).toBe("Coca cola zero");
-    expect(itens[0].descricao).toBe("Coca cola zero 100 g");
+    expect(itens[0]!.descricao).toBe("Coca cola zero 100 g");
   });
 
   it("remover um item tira-o do conjunto que será gravado", async () => {
@@ -187,7 +187,7 @@ describe("RevisaoEstimativa", () => {
     const itens = aoMudar.mock.calls.at(-1)![0] as ItemPrato[];
     expect(itens).toHaveLength(3);
     expect(itens.slice(0, 2)).toEqual([ARROZ, BIFE]);
-    expect(itens[2].origemDado).toBe("estimativa-ia");
+    expect(itens[2]!.origemDado).toBe("estimativa-ia");
   });
 
   it("sem estimativa de conjunto, não inventa tarja de incerteza", () => {
@@ -247,7 +247,7 @@ describe("RevisaoEstimativa", () => {
     const botoes = screen.getAllByRole("button", { name: /Recalcular/ });
     expect(botoes).toHaveLength(1);
 
-    await userEvent.click(botoes[0]);
+    await userEvent.click(botoes[0]!);
     expect(aoRecalcularItem).toHaveBeenCalledWith(0);
   });
 
@@ -411,7 +411,7 @@ describe("RegistroPorDescricao", () => {
     // permaneceu intacto.
     const total = screen.getByText("Total estimado").parentElement!;
     await waitFor(() => expect(within(total).getByText(/250 kcal/)).toBeTruthy());
-    const enviado = fns.recalcularItem.mock.calls[0][0];
+    const enviado = fns.recalcularItem.mock.calls[0]![0];
     expect(enviado.get("alimento")).toBe("Arroz integral cozido");
     // A unidade viaja junto: pedir macros de "100" sem dizer se são
     // gramas ou mililitros devolve o número de outra comida.
@@ -424,11 +424,11 @@ describe("RegistroPorDescricao", () => {
     await userEvent.click(screen.getByRole("button", { name: /Registrar no Diário/ }));
     await waitFor(() => expect(fns.registrar).toHaveBeenCalledOnce());
     const gravados = JSON.parse(
-      (fns.registrar.mock.calls[0][0].get("itens") as string | null) ?? "[]",
+      (fns.registrar.mock.calls[0]![0].get("itens") as string | null) ?? "[]",
     ) as ItemPrato[];
-    expect(gravados[0].descricao).toBe("Arroz integral cozido 100 g");
-    expect(gravados[0].calorias).toBe(0);
-    expect(gravados[1].calorias).toBe(BIFE.calorias);
+    expect(gravados[0]!.descricao).toBe("Arroz integral cozido 100 g");
+    expect(gravados[0]!.calorias).toBe(0);
+    expect(gravados[1]!.calorias).toBe(BIFE.calorias);
   });
 
   it("falha ao recalcular preserva os números que estavam na tela", async () => {
@@ -475,7 +475,7 @@ describe("RegistroPorDescricao", () => {
     await userEvent.click(screen.getByRole("button", { name: /Registrar no Diário/ }));
 
     await waitFor(() => expect(registrar).toHaveBeenCalledOnce());
-    const fd = registrar.mock.calls[0][0];
+    const fd = registrar.mock.calls[0]![0];
     expect(fd.get("hora")).toBe("15:45");
     expect(fd.get("nome")).toBe("Almoço: arroz e bife");
   });
@@ -521,7 +521,7 @@ describe("RegistroPorDescricao", () => {
     await waitFor(() => expect(registrar).toHaveBeenCalledOnce());
     // O vínculo com a Refeição Planejada é o que faz a gravação
     // substituir em vez de somar um segundo almoço ao dia.
-    const fd = registrar.mock.calls[0][0];
+    const fd = registrar.mock.calls[0]![0];
     expect(fd.get("refeicaoRef")).toBe("1-Almoço");
   });
 

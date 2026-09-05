@@ -136,7 +136,7 @@ export function RegistroPorFoto({
     const decoder = new TextDecoder();
     let pendente = "";
     let final: ResultadoEstimativa | null = null;
-    while (true) {
+    for (;;) {
       const { done, value } = await leitor.read();
       pendente += decoder.decode(value, { stream: !done });
       const linhas = pendente.split("\n");

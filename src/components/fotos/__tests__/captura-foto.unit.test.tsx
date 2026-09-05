@@ -32,7 +32,7 @@ describe("CapturaFoto", () => {
 
     const capturas = seletores().filter((input) => input.hasAttribute("capture"));
     expect(capturas).toHaveLength(1);
-    expect(capturas[0].getAttribute("capture")).toBe("environment");
+    expect(capturas[0]!.getAttribute("capture")).toBe("environment");
     expect(seletores()).toHaveLength(2);
     expect(screen.getByRole("button", { name: /tirar foto/i })).toBeDefined();
   });

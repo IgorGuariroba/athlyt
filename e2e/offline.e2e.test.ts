@@ -135,7 +135,7 @@ test("o selo de recorde visto offline é o mesmo que o resumo confirma depois de
   const [planoSalvo] = await db.insert(plans).values({ userId: user.id, perfilVersao: 1, versao: 1, estado: "ativo", regraVersao: plano.regraVersao, modoConservador: false, conteudo: plano, activatedAt: new Date() }).returning();
   // Histórico do exercício: 20 kg × 8. É a marca a bater.
   await db.insert(workoutSessions).values({
-    userId: user.id, planId: planoSalvo.id, diaId: "superior-a", nome: "Superior A", estado: "concluida",
+    userId: user.id, planId: planoSalvo!.id, diaId: "superior-a", nome: "Superior A", estado: "concluida",
     exercicios: [{
       exercicioId: "supino-reto-halteres", nome: "Supino reto com halteres", descansoSeg: 1,
       series: [{ numero: 1, repeticoesSugeridas: "8–10", cargaKg: 20, cargaSugeridaKg: 20, repeticoes: 8, rir: 2, concluida: true }],

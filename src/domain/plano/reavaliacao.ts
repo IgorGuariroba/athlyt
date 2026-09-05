@@ -113,6 +113,7 @@ export async function solicitarMudancaDeObjetivo(
         objetivoNovo,
       })
       .returning();
+    if (!reavaliacao) throw new Error("Falha ao registrar reavaliação: linha não retornada.");
 
     return {
       alterado: true,

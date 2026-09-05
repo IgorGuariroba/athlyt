@@ -18,7 +18,7 @@ describe("BottomNav", () => {
     });
     const links = screen.getAllByRole("link");
 
-    expect(navegacao.contains(links[0])).toBe(true);
+    expect(navegacao.contains(links[0]!)).toBe(true);
     expect(navegacao.className).toContain("z-10");
     expect(links).toHaveLength(4);
     expect(screen.getByRole("link", { name: "Dieta" }).getAttribute("href")).toBe(

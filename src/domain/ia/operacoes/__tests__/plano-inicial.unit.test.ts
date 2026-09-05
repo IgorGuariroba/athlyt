@@ -90,7 +90,7 @@ describe("gerarPlanoInicialComIA", () => {
 
     expect(resultado.status).toBe("ok");
     if (resultado.status !== "ok") return;
-    expect(resultado.valor.nutricao.refeicoes[0].itens[0]).toMatchObject({
+    expect(resultado.valor.nutricao.refeicoes[0]!.itens[0]).toMatchObject({
       nome: "Aveia em flocos",
       quantidade: 60,
       calorias: 236,
@@ -107,7 +107,7 @@ describe("gerarPlanoInicialComIA", () => {
 
     expect(resultado.status).toBe("ok");
     if (resultado.status !== "ok") return;
-    expect(resultado.valor.bloco.dias[0].exercicios[0].justificativa).toContain("peitoral");
+    expect(resultado.valor.bloco.dias[0]!.exercicios[0]!.justificativa).toContain("peitoral");
   });
 
   it("indisponibiliza o plano inteiro quando o treino falha", async () => {

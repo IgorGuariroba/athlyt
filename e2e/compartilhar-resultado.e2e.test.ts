@@ -90,11 +90,11 @@ async function semearSessaoConcluida(email: string, comRecordes: boolean) {
   // cada exercício, então `obterResumoSessao` não acha carga superada.
   if (!comRecordes) {
     await db.insert(workoutSessions).values({
-      userId: user.id, planId: planoSalvo.id, diaId: "segunda-a",
+      userId: user.id, planId: planoSalvo!.id, diaId: "segunda-a",
       nome: "Segunda-feira - A", estado: "concluida",
       exercicios: exercicios.map((e) => ({
         ...e,
-        series: series(1, (e.series[0].cargaKg ?? 0) + 10, 8),
+        series: series(1, (e.series[0]!.cargaKg ?? 0) + 10, 8),
       })),
       startedAt: new Date(inicio.getTime() - 7 * 86_400_000),
       endedAt: new Date(fim.getTime() - 7 * 86_400_000),
@@ -102,12 +102,12 @@ async function semearSessaoConcluida(email: string, comRecordes: boolean) {
   }
 
   const [sessao] = await db.insert(workoutSessions).values({
-    userId: user.id, planId: planoSalvo.id, diaId: "segunda-a",
+    userId: user.id, planId: planoSalvo!.id, diaId: "segunda-a",
     nome: "Segunda-feira - A", estado: "concluida",
     exercicios, startedAt: inicio, endedAt: fim,
   }).returning();
 
-  return { cookie, url: `/sessao/${sessao.id}/resumo` };
+  return { cookie, url: `/sessao/${sessao!.id}/resumo` };
 }
 
 /**

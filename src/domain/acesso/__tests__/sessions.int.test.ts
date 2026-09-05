@@ -23,21 +23,21 @@ describe("revokeAllSessions", () => {
 
     const expires = new Date(Date.now() + 1000 * 60 * 60);
     await db.insert(sessions).values([
-      { sessionToken: randomUUID(), userId: user.id, expires },
-      { sessionToken: randomUUID(), userId: user.id, expires },
-      { sessionToken: randomUUID(), userId: outroUser.id, expires },
+      { sessionToken: randomUUID(), userId: user!.id, expires },
+      { sessionToken: randomUUID(), userId: user!.id, expires },
+      { sessionToken: randomUUID(), userId: outroUser!.id, expires },
     ]);
 
-    await revokeAllSessions(user.id);
+    await revokeAllSessions(user!.id);
 
     const restantesDoUsuario = await db
       .select()
       .from(sessions)
-      .where(eq(sessions.userId, user.id));
+      .where(eq(sessions.userId, user!.id));
     const restantesDoOutro = await db
       .select()
       .from(sessions)
-      .where(eq(sessions.userId, outroUser.id));
+      .where(eq(sessions.userId, outroUser!.id));
 
     expect(restantesDoUsuario).toHaveLength(0);
     expect(restantesDoOutro).toHaveLength(1);

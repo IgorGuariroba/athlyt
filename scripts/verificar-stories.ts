@@ -54,7 +54,7 @@ async function main() {
     const altura = caixa?.height ?? 0;
 
     if (erros.length > 0) {
-      falhas.push(`${story.title} / ${story.name}: ${erros[0].split("\n")[0]}`);
+      falhas.push(`${story.title} / ${story.name}: ${erros[0]?.split("\n")[0] ?? ""}`);
     } else if (altura < 4) {
       falhas.push(
         `${story.title} / ${story.name}: renderizou vazia (altura ${altura}px)`,

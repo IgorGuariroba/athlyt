@@ -35,8 +35,8 @@ describe("merge idempotente do outbox", () => {
     const { estado, aplicados, conflitos } = mesclarEventos(estadoInicial(), [evento(1), evento(2)]);
     expect(aplicados).toEqual(["evt-1", "evt-2"]);
     expect(conflitos).toEqual([]);
-    expect(estado.exercicios[0].series.filter((s) => s.concluida)).toHaveLength(2);
-    expect(estado.exercicios[0].series[0]).toMatchObject({ cargaKg: 40, repeticoes: 10, concluida: true });
+    expect(estado.exercicios[0]!.series.filter((s) => s.concluida)).toHaveLength(2);
+    expect(estado.exercicios[0]!.series[0]).toMatchObject({ cargaKg: 40, repeticoes: 10, concluida: true });
   });
 
   it("reconhece reenvio da fila como duplicata em vez de aplicar de novo", () => {
@@ -60,14 +60,14 @@ describe("merge idempotente do outbox", () => {
       dispositivo: { exercicioId: "supino-reto-halteres", numero: 1, cargaKg: 60, repeticoes: 6, rir: 1 },
     }]);
     // Nada é descartado silenciosamente: o servidor mantém o que tinha.
-    expect(segundo.estado.exercicios[0].series[0].cargaKg).toBe(40);
+    expect(segundo.estado.exercicios[0]!.series[0]!.cargaKg).toBe(40);
   });
 
   it("trata série que não existe no plano do servidor como conflito, não como perda", () => {
     const fora = evento(9, { dados: { exercicioId: "remada-curvada", numero: 1, cargaKg: 50, repeticoes: 8, rir: 2 } });
     const { conflitos, estado } = mesclarEventos(estadoInicial(), [fora]);
     expect(conflitos[0]).toMatchObject({ motivo: "serie_divergente", servidor: { existe: false } });
-    expect(estado.exercicios[0].series.every((s) => !s.concluida)).toBe(true);
+    expect(estado.exercicios[0]!.series.every((s) => !s.concluida)).toBe(true);
   });
 
   it("encerra a sessão pelo evento offline e aceita reenvio idêntico", () => {
@@ -91,7 +91,7 @@ describe("merge idempotente do outbox", () => {
 
     expect(aplicados).toEqual(["fim"]);
     expect(estado.estado).toBe("concluida");
-    expect(estado.exercicios[0].series.every((s) => !s.concluida)).toBe(true);
+    expect(estado.exercicios[0]!.series.every((s) => !s.concluida)).toBe(true);
     expect(conflitos).toEqual([{
       eventoId: "tardia",
       motivo: "sessao_ja_encerrada",
@@ -108,7 +108,7 @@ describe("merge idempotente do outbox", () => {
     expect(aplicados).toEqual([]);
     expect(conflitos).toEqual([]);
     expect(inadmissiveis).toEqual([{ eventoId: "ruim", motivo: "valor_fora_de_faixa" }]);
-    expect(estado.exercicios[0].series[0].concluida).toBe(false);
+    expect(estado.exercicios[0]!.series[0]!.concluida).toBe(false);
   });
 
   it("recusa como inadmissível o registro com campo de tipo errado", () => {

@@ -23,7 +23,7 @@ const DECLARACAO_DE_ACTION = /export\s+async\s+function\s+([A-Za-z0-9_]+)/g;
 /** Corpo de cada função exportada, delimitado pela declaração seguinte. */
 function corposDasActions(fonte: string): { nome: string; corpo: string }[] {
   const inicios = [...fonte.matchAll(DECLARACAO_DE_ACTION)].map((m) => ({
-    nome: m[1],
+    nome: m[1] ?? "",
     indice: m.index,
   }));
   return inicios.map(({ nome, indice }, posicao) => ({

@@ -39,7 +39,9 @@ export default async function ResumoPage({
   const tempos = [resumo.startedAt, ...resumo.eventos.map((evento) => evento.createdAt)]
     .sort((a, b) => a.getTime() - b.getTime());
   const minutosAtivos = tempos.slice(1).reduce((total, atual, indice) => {
-    const intervalo = (atual.getTime() - tempos[indice].getTime()) / 60000;
+    const anterior = tempos[indice];
+    if (!anterior) return total;
+    const intervalo = (atual.getTime() - anterior.getTime()) / 60000;
     return total + (intervalo <= 10 ? intervalo : 0);
   }, 0);
   const duracaoMin = Math.max(1, Math.round(minutosAtivos));

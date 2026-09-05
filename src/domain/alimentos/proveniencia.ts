@@ -93,8 +93,9 @@ function concordancia(valor: ValorDeFonte, valores: readonly ValorDeFonte[]): nu
   if (outros.length === 0) return 0.5; // sem conjunto, nem prêmio nem castigo
   const ordenados = [...outros].sort((a, b) => a - b);
   const meio = Math.floor(ordenados.length / 2);
+  // Com length par >= 2 os dois índices existem; o ?? é só para o compilador.
   const mediana =
-    ordenados.length % 2 === 0 ? (ordenados[meio - 1] + ordenados[meio]) / 2 : ordenados[meio];
+    ordenados.length % 2 === 0 ? ((ordenados[meio - 1] ?? 0) + (ordenados[meio] ?? 0)) / 2 : (ordenados[meio] ?? 0);
   if (mediana === 0) return valor.valor === 0 ? 1 : 0;
   const desvio = Math.abs(valor.valor - mediana) / Math.abs(mediana);
   return Math.max(0, 1 - desvio);
@@ -147,9 +148,12 @@ export function escolherValor(
     valor,
     pontuacao: pontuarFonte(valor, { hoje: contexto.hoje, valores }),
   }));
-  const [melhor, ...resto] = [...pontuadas].sort(
+  const ordenadas = [...pontuadas].sort(
     (a, b) => b.pontuacao - a.pontuacao || CREDENCIAL[b.valor.tipo] - CREDENCIAL[a.valor.tipo],
   );
+  const melhor = ordenadas[0];
+  if (!melhor) throw new Error("A escolha de valor nutricional exige ao menos uma fonte.");
+  const resto = ordenadas.slice(1);
 
   const numeros = valores.map((v) => v.valor);
   const maior = Math.max(...numeros);

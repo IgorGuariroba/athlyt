@@ -276,15 +276,15 @@ export function posicaoNaCascata(id: EtapaId): {
 /** Etapa anterior na ordem fixa da cascata, ou `null` na primeira etapa. */
 export function etapaAnterior(id: EtapaId): EtapaId | null {
   const indice = ETAPAS_TRIAGEM.findIndex((e) => e.id === id);
-  return indice > 0 ? ETAPAS_TRIAGEM[indice - 1].id : null;
+  const anterior = ETAPAS_TRIAGEM[indice - 1];
+  return indice > 0 && anterior ? anterior.id : null;
 }
 
 /** Próxima etapa na ordem fixa da cascata, ou `null` após a última. */
 export function etapaSeguinte(id: EtapaId): EtapaId | null {
   const indice = ETAPAS_TRIAGEM.findIndex((e) => e.id === id);
-  return indice >= 0 && indice < ETAPAS_TRIAGEM.length - 1
-    ? ETAPAS_TRIAGEM[indice + 1].id
-    : null;
+  const seguinte = ETAPAS_TRIAGEM[indice + 1];
+  return indice >= 0 && seguinte ? seguinte.id : null;
 }
 
 /**

@@ -50,8 +50,8 @@ describe("linhaDeMarcas — recorde de cada série", () => {
 describe("linhaDeMarcas — referência de cada série", () => {
   it("acumula as séries já registradas hoje sobre o histórico", () => {
     const linha = linhaDeMarcas({ historico, series: [serie(1, 62.5, 9), serie(2, 60, 9)] });
-    expect(linha[0].referencia).toEqual(historico);
-    expect(linha[1].referencia.cargaKg).toBe(62.5);
+    expect(linha[0]!.referencia).toEqual(historico);
+    expect(linha[1]!.referencia.cargaKg).toBe(62.5);
   });
 
   it("conta a série registrada só na fila local na referência da seguinte", () => {
@@ -59,24 +59,24 @@ describe("linhaDeMarcas — referência de cada série", () => {
     // servidor, então a série 2 offline era medida contra o histórico e
     // anunciava um recorde que o resumo depois retirava.
     const linha = linhaDeMarcas({ historico, series: [serie(1, 70, 9), serie(2, 65, 9)] });
-    expect(linha[1].referencia.cargaKg).toBe(70);
-    expect(linha[1].recorde).toBeNull();
+    expect(linha[1]!.referencia.cargaKg).toBe(70);
+    expect(linha[1]!.recorde).toBeNull();
   });
 
   it("séries não registradas não entram na referência das seguintes", () => {
     const linha = linhaDeMarcas({ historico, series: [serie(1, 70, 9, false), serie(2, 62.5, 9)] });
-    expect(linha[1].referencia).toEqual(historico);
-    expect(linha[1].recorde).toMatchObject({ tipo: "e1rm" });
+    expect(linha[1]!.referencia).toEqual(historico);
+    expect(linha[1]!.recorde).toMatchObject({ tipo: "e1rm" });
   });
 
   it("sem histórico entregue, a referência inicial é a marca zero", () => {
-    expect(linhaDeMarcas({ series: [serie(1, 60, 9)] })[0].referencia).toEqual(MARCA_ZERO);
+    expect(linhaDeMarcas({ series: [serie(1, 60, 9)] })[0]!.referencia).toEqual(MARCA_ZERO);
   });
 
   it("responde na ordem dos números da série, não na de entrada", () => {
     const linha = linhaDeMarcas({ historico, series: [serie(2, 60, 9), serie(1, 62.5, 9)] });
     expect(linha.map((entrada) => entrada.numero)).toEqual([1, 2]);
-    expect(linha[1].referencia.cargaKg).toBe(62.5);
+    expect(linha[1]!.referencia.cargaKg).toBe(62.5);
   });
 });
 
@@ -88,10 +88,10 @@ describe("linhaDeMarcas — qual série ostenta o selo", () => {
 
   it("o selo deixa a série anterior assim que a posterior é registrada", () => {
     const antes = linhaDeMarcas({ historico, series: [serie(1, 62.5, 9), serie(2, 70, 9, false)] });
-    expect(antes[0].ostentaSelo).toBe(true);
+    expect(antes[0]!.ostentaSelo).toBe(true);
 
     const depois = linhaDeMarcas({ historico, series: [serie(1, 62.5, 9), serie(2, 70, 9)] });
-    expect(depois[0].ostentaSelo).toBe(false);
+    expect(depois[0]!.ostentaSelo).toBe(false);
   });
 
   it("série posterior sem recorde não deixa nenhum selo na tela", () => {

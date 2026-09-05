@@ -139,7 +139,7 @@ export function calcularEscalaDePeso({
     marcas.push(Number((pisoKg + i * passo).toFixed(10)));
   }
 
-  return { marcas, pisoKg: marcas[0], tetoKg: marcas[marcas.length - 1] };
+  return { marcas, pisoKg: marcas[0] ?? pisoKg, tetoKg: marcas.at(-1) ?? pisoKg };
 }
 
 /**

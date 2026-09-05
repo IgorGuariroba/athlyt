@@ -144,7 +144,7 @@ describe("gerarPlanoNutricaoComIA", () => {
 
     await gerarPlanoNutricaoComIA({ userId: "u1", nucleo, triagemCompleta: {}, linhaBaseCorporal: { gorduras: [{ percentualBasisPoints: 1820 }] } });
 
-    const { instrucao } = decidir.mock.calls[0][0] as { instrucao: string };
+    const { instrucao } = decidir.mock.calls[0]![0] as { instrucao: string };
     expect(instrucao).toContain("percentual de gordura");
     expect(instrucao).toContain("massa livre de gordura");
   });
@@ -154,7 +154,7 @@ describe("gerarPlanoNutricaoComIA", () => {
 
     await gerarPlanoNutricaoComIA({ userId: "u1", nucleo, triagemCompleta: {} });
 
-    const { instrucao } = decidir.mock.calls[0][0] as { instrucao: string };
+    const { instrucao } = decidir.mock.calls[0]![0] as { instrucao: string };
     expect(instrucao).not.toContain("supino-barra");
   });
 
@@ -166,14 +166,14 @@ describe("gerarPlanoNutricaoComIA", () => {
 
   it("rejeita item novo sem quantidade nutricional estruturada", () => {
     const comString = structuredClone(nutricaoValida);
-    comString.nutricao.refeicoes[0].itens = ["Aveia 60 g"] as never;
+    comString.nutricao.refeicoes[0]!.itens = ["Aveia 60 g"] as never;
 
     expect(planoNutricaoSchema.safeParse(comString).success).toBe(false);
   });
 
   it("rejeita composição fora de 10% da energia ou 15% da proteína", () => {
     const incoerente = structuredClone(nutricaoValida);
-    incoerente.nutricao.refeicoes[0].itens[0].calorias = 100;
+    incoerente.nutricao.refeicoes[0]!.itens[0]!.calorias = 100;
 
     expect(planoNutricaoSchema.safeParse(incoerente).success).toBe(false);
   });

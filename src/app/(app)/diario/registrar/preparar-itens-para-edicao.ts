@@ -31,7 +31,10 @@ export async function prepararItensParaEdicao(
   const pendentes = preparados.flatMap((item, indice) => item ? [] : [indice]);
   if (pendentes.length === 0) return { ok: true, itens: preparados as ItemPrato[] };
 
-  const resultado = await estimarRestantes(pendentes.map((indice) => itens[indice].descricao));
+  const resultado = await estimarRestantes(pendentes.flatMap((indice) => {
+    const item = itens[indice];
+    return item ? [item.descricao] : [];
+  }));
   if (!resultado.ok) return resultado;
   if (resultado.itens.length !== pendentes.length || !resultado.itens.every(ehItemPrato)) {
     return {
@@ -41,7 +44,8 @@ export async function prepararItensParaEdicao(
   }
 
   pendentes.forEach((indice, posicao) => {
-    preparados[indice] = resultado.itens[posicao];
+    const item = resultado.itens[posicao];
+    if (item) preparados[indice] = item;
   });
   return { ok: true, itens: preparados as ItemPrato[] };
 }

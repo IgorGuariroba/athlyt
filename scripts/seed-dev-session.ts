@@ -17,6 +17,7 @@ async function main() {
       set: { name: "Atleta Dev" },
     })
     .returning({ id: users.id });
+  if (!user) throw new Error("Falha ao criar usuário dev.");
 
   await db
     .insert(sessions)

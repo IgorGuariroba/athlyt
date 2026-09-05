@@ -34,7 +34,7 @@ describe("busca de alimentos", () => {
   it("encontra por nome parcial, sem exigir acento", () => {
     const resultados = buscarAlimentos("feijao");
     expect(resultados.length).toBeGreaterThan(0);
-    expect(resultados[0].nome.toLowerCase()).toContain("feij");
+    expect(resultados[0]!.nome.toLowerCase()).toContain("feij");
   });
 
   it("é insensível a caixa e a espaços em volta", () => {
@@ -52,7 +52,7 @@ describe("busca de alimentos", () => {
 
   it("prioriza quem começa com o termo sobre quem apenas o contém", () => {
     const resultados = buscarAlimentos("arroz");
-    expect(resultados[0].nome.toLowerCase().startsWith("arroz")).toBe(true);
+    expect(resultados[0]!.nome.toLowerCase().startsWith("arroz")).toBe(true);
   });
 
   it("também encontra por sinônimo popular", () => {

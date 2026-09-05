@@ -42,9 +42,10 @@ export async function gerarRevisaoSemanal(fd: FormData) {
     { sentido: desempenhoScore >= 60 ? "favor" : "contra", descricao: seriesComBaseline.length ? `${desempenhoScore}% das séries comparáveis mantiveram ou superaram a melhor carga anterior` : "Sem séries com baseline comparável para concluir progressão de carga", fonte: "Sessão de Treino", qualidade: seriesComBaseline.length ? "alta" : "baixa", observadoEm: fim },
   ];
   const cinturas = panorama.medicoes.filter((item) => item.regiao === "cintura" && item.lado === "unico");
-  const deltaCinturaMm = cinturas.length >= 2 ? cinturas[0].valorMm - cinturas[1].valorMm : null;
+  const [cinturaAtual, cinturaAnterior] = cinturas;
+  const deltaCinturaMm = cinturaAtual && cinturaAnterior ? cinturaAtual.valorMm - cinturaAnterior.valorMm : null;
   const tendenciaScore = deltaCinturaMm === null ? 40 : Math.abs(deltaCinturaMm) <= 5 ? 60 : deltaCinturaMm < 0 ? 70 : 45;
-  if (deltaCinturaMm !== null) evidencias.push({ sentido: Math.abs(deltaCinturaMm) <= 5 || deltaCinturaMm < 0 ? "favor" : "contra", descricao: `Cintura variou ${(deltaCinturaMm / 10).toLocaleString("pt-BR")} cm entre as duas medições comparáveis mais recentes`, fonte: "circunferência", qualidade: cinturas[0].qualidade, observadoEm: cinturas[0].observadoEm, protocolo: "fita-v1" });
+  if (cinturaAtual && cinturaAnterior && deltaCinturaMm !== null) evidencias.push({ sentido: Math.abs(deltaCinturaMm) <= 5 || deltaCinturaMm < 0 ? "favor" : "contra", descricao: `Cintura variou ${(deltaCinturaMm / 10).toLocaleString("pt-BR")} cm entre as duas medições comparáveis mais recentes`, fonte: "circunferência", qualidade: cinturaAtual.qualidade, observadoEm: cinturaAtual.observadoEm, protocolo: "fita-v1" });
   const metodos = new Set(panorama.gorduras.slice(0, 4).map((item) => `${item.metodo}:${item.protocolo ?? "sem protocolo"}`));
   if (metodos.size > 1) evidencias.push({ sentido: "contra", descricao: "Medições recentes de gordura usam método ou protocolo diferente e não foram fundidas", fonte: "Medição de Gordura Corporal", qualidade: "alta" });
   if (panorama.medicoes.length >= 3) evidencias.push({ sentido: "favor", descricao: "Há pelo menos três circunferências com proveniência e protocolo registrados", fonte: "circunferência", qualidade: "moderada" });

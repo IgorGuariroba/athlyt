@@ -37,6 +37,7 @@ export default async function SessaoPage({ params, searchParams }: { params: Pro
   const total = sessao.exercicios.reduce((soma, e) => soma + e.series.length, 0);
   const indiceAtual = Math.min(Math.max(Number(exercicioParam ?? 0), 0), sessao.exercicios.length - 1);
   const exercicio = sessao.exercicios[indiceAtual];
+  if (!exercicio) notFound();
   const feito = exercicio.series.every((serie) => serie.concluida);
   const proximoIndice = Math.min(indiceAtual + 1, sessao.exercicios.length - 1);
   const definicaoExercicio = encontrarExercicio(exercicio.exercicioId);
@@ -95,7 +96,7 @@ export default async function SessaoPage({ params, searchParams }: { params: Pro
                 />
               ) : null}
             </div>
-            <p className="text-body-sm text-muted-foreground">{exercicio.series.length} séries · {exercicio.series[0].repeticoesSugeridas}{definicaoExercicio?.id === "prancha" ? " s" : " reps"} · RIR {exercicio.series[0].rirPrescrito ?? exercicio.series[0].rir}</p>
+            <p className="text-body-sm text-muted-foreground">{exercicio.series.length} séries · {exercicio.series[0]?.repeticoesSugeridas}{definicaoExercicio?.id === "prancha" ? " s" : " reps"} · RIR {exercicio.series[0]?.rirPrescrito ?? exercicio.series[0]?.rir}</p>
           </div>
           {exercicio.interrompido ? null : (
             <Button asChild variant="ghost" size="icon" className="shrink-0">
@@ -126,7 +127,7 @@ export default async function SessaoPage({ params, searchParams }: { params: Pro
         <AjusteDescanso exercicioId={exercicio.exercicioId} descansoPrescritoSeg={exercicio.descansoSeg} />
         <details className="border-b border-border px-4 py-3 text-body-sm"><summary className="cursor-pointer font-semibold">O que é RIR?</summary><p className="mt-2 text-muted-foreground">É quantas repetições você ainda conseguiria fazer com boa técnica ao encerrar a série. Quanto menor o RIR, mais difícil foi a série.</p></details>
         <div className="px-3">
-          {exercicio.series.map((serie) => <RegistroSerie key={`${sessao.id}:${exercicio.exercicioId}:${serie.numero}`} sessionId={sessao.id} exercicioId={exercicio.exercicioId} numero={serie.numero} repeticoesSugeridas={serie.repeticoesSugeridas} rirInicial={serie.rir} rirSugerido={serie.rirPrescrito ?? serie.rir} descansoSeg={exercicio.descansoSeg} concluida={serie.concluida} cargaInicial={serie.cargaKg} cargaSugerida={serie.cargaSugeridaKg ?? 0} marcaHistorica={exercicio.marcaAnterior ?? MARCA_ZERO} repeticoesIniciais={serie.repeticoes} modo={exercicio.protocolo ?? (definicaoExercicio?.id === "prancha" ? "tempo" : "repeticoes")} seriesDoExercicio={exercicio.series.map((s) => ({ numero: s.numero, cargaKg: s.cargaKg, repeticoes: s.repeticoes, concluida: s.concluida }))} />)}
+          {exercicio.series.map((serie) => <RegistroSerie key={`${sessao.id}:${exercicio.exercicioId}:${serie.numero}`} sessionId={sessao.id} exercicioId={exercicio.exercicioId} numero={serie.numero} repeticoesSugeridas={serie.repeticoesSugeridas} rirInicial={serie.rir} rirSugerido={serie.rirPrescrito ?? serie.rir} descansoSeg={exercicio.descansoSeg} concluida={serie.concluida} cargaInicial={serie.cargaKg} cargaSugerida={serie.cargaSugeridaKg} marcaHistorica={exercicio.marcaAnterior ?? MARCA_ZERO} repeticoesIniciais={serie.repeticoes} modo={exercicio.protocolo ?? (definicaoExercicio?.id === "prancha" ? "tempo" : "repeticoes")} seriesDoExercicio={exercicio.series.map((s) => ({ numero: s.numero, cargaKg: s.cargaKg, repeticoes: s.repeticoes, concluida: s.concluida }))} />)}
         </div>
       </section>
 

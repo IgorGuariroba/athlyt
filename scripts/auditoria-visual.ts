@@ -110,7 +110,7 @@ async function main() {
       console.log(`ok   ${nome} [${String(resposta?.status() ?? 0)}]${redirecionou}`);
     } catch (erro) {
       falhas.push(nome);
-      console.log(`FALHA ${nome}: ${(erro as Error).message.split("\n")[0]}`);
+      console.log(`FALHA ${nome}: ${(erro as Error).message.split("\n")[0] ?? ""}`);
     }
   }
 

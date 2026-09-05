@@ -161,6 +161,7 @@ export async function iniciarSessao(userId: string, diaId: string): Promise<Sess
     const [linha] = await tx.insert(workoutSessions).values({
       userId, planId: plano.id, diaId, nome: dia.nome, estado: "em_andamento", exercicios,
     }).returning();
+    if (!linha) throw new Error("Falha ao iniciar sessão: linha não retornada.");
     await tx.insert(workoutEvents).values({ sessionId: linha.id, userId, tipo: "sessao_iniciada", dados: { planoId: plano.id, diaId } });
     return mapear(linha);
   });
@@ -199,6 +200,7 @@ export async function registrarSerie(userId: string, sessionId: string, entrada:
 
     const { exercicios } = aplicarRegistroSerie(estado, veredito.registro);
     const [atualizada] = await tx.update(workoutSessions).set({ exercicios }).where(eq(workoutSessions.id, sessionId)).returning();
+    if (!atualizada) throw new Error("Falha ao registrar série: linha não retornada.");
     await tx.insert(workoutEvents).values({ sessionId, userId, tipo: "serie_registrada", dados: entrada });
     return mapear(atualizada);
   });
@@ -290,6 +292,7 @@ async function encerrar(userId: string, sessionId: string, estado: "concluida" |
     const [linha] = await tx.select().from(workoutSessions).where(and(eq(workoutSessions.id, sessionId), eq(workoutSessions.userId, userId))).limit(1).for("update");
     if (linha?.estado !== "em_andamento") throw new Error("Sessão não está em andamento.");
     const [encerrada] = await tx.update(workoutSessions).set({ estado, endedAt: new Date(), motivoAbandono: motivo ?? null }).where(eq(workoutSessions.id, sessionId)).returning();
+    if (!encerrada) throw new Error("Falha ao encerrar sessão: linha não retornada.");
     await tx.insert(workoutEvents).values({ sessionId, userId, tipo: estado === "concluida" ? "sessao_concluida" : "sessao_abandonada", dados: motivo ? { motivo } : {} });
     return encerrada;
   });
@@ -463,11 +466,13 @@ export async function substituirExercicioNaSessao(userId: string, sessionId: str
     const indice = exercicios.findIndex((item) => item.exercicioId === entrada.exercicioId);
     if (indice < 0) throw new Error("Exercício não pertence à sessão.");
     const original = exercicios[indice];
+    if (!original) throw new Error("Exercício não pertence à sessão.");
     if (original.interrompido) throw new Error("Este exercício já foi substituído nesta sessão.");
     const seriesJaFeitas = original.series.filter((serie) => serie.concluida).length;
     exercicios.splice(indice, 1, ...dividirNaSubstituicao(original, novo.id, novo.nome, entrada.motivo, marcas.get(novo.id) ?? MARCA_ZERO, ultimasSeries));
 
     const [atualizada] = await tx.update(workoutSessions).set({ exercicios }).where(eq(workoutSessions.id, sessionId)).returning();
+    if (!atualizada) throw new Error("Falha ao substituir exercício: linha não retornada.");
     const dados = { de: entrada.exercicioId, para: entrada.novoExercicioId, motivo: entrada.motivo, preservaEstimulo: escolhida.preservaEstimulo, persistente, observacao: entrada.observacao ?? null, seriesJaFeitas };
     await tx.insert(workoutEvents).values({ sessionId, userId, tipo: "exercicio_substituido", dados });
     await tx.insert(exerciseSubstitutions).values({

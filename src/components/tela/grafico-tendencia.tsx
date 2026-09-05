@@ -67,7 +67,7 @@ export function GraficoTendencia({
           {titulo}
         </figcaption>
         <p className="text-body-sm leading-relaxed text-muted-foreground">
-          {pontos.length === 1
+          {pontos.length === 1 && pontos[0]
             ? `Um registro em ${formatarData(pontos[0].data)}. A tendência aparece a partir do segundo ponto comparável.`
             : "Sem registros no período selecionado."}
         </p>
@@ -89,23 +89,26 @@ export function GraficoTendencia({
     y: MARGEM + (1 - (ponto.valor - min) / amplitude) * (ALTURA - MARGEM * 2),
   });
 
-  const desenhadas = comTendencia.map((serie) => {
+  const desenhadas = comTendencia.flatMap((serie) => {
     const coordenadas = serie.valores.map(projetar);
     const linha = coordenadas.map(({ x, y }) => `${x},${y}`).join(" ");
     const ultimo = serie.valores[serie.valores.length - 1];
     const primeiro = serie.valores[0];
+    const pontoInicial = coordenadas[0];
+    const pontoFinal = coordenadas[coordenadas.length - 1];
+    if (!primeiro || !ultimo || !pontoInicial || !pontoFinal) return [];
     const variacao = ultimo.valor - primeiro.valor;
-    return {
+    return [{
       ...serie,
       linha,
       area:
         comTendencia.length === 1
-          ? `${coordenadas[0].x},${ALTURA} ${linha} ${coordenadas[coordenadas.length - 1].x},${ALTURA}`
+          ? `${pontoInicial.x},${ALTURA} ${linha} ${pontoFinal.x},${ALTURA}`
           : null,
       primeiro,
       ultimo,
       variacao,
-    };
+    }];
   });
 
   const resumo = `${titulo}, em ${unidade}, de ${formatarData(new Date(inicio))} a ${formatarData(new Date(fim))}. ${desenhadas
@@ -119,7 +122,6 @@ export function GraficoTendencia({
     )
     .join(". ")}.`;
 
-  const principal = desenhadas[0];
 
   return (
     <figure className={cn("flex flex-col gap-2", className)}>
@@ -127,9 +129,9 @@ export function GraficoTendencia({
         <span className="min-w-0 truncate text-label-lg text-on-surface-strong">
           {titulo}
         </span>
-        {desenhadas.length === 1 ? (
+        {desenhadas.length === 1 && desenhadas[0] ? (
           <span className="shrink-0 text-label-lg tabular-nums text-on-surface-strong">
-            {formatarValor(principal.ultimo.valor)}{" "}
+            {formatarValor(desenhadas[0].ultimo.valor)}{" "}
             <span className="text-body-sm font-normal text-muted-foreground">
               {unidade}
             </span>

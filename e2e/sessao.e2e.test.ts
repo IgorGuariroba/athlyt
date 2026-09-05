@@ -34,10 +34,10 @@ const planoComExercicioDoCatalogo: PlanoGerado = {
   bloco: {
     ...plano.bloco,
     dias: [{
-      ...plano.bloco.dias[0],
+      ...plano.bloco.dias[0]!,
       // Id real do catálogo (`src/domain/plano/exercicios.ts`) — só
       // com um exercício conhecido a ficha (ícone ℹ) é renderizada.
-      exercicios: [{ ...plano.bloco.dias[0].exercicios[0], exercicioId: "supino-halteres", nome: "Supino reto com halteres" }],
+      exercicios: [{ ...plano.bloco.dias[0]!.exercicios[0]!, exercicioId: "supino-halteres", nome: "Supino reto com halteres" }],
     }],
   },
 };
@@ -47,8 +47,8 @@ const planoDescanso: PlanoGerado = {
   bloco: {
     ...plano.bloco,
     dias: [{
-      ...plano.bloco.dias[0],
-      exercicios: [{ ...plano.bloco.dias[0].exercicios[0], series: 3, descansoSeg: 90 }],
+      ...plano.bloco.dias[0]!,
+      exercicios: [{ ...plano.bloco.dias[0]!.exercicios[0]!, series: 3, descansoSeg: 90 }],
     }],
   },
 };
@@ -58,10 +58,10 @@ const planoNavegacao: PlanoGerado = {
   bloco: {
     ...plano.bloco,
     dias: [{
-      ...plano.bloco.dias[0],
+      ...plano.bloco.dias[0]!,
       exercicios: [
-        { ...plano.bloco.dias[0].exercicios[0], exercicioId: "supino-halteres", nome: "Supino reto com halteres", repeticoes: "8–10", rir: 2 },
-        { ...plano.bloco.dias[0].exercicios[0], exercicioId: "remada-curvada", nome: "Remada curvada com barra", padrao: "puxar-horizontal", repeticoes: "10–12", rir: 2 },
+        { ...plano.bloco.dias[0]!.exercicios[0]!, exercicioId: "supino-halteres", nome: "Supino reto com halteres", repeticoes: "8–10", rir: 2 },
+        { ...plano.bloco.dias[0]!.exercicios[0]!, exercicioId: "remada-curvada", nome: "Remada curvada com barra", padrao: "puxar-horizontal", repeticoes: "10–12", rir: 2 },
       ],
     }],
   },

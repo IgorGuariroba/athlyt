@@ -46,7 +46,9 @@ export interface MetaProporcao {
 const mediana = (valores: number[]) => {
   const ordenados = [...valores].sort((a, b) => a - b);
   const meio = Math.floor(ordenados.length / 2);
-  return ordenados.length % 2 ? ordenados[meio] : Math.round((ordenados[meio - 1] + ordenados[meio]) / 2);
+  return ordenados.length % 2
+    ? (ordenados[meio] ?? 0)
+    : Math.round(((ordenados[meio - 1] ?? 0) + (ordenados[meio] ?? 0)) / 2);
 };
 
 /**

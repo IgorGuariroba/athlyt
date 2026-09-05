@@ -49,7 +49,7 @@ describe("Prato — montagem de múltiplos alimentos", () => {
     const prato = [arroz, frango, arroz];
     const restante = removerDoPrato(prato, 0);
     expect(restante).toHaveLength(2);
-    expect(restante[0].descricao).toBe(frango.descricao);
+    expect(restante[0]!.descricao).toBe(frango.descricao);
   });
 
   it("remover índice inexistente devolve o prato intacto", () => {

@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { calcularEscalaDePeso } from "../plano-peso";
 
 const passos = (marcas: readonly number[]) =>
-  marcas.slice(1).map((valor, i) => Number((valor - marcas[i]).toFixed(10)));
+  marcas.slice(1).map((valor, i) => Number((valor - marcas[i]!).toFixed(10)));
 
 describe("calcularEscalaDePeso", () => {
   it("usa marcas redondas que enquadram os dados", () => {
@@ -21,7 +21,7 @@ describe("calcularEscalaDePeso", () => {
       [63.7, 64.2],
       [99.9, 130.1],
       [45, 45],
-    ]) {
+    ] as const) {
       const escala = calcularEscalaDePeso({ minKg, maxKg });
       expect(escala.pisoKg).toBeLessThanOrEqual(minKg);
       expect(escala.tetoKg).toBeGreaterThanOrEqual(maxKg);
@@ -33,7 +33,7 @@ describe("calcularEscalaDePeso", () => {
       [78.1, 90.4],
       [70, 112],
       [81.2, 83.9],
-    ]) {
+    ] as const) {
       const escala = calcularEscalaDePeso({ minKg, maxKg });
       const distintos = new Set(passos(escala.marcas));
       expect(distintos.size).toBe(1);
@@ -44,6 +44,7 @@ describe("calcularEscalaDePeso", () => {
     for (let min = 60; min < 100; min += 1.3) {
       const escala = calcularEscalaDePeso({ minKg: min, maxKg: min + 11.7 });
       const [passo] = passos(escala.marcas);
+      if (!passo) throw new Error("sem passos");
       const mantissa = passo / 10 ** Math.floor(Math.log10(passo));
       expect([1, 2, 2.5, 5, 10]).toContain(Number(mantissa.toFixed(10)));
     }
@@ -65,7 +66,7 @@ describe("calcularEscalaDePeso", () => {
       [85, 85.3],
       [84.9, 85.1],
       [85, 85],
-    ]) {
+    ] as const) {
       const escala = calcularEscalaDePeso({ minKg, maxKg });
       expect(escala.tetoKg - escala.pisoKg).toBeGreaterThanOrEqual(2);
     }

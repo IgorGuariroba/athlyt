@@ -84,7 +84,7 @@ describe("gerarPlanoTreinoComIA", () => {
 
     await gerarPlanoTreinoComIA({ userId: "u1", nucleo, triagemCompleta: {} });
 
-    const { instrucao } = decidir.mock.calls[0][0] as { instrucao: string };
+    const { instrucao } = decidir.mock.calls[0]![0] as { instrucao: string };
     expect(instrucao).toContain("supino-barra | empurrar-horizontal |");
     // O texto de execução vive no catálogo estático e a tela o usa direto.
     expect(instrucao).not.toContain("retraça as escápulas");

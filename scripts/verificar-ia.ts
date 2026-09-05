@@ -81,6 +81,7 @@ async function main() {
     .insert(users)
     .values({ email: `verificar-ia-${crypto.randomUUID()}@example.com` })
     .returning();
+  if (!usuario) throw new Error("Falha ao criar usuário de verificação.");
 
   try {
     const nucleo = montarNucleo({
@@ -176,7 +177,7 @@ async function main() {
     const [maisRecente, maisAntiga] = trilhas;
 
     verificar(
-      maisRecente?.auditavel,
+      maisRecente?.auditavel === true,
       "decisão marcada como auditável (modelo identificado)",
     );
     verificar(

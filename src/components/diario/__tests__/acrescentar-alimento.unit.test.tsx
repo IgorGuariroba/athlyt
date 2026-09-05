@@ -91,7 +91,7 @@ describe("AcrescentarAlimento", () => {
     await userEvent.click(screen.getByRole("button", { name: /Acrescentar ao prato/ }));
 
     await waitFor(() => expect(aoAcrescentar).toHaveBeenCalledWith([PAO]));
-    const corpo = estimarDescricao.mock.calls[0][0];
+    const corpo = estimarDescricao.mock.calls[0]![0];
     expect(corpo.get("descricao")).toBe("um pão de queijo");
     expect(corpo.get("dia")).toBe("2026-05-20");
   });

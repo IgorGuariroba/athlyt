@@ -52,6 +52,6 @@ export function avaliarLoteCircunferencias(
  */
 export function mensagemDoLote(falhas: readonly FalhaRegiao[]): string {
   if (falhas.length === 0) return "";
-  if (falhas.length === 1) return falhas[0].erro;
+  if (falhas.length === 1) return falhas[0]?.erro ?? "";
   return `Confira as medidas de ${falhas.length} regiões destacadas abaixo.`;
 }

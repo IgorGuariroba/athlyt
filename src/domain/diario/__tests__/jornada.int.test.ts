@@ -37,10 +37,10 @@ const plano: PlanoGerado = {
 async function usuarioComPlano() {
   const [u] = await db.insert(users).values({ email: `diario-${randomUUID()}@example.com` }).returning();
   await db.insert(plans).values({
-    userId: u.id, perfilVersao: 1, versao: 1, estado: "ativo",
+    userId: u!.id, perfilVersao: 1, versao: 1, estado: "ativo",
     regraVersao: plano.regraVersao, modoConservador: false, conteudo: plano, activatedAt: new Date(),
   });
-  return u.id;
+  return u!.id;
 }
 
 describe("jornada do Diário: prescrição → confirmação → macros restantes", () => {
@@ -120,7 +120,7 @@ describe("jornada do Diário: prescrição → confirmação → macros restante
 
   it("sem Plano Ativo o Diário abre vazio em vez de falhar", async () => {
     const [u] = await db.insert(users).values({ email: `diario-${randomUUID()}@example.com` }).returning();
-    const diario = await montarDiarioDoDia(u.id, { dia: "2026-04-10", fuso: FUSO });
+    const diario = await montarDiarioDoDia(u!.id, { dia: "2026-04-10", fuso: FUSO });
     expect(diario.linhaDoTempo).toEqual([]);
     expect(diario.painel.meta.calorias).toBe(0);
   });

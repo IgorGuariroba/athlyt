@@ -101,7 +101,12 @@ function calcularNutricao(respostas: RespostasTriagem, conservador: boolean, ago
       : ajuste < 0 ? "Déficit moderado de 10%, preservando proteína e desempenho."
       : ajuste > 0 ? "Superávit moderado de 8%, priorizando ganho gradual de massa."
       : "Energia próxima da manutenção para recomposição corporal.",
-    refeicoes: percentuais.map((percentual, i) => ({ nome: nomes[i], percentual, calorias: Math.round(calorias * percentual / 100), proteinaG: Math.round(proteinaG * percentual / 100), itens: itens[i] })),
+    refeicoes: percentuais.map((percentual, i) => {
+      const nome = nomes[i];
+      const itensDaRefeicao = itens[i];
+      if (!nome || !itensDaRefeicao) throw new Error("Tabela de refeições desalinhada.");
+      return { nome, percentual, calorias: Math.round(calorias * percentual / 100), proteinaG: Math.round(proteinaG * percentual / 100), itens: itensDaRefeicao };
+    }),
   };
 }
 
@@ -117,6 +122,7 @@ export function gerarPlano(entrada: { perfilVersao: number; respostas: Respostas
   const diasPerfil = respostas.diasDisponiveis?.length ? respostas.diasDisponiveis : ["segunda", "quinta"];
   const frequencia = Math.min(modoConservador ? 3 : 5, Math.max(1, diasPerfil.length));
   const modelos = PADROES[frequencia];
+  if (!modelos) throw new Error(`Sem modelo de divisão para frequência ${frequencia}.`);
   const dias: DiaTreino[] = modelos.map((modelo, i) => {
     // Cardio é uma modalidade transversal: entra uma vez por sessão,
     // preservando o treino de força e permitindo validar seu protocolo.

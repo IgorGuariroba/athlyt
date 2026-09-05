@@ -371,7 +371,7 @@ export function SelecaoEquipamentos({
                       value={equipamento.id}
                       rotulo={equipamento.rotulo}
                       src={
-                        IMAGENS_EQUIPAMENTOS_REPDB[equipamento.id as keyof typeof IMAGENS_EQUIPAMENTOS_REPDB] ??
+                        (IMAGENS_EQUIPAMENTOS_REPDB as Record<string, string>)[equipamento.id] ??
                         imagemEquipamento(equipamento.id)
                       }
                       loading="eager"

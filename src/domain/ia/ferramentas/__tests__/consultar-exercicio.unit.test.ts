@@ -5,7 +5,7 @@ vi.mock("@/infra/exercisedb", () => ({
   criarClienteExerciseDB: () => ({ buscar }),
 }));
 
-const { consultarExercicio } = await import("../consultar-exercicio");
+const { consultarExercicio, consultarExercicioSchema } = await import("../consultar-exercicio");
 
 describe("consultarExercicio (ferramenta de leitura da ExerciseDB)", () => {
   it("retorna dados normalizados (musculos/equipamentos/instrucoes) do exercicio", async () => {
@@ -39,7 +39,10 @@ describe("consultarExercicio (ferramenta de leitura da ExerciseDB)", () => {
 
   it("repassa o limite padrão quando não informado", async () => {
     buscar.mockResolvedValue([]);
-    await consultarExercicio.execute({ termo: "pull-up" } as never, { toolCallId: "teste" } as never);
+    // O AI SDK aplica o inputSchema antes de execute; o default(3) do
+    // zod entra nesse parse, não dentro da ferramenta.
+    const entrada = consultarExercicioSchema.parse({ termo: "pull-up" });
+    await consultarExercicio.execute(entrada, { toolCallId: "teste" } as never);
     expect(buscar).toHaveBeenCalledWith("pull-up", 3);
   });
 });

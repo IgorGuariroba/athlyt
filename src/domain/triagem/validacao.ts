@@ -90,7 +90,7 @@ const SCHEMAS: Record<EtapaId, (formData: FormData) => ResultadoParse> = {
       dataNascimento: fd.get("dataNascimento"),
     });
     if (!parsed.success) {
-      return { ok: false, erro: parsed.error.issues[0].message };
+      return { ok: false, erro: parsed.error.issues[0]?.message ?? "Dados inválidos." };
     }
     return { ok: true, dados: parsed.data };
   },

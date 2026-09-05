@@ -410,8 +410,8 @@ describe("PorQueIsso", () => {
     expect(screen.getByText(/Estimei sua manutenção/)).toBeDefined();
     const dados = within(screen.getByRole("list")).getAllByRole("listitem");
     expect(dados).toHaveLength(2);
-    expect(dados[0].textContent).toContain("Peso");
-    expect(dados[0].textContent).toContain("80 kg");
+    expect(dados[0]!.textContent).toContain("Peso");
+    expect(dados[0]!.textContent).toContain("80 kg");
   });
 
   it("diz que a decisão veio de um plano anterior quando não há explicação", () => {

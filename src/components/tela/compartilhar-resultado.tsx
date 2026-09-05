@@ -347,8 +347,9 @@ async function gerarCard(props: Props) {
   );
   ctx.fillStyle = forte;
   ctx.font = `700 40px ${fonteMarca}`;
+  const recordeDestaque = props.recordes[0];
   const destaque = (
-    temRecorde ? props.recordes[0].nome : props.nome
+    temRecorde && recordeDestaque ? recordeDestaque.nome : props.nome
   ).toUpperCase();
   ctx.fillText(
     quebrar(ctx, destaque, conquistaLargura, 1)[0] ?? "",
@@ -358,8 +359,8 @@ async function gerarCard(props: Props) {
 
   ctx.fillStyle = mutado;
   ctx.font = `500 28px ${fonteInterface}`;
-  const apoio = temRecorde
-    ? `${props.recordes[0].valor} kg. Novo melhor resultado.`
+  const apoio = temRecorde && recordeDestaque
+    ? `${recordeDestaque.valor} kg. Novo melhor resultado.`
     : `${props.exercicios.length} exercícios. Constância registrada.`;
   quebrar(ctx, apoio, conquistaLargura, 2).forEach((linha, i) =>
     ctx.fillText(linha, conquistaX, cartaoY + 172 + i * 41),

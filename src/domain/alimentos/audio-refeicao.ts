@@ -54,7 +54,7 @@ export function validarAudioRefeicao(entrada: {
   // O navegador anexa codec ao tipo ("audio/webm;codecs=opus"); a
   // decisão é sobre o container, então o parâmetro é descartado antes
   // da comparação em vez de multiplicar entradas na lista.
-  const mediaType = entrada.contentType.split(";")[0].trim().toLowerCase();
+  const mediaType = (entrada.contentType.split(";")[0] ?? "").trim().toLowerCase();
   if (!TIPOS_AUDIO_REFEICAO.has(mediaType)) {
     throw new Error("Formato de áudio não permitido. Grave de novo ou escreva a descrição.");
   }

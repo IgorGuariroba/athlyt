@@ -67,6 +67,7 @@ export async function registrarRespostas(
         respostas: respostasMescladas,
       })
       .returning();
+    if (!inserida) throw new Error("Falha ao registrar versão do perfil: linha não retornada.");
 
     return {
       version: inserida.version,

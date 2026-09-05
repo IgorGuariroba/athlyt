@@ -12,7 +12,7 @@ describe.skipIf(!config)("Cloudflare R2 real", () => {
         await storage.gravar({ chave, corpo: new TextEncoder().encode("athlyt-storage-real"), contentType: "text/plain" });
       } catch (erro: unknown) {
         const mensagem = String(erro);
-        const status = (erro as { $metadata?: { httpStatusCode?: number } })?.$metadata?.httpStatusCode;
+        const status = (erro as { $metadata?: { httpStatusCode?: number } }).$metadata?.httpStatusCode;
         if (status === 401 || mensagem.includes("Unauthorized")) {
           console.warn("Cloudflare R2 não autorizado com as credenciais atuais — teste de integração real ignorado.");
           return;

@@ -10,6 +10,7 @@ const CHAVE: string = CHAVE_RAW;
 
 async function endpointAprovado(modelo: string, tag: string): Promise<string> {
   const [autor, ...slug] = modelo.split("/");
+  if (!autor) throw new Error(`Modelo inválido: ${modelo}`);
   const resposta = await fetch(`${BASE}/models/${autor}/${slug.join("/")}/endpoints`, {
     headers: { Authorization: `Bearer ${CHAVE}` },
   });

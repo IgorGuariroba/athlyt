@@ -5,6 +5,11 @@
     "allowJs": true,
     "skipLibCheck": true,
     "strict": true,
+    // Acessos indexados (`arr[i]`, `map.get(k)`) carregam `| undefined`:
+    // o compilador passa a exigir narrowing antes do uso. Foi o que
+    // revelou que os 103 achados restantes de no-unnecessary-condition
+    // eram checagens reais de linhas de banco que o compilador não via.
+    "noUncheckedIndexedAccess": true,
     "noEmit": true,
     "esModuleInterop": true,
     "module": "esnext",
