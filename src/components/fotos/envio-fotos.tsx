@@ -66,7 +66,7 @@ export function EnvioFotos({
   const [atualizando, iniciarAtualizacao] = useTransition();
   const ocupado = enviando || atualizando;
 
-  async function aoEnviar(evento: React.FormEvent<HTMLFormElement>) {
+  async function aoEnviar(evento: React.SyntheticEvent<HTMLFormElement>) {
     evento.preventDefault();
     const formulario = evento.currentTarget;
     const dados = new FormData(formulario);

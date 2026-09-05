@@ -61,7 +61,6 @@ describe("avaliarSuficiencia", () => {
   });
 
   it("permanece em Modo Conservador se faltar uma única etapa obrigatória", () => {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars -- destructuring só para remover a chave `pesoKg`
     const { pesoKg: _pesoKg, ...semPeso } = perfilObrigatorioCompleto;
     const resultado = avaliarSuficiencia(semPeso);
     expect(resultado.modoConservador).toBe(true);

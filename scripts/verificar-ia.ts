@@ -213,7 +213,7 @@ async function main() {
   process.exit(0);
 }
 
-main().catch((erro) => {
+main().catch((erro: unknown) => {
   console.error("\nFALHA:", erro instanceof Error ? erro.stack : erro);
   process.exit(1);
 });

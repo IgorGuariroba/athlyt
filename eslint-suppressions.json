@@ -31,14 +31,8 @@
     }
   },
   "e2e/desativacao-offline.e2e.test.ts": {
-    "@typescript-eslint/no-confusing-void-expression": {
-      "count": 4
-    },
     "@typescript-eslint/no-misused-promises": {
       "count": 1
-    },
-    "@typescript-eslint/prefer-promise-reject-errors": {
-      "count": 2
     },
     "@typescript-eslint/restrict-template-expressions": {
       "count": 2
@@ -58,9 +52,6 @@
     }
   },
   "e2e/helpers/sessao.ts": {
-    "@typescript-eslint/no-confusing-void-expression": {
-      "count": 1
-    },
     "@typescript-eslint/restrict-template-expressions": {
       "count": 3
     }
@@ -134,9 +125,6 @@
   "scripts/aplicar-retencao-fotos.ts": {
     "@typescript-eslint/restrict-template-expressions": {
       "count": 2
-    },
-    "@typescript-eslint/use-unknown-in-catch-callback-variable": {
-      "count": 1
     }
   },
   "scripts/auditoria-visual.ts": {
@@ -153,9 +141,6 @@
     },
     "@typescript-eslint/restrict-template-expressions": {
       "count": 2
-    },
-    "@typescript-eslint/use-unknown-in-catch-callback-variable": {
-      "count": 1
     }
   },
   "scripts/importar-midia-exercicios.ts": {
@@ -164,9 +149,6 @@
     },
     "@typescript-eslint/restrict-template-expressions": {
       "count": 7
-    },
-    "@typescript-eslint/use-unknown-in-catch-callback-variable": {
-      "count": 1
     }
   },
   "scripts/inspecionar-prompt-plano.ts": {
@@ -174,14 +156,6 @@
       "count": 1
     },
     "@typescript-eslint/restrict-template-expressions": {
-      "count": 1
-    },
-    "@typescript-eslint/use-unknown-in-catch-callback-variable": {
-      "count": 1
-    }
-  },
-  "scripts/seed-dev-session.ts": {
-    "@typescript-eslint/use-unknown-in-catch-callback-variable": {
       "count": 1
     }
   },
@@ -202,14 +176,6 @@
     },
     "@typescript-eslint/restrict-template-expressions": {
       "count": 4
-    },
-    "@typescript-eslint/use-unknown-in-catch-callback-variable": {
-      "count": 1
-    }
-  },
-  "scripts/verificar-avaliacao-visual.ts": {
-    "@typescript-eslint/use-unknown-in-catch-callback-variable": {
-      "count": 1
     }
   },
   "scripts/verificar-ia.ts": {
@@ -221,30 +187,16 @@
     },
     "@typescript-eslint/restrict-template-expressions": {
       "count": 3
-    },
-    "@typescript-eslint/use-unknown-in-catch-callback-variable": {
-      "count": 1
     }
   },
   "scripts/verificar-modalidades.ts": {
     "@typescript-eslint/restrict-template-expressions": {
       "count": 2
-    },
-    "@typescript-eslint/use-unknown-in-catch-callback-variable": {
-      "count": 1
-    }
-  },
-  "scripts/verificar-r2.ts": {
-    "@typescript-eslint/use-unknown-in-catch-callback-variable": {
-      "count": 1
     }
   },
   "scripts/verificar-refeicao-foto.ts": {
     "@typescript-eslint/restrict-template-expressions": {
       "count": 4
-    },
-    "@typescript-eslint/use-unknown-in-catch-callback-variable": {
-      "count": 1
     }
   },
   "scripts/verificar-stories.ts": {
@@ -253,9 +205,6 @@
     },
     "@typescript-eslint/restrict-template-expressions": {
       "count": 5
-    },
-    "@typescript-eslint/use-unknown-in-catch-callback-variable": {
-      "count": 1
     }
   },
   "src/app/(app)/diario/actions.ts": {
@@ -283,9 +232,6 @@
     "@typescript-eslint/array-type": {
       "count": 1
     },
-    "@typescript-eslint/no-confusing-void-expression": {
-      "count": 15
-    },
     "@typescript-eslint/restrict-template-expressions": {
       "count": 4
     }
@@ -301,9 +247,6 @@
     }
   },
   "src/app/(app)/diario/registrar/foto/estimativa.tsx": {
-    "@typescript-eslint/no-confusing-void-expression": {
-      "count": 3
-    },
     "@typescript-eslint/no-misused-promises": {
       "count": 1
     },
@@ -388,9 +331,6 @@
     "@typescript-eslint/consistent-type-definitions": {
       "count": 1
     },
-    "@typescript-eslint/no-confusing-void-expression": {
-      "count": 2
-    },
     "@typescript-eslint/no-unnecessary-condition": {
       "count": 10
     },
@@ -445,9 +385,6 @@
     }
   },
   "src/app/(app)/sessao/[id]/__tests__/registro-serie.unit.test.tsx": {
-    "@typescript-eslint/no-confusing-void-expression": {
-      "count": 3
-    },
     "@typescript-eslint/require-await": {
       "count": 2
     }
@@ -501,11 +438,6 @@
       "count": 5
     }
   },
-  "src/app/(auth)/plano/gerando/transicao-geracao.tsx": {
-    "@typescript-eslint/no-confusing-void-expression": {
-      "count": 2
-    }
-  },
   "src/app/(auth)/plano/revisao/nutricao/page.tsx": {
     "@typescript-eslint/restrict-template-expressions": {
       "count": 3
@@ -527,9 +459,6 @@
     }
   },
   "src/app/(auth)/triagem/academia-equipamentos/_components/selecao-equipamentos.tsx": {
-    "@typescript-eslint/no-confusing-void-expression": {
-      "count": 2
-    },
     "@typescript-eslint/no-floating-promises": {
       "count": 1
     },
@@ -554,9 +483,6 @@
     }
   },
   "src/app/(auth)/triagem/altura/_components/seletor-altura.tsx": {
-    "@typescript-eslint/no-confusing-void-expression": {
-      "count": 1
-    },
     "@typescript-eslint/restrict-template-expressions": {
       "count": 5
     }
@@ -582,9 +508,6 @@
     }
   },
   "src/app/(auth)/triagem/peso/_components/seletor-peso.tsx": {
-    "@typescript-eslint/no-confusing-void-expression": {
-      "count": 2
-    },
     "@typescript-eslint/restrict-template-expressions": {
       "count": 1
     }
@@ -592,11 +515,6 @@
   "src/app/(auth)/triagem/resumo/page.tsx": {
     "@typescript-eslint/restrict-template-expressions": {
       "count": 2
-    }
-  },
-  "src/app/api/ia/refeicao-foto/route.ts": {
-    "@typescript-eslint/no-confusing-void-expression": {
-      "count": 1
     }
   },
   "src/app/api/ia/refeicao-foto/route.unit.test.ts": {
@@ -631,9 +549,6 @@
     }
   },
   "src/components/diario/__tests__/acrescentar-alimento.unit.test.tsx": {
-    "@typescript-eslint/no-confusing-void-expression": {
-      "count": 3
-    },
     "@typescript-eslint/no-unnecessary-type-assertion": {
       "count": 1
     },
@@ -660,9 +575,6 @@
     "@typescript-eslint/no-base-to-string": {
       "count": 1
     },
-    "@typescript-eslint/no-confusing-void-expression": {
-      "count": 8
-    },
     "@typescript-eslint/no-empty-function": {
       "count": 3
     },
@@ -671,9 +583,6 @@
     }
   },
   "src/components/diario/acrescentar-alimento.stories.tsx": {
-    "@typescript-eslint/no-confusing-void-expression": {
-      "count": 1
-    },
     "@typescript-eslint/no-empty-function": {
       "count": 2
     },
@@ -685,9 +594,6 @@
     "@typescript-eslint/array-type": {
       "count": 1
     },
-    "@typescript-eslint/no-confusing-void-expression": {
-      "count": 2
-    },
     "@typescript-eslint/no-misused-promises": {
       "count": 2
     }
@@ -698,9 +604,6 @@
     }
   },
   "src/components/diario/captura-audio.tsx": {
-    "@typescript-eslint/no-confusing-void-expression": {
-      "count": 2
-    },
     "@typescript-eslint/no-misused-promises": {
       "count": 1
     }
@@ -715,11 +618,6 @@
       "count": 1
     }
   },
-  "src/components/diario/linha-do-tempo-dia.tsx": {
-    "@typescript-eslint/no-confusing-void-expression": {
-      "count": 1
-    }
-  },
   "src/components/diario/painel-macros-dia.tsx": {
     "@typescript-eslint/restrict-template-expressions": {
       "count": 10
@@ -731,9 +629,6 @@
     }
   },
   "src/components/diario/registro-por-descricao.tsx": {
-    "@typescript-eslint/no-confusing-void-expression": {
-      "count": 7
-    },
     "@typescript-eslint/no-misused-promises": {
       "count": 2
     }
@@ -747,9 +642,6 @@
     }
   },
   "src/components/diario/revisao-estimativa.tsx": {
-    "@typescript-eslint/no-confusing-void-expression": {
-      "count": 4
-    },
     "@typescript-eslint/no-misused-promises": {
       "count": 1
     },
@@ -773,11 +665,6 @@
       "count": 1
     }
   },
-  "src/components/fotos/captura-foto.tsx": {
-    "@typescript-eslint/no-confusing-void-expression": {
-      "count": 2
-    }
-  },
   "src/components/fotos/envio-fotos.stories.tsx": {
     "@typescript-eslint/require-await": {
       "count": 2
@@ -787,19 +674,11 @@
     "@typescript-eslint/no-base-to-string": {
       "count": 3
     },
-    "@typescript-eslint/no-deprecated": {
-      "count": 1
-    },
     "@typescript-eslint/no-misused-promises": {
       "count": 1
     },
     "@typescript-eslint/restrict-template-expressions": {
       "count": 3
-    }
-  },
-  "src/components/fotos/reduzir-imagem.ts": {
-    "@typescript-eslint/no-confusing-void-expression": {
-      "count": 1
     }
   },
   "src/components/progresso/__tests__/painel-grafico-peso.unit.test.tsx": {
@@ -836,18 +715,12 @@
     }
   },
   "src/components/progresso/seletor-horizonte.tsx": {
-    "@typescript-eslint/no-confusing-void-expression": {
-      "count": 1
-    },
     "@typescript-eslint/restrict-template-expressions": {
       "count": 1
     }
   },
   "src/components/sessao/__tests__/conclusao-sessao.unit.test.tsx": {
     "@typescript-eslint/array-type": {
-      "count": 1
-    },
-    "@typescript-eslint/no-confusing-void-expression": {
       "count": 1
     },
     "@typescript-eslint/require-await": {
@@ -879,12 +752,6 @@
     "@typescript-eslint/array-type": {
       "count": 1
     },
-    "@typescript-eslint/no-confusing-void-expression": {
-      "count": 13
-    },
-    "@typescript-eslint/no-deprecated": {
-      "count": 1
-    },
     "@typescript-eslint/restrict-template-expressions": {
       "count": 1
     }
@@ -904,11 +771,6 @@
       "count": 3
     }
   },
-  "src/components/tela/cartao-selecao-imagem.tsx": {
-    "@typescript-eslint/no-confusing-void-expression": {
-      "count": 1
-    }
-  },
   "src/components/tela/cascata-shell.tsx": {
     "@typescript-eslint/restrict-template-expressions": {
       "count": 2
@@ -921,9 +783,6 @@
     "@typescript-eslint/consistent-type-definitions": {
       "count": 1
     },
-    "@typescript-eslint/no-confusing-void-expression": {
-      "count": 6
-    },
     "@typescript-eslint/no-misused-promises": {
       "count": 1
     },
@@ -934,11 +793,6 @@
   "src/components/tela/diagrama-muscular.tsx": {
     "@typescript-eslint/consistent-type-definitions": {
       "count": 1
-    }
-  },
-  "src/components/tela/ficha-exercicio.tsx": {
-    "@typescript-eslint/no-confusing-void-expression": {
-      "count": 4
     }
   },
   "src/components/tela/grafico-tendencia.tsx": {
@@ -954,11 +808,6 @@
       "count": 3
     }
   },
-  "src/components/tela/opcao-cartao.tsx": {
-    "@typescript-eslint/no-confusing-void-expression": {
-      "count": 1
-    }
-  },
   "src/components/tela/painel-pendencias.tsx": {
     "@typescript-eslint/consistent-type-definitions": {
       "count": 1
@@ -969,25 +818,12 @@
       "count": 1
     }
   },
-  "src/components/tela/seletor-segmentado.tsx": {
-    "@typescript-eslint/no-confusing-void-expression": {
-      "count": 1
-    }
-  },
-  "src/components/tela/transicao-etapa.stories.tsx": {
-    "@typescript-eslint/no-confusing-void-expression": {
-      "count": 2
-    }
-  },
   "src/components/ui/controle-faixa.stories.tsx": {
     "@typescript-eslint/restrict-template-expressions": {
       "count": 1
     }
   },
   "src/components/ui/controle-faixa.tsx": {
-    "@typescript-eslint/no-confusing-void-expression": {
-      "count": 1
-    },
     "@typescript-eslint/restrict-template-expressions": {
       "count": 2
     }
@@ -1070,9 +906,6 @@
     }
   },
   "src/domain/ia/__tests__/fallback-modelo.unit.test.ts": {
-    "@typescript-eslint/no-confusing-void-expression": {
-      "count": 3
-    },
     "@typescript-eslint/require-await": {
       "count": 1
     }
@@ -1096,9 +929,6 @@
     "@typescript-eslint/no-base-to-string": {
       "count": 1
     },
-    "@typescript-eslint/no-deprecated": {
-      "count": 2
-    },
     "@typescript-eslint/no-unnecessary-condition": {
       "count": 1
     },
@@ -1109,9 +939,6 @@
   "src/domain/ia/detalhes-erro-geracao.ts": {
     "@typescript-eslint/consistent-type-definitions": {
       "count": 1
-    },
-    "@typescript-eslint/no-meaningless-void-operator": {
-      "count": 1
     }
   },
   "src/domain/ia/detalhes-erro-provedor.ts": {
@@ -1120,11 +947,6 @@
     },
     "@typescript-eslint/restrict-template-expressions": {
       "count": 1
-    }
-  },
-  "src/domain/ia/fallback-modelo.ts": {
-    "@typescript-eslint/no-confusing-void-expression": {
-      "count": 2
     }
   },
   "src/domain/ia/ferramentas/consultar-exercicio.ts": {
@@ -1143,16 +965,7 @@
     }
   },
   "src/domain/ia/timeout-geracao.ts": {
-    "@typescript-eslint/no-confusing-void-expression": {
-      "count": 6
-    },
-    "@typescript-eslint/prefer-promise-reject-errors": {
-      "count": 1
-    },
     "@typescript-eslint/restrict-template-expressions": {
-      "count": 1
-    },
-    "@typescript-eslint/use-unknown-in-catch-callback-variable": {
       "count": 1
     }
   },
@@ -1345,9 +1158,6 @@
     }
   },
   "src/lib/__tests__/use-tela-ativa.unit.test.tsx": {
-    "@typescript-eslint/no-confusing-void-expression": {
-      "count": 5
-    },
     "@typescript-eslint/require-await": {
       "count": 2
     }
@@ -1355,12 +1165,6 @@
   "src/lib/outbox-cliente.ts": {
     "@typescript-eslint/array-type": {
       "count": 2
-    },
-    "@typescript-eslint/no-confusing-void-expression": {
-      "count": 8
-    },
-    "@typescript-eslint/prefer-promise-reject-errors": {
-      "count": 4
     },
     "@typescript-eslint/restrict-template-expressions": {
       "count": 1

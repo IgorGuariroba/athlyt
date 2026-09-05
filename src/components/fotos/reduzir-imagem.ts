@@ -35,9 +35,9 @@ export async function reduzirImagemParaEnvio(
     contexto.drawImage(bitmap, 0, 0, largura, altura);
     bitmap.close();
 
-    const blob = await new Promise<Blob | null>((resolve) =>
-      canvas.toBlob(resolve, "image/webp", qualidade),
-    );
+    const blob = await new Promise<Blob | null>((resolve) => {
+      canvas.toBlob(resolve, "image/webp", qualidade);
+    });
     if (!blob || blob.size >= arquivo.size) return arquivo;
 
     return new File([blob], `${arquivo.name.replace(/\.[^.]+$/, "")}.webp`, {

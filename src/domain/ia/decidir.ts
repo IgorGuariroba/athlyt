@@ -259,7 +259,7 @@ async function decidirInternamente<T>(
         executar: async (rota, { chamada, signal }): Promise<ResultadoChamadaRota<T>> => {
           try {
             const respostaRota = await gerar(correcoes.get(rota.modelo), rota, signal);
-            const modeloResolvido = respostaRota.response.modelId || "";
+            const modeloResolvido = respostaRota.finalStep.response.modelId || "";
             if (modeloResolvido !== rota.modelo) {
               return { tipo: "erro", motivo: "Modelo resolvido fora da rota aprovada." };
             }
@@ -364,7 +364,7 @@ ${erro.text}`);
 
     // A auditoria exige o modelo efetivamente resolvido pelo
     // provedor, não o solicitado.
-    const modeloResolvido = resposta.response.modelId || null;
+    const modeloResolvido = resposta.finalStep.response.modelId || null;
 
     await registrarDecisao({
       ...registroBase,

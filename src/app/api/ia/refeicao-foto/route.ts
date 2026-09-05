@@ -40,7 +40,9 @@ export async function POST(request: Request): Promise<Response> {
           aberta = false;
         }
       };
-      const heartbeat = setInterval(() => emitir({ tipo: "heartbeat" }), 15_000);
+      const heartbeat = setInterval(() => {
+        emitir({ tipo: "heartbeat" });
+      }, 15_000);
 
       void estimarRefeicao(corpo, {
         userId,

@@ -46,8 +46,12 @@ test("retira o worker antigo e seus caches sem apagar dados locais ou outro work
       sessionStorage.setItem("rascunho", "pendente");
       await new Promise<void>((resolve, reject) => {
         const request = indexedDB.open("fila-de-treino", 1);
-        request.onupgradeneeded = () => request.result.createObjectStore("eventos");
-        request.onerror = () => reject(request.error);
+        request.onupgradeneeded = () => {
+          request.result.createObjectStore("eventos");
+        };
+        request.onerror = () => {
+          reject(request.error ?? new Error("IndexedDB error"));
+        };
         request.onsuccess = () => {
           const db = request.result;
           const tx = db.transaction("eventos", "readwrite");
@@ -66,7 +70,9 @@ test("retira o worker antigo e seus caches sem apagar dados locais ou outro work
     expect(await page.evaluate(() => [localStorage.getItem("preferencia"), sessionStorage.getItem("rascunho")])).toEqual(["escuro", "pendente"]);
     expect(await page.evaluate(() => new Promise((resolve, reject) => {
       const request = indexedDB.open("fila-de-treino");
-      request.onerror = () => reject(request.error);
+      request.onerror = () => {
+        reject(request.error ?? new Error("IndexedDB error"));
+      };
       request.onsuccess = () => {
         const db = request.result;
         const read = db.transaction("eventos").objectStore("eventos").get("1");
@@ -76,7 +82,12 @@ test("retira o worker antigo e seus caches sem apagar dados locais ou outro work
     await page.reload();
     await expect.poll(() => page.evaluate(async () => (await navigator.serviceWorker.getRegistrations()).length)).toBe(1);
   } finally {
-    await new Promise<void>((resolve, reject) => server.close((error) => error ? reject(error) : resolve()));
+    await new Promise<void>((resolve, reject) => {
+      server.close((error) => {
+        if (error) reject(error);
+        else resolve();
+      });
+    });
   }
 });
 

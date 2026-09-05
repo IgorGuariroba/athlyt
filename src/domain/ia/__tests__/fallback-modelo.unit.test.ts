@@ -90,7 +90,9 @@ describe("executarFallbackDeModelo", () => {
   it("cancela a rota ativa e não inicia fallback", async () => {
     const controlador = new AbortController();
     const executar = vi.fn<ChamadaExecutar>((_rota, { signal }) => new Promise<never>((_resolve, reject) => {
-      signal.addEventListener("abort", () => reject(new DOMException("cancelada", "AbortError")), { once: true });
+      signal.addEventListener("abort", () => {
+        reject(new DOMException("cancelada", "AbortError"));
+      }, { once: true });
     }));
     const promessa = executarFallbackDeModelo({ rotas: ROTAS, executar, signal: controlador.signal });
 
@@ -106,7 +108,9 @@ describe("executarFallbackDeModelo", () => {
   it("o limite global aborta tudo e impede nova tentativa", async () => {
     vi.useFakeTimers();
     const executar = vi.fn<ChamadaExecutar>((_rota, { signal }) => new Promise<never>((_resolve, reject) => {
-      signal.addEventListener("abort", () => reject(new DOMException("timeout", "AbortError")), { once: true });
+      signal.addEventListener("abort", () => {
+        reject(new DOMException("timeout", "AbortError"));
+      }, { once: true });
     }));
     const promessa = executarFallbackDeModelo({
       rotas: ROTAS,
@@ -129,7 +133,9 @@ describe("executarFallbackDeModelo", () => {
     const executar = vi
       .fn<ChamadaExecutar>()
       .mockImplementationOnce((_rota, { signal }) => new Promise<never>((_resolve, reject) => {
-        signal.addEventListener("abort", () => reject(new DOMException("timeout", "AbortError")), { once: true });
+        signal.addEventListener("abort", () => {
+          reject(new DOMException("timeout", "AbortError"));
+        }, { once: true });
       }))
       .mockResolvedValueOnce({ tipo: "sucesso", valor: "ok", modeloResolvido: "modelo-2" });
     const promessa = executarFallbackDeModelo({

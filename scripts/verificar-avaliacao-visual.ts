@@ -20,4 +20,4 @@ async function main() {
     console.log(`Avaliação visual real validada com ${resultado.modeloResolvido}; imagens sintéticas não foram persistidas.`);
   } finally { await db.delete(users).where(eq(users.id, usuario.id)); }
 }
-main().then(() => process.exit(0)).catch((erro) => { console.error(erro instanceof Error ? erro.message : erro); process.exit(1); });
+main().then(() => process.exit(0)).catch((erro: unknown) => { console.error(erro instanceof Error ? erro.message : erro); process.exit(1); });

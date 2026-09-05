@@ -57,4 +57,4 @@ async function principal() {
   console.log(`RepDB: ${Object.keys(imagens).length} imagens mapeadas em ${SAIDA}`);
 }
 
-principal().catch((erro) => { console.error(erro); process.exitCode = 1; });
+principal().catch((erro: unknown) => { console.error(erro); process.exitCode = 1; });

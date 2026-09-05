@@ -31,15 +31,23 @@ function abrir(): Promise<IDBDatabase> {
       }
       if (!bd.objectStoreNames.contains(META)) bd.createObjectStore(META);
     };
-    pedido.onsuccess = () => resolve(pedido.result);
-    pedido.onerror = () => reject(pedido.error);
+    pedido.onsuccess = () => {
+      resolve(pedido.result);
+    };
+    pedido.onerror = () => {
+      reject(pedido.error ?? new Error("Falha ao abrir IndexedDB"));
+    };
   });
 }
 
 function promessa<T>(pedido: IDBRequest<T>): Promise<T> {
   return new Promise((resolve, reject) => {
-    pedido.onsuccess = () => resolve(pedido.result);
-    pedido.onerror = () => reject(pedido.error);
+    pedido.onsuccess = () => {
+      resolve(pedido.result);
+    };
+    pedido.onerror = () => {
+      reject(pedido.error ?? new Error("Falha na requisição IndexedDB"));
+    };
   });
 }
 
@@ -65,8 +73,12 @@ export async function enfileirar(sessionId: string, tipo: TipoEventoOutbox, dado
     meta.put(ordem, chave);
     tx.objectStore(LOJA).put(evento);
     await new Promise<void>((resolve, reject) => {
-      tx.oncomplete = () => resolve();
-      tx.onerror = () => reject(tx.error);
+      tx.oncomplete = () => {
+        resolve();
+      };
+      tx.onerror = () => {
+        reject(tx.error ?? new Error("Falha na transação IndexedDB"));
+      };
     });
     return evento;
   } finally {
@@ -103,8 +115,12 @@ export async function confirmar(ids: readonly string[]): Promise<void> {
     const loja = tx.objectStore(LOJA);
     for (const id of ids) loja.delete(id);
     await new Promise<void>((resolve, reject) => {
-      tx.oncomplete = () => resolve();
-      tx.onerror = () => reject(tx.error);
+      tx.oncomplete = () => {
+        resolve();
+      };
+      tx.onerror = () => {
+        reject(tx.error ?? new Error("Falha na transação IndexedDB"));
+      };
     });
   } finally {
     bd.close();

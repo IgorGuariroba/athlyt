@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useState, type SyntheticEvent } from "react";
 import { Check, ChevronDown, Minus, Plus, TimerReset, Trophy, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -82,7 +82,7 @@ export function RegistroSerie({ sessionId, exercicioId, numero, repeticoesSugeri
    * que o app não sabe se o evento existe — e o timer, que é a razão
    * de o atleta olhar a tela, ficaria esperando a rede.
    */
-  function registrar(evento: FormEvent<HTMLFormElement>) {
+  function registrar(evento: SyntheticEvent<HTMLFormElement>) {
     evento.preventDefault();
     const formData = new FormData(evento.currentTarget);
     setEnviando(true);

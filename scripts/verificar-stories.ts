@@ -72,7 +72,7 @@ async function main() {
   console.log(`${stories.length} stories renderizaram sem erro.`);
 }
 
-main().catch((erro) => {
+main().catch((erro: unknown) => {
   console.error(erro);
   process.exit(1);
 });

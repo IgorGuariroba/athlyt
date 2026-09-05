@@ -59,7 +59,7 @@ async function main() {
   for (const rota of ROTAS_REFEICAO_FOTO) await sondar(rota.modelo, rota.endpoint, imagem);
 }
 
-main().then(() => process.exit(0)).catch((erro) => {
+main().then(() => process.exit(0)).catch((erro: unknown) => {
   console.error(erro instanceof Error ? erro.message : "Sonda falhou");
   process.exit(1);
 });

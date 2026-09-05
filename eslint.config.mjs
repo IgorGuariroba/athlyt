@@ -28,6 +28,21 @@ const eslintConfig = defineConfig([...nextVitals, ...nextTs,
     },
   },
 },
+{
+  files: ["**/*.{ts,tsx}"],
+  rules: {
+    // Permite que identificadores com prefixo _ indiquem deliberadamente
+    // argumentos ou variáveis não utilizados.
+    "@typescript-eslint/no-unused-vars": [
+      "error",
+      {
+        argsIgnorePattern: "^_",
+        varsIgnorePattern: "^_",
+        caughtErrorsIgnorePattern: "^_",
+      },
+    ],
+  },
+},
 // `core-web-vitals` habilita só 6 regras de jsx-a11y. O conjunto recommended
 // cobre o resto — sobretudo label sem controle associado, o defeito mais
 // comum nos formulários de triagem e diário.
@@ -38,6 +53,15 @@ const eslintConfig = defineConfig([...nextVitals, ...nextTs,
     // Deprecated no próprio plugin e redundante com
     // `label-has-associated-control`: gerava 38 achados sobrepostos.
     "jsx-a11y/label-has-for": "off",
+    // Permite arrow functions concisas em callbacks JSX (ex.: onClick={() => setAberto(true)})
+    // e o operador void explícito para descarte intencional de Promises.
+    "@typescript-eslint/no-confusing-void-expression": [
+      "error",
+      {
+        ignoreArrowShorthand: true,
+        ignoreVoidOperator: true,
+      },
+    ],
     // Permite que regiões roláveis e o container principal recebam foco de
     // teclado para rolagem acessível com setas e leitores de tela.
     "jsx-a11y/no-noninteractive-tabindex": [

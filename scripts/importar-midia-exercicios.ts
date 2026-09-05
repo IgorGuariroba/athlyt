@@ -129,7 +129,7 @@ async function espelhar(
   if (falhos > 0) process.exitCode = 1;
 }
 
-principal().catch((erro) => {
+principal().catch((erro: unknown) => {
   console.error(erro instanceof Error ? erro.message : erro);
   process.exitCode = 1;
 });

@@ -71,7 +71,7 @@ async function main() {
   console.log(`${stories.length} stories passaram na auditoria axe.`);
 }
 
-main().catch((erro) => {
+main().catch((erro: unknown) => {
   console.error(erro);
   process.exit(1);
 });

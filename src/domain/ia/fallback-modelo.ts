@@ -50,7 +50,9 @@ export async function executarFallbackDeModelo<T>(entrada: {
   if (abortado(externo)) return { status: "cancelada", tentativas };
 
   const global = new AbortController();
-  const timerGlobal = setTimeout(() => global.abort("orcamento-global"), entrada.orcamentoTotalMs ?? 360_000);
+  const timerGlobal = setTimeout(() => {
+    global.abort("orcamento-global");
+  }, entrada.orcamentoTotalMs ?? 360_000);
   const signalGlobal = AbortSignal.any([externo, global.signal]);
   entrada.aoProgresso?.({ tipo: "inicio", total: entrada.rotas.length });
 
@@ -69,7 +71,9 @@ export async function executarFallbackDeModelo<T>(entrada: {
       }
 
       const controladorRota = new AbortController();
-      const timerRota = setTimeout(() => controladorRota.abort("orcamento-rota"), entrada.orcamentoRotaMs ?? 120_000);
+      const timerRota = setTimeout(() => {
+        controladorRota.abort("orcamento-rota");
+      }, entrada.orcamentoRotaMs ?? 120_000);
       const signalRota = AbortSignal.any([signalGlobal, controladorRota.signal]);
       let resultado: ResultadoChamadaRota<T> | undefined;
       let chamadas = 0;

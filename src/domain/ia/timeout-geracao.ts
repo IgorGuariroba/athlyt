@@ -20,11 +20,15 @@ export function executarComTimeout<T>(
     };
     const cancelar = () => {
       controlador.abort(signalExterno?.reason);
-      concluir(() => reject(new DOMException("Operação cancelada.", "AbortError")));
+      concluir(() => {
+        reject(new DOMException("Operação cancelada.", "AbortError"));
+      });
     };
     const timer = setTimeout(() => {
       controlador.abort();
-      concluir(() => reject(new Error(`Timeout da geração de IA após ${timeoutMs} ms`)));
+      concluir(() => {
+        reject(new Error(`Timeout da geração de IA após ${timeoutMs} ms`));
+      });
     }, timeoutMs);
 
     if (signalExterno?.aborted) {
@@ -33,8 +37,16 @@ export function executarComTimeout<T>(
     }
     signalExterno?.addEventListener("abort", cancelar, { once: true });
     operacao(controlador.signal).then(
-      (valor) => concluir(() => resolve(valor)),
-      (erro) => concluir(() => reject(erro)),
+      (valor) => {
+        concluir(() => {
+          resolve(valor);
+        });
+      },
+      (erro: unknown) => {
+        concluir(() => {
+          reject(erro instanceof Error ? erro : new Error(String(erro)));
+        });
+      },
     );
   });
 }

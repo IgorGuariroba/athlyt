@@ -17,7 +17,7 @@ async function verificar() {
   }
 }
 
-verificar().catch((erro) => {
+verificar().catch((erro: unknown) => {
   console.error(erro instanceof Error ? erro.message : erro);
   process.exitCode = 1;
 });

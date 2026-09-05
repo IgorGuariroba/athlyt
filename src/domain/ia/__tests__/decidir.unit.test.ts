@@ -36,7 +36,18 @@ const gerar = vi.fn<(entrada: ChamadaGerar) => Promise<unknown>>(() =>
 );
 vi.mock("ai", async () => {
   const real = await vi.importActual<typeof import("ai")>("ai");
-  return { ...real, generateText: (entrada: ChamadaGerar) => gerar(entrada) };
+  return {
+    ...real,
+    generateText: async (entrada: ChamadaGerar) => {
+      const res = (await gerar(entrada)) as
+        | { response?: { modelId?: string }; finalStep?: { response?: { modelId?: string } } }
+        | undefined;
+      if (res && !res.finalStep && res.response) {
+        res.finalStep = { response: res.response };
+      }
+      return res;
+    },
+  };
 });
 
 const registrarErro = vi.fn();

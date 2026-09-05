@@ -35,7 +35,7 @@ async function main() {
 
 main().then(
   () => process.exit(0),
-  (error) => {
+  (error: unknown) => {
     console.error("[dev] falha ao preparar sessão local", error);
     process.exit(1);
   },

@@ -5,7 +5,6 @@ type ErroGeracao = {
 };
 
 /** Nunca devolve causa ou texto: ambos podem repetir prompts e anexos multimodais. */
-export function detalhesErroGeracao(erro: ErroGeracao): string {
-  void erro;
+export function detalhesErroGeracao(_erro: ErroGeracao): string {
   return "Saída inválida do modelo.";
 }
