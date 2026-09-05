@@ -29,9 +29,12 @@ export async function gerarRevisaoSemanal(fd: FormData) {
   const planejadasRefeicao = (plano?.conteudo.nutricao.refeicoes.length ?? 0) * 7;
   const aderenciaTreino = planejadasTreino ? limitar(concluidas / planejadasTreino * 100) : 50;
   const aderenciaNutricao = planejadasRefeicao ? limitar(refeicoes.length / planejadasRefeicao * 100) : 50;
-  const seriesConcluidas = sessoes.flatMap((sessao) => (sessao.exercicios as ExercicioSessao[]).flatMap((exercicio) => exercicio.series)).filter((serie) => serie.concluida);
-  const seriesComBaseline = seriesConcluidas.filter((serie) => serie.melhorCargaAnteriorKg > 0);
-  const desempenhoScore = seriesComBaseline.length ? limitar(seriesComBaseline.filter((serie) => (serie.cargaKg ?? 0) >= serie.melhorCargaAnteriorKg).length / seriesComBaseline.length * 100) : seriesConcluidas.length ? 60 : 40;
+  // A carga a bater é do exercício, não da série: cada série herda a
+  // marca histórica do exercício a que pertence.
+  const seriesConcluidas = sessoes.flatMap((sessao) => (sessao.exercicios as ExercicioSessao[]).flatMap((exercicio) =>
+    exercicio.series.filter((serie) => serie.concluida).map((serie) => ({ cargaKg: serie.cargaKg, baselineKg: exercicio.marcaAnterior?.cargaKg ?? 0 }))));
+  const seriesComBaseline = seriesConcluidas.filter((serie) => serie.baselineKg > 0);
+  const desempenhoScore = seriesComBaseline.length ? limitar(seriesComBaseline.filter((serie) => (serie.cargaKg ?? 0) >= serie.baselineKg).length / seriesComBaseline.length * 100) : seriesConcluidas.length ? 60 : 40;
   const evidencias: EvidenciaCorporal[] = [
     { sentido: planejadasTreino > 0 && concluidas >= planejadasTreino ? "favor" : "contra", descricao: planejadasTreino ? `${concluidas} de ${planejadasTreino} Sessões de Treino planejadas foram concluídas` : "Sem Plano Ativo para calcular aderência de treino", fonte: "Sessão de Treino", qualidade: planejadasTreino ? "alta" : "baixa", observadoEm: fim },
     { sentido: refeicoes.length ? "favor" : "contra", descricao: `${refeicoes.length} Consumos Confirmados na semana`, fonte: "Diário", qualidade: refeicoes.length ? "moderada" : "baixa", observadoEm: fim },
