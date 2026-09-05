@@ -64,7 +64,7 @@ export function RegistroSerie({ sessionId, exercicioId, numero, repeticoesSugeri
     const id = window.setTimeout(() => setRestante((valor) => {
       if (valor === null) return null;
       if (valor <= 1) {
-        navigator.vibrate?.([180, 80, 180]);
+        if ("vibrate" in navigator) navigator.vibrate([180, 80, 180]);
         if (Notification.permission === "granted") new Notification("Descanso concluído", { body: "Sua próxima série está pronta." });
         // O descanso concluído não mantém uma camada modal em 0:00
         // bloqueando o registro da próxima série.

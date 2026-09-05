@@ -15,5 +15,5 @@ export function nomeDoServico(): string {
 }
 
 export function ambienteDaAplicacao(): string {
-  return process.env.APP_ENV || process.env.NODE_ENV || "development";
+  return process.env.APP_ENV || process.env.NODE_ENV;
 }

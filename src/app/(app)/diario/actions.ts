@@ -107,18 +107,18 @@ export async function registrarPratoAction(formData: FormData) {
     if (item.origemDado === "estimativa-ia") {
       return itemEstimado({
         descricao: descricaoSemQuantidade(item.descricao),
-        quantidade: item.quantidade ?? 100,
+        quantidade: item.quantidade,
         unidade: item.unidade === "ml" ? "ml" : "g",
         calorias: item.calorias, proteinaG: item.proteinaG,
         carboidratosG: item.carboidratosG, gordurasG: item.gordurasG, fibrasG: item.fibrasG,
-        confianca: item.confianca ?? "baixa",
-        modelo: item.versaoFonte ?? "modelo não identificado",
+        confianca: item.confianca,
+        modelo: item.versaoFonte,
       });
     }
     return itemManual({
       nome: item.descricao,
-      quantidade: item.quantidade ?? 1,
-      unidade: item.unidade ?? "porção",
+      quantidade: item.quantidade,
+      unidade: item.unidade,
       calorias: item.calorias, proteinaG: item.proteinaG,
       carboidratosG: item.carboidratosG, gordurasG: item.gordurasG, fibrasG: item.fibrasG,
     });

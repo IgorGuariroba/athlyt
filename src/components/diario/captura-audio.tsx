@@ -69,7 +69,7 @@ export function CapturaAudio({
 
   async function iniciar() {
     setErro(null);
-    if (typeof MediaRecorder === "undefined" || !navigator.mediaDevices?.getUserMedia) {
+    if (typeof MediaRecorder === "undefined" || !("mediaDevices" in navigator)) {
       setErro("Este navegador não grava áudio. Escreva a descrição no lugar.");
       return;
     }

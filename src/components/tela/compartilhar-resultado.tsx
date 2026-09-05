@@ -403,10 +403,9 @@ export function CompartilharResultado(props: Props) {
       const arquivo = new File([imagem], "athlyt-treino.png", {
         type: "image/png",
       });
-      if (
-        navigator.share &&
-        (!navigator.canShare || navigator.canShare({ files: [arquivo] }))
-      ) {
+      const podeCompartilharArquivo =
+        "canShare" in navigator ? navigator.canShare({ files: [arquivo] }) : true;
+      if ("share" in navigator && podeCompartilharArquivo) {
         await navigator.share({
           title: "Treino concluído",
           text: textoCard(props),

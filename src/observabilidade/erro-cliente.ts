@@ -22,10 +22,12 @@ export function relatarErroCliente(error: Error & { digest?: string }): void {
 
   try {
     enviado =
-      navigator.sendBeacon?.(
-        "/api/observabilidade/erro-cliente",
-        new Blob([corpo], { type: "application/json" }),
-      ) ?? false;
+      "sendBeacon" in navigator
+        ? navigator.sendBeacon(
+            "/api/observabilidade/erro-cliente",
+            new Blob([corpo], { type: "application/json" }),
+          )
+        : false;
   } catch {
     // Se o beacon falhar, a tentativa por fetch abaixo ainda pode funcionar.
   }

@@ -125,7 +125,7 @@ export function RoletaValor({
       setIndiceDestaque(indice);
       aoMudar(valorDoIndice(indice, minimo, passo));
       if (typeof navigator !== "undefined" && "vibrate" in navigator) {
-        navigator.vibrate?.(6);
+        if ("vibrate" in navigator) navigator.vibrate(6);
       }
     },
     [aoMudar, desenhar, indiceDestaque, indiceMax, minimo, passo],

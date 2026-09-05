@@ -24,7 +24,7 @@ const DECLARACAO_DE_ACTION = /export\s+async\s+function\s+([A-Za-z0-9_]+)/g;
 function corposDasActions(fonte: string): { nome: string; corpo: string }[] {
   const inicios = [...fonte.matchAll(DECLARACAO_DE_ACTION)].map((m) => ({
     nome: m[1],
-    indice: m.index ?? 0,
+    indice: m.index,
   }));
   return inicios.map(({ nome, indice }, posicao) => ({
     nome,

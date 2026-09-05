@@ -29,7 +29,7 @@ export function reconstruirItemParaRegistro(
   if (!Number.isFinite(quantidade) || quantidade <= 0 || quantidade > 3000) {
     throw new Error(`Quantidade fora do intervalo aceito (1 a 3000 ${unidade}).`);
   }
-  const nome = descricaoSemQuantidade(String(bruto.descricao ?? "")).trim();
+  const nome = descricaoSemQuantidade(String(bruto.descricao)).trim();
   if (nome.length === 0) throw new Error("Todo item precisa de uma descrição.");
 
   if (bruto.origemDado === "base" && bruto.alimentoId) {
@@ -75,8 +75,8 @@ export function reconstruirItemParaRegistro(
     carboidratosG: numero(bruto.carboidratosG, 700),
     gordurasG: numero(bruto.gordurasG, 400),
     fibrasG: numero(bruto.fibrasG, 100),
-    confianca: bruto.confianca ?? "baixa",
-    modelo: bruto.versaoFonte ?? "modelo não identificado",
+    confianca: bruto.confianca,
+    modelo: bruto.versaoFonte,
     origemEstimativa: origemDaEstimativa(bruto, origemPadrao),
   });
 }
