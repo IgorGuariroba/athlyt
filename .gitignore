@@ -52,12 +52,6 @@ next-env.d.ts
 # galeria estática gerada pelo Storybook
 /storybook-static
 
-# service worker gerado (Serwist)
-/public/sw.js
-/public/sw.js.map
-/public/swe-worker*.js
-/public/swe-worker*.js.map
-
 # temp local
 /.tmp
 

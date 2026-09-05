@@ -31,8 +31,7 @@ ENV DATABASE_URL=$DATABASE_URL
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 
-# O script "build" é `next build --webpack`: o @serwist/next ainda não
-# suporta Turbopack e é ele quem gera `public/sw.js`.
+# Mesmo build Turbopack usado na validação local e no CI.
 RUN npm run build
 
 # -------------------------------------------------------------- runner
@@ -55,7 +54,7 @@ RUN apk add --no-cache ffmpeg
 RUN addgroup --system --gid 1001 nodejs \
   && adduser --system --uid 1001 nextjs
 
-# `public` inclui o service worker gerado pelo Serwist durante o build.
+# Inclui manifesto, ícones e o worker estático de desativação dos clientes antigos.
 COPY --from=builder --chown=nextjs:nodejs /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static

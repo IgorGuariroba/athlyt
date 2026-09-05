@@ -97,9 +97,12 @@ test("envia as quatro poses em uma única interação", async ({ page, context }
     await expect(page.getByRole("status")).toContainText("Fotos armazenadas", {
       timeout: 30_000,
     });
-    // O overlay de dev do Next injeta um `alert` vazio: filtrar por
-    // texto isola o alerta de erro da tela.
-    await expect(page.getByRole("alert").filter({ hasText: /\S/ })).toHaveCount(0);
+    // O alerta de erro da tela vive dentro de `main`. Fora dele o Next
+    // mantém o route announcer, um `role="alert"` que repete o `h1`
+    // quando o documento não tem título — ruído que não é erro.
+    await expect(
+      page.getByRole("main").getByRole("alert").filter({ hasText: /\S/ }),
+    ).toHaveCount(0);
     for (const nome of [/Abrir frente/, /Abrir costas/, /Abrir lateral direita/, /Abrir lateral esquerda/]) {
       await expect(page.getByRole("link", { name: nome })).toHaveCount(1);
     }

@@ -136,9 +136,8 @@ jobs:
         env:
           AUTH_SECRET: ci-build-secret
           DATABASE_URL: postgres://athlyt:athlyt@localhost:5432/athlyt
-      # O standalone não inclui os estáticos nem `public` sozinho. Sem
-      # esta cópia, o CI não publica `sw.js`: o registro do Service Worker
-      # recebe 404 e pode interromper transições disparadas por Server Actions.
+      # O standalone não inclui os estáticos nem `public` sozinho:
+      # copiar CSS/JS, manifesto, ícones e o worker de desativação.
       - name: Preparar build standalone
         run: |
           mkdir -p .next/standalone/.next

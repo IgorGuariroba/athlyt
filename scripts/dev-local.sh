@@ -128,7 +128,7 @@ conferir_cache() {
 # demanda. Já chegou a 5,5 GB e derrubou a sessão de trabalho por swap.
 #
 # `--max-old-space-size` sozinho não contém isso. Desde que o dev passou
-# a rodar com Turbopack (`turbopack: {}` em next.config.ts), o grafo vive
+# a rodar com Turbopack, o grafo vive
 # em memória nativa via N-API, fora do heap do V8: medimos 4,4 GB de RSS
 # anônimo com o teto de 2 GB ativo e não violado. O teto de heap seguia
 # aparentando proteger enquanto a máquina ia para o swap.
