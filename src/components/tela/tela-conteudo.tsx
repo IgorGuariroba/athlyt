@@ -9,6 +9,12 @@ import { cn } from "@/lib/utils";
  * `comAcaoFixa` existe para que o padding inferior seja consequência
  * declarada da presença do CTA, e não um número mágico repetido em
  * cada tela.
+ *
+ * É um `div`, não um `main`: cada rota tem um único landmark `main`,
+ * fornecido por quem envolve a moldura — o casco `(app)` no layout,
+ * ou a própria página fora dele. Um segundo `main` aninhado quebrava o
+ * atalho "pular para o conteúdo" do leitor de tela e fazia
+ * `getByRole("main")` resolver em dois elementos no E2E (issue #200).
  */
 export function TelaConteudo({
   comAcaoFixa = false,
@@ -20,7 +26,7 @@ export function TelaConteudo({
   children: React.ReactNode;
 }) {
   return (
-    <main
+    <div
       className={cn(
         "mx-auto flex w-full max-w-lg flex-1 flex-col bg-background",
         comAcaoFixa ? "pb-28" : "pb-8",
@@ -28,7 +34,7 @@ export function TelaConteudo({
       )}
     >
       {children}
-    </main>
+    </div>
   );
 }
 

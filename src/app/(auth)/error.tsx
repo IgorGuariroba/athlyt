@@ -27,22 +27,25 @@ export default function ErroTriagem({
     relatarErroCliente(error);
   }, [error]);
 
+  // Fora do casco (app), a rota fornece o <main>; o TelaConteudo é só moldura (issue #200).
   return (
-    <TelaConteudo>
-      <EstadoErro
-        titulo="Não foi possível carregar esta etapa"
-        descricao="Algo interrompeu o carregamento desta etapa."
-        statusDescricao="A ocorrência foi enviada para investigação."
-        referencia={error.digest}
-        ajuda="Suas respostas anteriores estão salvas."
-        className="px-6"
-        acao={
-          <Button type="button" size="cta" onClick={reset}>
-            <RotateCcw aria-hidden="true" />
-            Tentar novamente
-          </Button>
-        }
-      />
-    </TelaConteudo>
+    <main className="flex flex-1 flex-col">
+      <TelaConteudo>
+        <EstadoErro
+          titulo="Não foi possível carregar esta etapa"
+          descricao="Algo interrompeu o carregamento desta etapa."
+          statusDescricao="A ocorrência foi enviada para investigação."
+          referencia={error.digest}
+          ajuda="Suas respostas anteriores estão salvas."
+          className="px-6"
+          acao={
+            <Button type="button" size="cta" onClick={reset}>
+              <RotateCcw aria-hidden="true" />
+              Tentar novamente
+            </Button>
+          }
+        />
+      </TelaConteudo>
+    </main>
   );
 }
