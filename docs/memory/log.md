@@ -143,6 +143,7 @@
 
 ## 2026-09-06
 
+- Atualizada [e2e-reusa-o-dev-server-que-o-agente-deixou-no-ar.md](e2e-reusa-o-dev-server-que-o-agente-deixou-no-ar.md): registrada a variante falso-vermelho. O hook de `pre-push` roda `next build` com o servidor de produção antigo na porta 3000 e o Playwright o reusa; o processo serve chunks do diretório reconstruído e `page.goto` aborta com `net::ERR_ABORTED`, bloqueando o push como se fosse regressão. Prova temporal em dois comandos (`ps -o lstart -p <pid>` vs `stat .next/BUILD_ID`); `app:down && app:up` fechou 8/8. Regra derivada: vermelho obtido após qualquer `next build` é inconclusivo até reiniciar o servidor da porta. Fonte: push da issue #197.
 - Criada [mains-aninhados-quebram-o-escopo-main.md](mains-aninhados-quebram-o-escopo-main.md): na validação E2E da issue #197, o escopo por `getByRole("main")` — o próprio remédio de `route-announcer-do-next-e-um-alert.md` — reprovou com `strict mode violation: resolved to 2 elements` na página de proposta, porque `src/app/(app)/layout.tsx` e `src/components/tela/tela-conteudo.tsx` renderizam um `<main>` aninhado cada. Corrigido mirando `getByRole("listitem").filter({ hasText: "Justificativa" })`. Registrado também o defeito latente de acessibilidade (HTML permite um único `main` visível por página). Fonte: issue #197.
 
 ## 2026-09-05 (lote 7 de lint)
