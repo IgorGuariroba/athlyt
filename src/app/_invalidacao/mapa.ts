@@ -11,7 +11,14 @@
  *
  * Este módulo é dado puro e não importa `next/cache`: a decisão de
  * *o que* invalidar é testável sem infraestrutura; *como* invalidar
- * fica em `./index.ts`.
+ * fica em `./index.ts`. Hoje essas rotas são dinâmicas e, portanto, não
+ * há Full Route Cache a purgar; o mapa continua documentando as
+ * dependências para uma futura adoção de conteúdo cacheável.
+ *
+ * Importante: em uma Server Action, `revalidatePath` também purga o
+ * Router Cache do cliente inteiro. O argumento `rota` não recorta essa
+ * purga ao subtree nomeado; ele só identifica a entrada do Full Route
+ * Cache (quando houver) e mantém explícita a dependência de domínio.
  */
 
 /** Fato de domínio que uma escrita produziu. */
@@ -87,7 +94,6 @@ const LEITORES: Record<FatoMudado["fato"], readonly Invalidacao[]> = {
     pagina("/treino"),
     subtree("/diario"),
     pagina("/dieta"),
-    subtree("/triagem/avaliacao-corporal"),
   ],
   // Revogar consentimento remove análise visual e fotos do uso ativo.
   consentimento: [

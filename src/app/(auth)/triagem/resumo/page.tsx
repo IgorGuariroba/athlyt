@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { auth } from "@/auth";
+import { obterSessaoAtual } from "@/auth/sessao";
 import { Check, Circle, ShieldCheck } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -34,7 +34,7 @@ import { BotaoGerarPlano } from "./botao-gerar-plano";
  * O resumo desemboca na geração do Plano Ativo pelo agent.
  */
 export default async function ResumoTriagemPage({ searchParams }: { searchParams: Promise<{ erro?: string }> }) {
-  const session = await auth();
+  const session = await obterSessaoAtual();
   const userId = session?.user?.id;
   if (!userId) {
     redirect("/");

@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { Dumbbell, Play } from "lucide-react";
-import { auth } from "@/auth";
+import { obterSessaoAtual } from "@/auth/sessao";
 import { Button } from "@/components/ui/button";
 import {
   AcaoTela,
@@ -23,7 +23,7 @@ export default async function PreviaSessaoPage({
   params: Promise<{ diaId: string }>;
 }) {
   const { diaId } = await params;
-  const session = await auth();
+  const session = await obterSessaoAtual();
   const plano = session?.user?.id
     ? await obterPlanoAtivo(session.user.id)
     : null;

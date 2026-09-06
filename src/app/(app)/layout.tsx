@@ -1,4 +1,4 @@
-import { auth } from "@/auth";
+import { obterSessaoAtual } from "@/auth/sessao";
 import { redirect } from "next/navigation";
 import { BottomNav } from "@/components/navigation/bottom-nav";
 
@@ -32,7 +32,7 @@ export default async function AppLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const session = await auth();
+  const session = await obterSessaoAtual();
   if (!session?.user) {
     redirect("/");
   }

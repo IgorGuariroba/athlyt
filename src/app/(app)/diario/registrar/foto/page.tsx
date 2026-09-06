@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { auth } from "@/auth";
+import { obterSessaoAtual } from "@/auth/sessao";
 import { CabecalhoTela, NotaTela, SecoesTela, TelaConteudo } from "@/components/tela";
 import { FUSO_PADRAO, horaLocal } from "@/domain/diario/dia-alimentar";
 import { hojeDoUsuario, obterEntradaPlanejada } from "@/domain/diario/repositorio";
@@ -23,7 +23,7 @@ export default async function RegistrarPorFotoPage({
 }: {
   searchParams: Promise<{ dia?: string; refeicao?: string }>;
 }) {
-  const session = await auth();
+  const session = await obterSessaoAtual();
   if (!session?.user?.id) redirect("/");
 
   const { dia: diaParam, refeicao } = await searchParams;

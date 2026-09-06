@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { ArrowLeft, Camera, ChevronRight } from "lucide-react";
-import { auth } from "@/auth";
+import { obterSessaoAtual } from "@/auth/sessao";
 import { Button } from "@/components/ui/button";
 import { FUSO_PADRAO, horaLocal } from "@/domain/diario/dia-alimentar";
 import { hojeDoUsuario, obterEntradaPlanejada } from "@/domain/diario/repositorio";
@@ -19,7 +19,7 @@ export default async function RegistrarPage({
   searchParams: Promise<{ dia?: string; refeicao?: string }>;
 }) {
   const { dia: diaParam, refeicao } = await searchParams;
-  const session = await auth();
+  const session = await obterSessaoAtual();
   const userId = session?.user?.id;
   const fuso = FUSO_PADRAO;
   const dia = diaParam ?? hojeDoUsuario(fuso);

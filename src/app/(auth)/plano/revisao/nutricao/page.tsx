@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { Check, Flame, UtensilsCrossed } from "lucide-react";
 
-import { auth } from "@/auth";
+import { obterSessaoAtual } from "@/auth/sessao";
 import { Button } from "@/components/ui/button";
 import {
   BarraAcaoFixa,
@@ -22,7 +22,7 @@ import { obterRascunho } from "@/domain/plano/repositorio";
 import { ativarPlanoAction } from "../../actions";
 
 export default async function RevisaoNutricaoPage() {
-  const session = await auth();
+  const session = await obterSessaoAtual();
   if (!session?.user?.id) redirect("/");
   const plano = await obterRascunho(session.user.id);
   if (!plano) redirect("/plano/gerando");

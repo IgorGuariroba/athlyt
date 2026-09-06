@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, Check } from "lucide-react";
-import { auth } from "@/auth";
+import { obterSessaoAtual } from "@/auth/sessao";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ExplicacaoAgent } from "@/components/tela";
@@ -24,7 +24,7 @@ export default async function EditarRefeicaoPage({
 }) {
   const { refeicaoRef } = await params;
   const { dia: diaParam } = await searchParams;
-  const session = await auth();
+  const session = await obterSessaoAtual();
   const userId = session?.user?.id;
   const ref = decodeURIComponent(refeicaoRef);
   const planejada = userId ? await obterEntradaPlanejada(userId, ref) : null;

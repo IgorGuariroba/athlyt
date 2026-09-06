@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { Dumbbell, Flame, RefreshCw } from "lucide-react";
-import { auth } from "@/auth";
+import { obterSessaoAtual } from "@/auth/sessao";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { RadioGroup } from "@/components/ui/radio-group";
@@ -31,7 +31,7 @@ export default async function ObjetivoAtualPage({
 }: {
   searchParams: Promise<{ erro?: string; aviso?: string; sucesso?: string }>;
 }) {
-  const session = await auth();
+  const session = await obterSessaoAtual();
   if (!session?.user?.id) redirect("/");
 
   const [perfil, reavaliacao, planoAtivo, mensagens] = await Promise.all([

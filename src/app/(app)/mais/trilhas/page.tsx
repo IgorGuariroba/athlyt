@@ -1,6 +1,6 @@
 import { GitBranch } from "lucide-react";
 import { redirect } from "next/navigation";
-import { auth } from "@/auth";
+import { obterSessaoAtual } from "@/auth/sessao";
 import { Badge } from "@/components/ui/badge";
 import {
   CabecalhoTela,
@@ -213,7 +213,7 @@ function ConteudoAuditavel({ titulo, valor }: { titulo: string; valor: unknown }
  * então nada aqui é resumido a ponto de perder a rastreabilidade.
  */
 export default async function TrilhasPage() {
-  const session = await auth();
+  const session = await obterSessaoAtual();
   if (!session?.user?.id) redirect("/");
   const trilhas = await listarTrilhas(session.user.id);
 

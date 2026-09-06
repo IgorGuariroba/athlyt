@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { ImageOff } from "lucide-react";
 import { redirect } from "next/navigation";
-import { auth } from "@/auth";
+import { obterSessaoAtual } from "@/auth/sessao";
 import { Button } from "@/components/ui/button";
 import {
   CabecalhoTela,
@@ -18,7 +18,7 @@ import { criarStorageR2 } from "@/infra/storage";
 import { ComparadorFotos } from "./comparador";
 
 export default async function FotosProgressoPage() {
-  const session = await auth();
+  const session = await obterSessaoAtual();
   if (!session?.user?.id) redirect("/");
 
   const panorama = await obterPanoramaCorporal(session.user.id);

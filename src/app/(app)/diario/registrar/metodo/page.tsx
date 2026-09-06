@@ -1,12 +1,12 @@
 import { redirect } from "next/navigation";
-import { auth } from "@/auth";
+import { obterSessaoAtual } from "@/auth/sessao";
 import { SeletorMetodoRegistro } from "@/components/diario/seletor-metodo-registro";
 import { CabecalhoTela, SecoesTela, TelaConteudo } from "@/components/tela";
 import { FUSO_PADRAO } from "@/domain/diario/dia-alimentar";
 import { hojeDoUsuario, obterEntradaPlanejada } from "@/domain/diario/repositorio";
 
 export default async function MetodoRegistroPage({ searchParams }: { searchParams: Promise<{ dia?: string; refeicao?: string }> }) {
-  const session = await auth();
+  const session = await obterSessaoAtual();
   if (!session?.user?.id) redirect("/");
   const { dia: diaParam, refeicao } = await searchParams;
   const dia = diaParam ?? hojeDoUsuario(FUSO_PADRAO);

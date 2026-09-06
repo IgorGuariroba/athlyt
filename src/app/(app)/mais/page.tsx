@@ -12,7 +12,7 @@ import {
   UserRound,
 } from "lucide-react";
 
-import { auth } from "@/auth";
+import { obterSessaoAtual } from "@/auth/sessao";
 import {
   CabecalhoSecao,
   CabecalhoTela,
@@ -31,7 +31,7 @@ import { sair, sairDeTodosDispositivos } from "../../(auth)/actions";
  * Destinos relacionados dividem uma única superfície e divisores discretos.
  */
 export default async function MaisPage() {
-  const session = await auth();
+  const session = await obterSessaoAtual();
   const email = session?.user?.email;
   const nome = session?.user?.name ?? email ?? "Conta Athlyt";
 

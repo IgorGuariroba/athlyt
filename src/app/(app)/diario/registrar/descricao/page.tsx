@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { auth } from "@/auth";
+import { obterSessaoAtual } from "@/auth/sessao";
 import { RegistroPorDescricao } from "@/components/diario";
 import { AvisoAcao, CabecalhoTela, NotaTela, SecoesTela, TelaConteudo } from "@/components/tela";
 import { Button } from "@/components/ui/button";
@@ -38,7 +38,7 @@ export default async function RegistrarPorDescricaoPage({
 }: {
   searchParams: Promise<{ dia?: string; refeicao?: string; metodo?: string; consumo?: string }>;
 }) {
-  const session = await auth();
+  const session = await obterSessaoAtual();
   if (!session?.user?.id) redirect("/");
   const userId = session.user.id;
 

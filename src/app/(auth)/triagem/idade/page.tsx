@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { auth } from "@/auth";
+import { obterSessaoAtual } from "@/auth/sessao";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { posicaoNaCascata, proximoDestinoCascata } from "@/domain/triagem/etapas";
@@ -8,7 +8,7 @@ import { CascataShell } from "@/components/tela/cascata-shell";
 import { EtapaForm } from "../_components/etapa-form";
 
 export default async function IdadePage() {
-  const session = await auth();
+  const session = await obterSessaoAtual();
   const userId = session?.user?.id;
   if (!userId) redirect("/");
 

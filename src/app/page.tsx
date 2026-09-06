@@ -1,4 +1,4 @@
-import { auth } from "@/auth";
+import { obterSessaoAtual } from "@/auth/sessao";
 import { redirect } from "next/navigation";
 import { entrarComGoogle, entrarComoUsuarioDev } from "./(auth)/actions";
 import { Button } from "@/components/ui/button";
@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
  * já ativa pula direto para a aba Dieta.
  */
 export default async function BoasVindasPage() {
-  const session = await auth();
+  const session = await obterSessaoAtual();
   if (session?.user) {
     redirect("/dieta");
   }

@@ -14,7 +14,7 @@ import {
  */
 export default function CarregandoHistorico() {
   return (
-    <EsqueletoTela rotulo="Carregando o histórico de treinos">
+    <EsqueletoTela className="min-h-full" rotulo="Carregando o histórico de treinos">
       <EsqueletoCabecalho />
       <EsqueletoLista itens={5} />
     </EsqueletoTela>

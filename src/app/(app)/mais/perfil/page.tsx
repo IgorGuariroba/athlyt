@@ -6,7 +6,7 @@ import {
   Utensils,
 } from "lucide-react";
 
-import { auth } from "@/auth";
+import { obterSessaoAtual } from "@/auth/sessao";
 import {
   CabecalhoSecao,
   CabecalhoTela,
@@ -62,7 +62,7 @@ const GRUPOS: readonly {
 ];
 
 export default async function PerfilPersonalizacaoPage() {
-  const session = await auth();
+  const session = await obterSessaoAtual();
   if (!session?.user?.id) redirect("/");
 
   const perfil = await obterPerfilVigente(session.user.id);

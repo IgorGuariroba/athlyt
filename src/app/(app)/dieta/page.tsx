@@ -1,4 +1,4 @@
-import { auth } from "@/auth";
+import { obterSessaoAtual } from "@/auth/sessao";
 import {
   LinhaDoTempoDia,
   NavegacaoDia,
@@ -40,7 +40,7 @@ export default async function DietaPage({
   searchParams: Promise<{ dia?: string }>;
 }) {
   const { dia: diaParam } = await searchParams;
-  const session = await auth();
+  const session = await obterSessaoAtual();
   const userId = session?.user?.id;
   const fuso = FUSO_PADRAO;
   const hoje = hojeDoUsuario(fuso);

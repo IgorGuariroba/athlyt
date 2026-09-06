@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { auth } from "@/auth";
+import { obterSessaoAtual } from "@/auth/sessao";
 import { Button } from "@/components/ui/button";
 import { obterPerfilVigente } from "@/domain/triagem/perfil";
 import { proximaEtapaPendente } from "@/domain/triagem/suficiencia";
@@ -38,7 +38,7 @@ export default async function InicioTriagemPage({
 }: {
   searchParams: Promise<{ retomar?: string }>;
 }) {
-  const session = await auth();
+  const session = await obterSessaoAtual();
   const userId = session?.user?.id;
   if (!userId) redirect("/");
 

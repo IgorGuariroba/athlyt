@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 
-import { auth } from "@/auth";
+import { obterSessaoAtual } from "@/auth/sessao";
 import { PainelGraficoPeso } from "@/components/progresso/painel-grafico-peso";
 import { PainelPeso } from "@/components/progresso/painel-peso";
 import { CabecalhoTela, TelaConteudo } from "@/components/tela";
@@ -8,7 +8,7 @@ import { obterPesoEMetaAtuais, obterSerieDePeso } from "@/domain/medicoes/reposi
 import { salvarPesoEMeta } from "./actions";
 
 export default async function ProgressoPage() {
-  const session = await auth();
+  const session = await obterSessaoAtual();
   if (!session?.user?.id) redirect("/");
   const [pesos, serie] = await Promise.all([
     obterPesoEMetaAtuais(session.user.id),

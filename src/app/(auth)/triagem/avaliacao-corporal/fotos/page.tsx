@@ -2,7 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { ChevronLeft, Lock } from "lucide-react";
 import { AvisoAcao } from "@/components/tela/aviso-acao";
-import { auth } from "@/auth";
+import { obterSessaoAtual } from "@/auth/sessao";
 import { Button } from "@/components/ui/button";
 import { obterPanoramaCorporal } from "@/domain/medicoes/repositorio";
 import { configuracaoR2, criarStorageR2 } from "@/infra/storage";
@@ -32,7 +32,7 @@ export default async function FotosAvaliacaoPage({
 }: {
   searchParams: Promise<{ erro?: string; sucesso?: string }>;
 }) {
-  const session = await auth();
+  const session = await obterSessaoAtual();
   if (!session?.user?.id) redirect("/");
 
   const mensagens = await searchParams;
