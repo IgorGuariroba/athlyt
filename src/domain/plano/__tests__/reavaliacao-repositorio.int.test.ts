@@ -33,10 +33,10 @@ async function prepararAtleta() {
     .insert(users)
     .values({ email: `reavaliacao-${randomUUID()}@example.com` })
     .returning();
-  const perfil = await registrarRespostas(usuario.id, respostas);
-  const rascunho = await obterOuGerarRascunho(usuario.id, perfil);
-  const planoAtivo = await ativarPlano(usuario.id, rascunho.id);
-  return { userId: usuario.id, perfil, planoAtivo };
+  const perfil = await registrarRespostas(usuario!.id, respostas);
+  const rascunho = await obterOuGerarRascunho(usuario!.id, perfil);
+  const planoAtivo = await ativarPlano(usuario!.id, rascunho.id);
+  return { userId: usuario!.id, perfil, planoAtivo };
 }
 
 describe("mudança de objetivo durante um Plano Ativo", () => {
@@ -86,7 +86,7 @@ describe("mudança de objetivo durante um Plano Ativo", () => {
     const incorporada = await incorporarReavaliacaoSePropostaEstrutural(
       atleta.userId,
       mudanca.reavaliacao.id,
-      revisao.id,
+      revisao!.id,
       { tipo: "manter" },
     );
 
@@ -112,13 +112,13 @@ describe("mudança de objetivo durante um Plano Ativo", () => {
     await incorporarReavaliacaoSePropostaEstrutural(
       atleta.userId,
       mudanca.reavaliacao.id,
-      revisao.id,
+      revisao!.id,
       { tipo: "estrutural", gatilho: "mudanca_objetivo" },
     );
 
-    await rejeitarReavaliacaoDaRevisao(atleta.userId, revisao.id);
+    await rejeitarReavaliacaoDaRevisao(atleta.userId, revisao!.id);
 
-    expect(await obterReavaliacaoDaRevisao(atleta.userId, revisao.id))
+    expect(await obterReavaliacaoDaRevisao(atleta.userId, revisao!.id))
       .toMatchObject({ estado: "rejeitada" });
   });
 
@@ -139,7 +139,7 @@ describe("mudança de objetivo durante um Plano Ativo", () => {
     await incorporarReavaliacaoSePropostaEstrutural(
       atleta.userId,
       mudanca.reavaliacao.id,
-      revisao.id,
+      revisao!.id,
       { tipo: "estrutural", gatilho: "mudanca_objetivo" },
     );
     const perfil = await obterPerfilVigente(atleta.userId);
@@ -155,9 +155,9 @@ describe("mudança de objetivo durante um Plano Ativo", () => {
       janelaMinimaSemanas: 2,
     });
 
-    expect(await obterReavaliacaoDaRevisao(atleta.userId, revisao.id))
+    expect(await obterReavaliacaoDaRevisao(atleta.userId, revisao!.id))
       .toMatchObject({ estado: "aplicada", candidatePlanId: candidato.id });
-    expect(await obterRevisaoCorporal(atleta.userId, revisao.id))
+    expect(await obterRevisaoCorporal(atleta.userId, revisao!.id))
       .toMatchObject({ estado: "aplicada" });
   });
 
@@ -201,7 +201,7 @@ describe("mudança de objetivo durante um Plano Ativo", () => {
     await incorporarReavaliacaoNaRevisao(
       atleta.userId,
       vigente!.id,
-      revisao.id,
+      revisao!.id,
     );
     expect(await obterReavaliacaoPendente(atleta.userId)).toBeNull();
   });

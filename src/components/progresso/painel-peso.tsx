@@ -8,13 +8,13 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-export type EstadoRegistroPeso = { erro?: string; sucesso?: string };
+export interface EstadoRegistroPeso { erro?: string; sucesso?: string }
 
-type Props = {
+interface Props {
   pesoAtualKg?: number;
   pesoMetaKg?: number;
   aoSalvar: (estado: EstadoRegistroPeso, dados: FormData) => Promise<EstadoRegistroPeso>;
-};
+}
 
 /**
  * Registro conjunto da medição de hoje e da meta vigente. O peso atual

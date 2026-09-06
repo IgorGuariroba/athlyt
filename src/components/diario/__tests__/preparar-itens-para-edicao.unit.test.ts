@@ -39,7 +39,7 @@ describe("preparar itens antigos para edição", () => {
       calorias: 125, proteinaG: 5, carboidratosG: 22, gordurasG: 2, fibrasG: 3,
       confianca: "media", modelo: "modelo-x", origemEstimativa: "texto",
     });
-    const estimar = vi.fn(async () => ({ ok: true as const, itens: [pao] }));
+    const estimar = vi.fn(() => Promise.resolve({ ok: true as const, itens: [pao] }));
 
     const resultado = await prepararItensParaEdicao([
       { descricao: "Aveia 60 g", ...macros },
@@ -56,7 +56,11 @@ describe("preparar itens antigos para edição", () => {
   it("falha por inteiro se a IA não preparar os itens restantes", async () => {
     const resultado = await prepararItensParaEdicao(
       [{ descricao: "Receita da casa 1 porção", ...macros }],
-      async () => ({ ok: false, erro: "Não consegui preparar os alimentos antigos para edição." }),
+      () =>
+        Promise.resolve({
+          ok: false as const,
+          erro: "Não consegui preparar os alimentos antigos para edição.",
+        }),
     );
 
     expect(resultado).toEqual({

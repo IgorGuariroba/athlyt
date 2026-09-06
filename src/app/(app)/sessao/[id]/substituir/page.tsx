@@ -20,14 +20,17 @@ export default async function SubstituirPage({ params, searchParams }: {
   const { id } = await params;
   const { exercicio: exercicioId, motivo: motivoParam, relato } = await searchParams;
   const session = await auth();
-  const sessao = session?.user?.id ? await obterSessao(session.user.id, id) : null;
+  const userId = session?.user?.id;
+  if (!userId) notFound();
+
+  const sessao = await obterSessao(userId, id);
   if (!sessao || !exercicioId) notFound();
   const exercicio = sessao.exercicios.find((item) => item.exercicioId === exercicioId);
   if (!exercicio) notFound();
 
   const motivo = motivoValido(motivoParam) ? motivoParam : null;
   const alternativas = motivo
-    ? await alternativasParaSessao(session!.user!.id!, id, { exercicioId, motivo, relatoDor: relato })
+    ? await alternativasParaSessao(userId, id, { exercicioId, motivo, relatoDor: relato })
     : [];
   const voltar = `/sessao/${sessao.id}?exercicio=${sessao.exercicios.indexOf(exercicio)}`;
 

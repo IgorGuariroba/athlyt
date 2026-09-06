@@ -22,7 +22,7 @@ test("envia, lê por URL assinada e exclui foto corporal privada", async ({ page
     await expect(page.getByRole("status")).toContainText("Fotos armazenadas");
     const link = page.getByRole("link", { name: /Abrir frente/ });
     await expect(link).toHaveAttribute("href", /X-Amz-Signature=/);
-    const resposta = await page.request.get(await link.getAttribute("href") as string);
+    const resposta = await page.request.get((await link.getAttribute("href"))!);
     expect(resposta.status()).toBe(200);
     expect(resposta.headers()["content-type"]).toContain("image/webp");
     await page.getByRole("button", { name: "Excluir foto frente" }).click();

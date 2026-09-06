@@ -25,7 +25,7 @@ import {
 
 export type EixoRoleta = "x" | "y";
 
-type Props = {
+interface Props {
   eixo: EixoRoleta;
   minimo: number;
   maximo: number;
@@ -44,7 +44,7 @@ type Props = {
   /** Distância entre tiques, em pixels. Define a "marcha" do gesto. */
   passoPx?: number;
   className?: string;
-};
+}
 
 const RAIO_JANELA = 60;
 const DURACAO_ENCAIXE_MS = 180;
@@ -85,7 +85,7 @@ export function RoletaValor({
     ),
   );
   const arraste = useRef<{ coordenada: number; posicao: number } | null>(null);
-  const amostras = useRef<Array<{ posicao: number; tempo: number }>>([]);
+  const amostras = useRef<{ posicao: number; tempo: number }[]>([]);
   const animacao = useRef<number | null>(null);
   const rodaPendente = useRef(0);
   /**
@@ -125,7 +125,7 @@ export function RoletaValor({
       setIndiceDestaque(indice);
       aoMudar(valorDoIndice(indice, minimo, passo));
       if (typeof navigator !== "undefined" && "vibrate" in navigator) {
-        navigator.vibrate?.(6);
+        if ("vibrate" in navigator) navigator.vibrate(6);
       }
     },
     [aoMudar, desenhar, indiceDestaque, indiceMax, minimo, passo],

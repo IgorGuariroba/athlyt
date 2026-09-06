@@ -52,12 +52,14 @@ export function escolherTreinoDoDia(
   const emAndamento = sessoes.find((sessao) => sessao.estado === "em_andamento");
   if (emAndamento) {
     const dia = dias.find((item) => item.id === emAndamento.diaId) ?? dias[0];
+    if (!dia) throw new Error("Plano sem dias de treino.");
     return { dia, estado: "em_andamento", sessaoId: emAndamento.id, concluidasNaSemana };
   }
 
   const ultima = concluidas.at(-1);
   const indiceUltimo = ultima ? dias.findIndex((item) => item.id === ultima.diaId) : -1;
   const proximo = dias[(indiceUltimo + 1) % dias.length];
+  if (!proximo) throw new Error("Plano sem dias de treino.");
 
   // Concluir uma sessão avança imediatamente a sequência. A data não
   // bloqueia o próximo treino: o atleta pode antecipar, repor ou fazer

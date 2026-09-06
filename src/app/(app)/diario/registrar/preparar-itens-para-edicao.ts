@@ -23,7 +23,7 @@ export async function prepararItensParaEdicao(
   itens: readonly ItemAlimentar[],
   estimarRestantes: (descricoes: readonly string[]) => Promise<ResultadoPreparacaoItens>,
 ): Promise<ResultadoPreparacaoItens> {
-  const preparados: Array<ItemPrato | null> = itens.map((item) => {
+  const preparados: (ItemPrato | null)[] = itens.map((item) => {
     if (ehItemPrato(item)) return item;
     const planejado = interpretarItemPlanejadoLegadoNaBase(item.descricao);
     return planejado ? itemPlanejadoParaPrato(planejado) : null;
@@ -31,7 +31,10 @@ export async function prepararItensParaEdicao(
   const pendentes = preparados.flatMap((item, indice) => item ? [] : [indice]);
   if (pendentes.length === 0) return { ok: true, itens: preparados as ItemPrato[] };
 
-  const resultado = await estimarRestantes(pendentes.map((indice) => itens[indice].descricao));
+  const resultado = await estimarRestantes(pendentes.flatMap((indice) => {
+    const item = itens[indice];
+    return item ? [item.descricao] : [];
+  }));
   if (!resultado.ok) return resultado;
   if (resultado.itens.length !== pendentes.length || !resultado.itens.every(ehItemPrato)) {
     return {
@@ -41,7 +44,8 @@ export async function prepararItensParaEdicao(
   }
 
   pendentes.forEach((indice, posicao) => {
-    preparados[indice] = resultado.itens[posicao];
+    const item = resultado.itens[posicao];
+    if (item) preparados[indice] = item;
   });
   return { ok: true, itens: preparados as ItemPrato[] };
 }
@@ -50,8 +54,9 @@ export async function prepararItensParaEdicao(
 export function ehItemPrato(item: ItemAlimentar): item is ItemPrato {
   const candidato = item as Partial<ItemPrato>;
   return (
+    typeof candidato.quantidade === "number" &&
     Number.isFinite(candidato.quantidade) &&
-    candidato.quantidade! > 0 &&
+    candidato.quantidade > 0 &&
     (candidato.unidade === "g" || candidato.unidade === "ml") &&
     (candidato.origemDado === "base" ||
       candidato.origemDado === "usuario" ||

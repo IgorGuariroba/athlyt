@@ -15,7 +15,7 @@ const meta = {
       },
     },
   },
-  args: { valor: 30, aoMudar: () => {} },
+  args: { valor: 30, aoMudar: () => undefined },
 } satisfies Meta<typeof SeletorHorizonte>;
 
 export default meta;

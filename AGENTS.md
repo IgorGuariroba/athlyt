@@ -16,6 +16,14 @@ Run `npm run ui:verificar` to enforce these requirements; failures report the ex
 
 Run `npm run storybook:verificar` to ensure every story actually renders. `storybook build` verifies compilation but not rendering. See `docs/memory/galeria-compila-mas-nao-renderiza.md`.
 
+## Preset máximo de lint
+
+`eslint.config.mjs` roda o preset máximo: `strictTypeChecked` + `stylisticTypeChecked` do `typescript-eslint` (regras type-aware, exigem o programa TypeScript) e o `jsx-a11y` recommended completo. O lint sai de ~11 s para ~26 s; o custo é aceito de propósito.
+
+`tsconfig.json` ativa `noUncheckedIndexedAccess`: acessos indexados carregam `| undefined` e o compilador exige narrowing. `npm run lint` fica verde sem arquivo de supressões — a dívida inicial de 1024 achados foi paga em lotes (ver `docs/memory/log.md`) e `eslint-suppressions.json` foi excluído. O CI barra qualquer achado novo.
+
+Em testes (`**/*.test.*`, `e2e/**`), asserções não-nulas (`!`) continuam permitidas para expressar precondição; no código de produção, prefira guards com `throw`/`notFound()`.
+
 ## Fluxo de validação local
 
 Para validar alterações na aplicação web:

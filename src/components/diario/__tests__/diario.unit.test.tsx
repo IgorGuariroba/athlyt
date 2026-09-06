@@ -217,11 +217,11 @@ describe("LinhaDoTempoDia", () => {
     const itens = ["Café", "Almoço"].map((nome, indice) => ({ tipo: "planejada" as const, horaLocal: `${8 + indice}:00`, entrada: { refeicaoRef: nome, nome, horaLocal: `${8 + indice}:00`, itens: [{ descricao: `${nome} item`, ...MACROS }], macros: MACROS } }));
     render(<LinhaDoTempoDia itens={itens} dia="2026-08-30" fuso="America/Sao_Paulo" confirmar={() => undefined} desfazer={() => undefined} />);
     const botoes = screen.getAllByRole("button", { name: /Ver mais/ });
-    fireEvent.click(botoes[0]);
-    expect(botoes[0].getAttribute("aria-expanded")).toBe("true");
-    fireEvent.click(botoes[1]);
-    expect(botoes[0].getAttribute("aria-expanded")).toBe("false");
-    expect(botoes[1].getAttribute("aria-expanded")).toBe("true");
+    fireEvent.click(botoes[0]!);
+    expect(botoes[0]!.getAttribute("aria-expanded")).toBe("true");
+    fireEvent.click(botoes[1]!);
+    expect(botoes[0]!.getAttribute("aria-expanded")).toBe("false");
+    expect(botoes[1]!.getAttribute("aria-expanded")).toBe("true");
   });
 });
 
@@ -239,7 +239,7 @@ describe("LinhaDoTempoDiario", () => {
     const lista = screen.getByRole("list", { name: "Linha do tempo do dia" });
     const itens = within(lista).getAllByRole("listitem");
     expect(itens).toHaveLength(2);
-    expect(itens[0].textContent).toContain("07:29");
-    expect(itens[1].textContent).toContain("09:12");
+    expect(itens[0]!.textContent).toContain("07:29");
+    expect(itens[1]!.textContent).toContain("09:12");
   });
 });

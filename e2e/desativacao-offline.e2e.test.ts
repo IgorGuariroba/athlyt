@@ -10,23 +10,25 @@ test("retira o worker antigo e seus caches sem apagar dados locais ou outro work
     self.addEventListener('install', () => self.skipWaiting());
     self.addEventListener('activate', event => event.waitUntil(self.clients.claim()));
   `;
-  const server = createServer(async (request, response) => {
-    response.setHeader("Cache-Control", "no-store");
-    if (request.url === "/sw.js" || request.url === "/outro/sw.js") {
-      response.setHeader("Content-Type", "application/javascript");
-      response.end(migrado && request.url === "/sw.js"
-        ? await readFile("public/sw.js", "utf8") : legado);
-    } else if (request.url === "/desativar-sw.js") {
-      response.setHeader("Content-Type", "application/javascript");
-      try {
-        response.end(await readFile("public/desativar-sw.js", "utf8"));
-      } catch {
-        response.writeHead(404).end();
+  const server = createServer((request, response) => {
+    void (async () => {
+      response.setHeader("Cache-Control", "no-store");
+      if (request.url === "/sw.js" || request.url === "/outro/sw.js") {
+        response.setHeader("Content-Type", "application/javascript");
+        response.end(migrado && request.url === "/sw.js"
+          ? await readFile("public/sw.js", "utf8") : legado);
+      } else if (request.url === "/desativar-sw.js") {
+        response.setHeader("Content-Type", "application/javascript");
+        try {
+          response.end(await readFile("public/desativar-sw.js", "utf8"));
+        } catch {
+          response.writeHead(404).end();
+        }
+      } else {
+        response.setHeader("Content-Type", "text/html");
+        response.end(`<html><body>Migração${migrado ? '<script src="/desativar-sw.js"></script>' : ''}</body></html>`);
       }
-    } else {
-      response.setHeader("Content-Type", "text/html");
-      response.end(`<html><body>Migração${migrado ? '<script src="/desativar-sw.js"></script>' : ''}</body></html>`);
-    }
+    })();
   });
   await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
   const address = server.address() as { port: number };
@@ -46,8 +48,12 @@ test("retira o worker antigo e seus caches sem apagar dados locais ou outro work
       sessionStorage.setItem("rascunho", "pendente");
       await new Promise<void>((resolve, reject) => {
         const request = indexedDB.open("fila-de-treino", 1);
-        request.onupgradeneeded = () => request.result.createObjectStore("eventos");
-        request.onerror = () => reject(request.error);
+        request.onupgradeneeded = () => {
+          request.result.createObjectStore("eventos");
+        };
+        request.onerror = () => {
+          reject(request.error ?? new Error("IndexedDB error"));
+        };
         request.onsuccess = () => {
           const db = request.result;
           const tx = db.transaction("eventos", "readwrite");
@@ -66,7 +72,9 @@ test("retira o worker antigo e seus caches sem apagar dados locais ou outro work
     expect(await page.evaluate(() => [localStorage.getItem("preferencia"), sessionStorage.getItem("rascunho")])).toEqual(["escuro", "pendente"]);
     expect(await page.evaluate(() => new Promise((resolve, reject) => {
       const request = indexedDB.open("fila-de-treino");
-      request.onerror = () => reject(request.error);
+      request.onerror = () => {
+        reject(request.error ?? new Error("IndexedDB error"));
+      };
       request.onsuccess = () => {
         const db = request.result;
         const read = db.transaction("eventos").objectStore("eventos").get("1");
@@ -76,7 +84,12 @@ test("retira o worker antigo e seus caches sem apagar dados locais ou outro work
     await page.reload();
     await expect.poll(() => page.evaluate(async () => (await navigator.serviceWorker.getRegistrations()).length)).toBe(1);
   } finally {
-    await new Promise<void>((resolve, reject) => server.close((error) => error ? reject(error) : resolve()));
+    await new Promise<void>((resolve, reject) => {
+      server.close((error) => {
+        if (error) reject(error);
+        else resolve();
+      });
+    });
   }
 });
 
@@ -89,7 +102,9 @@ test("mantém instalação e autenticação sem instalar worker em uma visita no
   await expect(page.locator('link[rel="manifest"]')).toHaveAttribute("href", "/manifest.webmanifest");
   const manifestResponse = await page.request.get("/manifest.webmanifest");
   expect(manifestResponse.ok()).toBe(true);
-  const manifest = await manifestResponse.json();
+  const manifest = (await manifestResponse.json()) as {
+    display: string; name: string; icons: { src: string }[];
+  };
   expect(manifest.display).toBe("standalone");
   expect(manifest.name).toContain("Athlyt");
   expect(manifest.icons.length).toBeGreaterThan(0);
@@ -97,7 +112,7 @@ test("mantém instalação e autenticação sem instalar worker em uma visita no
     expect((await page.request.get(icon.src)).ok()).toBe(true);
   }
   const session = await page.request.get("/api/auth/session");
-  expect((await session.json()).user.email).toBe(user.email);
+  expect(((await session.json()) as { user: { email: string } }).user.email).toBe(user.email);
   await expect(page.locator('script[src="/desativar-sw.js"]')).toBeAttached();
   expect(await page.evaluate(async () => (await navigator.serviceWorker.getRegistrations()).length)).toBe(0);
 });

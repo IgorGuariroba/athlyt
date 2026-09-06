@@ -29,8 +29,8 @@ const nextConfig: NextConfig = {
   // A mesma raiz em dev e build, sem inferir lockfiles fora do projeto.
   turbopack: { root: __dirname },
 
-  async headers() {
-    return [{ source: "/sw.js", headers: [{ key: "Cache-Control", value: "no-store" }] }];
+  headers() {
+    return Promise.resolve([{ source: "/sw.js", headers: [{ key: "Cache-Control", value: "no-store" }] }]);
   },
 
   /**

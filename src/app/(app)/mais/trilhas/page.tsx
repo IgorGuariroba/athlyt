@@ -29,9 +29,18 @@ function explicacaoDe(valor: unknown): ExplicacaoDecisao | null {
   const registro = valor as Record<string, unknown> | null;
   if (!registro || typeof registro !== "object") return null;
   const { porque, dadosUsados } = registro;
-  return typeof porque === "string" && Array.isArray(dadosUsados)
-    ? ({ porque, dadosUsados } as ExplicacaoDecisao)
-    : null;
+  if (typeof porque !== "string" || !Array.isArray(dadosUsados)) return null;
+  // A forma dos itens ({ campo, valor }) vem do prompt que produziu o
+  // JSON; aqui entra a fronteira de leitura. Item fora da forma vira
+  // `{ campo: "", valor: "" }` em vez de vazar `any` para a tela.
+  const itens = (dadosUsados as unknown[]).map((item) => {
+    const registroItem = (item ?? {}) as Record<string, unknown>;
+    return {
+      campo: typeof registroItem.campo === "string" ? registroItem.campo : "",
+      valor: typeof registroItem.valor === "string" ? registroItem.valor : "",
+    };
+  });
+  return { porque, dadosUsados: itens };
 }
 
 /**
@@ -55,9 +64,9 @@ const PERGUNTA_META: Record<string, string> = {
 
 function coletarExplicacoes(
   resultado: Record<string, unknown> | null,
-): Array<{ pergunta: string; explicacao: ExplicacaoDecisao }> {
+): { pergunta: string; explicacao: ExplicacaoDecisao }[] {
   if (!resultado) return [];
-  const coletadas: Array<{ pergunta: string; explicacao: ExplicacaoDecisao }> = [];
+  const coletadas: { pergunta: string; explicacao: ExplicacaoDecisao }[] = [];
   const adicionar = (pergunta: string, valor: unknown) => {
     const explicacao = explicacaoDe(valor);
     if (explicacao) coletadas.push({ pergunta, explicacao });
@@ -65,10 +74,12 @@ function coletarExplicacoes(
 
   const bloco = resultado.bloco as Record<string, unknown> | undefined;
   adicionar("Por que esta divisão?", bloco?.explicacao);
-  for (const dia of (bloco?.dias ?? []) as Array<Record<string, unknown>>) {
-    adicionar(`Por que o dia ${dia.nome}?`, dia.explicacao);
-    for (const exercicio of (dia.exercicios ?? []) as Array<Record<string, unknown>>) {
-      adicionar(`Por que ${exercicio.nome}?`, exercicio.explicacao);
+  for (const dia of (bloco?.dias ?? []) as Record<string, unknown>[]) {
+    const nomeDia = typeof dia.nome === "string" ? dia.nome : "";
+    adicionar(`Por que o dia ${nomeDia}?`, dia.explicacao);
+    for (const exercicio of (dia.exercicios ?? []) as Record<string, unknown>[]) {
+      const nomeExercicio = typeof exercicio.nome === "string" ? exercicio.nome : "";
+      adicionar(`Por que ${nomeExercicio}?`, exercicio.explicacao);
     }
   }
 
@@ -77,8 +88,9 @@ function coletarExplicacoes(
   for (const [chave, valor] of Object.entries(explicacoes ?? {})) {
     adicionar(PERGUNTA_META[chave] ?? `Por que ${formatarRotulo(chave)}?`, valor);
   }
-  for (const refeicao of (nutricao?.refeicoes ?? []) as Array<Record<string, unknown>>) {
-    adicionar(`Por que a refeição ${refeicao.nome}?`, refeicao.explicacao);
+  for (const refeicao of (nutricao?.refeicoes ?? []) as Record<string, unknown>[]) {
+    const nomeRefeicao = typeof refeicao.nome === "string" ? refeicao.nome : "";
+    adicionar(`Por que a refeição ${nomeRefeicao}?`, refeicao.explicacao);
   }
 
   return coletadas;
@@ -100,10 +112,10 @@ function resumir(valor: unknown): string {
     return `${valor.length} ${valor.length === 1 ? "item" : "itens"}`;
   }
   if (valor && typeof valor === "object") {
-    const chaves = Object.keys(valor as Record<string, unknown>);
+    const chaves = Object.keys(valor);
     return `${chaves.length} ${chaves.length === 1 ? "campo" : "campos"}`;
   }
-  const texto = String(valor ?? "");
+  const texto = typeof valor === "string" || typeof valor === "number" || typeof valor === "boolean" ? String(valor) : "";
   return texto.length > 40 ? `${texto.slice(0, 40)}…` : texto;
 }
 
@@ -119,15 +131,18 @@ function ValorAuditavel({
   }
 
   if (typeof valor === "boolean") return <span>{valor ? "Sim" : "Não"}</span>;
-  if (typeof valor !== "object") {
-    return <span className="whitespace-pre-wrap break-words">{String(valor)}</span>;
+  if (typeof valor === "string" || typeof valor === "number") {
+    return <span className="whitespace-pre-wrap break-words">{valor}</span>;
   }
 
   if (Array.isArray(valor)) {
     if (valor.length === 0) return <span className="text-muted-foreground">Nenhum item</span>;
+    // `Array.isArray` sobre `unknown` entrega `any[]`; a atribuição para
+    // `unknown[]` recupera o tipo sem mentir sobre o conteúdo.
+    const itens: unknown[] = valor;
     return (
       <ol className="flex flex-col gap-2">
-        {valor.map((item, indice) => (
+        {itens.map((item, indice) => (
           <li key={indice} className="min-w-0 rounded-md border border-border bg-surface-container px-3 py-2">
             <Revelar rotulo={`Item ${indice + 1}`} meta={resumir(item)}>
               <ValorAuditavel valor={item} profundidade={profundidade + 1} />
@@ -227,11 +242,11 @@ export default async function TrilhasPage() {
               > | null;
               const campos =
                 (trilha.camposEnviados as string[]).join(", ") || "nenhum";
-              const ferramentas = trilha.ferramentasConsultadas as Array<{
+              const ferramentas = trilha.ferramentasConsultadas as {
                 nome: string;
                 argumentos: unknown;
                 resultado?: unknown;
-              }>;
+              }[];
               const explicacoes = coletarExplicacoes(resultado);
 
               return (

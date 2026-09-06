@@ -30,9 +30,9 @@ const plano: PlanoGerado = {
 
 async function contexto(equipamentos: string[] = ["halteres", "banco-reto", "supino-maquina"]) {
   const [user] = await db.insert(users).values({ email: `subst-${randomUUID()}@example.com` }).returning();
-  await db.insert(profileVersions).values({ userId: user.id, version: 1, respostas: { equipamentos, experienciaTreino: "intermediario" } });
-  await db.insert(plans).values({ userId: user.id, perfilVersao: 1, versao: 1, estado: "ativo", regraVersao: plano.regraVersao, modoConservador: false, conteudo: plano, activatedAt: new Date() });
-  return user.id;
+  await db.insert(profileVersions).values({ userId: user!.id, version: 1, respostas: { equipamentos, experienciaTreino: "intermediario" } });
+  await db.insert(plans).values({ userId: user!.id, perfilVersao: 1, versao: 1, estado: "ativo", regraVersao: plano.regraVersao, modoConservador: false, conteudo: plano, activatedAt: new Date() });
+  return user!.id;
 }
 
 describe("substituição de exercício na Sessão de Treino", () => {
@@ -57,8 +57,8 @@ describe("substituição de exercício na Sessão de Treino", () => {
     expect(atualizada.exercicios[0]).toEqual(expect.objectContaining({
       exercicioId: "supino-halteres", substituiuExercicioId: "supino-barra", motivoSubstituicao: "equipamento",
     }));
-    expect(atualizada.exercicios[0].series).toHaveLength(3);
-    expect(atualizada.exercicios[0].series[0].repeticoesSugeridas).toBe("6–10");
+    expect(atualizada.exercicios[0]!.series).toHaveLength(3);
+    expect(atualizada.exercicios[0]!.series[0]!.repeticoesSugeridas).toBe("6–10");
     expect(atualizada.eventos.at(-1)).toEqual(expect.objectContaining({
       tipo: "exercicio_substituido",
       dados: expect.objectContaining({ de: "supino-barra", para: "supino-halteres", motivo: "equipamento" }),
@@ -66,8 +66,8 @@ describe("substituição de exercício na Sessão de Treino", () => {
 
     const trilhas = await db.select().from(decisionTrails).where(and(eq(decisionTrails.userId, userId), eq(decisionTrails.operacao, "copiloto-sessao")));
     expect(trilhas).toHaveLength(1);
-    expect(trilhas[0].perfilVersao).toBe(1);
-    expect(trilhas[0].resultado).toEqual(expect.objectContaining({ tipo: "substituicao-em-sessao", motivo: "equipamento" }));
+    expect(trilhas[0]!.perfilVersao).toBe(1);
+    expect(trilhas[0]!.resultado).toEqual(expect.objectContaining({ tipo: "substituicao-em-sessao", motivo: "equipamento" }));
     expect(await listarSubstituicoes(userId, "superior-a")).toEqual([
       expect.objectContaining({ exercicioOriginalId: "supino-barra", exercicioNovoId: "supino-halteres", persistente: true }),
     ]);
@@ -80,13 +80,13 @@ describe("substituição de exercício na Sessão de Treino", () => {
     // substituto um motivo que ninguém produziu para ele.
     const userId = await contexto();
     const sessao = await iniciarSessao(userId, "superior-a");
-    expect(sessao.exercicios[0].explicacao).toBeDefined();
+    expect(sessao.exercicios[0]!.explicacao).toBeDefined();
 
     const atualizada = await substituirExercicioNaSessao(userId, sessao.id, {
       exercicioId: "supino-barra", novoExercicioId: "supino-halteres", motivo: "equipamento",
     });
 
-    expect(atualizada.exercicios[0].explicacao).toBeUndefined();
+    expect(atualizada.exercicios[0]!.explicacao).toBeUndefined();
   });
 
   it("não oferece alternativa que carrega a região dolorida relatada", async () => {
@@ -120,13 +120,13 @@ describe("substituição de exercício na Sessão de Treino", () => {
 
     // O que foi executado continua sendo do exercício que o atleta fez.
     expect(interrompido).toEqual(expect.objectContaining({ exercicioId: "supino-barra", interrompido: true, seriesPlanejadas: 3 }));
-    expect(interrompido.series).toHaveLength(1);
-    expect(interrompido.series[0]).toEqual(expect.objectContaining({ cargaKg: 60, repeticoes: 8, concluida: true }));
+    expect(interrompido!.series).toHaveLength(1);
+    expect(interrompido!.series[0]).toEqual(expect.objectContaining({ cargaKg: 60, repeticoes: 8, concluida: true }));
 
     // O substituto herda apenas o que faltava, renumerado e em branco.
     expect(substituto).toEqual(expect.objectContaining({ exercicioId: "supino-maquina-peito", substituiuExercicioId: "supino-barra", seriesPlanejadas: 2 }));
-    expect(substituto.series.map((serie) => serie.numero)).toEqual([1, 2]);
-    expect(substituto.series.every((serie) => !serie.concluida && serie.cargaKg === null)).toBe(true);
+    expect(substituto!.series.map((serie) => serie.numero)).toEqual([1, 2]);
+    expect(substituto!.series.every((serie) => !serie.concluida && serie.cargaKg === null)).toBe(true);
 
     // A sessão fecha registrando só as séries que restaram.
     await registrarSerie(userId, atualizada.id, { exercicioId: "supino-maquina-peito", numero: 1, cargaKg: 40, repeticoes: 10, rir: 2 });
@@ -162,7 +162,7 @@ describe("substituição de exercício na Sessão de Treino", () => {
       exercicioId: "supino-barra", novoExercicioId: "supino-maquina-peito", motivo: "preferencia",
     });
 
-    expect(novamenteSubstituida.exercicios[0].series[0]).toEqual(expect.objectContaining({
+    expect(novamenteSubstituida.exercicios[0]!.series[0]).toEqual(expect.objectContaining({
       cargaKg: 42, repeticoes: 9, rir: 1,
     }));
   });
@@ -188,7 +188,7 @@ describe("substituição de exercício na Sessão de Treino", () => {
 
     // A referência que a tela usa é a da máquina (40 × 10), não a da barra.
     const substituto = substituida.exercicios[1];
-    expect(substituto.marcaAnterior?.cargaKg).toBe(40);
+    expect(substituto!.marcaAnterior?.cargaKg).toBe(40);
 
     await registrarSerie(userId, substituida.id, { exercicioId: "supino-maquina-peito", numero: 1, cargaKg: 50, repeticoes: 10, rir: 2 });
     const resumo = await concluirSessao(userId, substituida.id);
@@ -202,7 +202,7 @@ describe("substituição de exercício na Sessão de Treino", () => {
       exercicioId: "supino-barra", novoExercicioId: "supino-halteres", motivo: "equipamento",
     });
     expect(atualizada.exercicios).toHaveLength(1);
-    expect(atualizada.exercicios[0].series).toHaveLength(3);
+    expect(atualizada.exercicios[0]!.series).toHaveLength(3);
   });
 
   it("motivo persistente mantém a troca nas sessões seguintes; preferência vale só na sessão", async () => {
@@ -214,16 +214,16 @@ describe("substituição de exercício na Sessão de Treino", () => {
 
     const segunda = await iniciarSessao(userId, "superior-a");
     expect(segunda.exercicios[0]).toEqual(expect.objectContaining({ exercicioId: "supino-halteres", substituiuExercicioId: "supino-barra" }));
-    expect(segunda.exercicios[0].series[0]).toEqual(expect.objectContaining({
+    expect(segunda.exercicios[0]!.series[0]).toEqual(expect.objectContaining({
       cargaKg: 24, repeticoes: 10, rir: 1,
     }));
-    expect(segunda.exercicios[0].marcaAnterior?.cargaKg).toBe(24);
+    expect(segunda.exercicios[0]!.marcaAnterior?.cargaKg).toBe(24);
 
     await substituirExercicioNaSessao(userId, segunda.id, { exercicioId: "supino-halteres", novoExercicioId: "supino-maquina-peito", motivo: "preferencia" });
     for (const numero of [1, 2, 3]) await registrarSerie(userId, segunda.id, { exercicioId: "supino-maquina-peito", numero, cargaKg: 40, repeticoes: 10, rir: 2 });
     await concluirSessao(userId, segunda.id);
 
     const terceira = await iniciarSessao(userId, "superior-a");
-    expect(terceira.exercicios[0].exercicioId).toBe("supino-halteres");
+    expect(terceira.exercicios[0]!.exercicioId).toBe("supino-halteres");
   });
 });

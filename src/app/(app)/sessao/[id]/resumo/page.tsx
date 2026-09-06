@@ -27,18 +27,21 @@ export default async function ResumoPage({
 }) {
   const { id } = await params;
   const session = await auth();
-  const encontrada = session?.user?.id
-    ? await obterSessao(session.user.id, id)
-    : null;
+  const userId = session?.user?.id;
+  if (!userId) notFound();
+
+  const encontrada = await obterSessao(userId, id);
   if (!encontrada || encontrada.estado === "em_andamento") notFound();
 
-  const resumo = await obterResumoSessao(session!.user!.id!, encontrada);
+  const resumo = await obterResumoSessao(userId, encontrada);
   // Ignora pausas longas entre eventos: uma sessão pode ficar aberta
   // enquanto o atleta se ausenta, mas isso não é duração de treino.
   const tempos = [resumo.startedAt, ...resumo.eventos.map((evento) => evento.createdAt)]
     .sort((a, b) => a.getTime() - b.getTime());
   const minutosAtivos = tempos.slice(1).reduce((total, atual, indice) => {
-    const intervalo = (atual.getTime() - tempos[indice].getTime()) / 60000;
+    const anterior = tempos[indice];
+    if (!anterior) return total;
+    const intervalo = (atual.getTime() - anterior.getTime()) / 60000;
     return total + (intervalo <= 10 ? intervalo : 0);
   }, 0);
   const duracaoMin = Math.max(1, Math.round(minutosAtivos));
@@ -119,11 +122,14 @@ export default async function ResumoPage({
                       .filter((serie) => serie.concluida)
                       .map((serie) => {
                         const modalidade = exercicio.protocolo ?? "repeticoes";
-                        if (modalidade === "tempo") return `${serie.repeticoes} s`;
-                        if (modalidade === "distancia") return `${serie.repeticoes} m`;
-                        if (modalidade === "duracao") return `${serie.repeticoes} min`;
-                        if (modalidade === "calorias") return `${serie.repeticoes} kcal`;
-                        return `${serie.repeticoes}×${serie.cargaKg} kg · RIR ${serie.rir}`;
+                        const repeticoes = serie.repeticoes ?? 0;
+                        const cargaKg = serie.cargaKg ?? 0;
+                        const rir = serie.rir;
+                        if (modalidade === "tempo") return `${repeticoes} s`;
+                        if (modalidade === "distancia") return `${repeticoes} m`;
+                        if (modalidade === "duracao") return `${repeticoes} min`;
+                        if (modalidade === "calorias") return `${repeticoes} kcal`;
+                        return `${repeticoes}×${cargaKg} kg · RIR ${rir}`;
                       })
                       .join(" · ") || "Sem séries registradas"
                   }

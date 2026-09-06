@@ -61,7 +61,13 @@ describe("gerarPlano — tabela de cenários", () => {
 
   it("cardápio respeita restrição vegetariana e traz quantidades", () => {
     const plano = gerarPlano({ perfilVersao: 1, respostas: { ...completo, restricoesAlimentares: ["Vegetariano"] }, agora: new Date("2025-06-01") });
-    const itens = plano.nutricao.refeicoes.flatMap((r) => r.itens).join(" ");
+    const itens = plano.nutricao.refeicoes
+      .flatMap((r) =>
+        r.itens.map((i) =>
+          typeof i === "string" ? i : `${i.nome} ${i.porcaoDescrita}`,
+        ),
+      )
+      .join(" ");
     expect(itens).not.toMatch(/frango|peixe/i);
     expect(itens).toMatch(/tofu|lentilha|feijão/i);
     expect(itens).toMatch(/\d+ (g|ml|un)/);
@@ -80,9 +86,9 @@ describe("substituirExercicio", () => {
   it("preserva padrão e prescrição", () => {
     const plano = gerarPlano({ perfilVersao: 1, respostas: completo, agora: new Date("2025-06-01") });
     const dia = plano.bloco.dias[0];
-    const atual = dia.exercicios.find((e) => e.padrao === "empurrar-horizontal")!;
-    const alterado = substituirExercicio(plano, { diaId: dia.id, exercicioId: atual.exercicioId, novoExercicioId: "supino-halteres" }, completo);
-    const novo = alterado.bloco.dias[0].exercicios.find((e) => e.exercicioId === "supino-halteres")!;
+    const atual = dia!.exercicios.find((e) => e.padrao === "empurrar-horizontal")!;
+    const alterado = substituirExercicio(plano, { diaId: dia!.id, exercicioId: atual.exercicioId, novoExercicioId: "supino-halteres" }, completo);
+    const novo = alterado.bloco.dias[0]!.exercicios.find((e) => e.exercicioId === "supino-halteres")!;
     expect(novo.padrao).toBe(atual.padrao);
     expect(novo.series).toBe(atual.series);
   });
@@ -90,7 +96,7 @@ describe("substituirExercicio", () => {
   it("rejeita estímulo diferente", () => {
     const plano = gerarPlano({ perfilVersao: 1, respostas: completo, agora: new Date("2025-06-01") });
     const dia = plano.bloco.dias[0];
-    const atual = dia.exercicios[0];
-    expect(() => substituirExercicio(plano, { diaId: dia.id, exercicioId: atual.exercicioId, novoExercicioId: "prancha" }, completo)).toThrow("preserva");
+    const atual = dia!.exercicios[0];
+    expect(() => substituirExercicio(plano, { diaId: dia!.id, exercicioId: atual!.exercicioId, novoExercicioId: "prancha" }, completo)).toThrow("preserva");
   });
 });

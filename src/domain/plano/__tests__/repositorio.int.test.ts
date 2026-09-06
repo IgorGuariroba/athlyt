@@ -15,7 +15,7 @@ const respostas: RespostasTriagem = {
 
 async function usuario() {
   const [u] = await db.insert(users).values({ email: `plano-${randomUUID()}@example.com` }).returning();
-  return u.id;
+  return u!.id;
 }
 
 describe("ciclo do Plano Ativo", () => {
@@ -26,17 +26,17 @@ describe("ciclo do Plano Ativo", () => {
     expect(b.id).toBe(a.id);
     const trilhas = await db.select().from(decisionTrails).where(eq(decisionTrails.userId, userId));
     expect(trilhas).toHaveLength(1);
-    expect(trilhas[0].modeloResolvido).toBe("motor-plano-v2");
-    expect(trilhas[0].camposEnviados).toContain("equipamentos");
+    expect(trilhas[0]!.modeloResolvido).toBe("motor-plano-v2");
+    expect(trilhas[0]!.camposEnviados).toContain("equipamentos");
   });
 
   it("substituição pré-ativação persiste e entra na Trilha de Decisão", async () => {
     const userId = await usuario();
     const rascunho = await obterOuGerarRascunho(userId, { version: 9, respostas });
     const dia = rascunho.conteudo.bloco.dias[0];
-    const atual = dia.exercicios.find((e) => e.padrao === "empurrar-horizontal")!;
-    const alterado = await substituirNoRascunho(userId, { planoId: rascunho.id, diaId: dia.id, exercicioId: atual.exercicioId, novoExercicioId: "flexao-de-braco" }, respostas);
-    expect(alterado.conteudo.bloco.dias[0].exercicios.map((e) => e.exercicioId)).toContain("flexao-de-braco");
+    const atual = dia!.exercicios.find((e) => e.padrao === "empurrar-horizontal")!;
+    const alterado = await substituirNoRascunho(userId, { planoId: rascunho.id, diaId: dia!.id, exercicioId: atual.exercicioId, novoExercicioId: "flexao-de-braco" }, respostas);
+    expect(alterado.conteudo.bloco.dias[0]!.exercicios.map((e) => e.exercicioId)).toContain("flexao-de-braco");
     const trilhas = await db.select().from(decisionTrails).where(eq(decisionTrails.userId, userId));
     expect(trilhas).toHaveLength(2);
     expect(trilhas.map((trilha) => (trilha.resultado as { tipo: string }).tipo)).toContain("substituicao-pre-ativacao");
@@ -50,7 +50,7 @@ describe("ciclo do Plano Ativo", () => {
     expect(ativo.versao).toBe(1);
     await expect(ativarPlano(userId, rascunho.id)).rejects.toThrow("já ativado");
     const dia = ativo.conteudo.bloco.dias[0];
-    await expect(substituirNoRascunho(userId, { planoId: ativo.id, diaId: dia.id, exercicioId: dia.exercicios[0].exercicioId, novoExercicioId: "prancha" }, respostas)).rejects.toThrow("rascunho");
+    await expect(substituirNoRascunho(userId, { planoId: ativo.id, diaId: dia!.id, exercicioId: dia!.exercicios[0]!.exercicioId, novoExercicioId: "prancha" }, respostas)).rejects.toThrow("rascunho");
   });
 
   it("Ajuste Auto-aplicado reduz até 10% do volume e desfazer cria nova versão", async () => {
@@ -58,7 +58,7 @@ describe("ciclo do Plano Ativo", () => {
     const ajuste = await aplicarReducaoVolumeAutomatica(userId, randomUUID()); expect(ajuste).not.toBeNull();
     const [aplicado] = await db.select().from(plans).where(eq(plans.id, ajuste!.appliedPlanId));
     const series = (conteudo: typeof baseline.conteudo) => conteudo.bloco.dias.flatMap((dia) => dia.exercicios).reduce((total, exercicio) => total + exercicio.series, 0);
-    expect(series(aplicado.conteudo as typeof baseline.conteudo)).toBe(series(baseline.conteudo) - Math.floor(series(baseline.conteudo) * 0.1));
+    expect(series(aplicado!.conteudo as typeof baseline.conteudo)).toBe(series(baseline.conteudo) - Math.floor(series(baseline.conteudo) * 0.1));
     const restaurado = await desfazerAjusteAutomatico(userId, { reviewId: randomUUID(), baselinePlanId: baseline.id });
     expect(restaurado.versao).toBe(3); expect(restaurado.conteudo).toEqual(baseline.conteudo);
   });

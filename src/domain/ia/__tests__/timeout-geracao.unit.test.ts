@@ -3,7 +3,15 @@ import { executarComTimeout } from "../timeout-geracao";
 
 describe("executarComTimeout", () => {
   it("rejeita com timeout quando a operação não termina no prazo", async () => {
-    await expect(executarComTimeout(() => new Promise(() => {}), 5)).rejects.toThrow("Timeout da geração de IA após 5 ms");
+    await expect(
+      executarComTimeout(
+        () =>
+          new Promise(() => {
+            // Promessa intencionalmente nunca resolve para exercitar o timeout.
+          }),
+        5,
+      ),
+    ).rejects.toThrow("Timeout da geração de IA após 5 ms");
   });
 
   it("propaga cancelamento externo ao sinal da chamada ativa", async () => {
@@ -12,7 +20,9 @@ describe("executarComTimeout", () => {
     const promessa = executarComTimeout(
       (signal) => {
         sinalRecebido = signal;
-        return new Promise(() => {});
+        return new Promise(() => {
+          // Promessa intencionalmente nunca resolve para exercitar o abort.
+        });
       },
       1_000,
       externo.signal,

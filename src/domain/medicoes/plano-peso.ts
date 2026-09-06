@@ -34,9 +34,9 @@ export const HORIZONTES_DISPONIVEIS = [30, 90, 120] as const;
 
 export type HorizonteDias = (typeof HORIZONTES_DISPONIVEIS)[number];
 
-export type MedicaoPeso = { data: Date; pesoKg: number };
+export interface MedicaoPeso { data: Date; pesoKg: number }
 
-export type PlanoDePeso = {
+export interface PlanoDePeso {
   /** Instante do dia 0 — a medição inicial. */
   inicio: Date;
   /** Borda direita do eixo do tempo. */
@@ -52,18 +52,18 @@ export type PlanoDePeso = {
   /** Extremos do eixo de peso, incluindo a meta mesmo se distante. */
   minKg: number;
   maxKg: number;
-};
+}
 
 const emDias = (inicio: Date, dias: number) =>
   new Date(inicio.getTime() + dias * DIA_EM_MS);
 
 /** Marcas do eixo de peso e os extremos que elas definem. */
-export type EscalaDePeso = {
+export interface EscalaDePeso {
   /** Valores rotulados, do menor ao maior, igualmente espaçados. */
   marcas: readonly number[];
   pisoKg: number;
   tetoKg: number;
-};
+}
 
 /** Alvo de marcas; o passo escolhido pode entregar uma a menos ou mais. */
 const MARCAS_ALVO = 4;
@@ -139,7 +139,7 @@ export function calcularEscalaDePeso({
     marcas.push(Number((pisoKg + i * passo).toFixed(10)));
   }
 
-  return { marcas, pisoKg: marcas[0], tetoKg: marcas[marcas.length - 1] };
+  return { marcas, pisoKg: marcas[0] ?? pisoKg, tetoKg: marcas.at(-1) ?? pisoKg };
 }
 
 /**
@@ -220,7 +220,8 @@ export function descreverDistanciaAMeta({
  */
 function escolherPasso(ideal: number): number {
   const decada = 10 ** Math.floor(Math.log10(ideal));
-  return PASSOS_LEGIVEIS.find((passo) => passo * decada >= ideal)! * decada;
+  const passoEscolhido = PASSOS_LEGIVEIS.find((passo) => passo * decada >= ideal) ?? 10;
+  return passoEscolhido * decada;
 }
 
 /**

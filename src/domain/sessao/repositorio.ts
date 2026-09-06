@@ -72,7 +72,7 @@ export interface SessaoTreino {
 }
 export interface ResumoSessao extends SessaoTreino {
   totalSeries: number; volumeKg: number;
-  recordes: Array<{ exercicioId: string; nome: string; tipo: TipoRecorde; valor: number; rotulo: string }>;
+  recordes: { exercicioId: string; nome: string; tipo: TipoRecorde; valor: number; rotulo: string }[];
 }
 
 type UltimaSerie = Pick<SerieSessao, "cargaKg" | "repeticoes" | "rir">;
@@ -161,6 +161,7 @@ export async function iniciarSessao(userId: string, diaId: string): Promise<Sess
     const [linha] = await tx.insert(workoutSessions).values({
       userId, planId: plano.id, diaId, nome: dia.nome, estado: "em_andamento", exercicios,
     }).returning();
+    if (!linha) throw new Error("Falha ao iniciar sessão: linha não retornada.");
     await tx.insert(workoutEvents).values({ sessionId: linha.id, userId, tipo: "sessao_iniciada", dados: { planoId: plano.id, diaId } });
     return mapear(linha);
   });
@@ -199,6 +200,7 @@ export async function registrarSerie(userId: string, sessionId: string, entrada:
 
     const { exercicios } = aplicarRegistroSerie(estado, veredito.registro);
     const [atualizada] = await tx.update(workoutSessions).set({ exercicios }).where(eq(workoutSessions.id, sessionId)).returning();
+    if (!atualizada) throw new Error("Falha ao registrar série: linha não retornada.");
     await tx.insert(workoutEvents).values({ sessionId, userId, tipo: "serie_registrada", dados: entrada });
     return mapear(atualizada);
   });
@@ -211,7 +213,7 @@ export async function registrarOverrideAlertaCautela(userId: string, sessionId: 
 }): Promise<void> {
   const sessao = await obterSessao(userId, sessionId);
   const exercicio = sessao?.exercicios.find((item) => item.exercicioId === entrada.exercicioId);
-  if (!sessao || sessao.estado !== "em_andamento" || !exercicio?.series.some((serie) => serie.numero === entrada.proximaSerie && !serie.concluida)) {
+  if (sessao?.estado !== "em_andamento" || !exercicio?.series.some((serie) => serie.numero === entrada.proximaSerie && !serie.concluida)) {
     throw new Error("Alerta de Cautela não corresponde à próxima série.");
   }
   await db.insert(workoutEvents).values({
@@ -288,8 +290,9 @@ export async function abandonarSessao(userId: string, sessionId: string, motivo:
 async function encerrar(userId: string, sessionId: string, estado: "concluida" | "abandonada", motivo?: MotivoAbandono): Promise<SessaoTreino> {
   const atualizada = await db.transaction(async (tx) => {
     const [linha] = await tx.select().from(workoutSessions).where(and(eq(workoutSessions.id, sessionId), eq(workoutSessions.userId, userId))).limit(1).for("update");
-    if (!linha || linha.estado !== "em_andamento") throw new Error("Sessão não está em andamento.");
+    if (linha?.estado !== "em_andamento") throw new Error("Sessão não está em andamento.");
     const [encerrada] = await tx.update(workoutSessions).set({ estado, endedAt: new Date(), motivoAbandono: motivo ?? null }).where(eq(workoutSessions.id, sessionId)).returning();
+    if (!encerrada) throw new Error("Falha ao encerrar sessão: linha não retornada.");
     await tx.insert(workoutEvents).values({ sessionId, userId, tipo: estado === "concluida" ? "sessao_concluida" : "sessao_abandonada", dados: motivo ? { motivo } : {} });
     return encerrada;
   });
@@ -447,7 +450,8 @@ export async function substituirExercicioNaSessao(userId: string, sessionId: str
   const alternativas = await alternativasParaSessao(userId, sessionId, { exercicioId: entrada.exercicioId, motivo: entrada.motivo, relatoDor: entrada.observacao });
   const escolhida = alternativas.find((a) => a.exercicioId === entrada.novoExercicioId);
   if (!escolhida) throw new Error("Alternativa não preserva o estímulo ou não é viável para o seu perfil.");
-  const novo = encontrarExercicio(entrada.novoExercicioId)!;
+  const novo = encontrarExercicio(entrada.novoExercicioId);
+  if (!novo) throw new Error("Exercício não encontrado.");
   const [marcas, ultimasSeries] = await Promise.all([
     marcasDoHistorico(userId),
     ultimasSeriesDoHistorico(userId),
@@ -457,16 +461,18 @@ export async function substituirExercicioNaSessao(userId: string, sessionId: str
 
   const atualizada = await db.transaction(async (tx) => {
     const [linha] = await tx.select().from(workoutSessions).where(and(eq(workoutSessions.id, sessionId), eq(workoutSessions.userId, userId))).limit(1).for("update");
-    if (!linha || linha.estado !== "em_andamento") throw new Error("Sessão não está em andamento.");
+    if (linha?.estado !== "em_andamento") throw new Error("Sessão não está em andamento.");
     const exercicios = structuredClone(linha.exercicios as ExercicioSessao[]);
     const indice = exercicios.findIndex((item) => item.exercicioId === entrada.exercicioId);
     if (indice < 0) throw new Error("Exercício não pertence à sessão.");
     const original = exercicios[indice];
+    if (!original) throw new Error("Exercício não pertence à sessão.");
     if (original.interrompido) throw new Error("Este exercício já foi substituído nesta sessão.");
     const seriesJaFeitas = original.series.filter((serie) => serie.concluida).length;
     exercicios.splice(indice, 1, ...dividirNaSubstituicao(original, novo.id, novo.nome, entrada.motivo, marcas.get(novo.id) ?? MARCA_ZERO, ultimasSeries));
 
     const [atualizada] = await tx.update(workoutSessions).set({ exercicios }).where(eq(workoutSessions.id, sessionId)).returning();
+    if (!atualizada) throw new Error("Falha ao substituir exercício: linha não retornada.");
     const dados = { de: entrada.exercicioId, para: entrada.novoExercicioId, motivo: entrada.motivo, preservaEstimulo: escolhida.preservaEstimulo, persistente, observacao: entrada.observacao ?? null, seriesJaFeitas };
     await tx.insert(workoutEvents).values({ sessionId, userId, tipo: "exercicio_substituido", dados });
     await tx.insert(exerciseSubstitutions).values({

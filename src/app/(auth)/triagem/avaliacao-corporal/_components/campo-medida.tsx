@@ -72,7 +72,7 @@ export function CampoMedida({
         placeholder="—"
         defaultValue={valorInicial}
         aria-label={rotuloAcessivel}
-        aria-invalid={invalido || undefined}
+        aria-invalid={invalido ? true : undefined}
         onBlur={(evento) => {
           // O submit já persiste o formulário inteiro. Não dispare uma
           // segunda escrita concorrente quando o blur foi causado pelo

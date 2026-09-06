@@ -1,8 +1,17 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   executarFallbackDeModelo,
+  type EventoProgressoFallback,
+  type ResultadoChamadaRota,
   type RotaModeloAprovada,
 } from "../fallback-modelo";
+
+/** Assinatura do callback que `executarFallbackDeModelo` espera; dá tipo
+ * às leituras de `mock.calls` e ao `signal` dos testes de abort. */
+type ChamadaExecutar = (
+  rota: RotaModeloAprovada,
+  contexto: { chamada: number; signal: AbortSignal },
+) => Promise<ResultadoChamadaRota<unknown>>;
 
 const ROTAS: readonly RotaModeloAprovada[] = [
   { modelo: "modelo-1", endpoint: "endpoint-1" },
@@ -14,11 +23,13 @@ afterEach(() => vi.useRealTimers());
 
 describe("executarFallbackDeModelo", () => {
   it("conclui no primário sem iniciar alternativas", async () => {
-    const executar = vi.fn(async () => ({
-      tipo: "sucesso" as const,
-      valor: { refeicao: "almoço" },
-      modeloResolvido: "modelo-1@2026",
-    }));
+    const executar = vi.fn<ChamadaExecutar>(() =>
+      Promise.resolve({
+        tipo: "sucesso" as const,
+        valor: { refeicao: "almoço" },
+        modeloResolvido: "modelo-1@2026",
+      }),
+    );
 
     const resultado = await executarFallbackDeModelo({ rotas: ROTAS, executar });
 
@@ -34,9 +45,9 @@ describe("executarFallbackDeModelo", () => {
   });
 
   it("repete uma falha transitória uma vez e então avança para a próxima rota", async () => {
-    const progresso = vi.fn();
+    const progresso = vi.fn<(evento: EventoProgressoFallback) => void>();
     const executar = vi
-      .fn()
+      .fn<ChamadaExecutar>()
       .mockResolvedValueOnce({ tipo: "limite-taxa", motivo: "429", retryable: true })
       .mockResolvedValueOnce({ tipo: "limite-taxa", motivo: "429", retryable: true })
       .mockResolvedValueOnce({
@@ -65,7 +76,7 @@ describe("executarFallbackDeModelo", () => {
   });
 
   it("corrige saída inválida na mesma rota e nunca avança para outro modelo", async () => {
-    const executar = vi.fn()
+    const executar = vi.fn<ChamadaExecutar>()
       .mockResolvedValueOnce({ tipo: "saida-invalida", motivo: "schema", retryable: true })
       .mockResolvedValueOnce({ tipo: "saida-invalida", motivo: "schema" });
 
@@ -80,8 +91,10 @@ describe("executarFallbackDeModelo", () => {
 
   it("cancela a rota ativa e não inicia fallback", async () => {
     const controlador = new AbortController();
-    const executar = vi.fn((_rota, { signal }) => new Promise<never>((_resolve, reject) => {
-      signal.addEventListener("abort", () => reject(new DOMException("cancelada", "AbortError")), { once: true });
+    const executar = vi.fn<ChamadaExecutar>((_rota, { signal }) => new Promise<never>((_resolve, reject) => {
+      signal.addEventListener("abort", () => {
+        reject(new DOMException("cancelada", "AbortError"));
+      }, { once: true });
     }));
     const promessa = executarFallbackDeModelo({ rotas: ROTAS, executar, signal: controlador.signal });
 
@@ -96,8 +109,10 @@ describe("executarFallbackDeModelo", () => {
 
   it("o limite global aborta tudo e impede nova tentativa", async () => {
     vi.useFakeTimers();
-    const executar = vi.fn((_rota, { signal }) => new Promise<never>((_resolve, reject) => {
-      signal.addEventListener("abort", () => reject(new DOMException("timeout", "AbortError")), { once: true });
+    const executar = vi.fn<ChamadaExecutar>((_rota, { signal }) => new Promise<never>((_resolve, reject) => {
+      signal.addEventListener("abort", () => {
+        reject(new DOMException("timeout", "AbortError"));
+      }, { once: true });
     }));
     const promessa = executarFallbackDeModelo({
       rotas: ROTAS,
@@ -117,9 +132,12 @@ describe("executarFallbackDeModelo", () => {
 
   it("o limite por rota aborta a chamada e avança quando resta orçamento global", async () => {
     vi.useFakeTimers();
-    const executar = vi.fn()
+    const executar = vi
+      .fn<ChamadaExecutar>()
       .mockImplementationOnce((_rota, { signal }) => new Promise<never>((_resolve, reject) => {
-        signal.addEventListener("abort", () => reject(new DOMException("timeout", "AbortError")), { once: true });
+        signal.addEventListener("abort", () => {
+          reject(new DOMException("timeout", "AbortError"));
+        }, { once: true });
       }))
       .mockResolvedValueOnce({ tipo: "sucesso", valor: "ok", modeloResolvido: "modelo-2" });
     const promessa = executarFallbackDeModelo({

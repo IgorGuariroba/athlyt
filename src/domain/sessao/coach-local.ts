@@ -63,7 +63,7 @@ export function sugerirCarga(exercicio: ExercicioSessao, proximaSerie: SerieSess
   const anteriores = exercicio.series.filter((serie) => serie.concluida && serie.numero < proximaSerie.numero);
   const ultima = anteriores.at(-1);
 
-  if (!ultima || ultima.cargaKg === null) {
+  if (ultima?.cargaKg == null) {
     return orientacao("carga-primeira-serie",
       `Comece com ${arredondar(proximaSerie.cargaSugeridaKg)} kg, sua referência para este exercício.`,
       { cargaSugeridaKg: arredondar(proximaSerie.cargaSugeridaKg) });
@@ -99,7 +99,9 @@ export function avaliarCautela(exercicio: ExercicioSessao): OrientacaoLocal | nu
   const feitas = exercicio.series.filter((serie) => serie.concluida);
   const ultimas = feitas.slice(-2);
   if (ultimas.length < 2) return null;
-  const minimo = repeticoesMinimas(ultimas[0].repeticoesSugeridas);
+  const primeiraDasUltimas = ultimas[0];
+  if (!primeiraDasUltimas) return null;
+  const minimo = repeticoesMinimas(primeiraDasUltimas.repeticoesSugeridas);
   const falhou = ultimas.every((serie) => serie.rir === 0 && (serie.repeticoes ?? 0) < minimo);
   if (!falhou) return null;
   return orientacao("cautela-falha-repetida",

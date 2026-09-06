@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const decidir = vi.fn();
-vi.mock("../../decidir", () => ({ decidir: (...args: unknown[]) => decidir(...args) }));
+const decidir = vi.fn<(entrada: unknown) => Promise<unknown>>();
+vi.mock("../../decidir", () => ({ decidir: (entrada: unknown) => decidir(entrada) }));
 
 const { estimarRefeicaoPorDescricao, refeicaoTextoSchema } = await import("../refeicao-texto");
 const { transcreverAudioDaRefeicao, refeicaoAudioSchema } = await import("../refeicao-audio");
@@ -47,14 +47,14 @@ describe("estimarRefeicaoPorDescricao", () => {
       origemDescricao: "texto",
     });
 
-    const chamada = decidir.mock.calls[0][0] as {
+    const chamada = decidir.mock.calls[0]![0] as {
       operacao: string;
       dados: Record<string, { texto?: string; origem?: string }>;
     };
     expect(chamada.operacao).toBe("refeicao-texto");
     // A descrição precisa chegar ao modelo como o atleta a escreveu:
     // é ela que sustenta a auditoria do registro depois.
-    expect(chamada.dados["descricao-livre"].texto).toBe("Duas colheres de arroz e um bife");
+    expect(chamada.dados["descricao-livre"]!.texto).toBe("Duas colheres de arroz e um bife");
   });
 
   it("distingue transcrição de áudio de texto escrito no contexto enviado", async () => {
@@ -67,11 +67,11 @@ describe("estimarRefeicaoPorDescricao", () => {
       origemDescricao: "audio",
     });
 
-    const chamada = decidir.mock.calls[0][0] as {
+    const chamada = decidir.mock.calls[0]![0] as {
       dados: Record<string, { origem?: string }>;
       origem: { gatilho: string };
     };
-    expect(chamada.dados["descricao-livre"].origem).toMatch(/transcri/i);
+    expect(chamada.dados["descricao-livre"]!.origem).toMatch(/transcri/i);
     expect(chamada.origem.gatilho).toContain("audio");
   });
 
@@ -82,7 +82,7 @@ describe("estimarRefeicaoPorDescricao", () => {
       userId: "u1", nucleo, descricao: "Comi dois ovos", origemDescricao: "texto",
     });
 
-    expect((decidir.mock.calls[0][0] as { imagens?: unknown }).imagens).toBeUndefined();
+    expect((decidir.mock.calls[0]![0] as { imagens?: unknown }).imagens).toBeUndefined();
   });
 
   it("proíbe usar as metas restantes como alvo da estimativa", async () => {
@@ -95,7 +95,7 @@ describe("estimarRefeicaoPorDescricao", () => {
 
     // As metas calibram porções plausíveis; forçar o resultado a
     // fechar a meta descreveria o plano, não a refeição.
-    const { instrucao } = decidir.mock.calls[0][0] as { instrucao: string };
+    const { instrucao } = decidir.mock.calls[0]![0] as { instrucao: string };
     expect(instrucao).toMatch(/Nunca ajuste a estimativa para fechar a meta/i);
   });
 
@@ -106,7 +106,7 @@ describe("estimarRefeicaoPorDescricao", () => {
       userId: "u1", nucleo, descricao: "Comi dois ovos", origemDescricao: "texto",
     });
 
-    const { instrucao } = decidir.mock.calls[0][0] as { instrucao: string };
+    const { instrucao } = decidir.mock.calls[0]![0] as { instrucao: string };
     expect(instrucao).toMatch(/apenas alimentos sustentados pela descrição/i);
   });
 
@@ -173,7 +173,7 @@ describe("transcreverAudioDaRefeicao", () => {
       audio: { dados: new Uint8Array([1, 2, 3]), mediaType: "audio/webm" },
     });
 
-    const chamada = decidir.mock.calls[0][0] as {
+    const chamada = decidir.mock.calls[0]![0] as {
       operacao: string;
       audios: { mediaType: string }[];
     };
@@ -192,7 +192,7 @@ describe("transcreverAudioDaRefeicao", () => {
       userId: "u1", nucleo, audio: { dados: new Uint8Array([1]), mediaType: "audio/webm" },
     });
 
-    const { instrucao } = decidir.mock.calls[0][0] as { instrucao: string };
+    const { instrucao } = decidir.mock.calls[0]![0] as { instrucao: string };
     expect(instrucao).toMatch(/Não estime calorias, macros nem gramas/i);
   });
 

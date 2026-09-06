@@ -21,7 +21,7 @@ const meta = {
   },
   args: {
     audio: null,
-    aoGravar: () => {},
+    aoGravar: () => undefined,
     dica: "Diga o que comeu e as porções como você lembra: “dois ovos, um pão francês e um copo de leite”.",
   },
 } satisfies Meta<typeof CapturaAudio>;

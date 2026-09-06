@@ -14,4 +14,4 @@ async function main() {
   console.log(`Retenção aplicada: ${[...removidas.values()].flat().length} fotos removidas; ${falhas} falhas preservadas para nova tentativa.`);
   if (falhas) process.exitCode = 1;
 }
-main().catch((erro) => { console.error(erro); process.exitCode = 1; });
+main().catch((erro: unknown) => { console.error(erro); process.exitCode = 1; });

@@ -69,7 +69,9 @@ export async function abrirExercicio(page: Page, nome: string) {
   await fecharTimer(page);
   const link = page.getByRole("link", { name: `Abrir ${nome}` });
   await expect(link).toBeVisible();
-  await link.evaluate((element) => element.scrollIntoView({ block: "center", inline: "nearest" }));
+  await link.evaluate((element) => {
+    element.scrollIntoView({ block: "center", inline: "nearest" });
+  });
   await link.click();
   await expect(page.getByRole("heading", { name: nome, level: 2 })).toBeVisible();
 }

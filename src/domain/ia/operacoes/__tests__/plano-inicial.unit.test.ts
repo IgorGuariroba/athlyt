@@ -1,9 +1,9 @@
 import { describe, expect, it, vi } from "vitest";
 
-const gerarTreino = vi.fn();
-const gerarNutricao = vi.fn();
-vi.mock("../plano-treino", () => ({ gerarPlanoTreinoComIA: (...a: unknown[]) => gerarTreino(...a) }));
-vi.mock("../plano-nutricao", () => ({ gerarPlanoNutricaoComIA: (...a: unknown[]) => gerarNutricao(...a) }));
+const gerarTreino = vi.fn<(entrada: unknown) => Promise<unknown>>();
+const gerarNutricao = vi.fn<(entrada: unknown) => Promise<unknown>>();
+vi.mock("../plano-treino", () => ({ gerarPlanoTreinoComIA: (entrada: unknown) => gerarTreino(entrada) }));
+vi.mock("../plano-nutricao", () => ({ gerarPlanoNutricaoComIA: (entrada: unknown) => gerarNutricao(entrada) }));
 
 const { gerarPlanoInicialComIA } = await import("../plano-inicial");
 
@@ -90,7 +90,7 @@ describe("gerarPlanoInicialComIA", () => {
 
     expect(resultado.status).toBe("ok");
     if (resultado.status !== "ok") return;
-    expect(resultado.valor.nutricao.refeicoes[0].itens[0]).toMatchObject({
+    expect(resultado.valor.nutricao.refeicoes[0]!.itens[0]).toMatchObject({
       nome: "Aveia em flocos",
       quantidade: 60,
       calorias: 236,
@@ -107,7 +107,7 @@ describe("gerarPlanoInicialComIA", () => {
 
     expect(resultado.status).toBe("ok");
     if (resultado.status !== "ok") return;
-    expect(resultado.valor.bloco.dias[0].exercicios[0].justificativa).toContain("peitoral");
+    expect(resultado.valor.bloco.dias[0]!.exercicios[0]!.justificativa).toContain("peitoral");
   });
 
   it("indisponibiliza o plano inteiro quando o treino falha", async () => {

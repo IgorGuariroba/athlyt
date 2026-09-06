@@ -9,20 +9,20 @@ export type ModalidadeProtocolo =
   | "unilateral"
   | "circuito";
 
-export type ProtocoloExecucao = {
+export interface ProtocoloExecucao {
   modalidade: ModalidadeProtocolo;
   unidade: "repeticoes" | "segundos" | "metros" | "minutos" | "kcal" | "pace" | "lados" | "rodadas";
   alvo: string;
   exigeCarga: boolean;
   exigeRir: boolean;
-};
+}
 
-export type EntradaProtocoloExecucao = {
+export interface EntradaProtocoloExecucao {
   exercicioId: string;
   repeticoes?: string;
   cargaKg?: boolean;
   modalidade?: ModalidadeProtocolo;
-};
+}
 
 /**
  * Resolve o protocolo de registro sem acoplar a tela ao nome do exercício.

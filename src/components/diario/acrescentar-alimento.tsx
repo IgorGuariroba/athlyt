@@ -57,7 +57,7 @@ export type ResultadoTranscricaoAcrescimo =
 
 type Modo = "texto" | "audio" | "foto";
 
-const MODOS: ReadonlyArray<{ id: Modo; rotulo: string; Icone: typeof PencilLine }> = [
+const MODOS: readonly { id: Modo; rotulo: string; Icone: typeof PencilLine }[] = [
   { id: "texto", rotulo: "Escrever", Icone: PencilLine },
   { id: "audio", rotulo: "Falar", Icone: Mic },
   { id: "foto", rotulo: "Fotografar", Icone: Camera },
@@ -244,7 +244,7 @@ export function AcrescentarAlimento({
           <Button
             type="button"
             className="flex-1"
-            onClick={transcreverAudio}
+            onClick={() => void transcreverAudio()}
             disabled={!audio || ocupado}
           >
             <Sparkles className="size-4" aria-hidden="true" />
@@ -254,7 +254,7 @@ export function AcrescentarAlimento({
           <Button
             type="button"
             className="flex-1"
-            onClick={modo === "foto" ? estimarPorFoto : estimarPorTexto}
+            onClick={() => void (modo === "foto" ? estimarPorFoto() : estimarPorTexto())}
             disabled={ocupado || (modo === "foto" ? !foto : !podeEstimarTexto)}
           >
             <Plus className="size-4" aria-hidden="true" />

@@ -85,7 +85,7 @@ export default async function ExperimentoPage({
         ) : rascunho && planoAtivo && reavaliacao ? (
           <form action={iniciarExperimento} className="flex flex-col gap-5">
             <input type="hidden" name="planoId" value={rascunho.id} />
-            {reavaliacao ? <input type="hidden" name="reavaliacaoId" value={reavaliacao.id} /> : null}
+            <input type="hidden" name="reavaliacaoId" value={reavaliacao.id} />
 
             <CartaoLista>
               <LinhasCartaoLista>

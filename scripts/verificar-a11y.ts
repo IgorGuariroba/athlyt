@@ -14,8 +14,8 @@ const BASE = process.env.STORYBOOK_URL ?? "http://localhost:6006";
 const require = createRequire(import.meta.url);
 const axeSource = readFileSync(require.resolve("axe-core"), "utf8");
 
-type Entrada = { id: string; type: string; title: string; name: string };
-type Violacao = { id: string; impact: string | null; help: string; nodes: { target: string[] }[] };
+interface Entrada { id: string; type: string; title: string; name: string }
+interface Violacao { id: string; impact: string | null; help: string; nodes: { target: string[] }[] }
 
 async function main() {
   const resposta = await fetch(`${BASE}/index.json`);
@@ -40,8 +40,13 @@ async function main() {
     await pagina.addScriptTag({ content: axeSource });
 
     const violacoes = (await pagina.evaluate(async () => {
-      // @ts-expect-error axe é injetado no contexto da página
-      const resultado = await window.axe.run("#storybook-root", {
+      // `axe` é injetado na página pelo `addScriptTag` acima; o tipo do
+      // axe-core existe só aqui dentro, onde não colide com o bundle do
+      // Node. Sem a guarda, um axe não injetado viraria TypeError sem
+      // dizer em qual story aconteceu.
+      const axe = (window as unknown as { axe?: { run: typeof import("axe-core").run } }).axe;
+      if (!axe) throw new Error("axe-core não foi injetado na página");
+      const resultado = await axe.run("#storybook-root", {
         resultTypes: ["violations"],
       });
       return resultado.violations;
@@ -66,7 +71,7 @@ async function main() {
   console.log(`${stories.length} stories passaram na auditoria axe.`);
 }
 
-main().catch((erro) => {
+main().catch((erro: unknown) => {
   console.error(erro);
   process.exit(1);
 });

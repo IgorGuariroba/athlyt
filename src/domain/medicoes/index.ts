@@ -46,7 +46,9 @@ export interface MetaProporcao {
 const mediana = (valores: number[]) => {
   const ordenados = [...valores].sort((a, b) => a - b);
   const meio = Math.floor(ordenados.length / 2);
-  return ordenados.length % 2 ? ordenados[meio] : Math.round((ordenados[meio - 1] + ordenados[meio]) / 2);
+  return ordenados.length % 2
+    ? (ordenados[meio] ?? 0)
+    : Math.round(((ordenados[meio - 1] ?? 0) + (ordenados[meio] ?? 0)) / 2);
 };
 
 /**
@@ -152,7 +154,7 @@ export function calcularPendenciasCadencia(entrada: { agora: Date; ultimoPeso?: 
 
 export function detectarAssimetriaSuspeita(entrada: { direitoMm: number; esquerdoMm: number; dor?: boolean; inchaco?: boolean; perdaForca?: boolean }) {
   const diferencaMm = Math.abs(entrada.direitoMm - entrada.esquerdoMm);
-  const sintomas = Boolean(entrada.dor || entrada.inchaco || entrada.perdaForca);
+  const sintomas = Boolean(entrada.dor) || Boolean(entrada.inchaco) || Boolean(entrada.perdaForca);
   return {
     diferencaMm,
     confirmavel: diferencaMm > 10 && !sintomas,

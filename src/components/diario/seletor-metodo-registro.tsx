@@ -3,10 +3,10 @@ import { Camera, Keyboard, Mic, Search } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 
-type ContextoRegistro = {
+interface ContextoRegistro {
   dia: string;
   refeicaoRef?: string | null;
-};
+}
 
 /** Os quatro caminhos de registro compartilham exatamente o mesmo contexto. */
 export function SeletorMetodoRegistro({ dia, refeicaoRef }: ContextoRegistro) {

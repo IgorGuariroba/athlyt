@@ -20,6 +20,7 @@ describe("registrarRespostas / obterPerfilVigente", () => {
       .insert(users)
       .values({ email: `perfil-test-${randomUUID()}@example.com` })
       .returning();
+  if (!user) throw new Error("Falha ao criar usuário de teste.");
     return user.id;
   }
 
@@ -75,9 +76,9 @@ describe("registrarRespostas / obterPerfilVigente", () => {
 
     expect(historico).toHaveLength(3);
     expect(historico.map((v) => v.version)).toEqual([3, 2, 1]);
-    expect(historico[2].respostas).toEqual({ pesoKg: 80 });
-    expect(historico[1].respostas).toEqual({ pesoKg: 78 });
-    expect(historico[0].respostas).toEqual({
+    expect(historico[2]!.respostas).toEqual({ pesoKg: 80 });
+    expect(historico[1]!.respostas).toEqual({ pesoKg: 78 });
+    expect(historico[0]!.respostas).toEqual({
       pesoKg: 78,
       sexoBiologico: "masculino",
     });

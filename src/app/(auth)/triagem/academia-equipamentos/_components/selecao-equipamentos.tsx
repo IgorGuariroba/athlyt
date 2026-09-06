@@ -270,7 +270,7 @@ export function SelecaoEquipamentos({
                 onKeyDown={(evento) => {
                   if (evento.key === "Enter") {
                     evento.preventDefault();
-                    adicionarPersonalizado();
+                    void adicionarPersonalizado();
                   }
                 }}
                 placeholder="Ex.: Belt squat"
@@ -280,7 +280,7 @@ export function SelecaoEquipamentos({
               />
               <button
                 type="button"
-                onClick={adicionarPersonalizado}
+                onClick={() => void adicionarPersonalizado()}
                 disabled={salvandoPersonalizados}
                 className="flex h-12 shrink-0 items-center gap-2 rounded-xl bg-on-surface-strong px-4 text-label-md text-background disabled:cursor-wait disabled:opacity-60"
               >
@@ -304,37 +304,35 @@ export function SelecaoEquipamentos({
                   src="/equipamentos/personalizado.svg"
                   loading="eager"
                   checked={personalizadosSelecionados.has(nome)}
-                  onCheckedChange={async (marcado) => {
+                  onCheckedChange={(marcado) => {
                     const proximos = new Set(personalizadosSelecionados);
                     if (marcado) proximos.add(nome);
                     else proximos.delete(nome);
-                    if (
-                      await persistirPersonalizados(
-                        personalizadosCadastrados,
-                        proximos,
-                      )
-                    ) {
-                      setPersonalizadosSelecionados(proximos);
-                    }
+                    void persistirPersonalizados(
+                      personalizadosCadastrados,
+                      proximos,
+                    ).then((persistido) => {
+                      if (persistido) setPersonalizadosSelecionados(proximos);
+                    });
                   }}
                   acao={
                     <button
                       type="button"
-                      onClick={async (evento) => {
+                      onClick={(evento) => {
                         evento.preventDefault();
                         const proximosCadastrados = personalizadosCadastrados.filter(
                           (item) => item !== nome,
                         );
                         const proximosSelecionados = new Set(personalizadosSelecionados);
                         proximosSelecionados.delete(nome);
-                        if (
-                          !(await persistirPersonalizados(
-                            proximosCadastrados,
-                            proximosSelecionados,
-                          ))
-                        ) return;
-                        setPersonalizadosCadastrados(proximosCadastrados);
-                        setPersonalizadosSelecionados(proximosSelecionados);
+                        void persistirPersonalizados(
+                          proximosCadastrados,
+                          proximosSelecionados,
+                        ).then((persistido) => {
+                          if (!persistido) return;
+                          setPersonalizadosCadastrados(proximosCadastrados);
+                          setPersonalizadosSelecionados(proximosSelecionados);
+                        });
                       }}
                       disabled={salvandoPersonalizados}
                       aria-label={`Excluir ${nome}`}
@@ -373,7 +371,7 @@ export function SelecaoEquipamentos({
                       value={equipamento.id}
                       rotulo={equipamento.rotulo}
                       src={
-                        IMAGENS_EQUIPAMENTOS_REPDB[equipamento.id as keyof typeof IMAGENS_EQUIPAMENTOS_REPDB] ??
+                        (IMAGENS_EQUIPAMENTOS_REPDB as Record<string, string>)[equipamento.id] ??
                         imagemEquipamento(equipamento.id)
                       }
                       loading="eager"

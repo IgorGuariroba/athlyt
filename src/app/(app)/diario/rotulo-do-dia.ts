@@ -11,6 +11,7 @@ export function rotuloDoDia(dia: string, hoje: string, fuso: string): string {
   if (dia === hoje) return "Hoje";
   if (dia === diaVizinho(hoje, -1, fuso)) return "Ontem";
   const [ano, mes, diaMes] = dia.split("-").map(Number);
+  if (ano === undefined || mes === undefined || diaMes === undefined) throw new Error(`Data local inválida: ${dia}`);
   return new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "short", timeZone: "UTC" })
     .format(new Date(Date.UTC(ano, mes - 1, diaMes)));
 }

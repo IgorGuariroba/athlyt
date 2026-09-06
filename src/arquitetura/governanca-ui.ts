@@ -121,7 +121,7 @@ export function componentesForaDoCatalogo(
     .filter(({ caminho }) => !COMPONENTES_DE_TELA_NAO_MIGRADOS.has(caminho))
     .filter(({ fonte }) =>
       [...fonte.matchAll(/export\s+(?:default\s+)?function\s+([A-Za-z0-9_]+)/g)].some(
-        (m) => ehNomeDeComponente(m[1]),
+        (m) => m[1] !== undefined && ehNomeDeComponente(m[1]),
       ),
     )
     .map(

@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { AvisoAcao } from "@/components/tela/aviso-acao";
 import { CampoSelecao } from "@/components/tela/campo-selecao";
+import { campoTexto } from "@/lib/form-data";
 import { reduzirImagemParaEnvio } from "./reduzir-imagem";
 
 /** Janelas de retenção oferecidas para as fotos corporais. */
@@ -66,7 +67,7 @@ export function EnvioFotos({
   const [atualizando, iniciarAtualizacao] = useTransition();
   const ocupado = enviando || atualizando;
 
-  async function aoEnviar(evento: React.FormEvent<HTMLFormElement>) {
+  async function aoEnviar(evento: React.SyntheticEvent<HTMLFormElement>) {
     evento.preventDefault();
     const formulario = evento.currentTarget;
     const dados = new FormData(formulario);
@@ -84,9 +85,9 @@ export function EnvioFotos({
       return;
     }
 
-    const condicoes = String(dados.get("condicoes") ?? "");
-    const retencaoDias = String(dados.get("retencaoDias") ?? "0");
-    const consentimento = String(dados.get("consentimentoArmazenamento") ?? "");
+    const condicoes = campoTexto(dados, "condicoes");
+    const retencaoDias = campoTexto(dados, "retencaoDias", "0");
+    const consentimento = campoTexto(dados, "consentimentoArmazenamento");
 
     setEnviando(true);
     setProgresso({ feitas: 0, total: escolhidas.length });
@@ -131,7 +132,7 @@ export function EnvioFotos({
   }
 
   return (
-    <form onSubmit={aoEnviar} className="flex flex-1 flex-col gap-6">
+    <form onSubmit={(evento) => void aoEnviar(evento)} className="flex flex-1 flex-col gap-6">
       <section className="overflow-hidden rounded-2xl border border-border bg-surface-container">
         <div className="flex flex-col gap-1.5 px-5 pt-4 pb-3">
           <strong className="text-title text-on-surface-strong">

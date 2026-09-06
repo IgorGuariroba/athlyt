@@ -31,15 +31,23 @@ function abrir(): Promise<IDBDatabase> {
       }
       if (!bd.objectStoreNames.contains(META)) bd.createObjectStore(META);
     };
-    pedido.onsuccess = () => resolve(pedido.result);
-    pedido.onerror = () => reject(pedido.error);
+    pedido.onsuccess = () => {
+      resolve(pedido.result);
+    };
+    pedido.onerror = () => {
+      reject(pedido.error ?? new Error("Falha ao abrir IndexedDB"));
+    };
   });
 }
 
 function promessa<T>(pedido: IDBRequest<T>): Promise<T> {
   return new Promise((resolve, reject) => {
-    pedido.onsuccess = () => resolve(pedido.result);
-    pedido.onerror = () => reject(pedido.error);
+    pedido.onsuccess = () => {
+      resolve(pedido.result);
+    };
+    pedido.onerror = () => {
+      reject(pedido.error ?? new Error("Falha na requisição IndexedDB"));
+    };
   });
 }
 
@@ -54,7 +62,10 @@ export async function enfileirar(sessionId: string, tipo: TipoEventoOutbox, dado
     const tx = bd.transaction([LOJA, META], "readwrite");
     const meta = tx.objectStore(META);
     const chave = `ordem:${sessionId}`;
-    const ordem = ((await promessa<number | undefined>(meta.get(chave))) ?? 0) + 1;
+    // A loja META é sem schema (`createObjectStore(META)` sem keyPath), então
+    // `get` devolve `IDBRequest<any>`. O recast tipa o contrato de escrita
+    // deste módulo: só ele grava nela, sempre números.
+    const ordem = ((await promessa<number | undefined>(meta.get(chave) as IDBRequest<number | undefined>)) ?? 0) + 1;
     const evento: EventoOutbox = {
       id: crypto.randomUUID(), sessionId, tipo, ordem,
       ocorridoEm: new Date().toISOString(), dados,
@@ -62,8 +73,12 @@ export async function enfileirar(sessionId: string, tipo: TipoEventoOutbox, dado
     meta.put(ordem, chave);
     tx.objectStore(LOJA).put(evento);
     await new Promise<void>((resolve, reject) => {
-      tx.oncomplete = () => resolve();
-      tx.onerror = () => reject(tx.error);
+      tx.oncomplete = () => {
+        resolve();
+      };
+      tx.onerror = () => {
+        reject(tx.error ?? new Error("Falha na transação IndexedDB"));
+      };
     });
     return evento;
   } finally {
@@ -75,7 +90,10 @@ export async function pendentes(sessionId?: string): Promise<EventoOutbox[]> {
   const bd = await abrir();
   try {
     const loja = bd.transaction(LOJA, "readonly").objectStore(LOJA);
-    const todos = await promessa<EventoOutbox[]>(loja.getAll());
+    // Mesmo contrato: a loja de eventos só recebe `EventoOutbox` gravado
+    // por `enfileirar`, então o `getAll` genérico (`any[]`) é afinado ao
+    // tipo que este módulo garante.
+    const todos = await promessa<EventoOutbox[]>(loja.getAll() as IDBRequest<EventoOutbox[]>);
     const filtrados = sessionId ? todos.filter((e) => e.sessionId === sessionId) : todos;
     return filtrados.sort((a, b) => a.ordem - b.ordem || a.id.localeCompare(b.id));
   } finally {
@@ -97,8 +115,12 @@ export async function confirmar(ids: readonly string[]): Promise<void> {
     const loja = tx.objectStore(LOJA);
     for (const id of ids) loja.delete(id);
     await new Promise<void>((resolve, reject) => {
-      tx.oncomplete = () => resolve();
-      tx.onerror = () => reject(tx.error);
+      tx.oncomplete = () => {
+        resolve();
+      };
+      tx.onerror = () => {
+        reject(tx.error ?? new Error("Falha na transação IndexedDB"));
+      };
     });
   } finally {
     bd.close();
@@ -108,13 +130,13 @@ export async function confirmar(ids: readonly string[]): Promise<void> {
 export interface RespostaSincronizacao {
   aplicados: string[];
   duplicados: string[];
-  conflitos: Array<{ id: string; motivo: string }>;
+  conflitos: { id: string; motivo: string }[];
   /**
    * Recusados por defeito do cliente. Saem da fila porque nenhum
    * reenvio os torna válidos — mantê-los só travaria a drenagem de
    * tudo o que vem depois.
    */
-  inadmissiveis?: Array<{ id: string; motivo: string }>;
+  inadmissiveis?: { id: string; motivo: string }[];
 }
 
 /**

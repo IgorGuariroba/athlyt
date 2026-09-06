@@ -9,7 +9,7 @@
 import { readdirSync, readFileSync, statSync } from "node:fs";
 import { join, relative, sep } from "node:path";
 
-export type ComponenteCatalogo = {
+export interface ComponenteCatalogo {
   /** Caminho relativo à raiz do projeto. */
   arquivo: string;
   /** Alias de import (`@/components/...`). */
@@ -24,7 +24,7 @@ export type ComponenteCatalogo = {
   variantes: Record<string, string[]>;
   /** Primeiro bloco de documentação do arquivo, quando existe. */
   doc?: string;
-};
+}
 
 const RAIZ_COMPONENTES = join("src", "components");
 
@@ -71,13 +71,17 @@ function extrairExports(fonte: string): { exports: string[]; tipos: string[] } {
   const declarado =
     /export\s+(?:async\s+)?(function|const|type|interface)\s+([A-Za-z0-9_]+)/g;
   for (const m of fonte.matchAll(declarado)) {
-    nomes.add(m[2]);
-    if (m[1] === "type" || m[1] === "interface") tipos.add(m[2]);
+    const nome = m[2];
+    if (!nome) continue;
+    nomes.add(nome);
+    if (m[1] === "type" || m[1] === "interface") tipos.add(nome);
   }
 
   const reexport = /export\s*\{([^}]*)\}/g;
   for (const m of fonte.matchAll(reexport)) {
-    for (const parte of m[1].split(",")) {
+    const lista = m[1];
+    if (!lista) continue;
+    for (const parte of lista.split(",")) {
       const ehTipo = /\btype\b/.test(parte);
       const nome = parte.replace(/\btype\b/, "").split(/\s+as\s+/).pop()?.trim();
       if (!nome) continue;
@@ -100,6 +104,7 @@ function extrairVariantes(fonte: string): Record<string, string[]> {
   const corpo: string[] = [];
   while (i < fonte.length && profundidade > 0) {
     const c = fonte[i];
+    if (c === undefined) break;
     if (c === "{") profundidade++;
     else if (c === "}") profundidade--;
     if (profundidade > 0) corpo.push(c);
@@ -112,12 +117,13 @@ function extrairVariantes(fonte: string): Record<string, string[]> {
   while (j < texto.length) {
     const abre = texto.indexOf("{", j);
     if (abre === -1) break;
-    const rotulo = texto.slice(j, abre).match(/([A-Za-z0-9_]+)\s*:\s*$/);
+    const rotulo = /([A-Za-z0-9_]+)\s*:\s*$/.exec(texto.slice(j, abre));
     let prof = 1;
     let k = abre + 1;
     const inner: string[] = [];
     while (k < texto.length && prof > 0) {
       const c = texto[k];
+      if (c === undefined) break;
       if (c === "{") prof++;
       else if (c === "}") prof--;
       if (prof > 0) inner.push(c);
@@ -126,9 +132,11 @@ function extrairVariantes(fonte: string): Record<string, string[]> {
     if (rotulo) {
       const opcoes = new Set<string>();
       for (const m of inner.join("").matchAll(/(?:^|\n)\s*"?([A-Za-z0-9_-]+)"?\s*:/g)) {
-        opcoes.add(m[1]);
+        const opcao = m[1];
+        if (opcao) opcoes.add(opcao);
       }
-      if (opcoes.size > 0) resultado[rotulo[1]] = [...opcoes];
+      const grupo = rotulo[1];
+      if (opcoes.size > 0 && grupo) resultado[grupo] = [...opcoes];
     }
     j = k;
   }
@@ -136,8 +144,8 @@ function extrairVariantes(fonte: string): Record<string, string[]> {
 }
 
 function extrairDoc(fonte: string): string | undefined {
-  const m = fonte.match(/\/\*\*([\s\S]*?)\*\//);
-  if (!m) return undefined;
+  const m = /\/\*\*([\s\S]*?)\*\//.exec(fonte);
+  if (m?.[1] === undefined) return undefined;
   return m[1]
     .split("\n")
     .map((linha) => linha.replace(/^\s*\*\s?/, "").trim())

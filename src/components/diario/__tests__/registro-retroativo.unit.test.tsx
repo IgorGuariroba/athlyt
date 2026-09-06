@@ -46,7 +46,8 @@ const PAO_ESTIMADO = itemEstimado({
 
 /** Acréscimo por descrição: o caminho que substituiu o formulário de macros. */
 const ACRESCIMO = {
-  estimarDescricao: async () => ({ ok: true as const, estimativa: { itens: [PAO_ESTIMADO] } }),
+  estimarDescricao: () =>
+    Promise.resolve({ ok: true as const, estimativa: { itens: [PAO_ESTIMADO] } }),
 };
 
 const ESTIMATIVA: EstimativaDescrita = {
@@ -103,7 +104,7 @@ describe("RevisaoEstimativa", () => {
     expect(screen.getByText(/378 kcal/)).toBeTruthy();
   });
 
-  it("corrigir a porção reescala o item sem promover a estimativa", async () => {
+  it("corrigir a porção reescala o item sem promover a estimativa", () => {
     const aoMudar = montar();
 
     fireEvent.change(screen.getByLabelText("Quantidade de Arroz branco cozido em g"), {
@@ -111,11 +112,11 @@ describe("RevisaoEstimativa", () => {
     });
 
     const itens = aoMudar.mock.calls.at(-1)![0] as ItemPrato[];
-    expect(itens[0].quantidade).toBe(50);
-    expect(itens[0].origemDado).toBe("estimativa-ia");
+    expect(itens[0]!.quantidade).toBe(50);
+    expect(itens[0]!.origemDado).toBe("estimativa-ia");
   });
 
-  it("corrigir o alimento preserva os macros: dizer o que era não é dizer quanto era", async () => {
+  it("corrigir o alimento preserva os macros: dizer o que era não é dizer quanto era", () => {
     const aoMudar = montar();
 
     fireEvent.change(screen.getByLabelText("Alimento 1"), {
@@ -123,8 +124,8 @@ describe("RevisaoEstimativa", () => {
     });
 
     const itens = aoMudar.mock.calls.at(-1)![0] as ItemPrato[];
-    expect(itens[0].descricao).toBe("Arroz integral cozido 100 g");
-    expect(itens[0].calorias).toBe(ARROZ.calorias);
+    expect(itens[0]!.descricao).toBe("Arroz integral cozido 100 g");
+    expect(itens[0]!.calorias).toBe(ARROZ.calorias);
   });
 
   it("aceita nome composto digitado tecla a tecla", async () => {
@@ -153,7 +154,7 @@ describe("RevisaoEstimativa", () => {
     await userEvent.type(campo, "Coca cola zero");
 
     expect((campo as HTMLInputElement).value).toBe("Coca cola zero");
-    expect(itens[0].descricao).toBe("Coca cola zero 100 g");
+    expect(itens[0]!.descricao).toBe("Coca cola zero 100 g");
   });
 
   it("remover um item tira-o do conjunto que será gravado", async () => {
@@ -186,7 +187,7 @@ describe("RevisaoEstimativa", () => {
     const itens = aoMudar.mock.calls.at(-1)![0] as ItemPrato[];
     expect(itens).toHaveLength(3);
     expect(itens.slice(0, 2)).toEqual([ARROZ, BIFE]);
-    expect(itens[2].origemDado).toBe("estimativa-ia");
+    expect(itens[2]!.origemDado).toBe("estimativa-ia");
   });
 
   it("sem estimativa de conjunto, não inventa tarja de incerteza", () => {
@@ -228,7 +229,7 @@ describe("RevisaoEstimativa", () => {
   });
 
   it("recalcular é por item e sob comando: nunca durante a digitação", async () => {
-    const aoRecalcularItem = vi.fn(async () => {});
+    const aoRecalcularItem = vi.fn(() => Promise.resolve());
     const editado = renomearItem(ARROZ, "Arroz integral cozido");
     render(
       <RevisaoEstimativa
@@ -246,7 +247,7 @@ describe("RevisaoEstimativa", () => {
     const botoes = screen.getAllByRole("button", { name: /Recalcular/ });
     expect(botoes).toHaveLength(1);
 
-    await userEvent.click(botoes[0]);
+    await userEvent.click(botoes[0]!);
     expect(aoRecalcularItem).toHaveBeenCalledWith(0);
   });
 
@@ -271,16 +272,22 @@ describe("RevisaoEstimativa", () => {
 
 describe("RegistroPorDescricao", () => {
   const acoes = () => ({
-    estimar: vi.fn<(fd: FormData) => Promise<ResultadoEstimativa>>(async () => ({
-      ok: true,
-      estimativa: ESTIMATIVA,
-    })),
-    transcrever: vi.fn<(fd: FormData) => Promise<ResultadoTranscricao>>(async () => ({
-      ok: true,
-      transcricao: "Duas colheres de arroz e um bife médio.",
-      trechosIncertos: ["bife médio"],
-    })),
-    registrar: vi.fn<(fd: FormData) => Promise<ResultadoRegistro>>(async () => ({ ok: true })),
+    estimar: vi.fn<(fd: FormData) => Promise<ResultadoEstimativa>>(() =>
+      Promise.resolve({
+        ok: true,
+        estimativa: ESTIMATIVA,
+      }),
+    ),
+    transcrever: vi.fn<(fd: FormData) => Promise<ResultadoTranscricao>>(() =>
+      Promise.resolve({
+        ok: true,
+        transcricao: "Duas colheres de arroz e um bife médio.",
+        trechosIncertos: ["bife médio"],
+      }),
+    ),
+    registrar: vi.fn<(fd: FormData) => Promise<ResultadoRegistro>>(() =>
+      Promise.resolve({ ok: true }),
+    ),
   });
 
   function montar(props = {}) {
@@ -318,10 +325,12 @@ describe("RegistroPorDescricao", () => {
 
   it("falha na estimativa preserva a descrição digitada", async () => {
     const fns = acoes();
-    fns.estimar = vi.fn<(fd: FormData) => Promise<ResultadoEstimativa>>(async () => ({
-      ok: false,
-      erro: "Indisponível agora.",
-    }));
+    fns.estimar = vi.fn<(fd: FormData) => Promise<ResultadoEstimativa>>(() =>
+      Promise.resolve({
+        ok: false,
+        erro: "Indisponível agora.",
+      }),
+    );
     render(
       <RegistroPorDescricao
         dia="2026-05-20" horaInicial="12:30" nomeInicial="Almoço"
@@ -366,13 +375,15 @@ describe("RegistroPorDescricao", () => {
     // número do refrigerante comum sob o nome do zero.
     const fns = {
       ...acoes(),
-      recalcularItem: vi.fn<(fd: FormData) => Promise<ResultadoMacrosItem>>(async () => ({
-        ok: true,
-        macros: {
-          calorias: 0, proteinaG: 0, carboidratosG: 0, gordurasG: 0, fibrasG: 0,
-          confianca: "alta" as const, modelo: "modelo-y",
-        },
-      })),
+      recalcularItem: vi.fn<(fd: FormData) => Promise<ResultadoMacrosItem>>(() =>
+        Promise.resolve({
+          ok: true,
+          macros: {
+            calorias: 0, proteinaG: 0, carboidratosG: 0, gordurasG: 0, fibrasG: 0,
+            confianca: "alta" as const, modelo: "modelo-y",
+          },
+        }),
+      ),
     };
     render(
       <RegistroPorDescricao
@@ -400,7 +411,7 @@ describe("RegistroPorDescricao", () => {
     // permaneceu intacto.
     const total = screen.getByText("Total estimado").parentElement!;
     await waitFor(() => expect(within(total).getByText(/250 kcal/)).toBeTruthy());
-    const enviado = fns.recalcularItem.mock.calls[0][0];
+    const enviado = fns.recalcularItem.mock.calls[0]![0];
     expect(enviado.get("alimento")).toBe("Arroz integral cozido");
     // A unidade viaja junto: pedir macros de "100" sem dizer se são
     // gramas ou mililitros devolve o número de outra comida.
@@ -413,20 +424,22 @@ describe("RegistroPorDescricao", () => {
     await userEvent.click(screen.getByRole("button", { name: /Registrar no Diário/ }));
     await waitFor(() => expect(fns.registrar).toHaveBeenCalledOnce());
     const gravados = JSON.parse(
-      String(fns.registrar.mock.calls[0][0].get("itens")),
+      (fns.registrar.mock.calls[0]![0].get("itens") as string | null) ?? "[]",
     ) as ItemPrato[];
-    expect(gravados[0].descricao).toBe("Arroz integral cozido 100 g");
-    expect(gravados[0].calorias).toBe(0);
-    expect(gravados[1].calorias).toBe(BIFE.calorias);
+    expect(gravados[0]!.descricao).toBe("Arroz integral cozido 100 g");
+    expect(gravados[0]!.calorias).toBe(0);
+    expect(gravados[1]!.calorias).toBe(BIFE.calorias);
   });
 
   it("falha ao recalcular preserva os números que estavam na tela", async () => {
     const fns = {
       ...acoes(),
-      recalcularItem: vi.fn<(fd: FormData) => Promise<ResultadoMacrosItem>>(async () => ({
-        ok: false,
-        erro: "Não consegui recalcular agora.",
-      })),
+      recalcularItem: vi.fn<(fd: FormData) => Promise<ResultadoMacrosItem>>(() =>
+        Promise.resolve({
+          ok: false,
+          erro: "Não consegui recalcular agora.",
+        }),
+      ),
     };
     render(
       <RegistroPorDescricao
@@ -462,7 +475,7 @@ describe("RegistroPorDescricao", () => {
     await userEvent.click(screen.getByRole("button", { name: /Registrar no Diário/ }));
 
     await waitFor(() => expect(registrar).toHaveBeenCalledOnce());
-    const fd = registrar.mock.calls[0][0];
+    const fd = registrar.mock.calls[0]![0];
     expect(fd.get("hora")).toBe("15:45");
     expect(fd.get("nome")).toBe("Almoço: arroz e bife");
   });
@@ -508,7 +521,7 @@ describe("RegistroPorDescricao", () => {
     await waitFor(() => expect(registrar).toHaveBeenCalledOnce());
     // O vínculo com a Refeição Planejada é o que faz a gravação
     // substituir em vez de somar um segundo almoço ao dia.
-    const fd = registrar.mock.calls[0][0];
+    const fd = registrar.mock.calls[0]![0];
     expect(fd.get("refeicaoRef")).toBe("1-Almoço");
   });
 
@@ -526,7 +539,7 @@ describe("RegistroPorDescricao", () => {
 
 describe("CapturaAudio", () => {
   it("orienta a gravar e não expõe controle de reprodução antes de existir áudio", () => {
-    render(<CapturaAudio audio={null} aoGravar={() => {}} dica="Diga o que comeu." />);
+    render(<CapturaAudio audio={null} aoGravar={() => undefined} dica="Diga o que comeu." />);
 
     expect(screen.getByRole("button", { name: /Gravar descrição/ })).toBeTruthy();
     expect(screen.getByText("Diga o que comeu.")).toBeTruthy();
@@ -535,7 +548,7 @@ describe("CapturaAudio", () => {
 
   it("com áudio gravado, oferece ouvir antes de enviar e regravar", () => {
     const arquivo = new File([new Uint8Array([1])], "descricao", { type: "audio/webm" });
-    render(<CapturaAudio audio={arquivo} aoGravar={() => {}} />);
+    render(<CapturaAudio audio={arquivo} aoGravar={() => undefined} />);
 
     expect(screen.getByLabelText("Áudio gravado")).toBeTruthy();
     expect(screen.getByRole("button", { name: /Gravar de novo/ })).toBeTruthy();

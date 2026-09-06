@@ -5,7 +5,7 @@ import { users } from "@/db/schema";
 import { atualizarEstadoRevisaoCorporal, garantirPesoInicial, listarFotosExpiradas, obterOuCriarAvaliacaoInicial, obterPanoramaCorporal, obterPesoEMetaAtuais, obterSerieDePeso, recalcularMetasProporcao, registrarAvaliacaoVisual, registrarCircunferencia, registrarFotoProgresso, registrarGorduraCorporal, registrarPeso, registrarPesoEMeta, registrarRevisaoCorporal, revogarAvaliacoesVisuais, salvarCircunferenciaDaAvaliacaoInicial } from "../repositorio";
 import { produzirRevisaoCorporal } from "../revisao-corporal";
 
-async function usuario() { const [u] = await db.insert(users).values({ email: `medicoes-${randomUUID()}@example.com` }).returning(); return u.id; }
+async function usuario() { const [u] = await db.insert(users).values({ email: `medicoes-${randomUUID()}@example.com` }).returning(); return u!.id; }
 describe("jornada persistida de medições", () => {
   it("preserva leituras, método de gordura e metas versionadas", async () => {
     const userId = await usuario();
@@ -16,7 +16,7 @@ describe("jornada persistida de medições", () => {
     await registrarGorduraCorporal(userId, { percentual: 18.2, metodo: "bioimpedancia", protocolo: "jejum" });
     await recalcularMetasProporcao(userId, ["ombros"]);
     const panorama = await obterPanoramaCorporal(userId);
-    expect(panorama.pesos[0].pesoGramas).toBe(82400);
+    expect(panorama.pesos[0]!.pesoGramas).toBe(82400);
     expect(panorama.gorduras[0]).toMatchObject({ percentualBasisPoints: 1820, metodo: "bioimpedancia" });
     expect(panorama.metas[0]).toMatchObject({ regiao: "ombros", direcao: "aumentar", metodologiaVersao: "trajetoria-v1" });
     // A medida guarda o protocolo sob o qual foi coletada, para que
@@ -29,7 +29,7 @@ describe("jornada persistida de medições", () => {
     const primeiro = await registrarPesoEMeta(userId, { pesoAtualKg: 82.4, pesoMetaKg: 76 });
     const segundo = await registrarPesoEMeta(userId, { pesoAtualKg: 81.9, pesoMetaKg: 75 });
 
-    expect(segundo.meta.id).not.toBe(primeiro.meta.id);
+    expect(segundo.meta!.id).not.toBe(primeiro.meta!.id);
     expect(await obterPesoEMetaAtuais(userId)).toEqual({ pesoAtualKg: 81.9, pesoMetaKg: 75 });
     const panorama = await obterPanoramaCorporal(userId);
     expect(panorama.pesos.map((peso) => peso.pesoGramas)).toEqual([81900, 82400]);
@@ -42,8 +42,8 @@ describe("jornada persistida de medições", () => {
 
     // A pesagem é sempre um fato novo; reenviar a mesma meta não é
     // uma decisão de mudar de alvo.
-    expect(repetido.medicao.id).not.toBe(primeiro.medicao.id);
-    expect(repetido.meta.id).toBe(primeiro.meta.id);
+    expect(repetido.medicao!.id).not.toBe(primeiro.medicao!.id);
+    expect(repetido.meta!.id).toBe(primeiro.meta!.id);
   });
 
   it("cria a linha de base do gráfico uma única vez, mesmo reenviando a triagem", async () => {
@@ -51,7 +51,7 @@ describe("jornada persistida de medições", () => {
     const inicial = await garantirPesoInicial(userId, 90);
     const reenvio = await garantirPesoInicial(userId, 88);
 
-    expect(reenvio.id).toBe(inicial.id);
+    expect(reenvio!.id).toBe(inicial!.id);
     const serie = await obterSerieDePeso(userId);
     expect(serie.medicoes.map(({ pesoKg }) => pesoKg)).toEqual([90]);
   });
@@ -85,21 +85,21 @@ describe("jornada persistida de medições", () => {
     expect(primeira.ok).toBe(true);
     expect(corrigida.ok).toBe(true);
     if (!primeira.ok || !corrigida.ok) return;
-    expect(corrigida.medicao.id).toBe(primeira.medicao.id);
-    expect(corrigida.medicao.valorMm).toBe(855);
+    expect(corrigida.medicao!.id).toBe(primeira.medicao!.id);
+    expect(corrigida.medicao!.valorMm).toBe(855);
   });
 
   it("versiona projeção visual e o estado da Revisão Semanal", async () => {
     const userId = await usuario();
     const visual = await registrarAvaliacaoVisual(userId, { photoIds: [randomUUID()], criterios: { vTaper: 70, ombros: 68, cintura: 62, equilibrio: 66, simetria: 64 }, gorduraMinBasisPoints: 1200, gorduraMaxBasisPoints: 1600, observacoes: ["comparável"], limitacoes: [], confianca: "alta", metodologiaVersao: "visual-v1", modeloResolvido: "modelo-teste" });
-    expect(visual.ativa).toBe(true);
+    expect(visual!.ativa).toBe(true);
     const revisao = produzirRevisaoCorporal({ dimensoes: { aderencia: 80, desempenho: 70, tendenciaCorporal: 60, recuperacao: 70, utilidade: 80 }, confiancas: { composicaoCorporal: "confiavel", proporcoes: "confiavel", simetriaBilateral: "confiavel", treinamento: "confiavel", nutricao: "confiavel", saudeRecuperacao: "confiavel" }, evidencias: [], semanasObservadas: 2 });
     const linha = await registrarRevisaoCorporal(userId, { periodoInicio: new Date("2026-07-01T00:00:00Z"), periodoFim: new Date("2026-07-07T23:59:59Z"), revisao });
     expect((await atualizarEstadoRevisaoCorporal(userId, linha.id, "aplicada"))?.estado).toBe("aplicada");
     await revogarAvaliacoesVisuais(userId);
     const panorama = await obterPanoramaCorporal(userId);
-    expect(panorama.avaliacoesVisuais[0].ativa).toBe(false);
-    expect(panorama.revisoes[0].estado).toBe("aplicada");
+    expect(panorama.avaliacoesVisuais[0]!.ativa).toBe(false);
+    expect(panorama.revisoes[0]!.estado).toBe("aplicada");
   });
 
   it("seleciona para retenção somente fotos cujo prazo venceu", async () => {
@@ -107,7 +107,7 @@ describe("jornada persistida de medições", () => {
     const vencida = await registrarFotoProgresso(userId, { pose: "frente", objectKey: `teste/${randomUUID()}.webp`, excluirEm: new Date("2020-01-01T00:00:00Z") });
     await registrarFotoProgresso(userId, { pose: "costas", objectKey: `teste/${randomUUID()}.webp`, excluirEm: new Date("2090-01-01T00:00:00Z") });
     const expiradas = await listarFotosExpiradas(new Date("2026-01-01T00:00:00Z"));
-    expect(expiradas.some((foto) => foto.id === vencida.id)).toBe(true);
+    expect(expiradas.some((foto) => foto.id === vencida!.id)).toBe(true);
     expect(expiradas.filter((foto) => foto.userId === userId)).toHaveLength(1);
   });
 });

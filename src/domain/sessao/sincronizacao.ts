@@ -70,12 +70,13 @@ export async function sincronizarEventos(userId: string, sessionId: string, even
         endedAt: merge.estado.estado === "em_andamento" ? linha.endedAt : (linha.endedAt ?? new Date()),
       }).where(eq(workoutSessions.id, sessionId));
 
-      await tx.insert(workoutEvents).values(merge.aplicados.map((id) => {
-        const evento = porId.get(id)!;
-        return {
+      await tx.insert(workoutEvents).values(merge.aplicados.flatMap((id) => {
+        const evento = porId.get(id);
+        if (!evento) return [];
+        return [{
           sessionId, userId, tipo: evento.tipo, dados: evento.dados,
           clientEventId: evento.id, ocorridoEm: new Date(evento.ocorridoEm), ordem: evento.ordem,
-        };
+        }];
       })).onConflictDoNothing({ target: workoutEvents.clientEventId });
     }
 
@@ -141,6 +142,7 @@ export async function resolverConflito(userId: string, conflitoId: string, escol
 
     if (escolha === "dispositivo" && conflito.motivo === "serie_divergente") {
       const [linha] = await tx.select().from(workoutSessions).where(eq(workoutSessions.id, conflito.sessionId)).limit(1).for("update");
+      if (!linha) throw new Error("Sessão do conflito não encontrada.");
       const dados = conflito.dispositivo as { exercicioId?: string; numero?: number; cargaKg: number; repeticoes: number; rir: number };
       const exercicios = (linha.exercicios as ExercicioSessao[]).map((exercicio) => {
         if (exercicio.exercicioId !== dados.exercicioId) return exercicio;

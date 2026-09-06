@@ -91,7 +91,7 @@ export function useRevisaoEstimativa({
   }
 
   async function recalcular(indice: number) {
-    if (!recalcularItem) return;
+    if (!recalcularItem || indice < 0 || indice >= itens.length) return;
     const item = itens[indice];
     if (!item) return;
     setErro(null);

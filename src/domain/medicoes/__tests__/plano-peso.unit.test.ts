@@ -40,8 +40,8 @@ describe("montarPlanoDePeso", () => {
     };
     const inclinacao = (horizonteDias: 30 | 90 | 120) => {
       const linha = montarPlanoDePeso({ ...entrada, horizonteDias })!.linhaMeta!;
-      const primeiro = linha[0];
-      const ultimo = linha[linha.length - 1];
+      const primeiro = linha[0]!;
+      const ultimo = linha[linha.length - 1]!;
       return (
         (ultimo.pesoKg - primeiro.pesoKg) /
         ((ultimo.data.getTime() - primeiro.data.getTime()) / DIA_EM_MS)
@@ -74,7 +74,7 @@ describe("montarPlanoDePeso", () => {
 
     expect(diaDo(plano!.fim)).toBe(150);
     expect(plano?.linhaMeta?.map(({ pesoKg }) => pesoKg)).toEqual([90, 78, 78]);
-    expect(diaDo(plano!.linhaMeta![2].data)).toBe(150);
+    expect(diaDo(plano!.linhaMeta![2]!.data)).toBe(150);
   });
 
   it("não estica os recortes curtos até hoje, senão os três botões desenhariam o mesmo", () => {

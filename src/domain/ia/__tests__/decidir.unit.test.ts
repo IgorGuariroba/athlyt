@@ -10,16 +10,44 @@ vi.mock("@/domain/ia/trilha", async () => {
   const real = await vi.importActual<typeof import("../trilha")>("../trilha");
   return {
     ...real,
-    registrarDecisao: vi.fn(async (registro: unknown) => {
+    registrarDecisao: vi.fn((registro: unknown) => {
       decisoesGravadas.push(registro);
     }),
   };
 });
 
-const gerar = vi.fn();
+/**
+ * Recorte do objeto que `decidir` passa ao `generateText`, com só o que
+ * os testes abaixo afirmam. O `vi.fn` tipado é o que dá checagem de
+ * compilação às leituras de `mock.calls` — sem ele, toda leitura é `any`.
+ */
+interface ChamadaGerar {
+  prompt?: string;
+  maxOutputTokens?: number;
+  providerOptions?: { openrouter?: { provider?: { only?: string[] } } };
+  onStepFinish?: (passo: {
+    toolCalls: { toolName: string; input: unknown }[];
+    toolResults: { toolName: string; input: unknown; output: unknown }[];
+  }) => void;
+}
+
+const gerar = vi.fn<(entrada: ChamadaGerar) => Promise<unknown>>(() =>
+  Promise.resolve(undefined),
+);
 vi.mock("ai", async () => {
   const real = await vi.importActual<typeof import("ai")>("ai");
-  return { ...real, generateText: (...args: unknown[]) => gerar(...args) };
+  return {
+    ...real,
+    generateText: async (entrada: ChamadaGerar) => {
+      const res = (await gerar(entrada)) as
+        | { response?: { modelId?: string }; finalStep?: { response?: { modelId?: string } } }
+        | undefined;
+      if (res && !res.finalStep && res.response) {
+        res.finalStep = { response: res.response };
+      }
+      return res;
+    },
+  };
 });
 
 const registrarErro = vi.fn();
@@ -102,12 +130,12 @@ describe("decidir", () => {
   });
 
   it("registra argumentos e retorno das ferramentas chamadas pelo agent", async () => {
-    gerar.mockImplementation(async (entrada: { onStepFinish: (passo: { toolCalls: unknown[]; toolResults: unknown[] }) => void }) => {
-      entrada.onStepFinish({
+    gerar.mockImplementation((entrada) => {
+      entrada.onStepFinish?.({
         toolCalls: [{ toolName: "historico_exercicio", input: { exercicioId: "supino" } }],
         toolResults: [{ toolName: "historico_exercicio", input: { exercicioId: "supino" }, output: { melhorCargaKg: 80 } }],
       });
-      return { output: { carga: 60 }, response: { modelId: "m" }, steps: [] };
+      return Promise.resolve({ output: { carga: 60 }, response: { modelId: "m" }, steps: [] });
     });
 
     await chamar();
@@ -234,7 +262,7 @@ describe("decidir", () => {
     if (resultado.status !== "ok") return;
     expect(resultado.valor).toEqual({ carga: 60 });
     expect(gerar).toHaveBeenCalledTimes(2);
-    const promptCorrecao = gerar.mock.calls[1]?.[0]?.prompt as string;
+    const promptCorrecao = gerar.mock.calls[1]?.[0]?.prompt ?? "";
     expect(promptCorrecao).toContain("Explicação precisa citar equipamentos");
     expect(promptCorrecao.split(textoInvalido)).toHaveLength(2);
     expect(decisoesGravadas).toHaveLength(1);
@@ -295,7 +323,7 @@ describe("decidir", () => {
     expect(resultado.status).toBe("ok");
     expect(gerar).toHaveBeenCalledTimes(3);
     expect(gerar.mock.calls.map(([chamada]) => chamada.maxOutputTokens)).toEqual([4096, 4096, 4096]);
-    expect(gerar.mock.calls.map(([chamada]) => chamada.providerOptions.openrouter.provider.only)).toEqual([
+    expect(gerar.mock.calls.map(([chamada]) => chamada.providerOptions?.openrouter?.provider?.only)).toEqual([
       ["endpoint-1"], ["endpoint-1"], ["endpoint-2"],
     ]);
     expect(gerar.mock.calls.map(([chamada]) => chamada.prompt)).toEqual([

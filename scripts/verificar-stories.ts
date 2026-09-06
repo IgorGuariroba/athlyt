@@ -19,7 +19,7 @@ import { chromium } from "playwright";
  */
 const BASE = process.env.STORYBOOK_URL ?? "http://localhost:6006";
 
-type Entrada = { id: string; type: string; title: string; name: string };
+interface Entrada { id: string; type: string; title: string; name: string }
 
 async function main() {
   const resposta = await fetch(`${BASE}/index.json`);
@@ -54,7 +54,7 @@ async function main() {
     const altura = caixa?.height ?? 0;
 
     if (erros.length > 0) {
-      falhas.push(`${story.title} / ${story.name}: ${erros[0].split("\n")[0]}`);
+      falhas.push(`${story.title} / ${story.name}: ${erros[0]?.split("\n")[0] ?? ""}`);
     } else if (altura < 4) {
       falhas.push(
         `${story.title} / ${story.name}: renderizou vazia (altura ${altura}px)`,
@@ -72,7 +72,7 @@ async function main() {
   console.log(`${stories.length} stories renderizaram sem erro.`);
 }
 
-main().catch((erro) => {
+main().catch((erro: unknown) => {
   console.error(erro);
   process.exit(1);
 });

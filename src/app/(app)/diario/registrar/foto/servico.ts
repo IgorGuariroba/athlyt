@@ -12,6 +12,7 @@ import type { EventoProgressoFallback } from "@/domain/ia/fallback-modelo";
 import { estimarRefeicaoPorFoto } from "@/domain/ia/operacoes/refeicao-foto";
 import { NOME_PROVEDOR } from "@/domain/ia/provedor";
 import { obterPerfilVigente } from "@/domain/triagem/perfil";
+import { campoTexto } from "@/lib/form-data";
 
 const CAMPOS = ["foto-refeicao", "metas-restantes", "restricoes"];
 
@@ -44,8 +45,8 @@ export async function estimarRefeicao(
     return { ok: false, erro: "Use JPG, PNG ou WebP com até 10 MB." };
   }
 
-  const dia = String(fd.get("dia") ?? "") || hojeDoUsuario(FUSO_PADRAO);
-  const observacao = String(fd.get("observacao") ?? "");
+  const dia = campoTexto(fd, "dia") || hojeDoUsuario(FUSO_PADRAO);
+  const observacao = campoTexto(fd, "observacao");
   let foto;
   try {
     foto = await prepararFotoRefeicao({

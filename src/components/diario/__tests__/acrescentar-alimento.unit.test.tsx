@@ -24,19 +24,25 @@ const CAFE = itemEstimado({
 
 function acoes(itens: ItemPrato[] = [PAO]) {
   return {
-    estimarDescricao: vi.fn<(fd: FormData) => Promise<ResultadoComItens>>(async () => ({
-      ok: true,
-      estimativa: { itens },
-    })),
-    estimarFoto: vi.fn<(fd: FormData) => Promise<ResultadoComItens>>(async () => ({
-      ok: true,
-      estimativa: { itens },
-    })),
-    transcrever: vi.fn(async () => ({
-      ok: true as const,
-      transcricao: "um pão de queijo",
-      trechosIncertos: [],
-    })),
+    estimarDescricao: vi.fn<(fd: FormData) => Promise<ResultadoComItens>>(() =>
+      Promise.resolve({
+        ok: true,
+        estimativa: { itens },
+      }),
+    ),
+    estimarFoto: vi.fn<(fd: FormData) => Promise<ResultadoComItens>>(() =>
+      Promise.resolve({
+        ok: true,
+        estimativa: { itens },
+      }),
+    ),
+    transcrever: vi.fn(() =>
+      Promise.resolve({
+        ok: true as const,
+        transcricao: "um pão de queijo",
+        trechosIncertos: [],
+      }),
+    ),
   };
 }
 
@@ -85,17 +91,19 @@ describe("AcrescentarAlimento", () => {
     await userEvent.click(screen.getByRole("button", { name: /Acrescentar ao prato/ }));
 
     await waitFor(() => expect(aoAcrescentar).toHaveBeenCalledWith([PAO]));
-    const corpo = estimarDescricao.mock.calls[0][0];
+    const corpo = estimarDescricao.mock.calls[0]![0];
     expect(corpo.get("descricao")).toBe("um pão de queijo");
     expect(corpo.get("dia")).toBe("2026-05-20");
   });
 
   it("acrescenta todos os itens que a estimativa trouxe, não só o primeiro", async () => {
     const { aoAcrescentar } = montar({
-      estimarDescricao: vi.fn(async () => ({
-        ok: true as const,
-        estimativa: { itens: [PAO, CAFE] },
-      })),
+      estimarDescricao: vi.fn(() =>
+        Promise.resolve({
+          ok: true as const,
+          estimativa: { itens: [PAO, CAFE] },
+        }),
+      ),
     });
 
     await userEvent.type(screen.getByLabelText(/O que faltou/), "pão de queijo e café com leite");
@@ -106,7 +114,9 @@ describe("AcrescentarAlimento", () => {
 
   it("falha da IA não acrescenta nada e preserva o que foi escrito", async () => {
     const { aoAcrescentar } = montar({
-      estimarDescricao: vi.fn(async () => ({ ok: false as const, erro: "Estimativa indisponível." })),
+      estimarDescricao: vi.fn(() =>
+        Promise.resolve({ ok: false as const, erro: "Estimativa indisponível." }),
+      ),
     });
 
     await userEvent.type(screen.getByLabelText(/O que faltou/), "um pão de queijo");
@@ -114,7 +124,7 @@ describe("AcrescentarAlimento", () => {
 
     await waitFor(() => expect(screen.getByText("Estimativa indisponível.")).toBeTruthy());
     expect(aoAcrescentar).not.toHaveBeenCalled();
-    expect((screen.getByLabelText(/O que faltou/) as HTMLTextAreaElement).value).toBe(
+    expect(screen.getByLabelText<HTMLTextAreaElement>(/O que faltou/).value).toBe(
       "um pão de queijo",
     );
   });

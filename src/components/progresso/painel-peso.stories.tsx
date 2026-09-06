@@ -8,7 +8,7 @@ const meta = {
   args: {
     pesoAtualKg: 82.4,
     pesoMetaKg: 76,
-    aoSalvar: async () => ({ sucesso: "Pesos salvos." }),
+    aoSalvar: () => Promise.resolve({ sucesso: "Pesos salvos." }),
   },
   parameters: {
     docs: {

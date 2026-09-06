@@ -2,8 +2,8 @@ import { rotuloObjetivoComposicao } from "@/domain/triagem/etapas";
 import type { ConfiancaCorporal, QualidadeMedicao } from "./index";
 
 export const SCORECARD_CORPORAL_VERSAO = "scorecard-v1";
-export type DimensoesScorecard = { aderencia: number; desempenho: number; tendenciaCorporal: number; recuperacao: number; utilidade: number };
-export type EvidenciaCorporal = { sentido: "favor" | "contra"; descricao: string; fonte: string; qualidade: QualidadeMedicao; observadoEm?: Date; metodo?: string; protocolo?: string };
+export interface DimensoesScorecard { aderencia: number; desempenho: number; tendenciaCorporal: number; recuperacao: number; utilidade: number }
+export interface EvidenciaCorporal { sentido: "favor" | "contra"; descricao: string; fonte: string; qualidade: QualidadeMedicao; observadoEm?: Date; metodo?: string; protocolo?: string }
 
 export function produzirRevisaoCorporal(entrada: {
   dimensoes: DimensoesScorecard;
@@ -18,7 +18,13 @@ export function produzirRevisaoCorporal(entrada: {
     objetivoNovo: string;
   };
 }) {
-  const valores = Object.values(entrada.dimensoes);
+  const valores = [
+    entrada.dimensoes.aderencia,
+    entrada.dimensoes.desempenho,
+    entrada.dimensoes.tendenciaCorporal,
+    entrada.dimensoes.recuperacao,
+    entrada.dimensoes.utilidade,
+  ];
   if (valores.some((valor) => !Number.isFinite(valor) || valor < 0 || valor > 100)) throw new Error("Dimensão do Scorecard fora da faixa.");
   const geral = Math.round(valores.reduce((total, valor) => total + valor, 0) / valores.length);
   const confiaveis = Object.values(entrada.confiancas).filter((valor) => valor === "confiavel").length;

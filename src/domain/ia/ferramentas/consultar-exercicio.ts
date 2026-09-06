@@ -18,15 +18,7 @@ import { tool } from "ai";
 import { z } from "zod";
 import { criarClienteExerciseDB } from "@/infra/exercisedb";
 
-export const consultarExercicio = tool({
-  description:
-    "Busca informações detalhadas de um ou mais exercícios na ExerciseDB (banco internacional com 11.000+ exercícios). " +
-    "Retorna instruções passo a passo (em inglês), músculos-alvo, músculos secundários e equipamentos. " +
-    "Use para obter dados precisos de execução ao montar o plano de treino. " +
-    "O parâmetro 'termo' aceita nome do exercício em inglês ou português. " +
-    "Se o resultado não parecer ideal, tente um termo diferente. " +
-    "Exemplos: 'barbell bench press', 'dumbbell squat', 'pull-up', 'push-up'.",
-  inputSchema: z.object({
+export const consultarExercicioSchema = z.object({
     termo: z
       .string()
       .min(2)
@@ -38,11 +30,21 @@ export const consultarExercicio = tool({
       .max(10)
       .default(3)
       .describe("Quantos resultados retornar (máx 10)."),
-  }),
+  });
+
+export const consultarExercicio = tool({
+  description:
+    "Busca informações detalhadas de um ou mais exercícios na ExerciseDB (banco internacional com 11.000+ exercícios). " +
+    "Retorna instruções passo a passo (em inglês), músculos-alvo, músculos secundários e equipamentos. " +
+    "Use para obter dados precisos de execução ao montar o plano de treino. " +
+    "O parâmetro 'termo' aceita nome do exercício em inglês ou português. " +
+    "Se o resultado não parecer ideal, tente um termo diferente. " +
+    "Exemplos: 'barbell bench press', 'dumbbell squat', 'pull-up', 'push-up'.",
+  inputSchema: consultarExercicioSchema,
   execute: async (args) => {
     const { termo, limite } = args;
     const cliente = criarClienteExerciseDB();
-    const resultados = await cliente.buscar(termo, limite ?? 3);
+    const resultados = await cliente.buscar(termo, limite);
 
     return resultados.map((r) => ({
       exerciseId: r.exerciseId,

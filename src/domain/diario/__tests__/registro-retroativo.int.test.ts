@@ -38,11 +38,11 @@ async function usuarioComPlano() {
     .values({ email: `retroativo-${randomUUID()}@example.com` })
     .returning();
   await db.insert(plans).values({
-    userId: u.id, perfilVersao: 1, versao: 1, estado: "ativo",
+    userId: u!.id, perfilVersao: 1, versao: 1, estado: "ativo",
     regraVersao: plano.regraVersao, modoConservador: false, conteudo: plano,
     activatedAt: new Date(),
   });
-  return u.id;
+  return u!.id;
 }
 
 function estimados(calorias: number) {
@@ -206,8 +206,8 @@ describe("Registro Retroativo sem planejamento", () => {
     const diario = await montarDiarioDoDia(userId, { dia: DIA, fuso: FUSO });
     const consumo = diario.linhaDoTempo.find((i) => i.tipo === "consumo");
     if (consumo?.tipo !== "consumo") throw new Error("Consumo ausente.");
-    const itens = consumo.consumo.itens as Array<{ fonte?: string; origemDado?: string }>;
-    expect(itens[0].origemDado).toBe("estimativa-ia");
-    expect(itens[0].fonte).toBe("Estimativa por descrição");
+    const itens = consumo.consumo.itens as { fonte?: string; origemDado?: string }[];
+    expect(itens[0]!.origemDado).toBe("estimativa-ia");
+    expect(itens[0]!.fonte).toBe("Estimativa por descrição");
   });
 });

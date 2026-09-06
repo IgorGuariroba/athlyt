@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useState, type SyntheticEvent } from "react";
 import { Check, ChevronDown, Minus, Plus, TimerReset, Trophy, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -27,7 +27,7 @@ export function RegistroSerie({ sessionId, exercicioId, numero, repeticoesSugeri
    * depende do exercício inteiro, não desta série: a marca a bater
    * acumula as anteriores, e só a mais recente registrada ostenta.
    */
-  seriesDoExercicio: Array<{ numero: number; cargaKg: number | null; repeticoes: number | null; concluida: boolean }>;
+  seriesDoExercicio: { numero: number; cargaKg: number | null; repeticoes: number | null; concluida: boolean }[];
 }) {
   const modoEfetivo = modo ?? "repeticoes";
   const rotulos = { repeticoes: "REPS", tempo: "TEMPO (S)", distancia: "DISTÂNCIA (M)", duracao: "DURAÇÃO (MIN)", calorias: "CALORIAS", ritmo: "RITMO", unilateral: "LADOS", circuito: "RODADAS" } as const;
@@ -64,7 +64,7 @@ export function RegistroSerie({ sessionId, exercicioId, numero, repeticoesSugeri
     const id = window.setTimeout(() => setRestante((valor) => {
       if (valor === null) return null;
       if (valor <= 1) {
-        navigator.vibrate?.([180, 80, 180]);
+        if ("vibrate" in navigator) navigator.vibrate([180, 80, 180]);
         if (Notification.permission === "granted") new Notification("Descanso concluído", { body: "Sua próxima série está pronta." });
         // O descanso concluído não mantém uma camada modal em 0:00
         // bloqueando o registro da próxima série.
@@ -82,7 +82,7 @@ export function RegistroSerie({ sessionId, exercicioId, numero, repeticoesSugeri
    * que o app não sabe se o evento existe — e o timer, que é a razão
    * de o atleta olhar a tela, ficaria esperando a rede.
    */
-  function registrar(evento: FormEvent<HTMLFormElement>) {
+  function registrar(evento: SyntheticEvent<HTMLFormElement>) {
     evento.preventDefault();
     const formData = new FormData(evento.currentTarget);
     setEnviando(true);

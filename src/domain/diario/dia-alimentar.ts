@@ -42,6 +42,7 @@ export function intervaloUtcDoDia(
   fuso: string = FUSO_PADRAO,
 ): { inicio: Date; fim: Date } {
   const [ano, mes, dias] = dia.split("-").map(Number);
+  if (ano === undefined || mes === undefined || dias === undefined) throw new Error(`Data local inválida: ${dia}`);
   const palpite = Date.UTC(ano, mes - 1, dias, 0, 0, 0);
   // Duas passadas: o deslocamento é avaliado no instante estimado, o
   // que resolve corretamente as viradas de horário de verão.
@@ -50,6 +51,7 @@ export function intervaloUtcDoDia(
   const proximo = new Date(inicio.getTime() + 26 * 60 * 60 * 1000);
   const diaSeguinte = diaAlimentar(proximo, fuso);
   const [ano2, mes2, dia2] = diaSeguinte.split("-").map(Number);
+  if (ano2 === undefined || mes2 === undefined || dia2 === undefined) throw new Error(`Data local inválida: ${diaSeguinte}`);
   const palpite2 = Date.UTC(ano2, mes2 - 1, dia2, 0, 0, 0);
   let fim = new Date(palpite2 - deslocamentoMin(new Date(palpite2), fuso) * 60_000);
   fim = new Date(palpite2 - deslocamentoMin(fim, fuso) * 60_000);
@@ -88,5 +90,6 @@ export function instanteDeHoraLocal(
 ): Date {
   const { inicio } = intervaloUtcDoDia(dia, fuso);
   const [h, m] = hora.split(":").map(Number);
+  if (h === undefined || m === undefined) throw new Error(`Hora local inválida: ${hora}`);
   return new Date(inicio.getTime() + (h * 60 + m) * 60_000);
 }

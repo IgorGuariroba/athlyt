@@ -5,14 +5,14 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { AvisoAcao } from "./aviso-acao";
 
-type Props = {
+interface Props {
   nome: string;
   duracaoMin: number;
   totalSeries: number;
   volumeKg: number;
-  recordes: Array<{ nome: string; valor: number }>;
-  exercicios: Array<{ nome: string }>;
-};
+  recordes: { nome: string; valor: number }[];
+  exercicios: { nome: string }[];
+}
 
 type Simbolo = "tempo" | "series" | "volume" | "estrela" | "marca";
 
@@ -268,7 +268,7 @@ async function gerarCard(props: Props) {
 
   // Métricas empilhadas: disco com ícone, rótulo espaçado, valor enorme e
   // unidade em acento, separadas por divisórias finas.
-  const metricas: Array<[string, string, string, Simbolo]> = [
+  const metricas: [string, string, string, Simbolo][] = [
     [
       "VOLUME TOTAL",
       props.volumeKg.toLocaleString("pt-BR"),
@@ -347,8 +347,9 @@ async function gerarCard(props: Props) {
   );
   ctx.fillStyle = forte;
   ctx.font = `700 40px ${fonteMarca}`;
+  const recordeDestaque = props.recordes[0];
   const destaque = (
-    temRecorde ? props.recordes[0].nome : props.nome
+    temRecorde && recordeDestaque ? recordeDestaque.nome : props.nome
   ).toUpperCase();
   ctx.fillText(
     quebrar(ctx, destaque, conquistaLargura, 1)[0] ?? "",
@@ -358,8 +359,8 @@ async function gerarCard(props: Props) {
 
   ctx.fillStyle = mutado;
   ctx.font = `500 28px ${fonteInterface}`;
-  const apoio = temRecorde
-    ? `${props.recordes[0].valor} kg. Novo melhor resultado.`
+  const apoio = temRecorde && recordeDestaque
+    ? `${recordeDestaque.valor} kg. Novo melhor resultado.`
     : `${props.exercicios.length} exercícios. Constância registrada.`;
   quebrar(ctx, apoio, conquistaLargura, 2).forEach((linha, i) =>
     ctx.fillText(linha, conquistaX, cartaoY + 172 + i * 41),
@@ -403,10 +404,9 @@ export function CompartilharResultado(props: Props) {
       const arquivo = new File([imagem], "athlyt-treino.png", {
         type: "image/png",
       });
-      if (
-        navigator.share &&
-        (!navigator.canShare || navigator.canShare({ files: [arquivo] }))
-      ) {
+      const podeCompartilharArquivo =
+        "canShare" in navigator ? navigator.canShare({ files: [arquivo] }) : true;
+      if ("share" in navigator && podeCompartilharArquivo) {
         await navigator.share({
           title: "Treino concluído",
           text: textoCard(props),
@@ -434,7 +434,7 @@ export function CompartilharResultado(props: Props) {
         size="icon-lg"
         className="size-12"
         aria-label="Compartilhar no Instagram"
-        onClick={compartilhar}
+        onClick={() => void compartilhar()}
       >
         <Share2 aria-hidden="true" />
       </Button>

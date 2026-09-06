@@ -11,6 +11,10 @@ process.env.AUTH_GOOGLE_SECRET ??= "test-google-secret";
 // trazer o erro ao campo de visão. Sem o stub, qualquer teste que
 // renderize um aviso derruba a suíte com um erro não capturado que não
 // tem relação com o que estava sendo verificado.
-if (typeof Element !== "undefined" && !Element.prototype.scrollIntoView) {
-  Element.prototype.scrollIntoView = () => {};
+if (typeof Element !== "undefined" && !("scrollIntoView" in Element.prototype)) {
+  Object.defineProperty(Element.prototype, "scrollIntoView", {
+    value: () => undefined,
+    writable: true,
+    configurable: true,
+  });
 }

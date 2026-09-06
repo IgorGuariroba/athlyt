@@ -76,6 +76,7 @@ export async function estimarRefeicaoPorFoto(entrada: {
   signal?: AbortSignal;
   aoProgresso?: (evento: EventoProgressoFallback) => void;
 }): Promise<ResultadoDecisao<RefeicaoEstimada>> {
+  const observacao = entrada.observacao?.trim();
   return decidir({
     userId: entrada.userId,
     operacao: "refeicao-foto",
@@ -83,7 +84,8 @@ export async function estimarRefeicaoPorFoto(entrada: {
     dados: {
       "foto-refeicao": {
         enviada: true,
-        observacaoDoAtleta: entrada.observacao?.trim() || undefined,
+        observacaoDoAtleta:
+          observacao !== undefined && observacao.length > 0 ? observacao : undefined,
       },
       "metas-restantes": entrada.metasRestantes,
       restricoes: entrada.restricoes?.length ? [...entrada.restricoes] : undefined,

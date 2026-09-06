@@ -21,7 +21,7 @@ describe("AjusteDescanso", () => {
   it("começa no descanso do plano quando não há escolha anterior", () => {
     render(<AjusteDescanso exercicioId="supino" descansoPrescritoSeg={90} />);
 
-    const escolhida = screen.getByRole("radio", { checked: true }) as HTMLInputElement;
+    const escolhida = screen.getByRole("radio", { checked: true });
     expect(escolhida.getAttribute("aria-label")).toBe("Descanso do plano: 1:30");
   });
 
@@ -32,7 +32,7 @@ describe("AjusteDescanso", () => {
 
     expect(lerDescanso()).toEqual({ supino: "curto" });
     expect(
-      (screen.getByRole("radio", { name: "Descanso curto: 1:00" }) as HTMLInputElement).checked,
+      screen.getByRole<HTMLInputElement>("radio", { name: "Descanso curto: 1:00" }).checked,
     ).toBe(true);
   });
 });

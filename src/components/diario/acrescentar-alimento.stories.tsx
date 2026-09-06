@@ -38,8 +38,8 @@ const meta = {
   },
   args: {
     dia: "2026-05-20",
-    aoAcrescentar: () => {},
-    aoFechar: () => {},
+    aoAcrescentar: () => undefined,
+    aoFechar: () => undefined,
     estimarDescricao: async (): Promise<ResultadoComItens> => {
       await espera(600);
       return { ok: true, estimativa: { itens: [PAO] } };

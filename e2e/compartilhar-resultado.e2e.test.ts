@@ -90,11 +90,11 @@ async function semearSessaoConcluida(email: string, comRecordes: boolean) {
   // cada exercício, então `obterResumoSessao` não acha carga superada.
   if (!comRecordes) {
     await db.insert(workoutSessions).values({
-      userId: user.id, planId: planoSalvo.id, diaId: "segunda-a",
+      userId: user.id, planId: planoSalvo!.id, diaId: "segunda-a",
       nome: "Segunda-feira - A", estado: "concluida",
       exercicios: exercicios.map((e) => ({
         ...e,
-        series: series(1, (e.series[0].cargaKg ?? 0) + 10, 8),
+        series: series(1, (e.series[0]!.cargaKg ?? 0) + 10, 8),
       })),
       startedAt: new Date(inicio.getTime() - 7 * 86_400_000),
       endedAt: new Date(fim.getTime() - 7 * 86_400_000),
@@ -102,12 +102,12 @@ async function semearSessaoConcluida(email: string, comRecordes: boolean) {
   }
 
   const [sessao] = await db.insert(workoutSessions).values({
-    userId: user.id, planId: planoSalvo.id, diaId: "segunda-a",
+    userId: user.id, planId: planoSalvo!.id, diaId: "segunda-a",
     nome: "Segunda-feira - A", estado: "concluida",
     exercicios, startedAt: inicio, endedAt: fim,
   }).returning();
 
-  return { cookie, url: `/sessao/${sessao.id}/resumo` };
+  return { cookie, url: `/sessao/${sessao!.id}/resumo` };
 }
 
 /**
@@ -125,7 +125,7 @@ async function instalarCapturaDoCard(page: import("@playwright/test").Page) {
     (window as unknown as { __cardPng?: string }).__cardPng = undefined;
     URL.createObjectURL = (objeto: Blob | MediaSource) => {
       if (objeto instanceof Blob && objeto.type === "image/png") {
-        objeto.arrayBuffer().then((buffer) => {
+        void objeto.arrayBuffer().then((buffer) => {
           let binario = "";
           for (const byte of new Uint8Array(buffer)) {
             binario += String.fromCharCode(byte);
@@ -187,7 +187,7 @@ async function gerarEvidencia(
   void baixarSuprimido;
 
   const base64 = await page.evaluate(
-    () => (window as unknown as { __cardPng?: string }).__cardPng as string,
+    () => (window as unknown as { __cardPng?: string }).__cardPng!,
   );
   const png = Buffer.from(base64, "base64");
   const destino = `${EVIDENCIAS}/card-compartilhamento-${cenario}-1080x1920.png`;

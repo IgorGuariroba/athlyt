@@ -19,11 +19,11 @@ const plano: PlanoGerado = {
 async function contexto() {
   const [user] = await db.insert(users).values({ email: `sync-${randomUUID()}@example.com` }).returning();
   await db.insert(plans).values({
-    userId: user.id, perfilVersao: 1, versao: 1, estado: "ativo", regraVersao: plano.regraVersao,
+    userId: user!.id, perfilVersao: 1, versao: 1, estado: "ativo", regraVersao: plano.regraVersao,
     modoConservador: false, conteudo: plano, activatedAt: new Date(),
   });
-  const sessao = await iniciarSessao(user.id, "segunda-superior");
-  return { userId: user.id, sessionId: sessao.id };
+  const sessao = await iniciarSessao(user!.id, "segunda-superior");
+  return { userId: user!.id, sessionId: sessao.id };
 }
 
 function evento(sessionId: string, ordem: number, dados: Record<string, unknown>, tipo: EventoOutbox["tipo"] = "serie_registrada", id = randomUUID()): EventoOutbox {
@@ -49,7 +49,7 @@ describe("sincronização da fila offline", () => {
 
     const sessao = await obterSessao(userId, sessionId);
     expect(sessao?.estado).toBe("concluida");
-    expect(sessao?.exercicios[0].series.filter((s) => s.concluida)).toHaveLength(2);
+    expect(sessao?.exercicios[0]?.series.filter((s) => s.concluida)).toHaveLength(2);
     // Um evento de início (servidor) + três da fila, contados uma vez só.
     expect(sessao?.eventos.filter((e) => e.tipo === "serie_registrada")).toHaveLength(2);
     expect(sessao?.eventos).toHaveLength(4);
@@ -67,7 +67,7 @@ describe("sincronização da fila offline", () => {
     expect(resultado.aplicados).toEqual([b.id]);
 
     const sessao = await obterSessao(userId, sessionId);
-    expect(sessao?.exercicios[0].series.map((s) => s.cargaKg)).toEqual([30, 32]);
+    expect(sessao?.exercicios[0]?.series.map((s) => s.cargaKg)).toEqual([30, 32]);
   });
 
   it("apresenta divergência sobre série já gravada online sem sobrescrever nem descartar", async () => {
@@ -84,7 +84,7 @@ describe("sincronização da fila offline", () => {
       servidor: { exercicioId: "supino-reto-halteres", numero: 1, cargaKg: 40, repeticoes: 10, rir: 2 },
       dispositivo: { exercicioId: "supino-reto-halteres", numero: 1, cargaKg: 60, repeticoes: 6, rir: 0 },
     });
-    expect((await obterSessao(userId, sessionId))?.exercicios[0].series[0].cargaKg).toBe(40);
+    expect((await obterSessao(userId, sessionId))?.exercicios[0]?.series[0]?.cargaKg).toBe(40);
 
     // Reenviar não multiplica o conflito.
     const reenvio = await sincronizarEventos(userId, sessionId, [offline]);
@@ -98,11 +98,11 @@ describe("sincronização da fila offline", () => {
     const offline = evento(sessionId, 1, { exercicioId: "supino-reto-halteres", numero: 1, cargaKg: 60, repeticoes: 6, rir: 0 });
     const { conflitos } = await sincronizarEventos(userId, sessionId, [offline]);
 
-    await resolverConflito(userId, conflitos[0].id, "dispositivo");
+    await resolverConflito(userId, conflitos[0]!.id, "dispositivo");
 
-    expect((await obterSessao(userId, sessionId))?.exercicios[0].series[0]).toMatchObject({ cargaKg: 60, repeticoes: 6, rir: 0 });
+    expect((await obterSessao(userId, sessionId))?.exercicios[0]?.series[0]).toMatchObject({ cargaKg: 60, repeticoes: 6, rir: 0 });
     expect(await listarConflitosPendentes(userId)).toEqual([]);
-    await expect(resolverConflito(userId, conflitos[0].id, "servidor")).rejects.toThrow("já resolvido");
+    await expect(resolverConflito(userId, conflitos[0]!.id, "servidor")).rejects.toThrow("já resolvido");
   });
 
   it("resolve conflito pelo servidor preservando o estado gravado", async () => {
@@ -111,8 +111,8 @@ describe("sincronização da fila offline", () => {
     const offline = evento(sessionId, 1, { exercicioId: "supino-reto-halteres", numero: 1, cargaKg: 60, repeticoes: 6, rir: 0 });
     const { conflitos } = await sincronizarEventos(userId, sessionId, [offline]);
 
-    await resolverConflito(userId, conflitos[0].id, "servidor");
-    expect((await obterSessao(userId, sessionId))?.exercicios[0].series[0].cargaKg).toBe(40);
+    await resolverConflito(userId, conflitos[0]!.id, "servidor");
+    expect((await obterSessao(userId, sessionId))?.exercicios[0]?.series[0]?.cargaKg).toBe(40);
     expect(await listarConflitosPendentes(userId)).toEqual([]);
   });
 
@@ -133,7 +133,7 @@ describe("sincronização da fila offline", () => {
     // cargas sugeridas das próximas sessões são reescritas depois do fato.
     const sessao = await obterSessao(userId, sessionId);
     expect(sessao?.estado).toBe("concluida");
-    expect(sessao?.exercicios[0].series.every((s) => !s.concluida)).toBe(true);
+    expect(sessao?.exercicios[0]?.series.every((s) => !s.concluida)).toBe(true);
 
     // E o caminho online recusa o mesmo registro pelo mesmo motivo.
     await expect(registrarSerie(userId, sessionId, { exercicioId: "supino-reto-halteres", numero: 1, cargaKg: 30, repeticoes: 10, rir: 2 }))
@@ -149,7 +149,7 @@ describe("sincronização da fila offline", () => {
     expect(resultado.aplicados).toEqual([]);
     expect(resultado.conflitos).toEqual([]);
     expect(await listarConflitosPendentes(userId)).toEqual([]);
-    expect((await obterSessao(userId, sessionId))?.exercicios[0].series[0].concluida).toBe(false);
+    expect((await obterSessao(userId, sessionId))?.exercicios[0]?.series[0]?.concluida).toBe(false);
 
     await expect(registrarSerie(userId, sessionId, { exercicioId: "supino-reto-halteres", numero: 1, cargaKg: 30, repeticoes: 10, rir: 47 }))
       .rejects.toThrow("Valores da série inválidos.");
@@ -158,6 +158,7 @@ describe("sincronização da fila offline", () => {
   it("recusa fila de sessão de outro usuário", async () => {
     const { sessionId } = await contexto();
     const [outro] = await db.insert(users).values({ email: `intruso-${randomUUID()}@example.com` }).returning();
+    if (!outro) throw new Error("Falha ao criar usuário de teste.");
     await expect(sincronizarEventos(outro.id, sessionId, [])).rejects.toThrow("Sessão não encontrada");
   });
 });

@@ -14,7 +14,7 @@ import type { ModalidadeProtocolo } from "@/domain/sessao/protocolo-execucao";
  */
 export interface ExplicacaoDecisao {
   porque: string;
-  dadosUsados: Array<{ campo: string; valor: string }>;
+  dadosUsados: { campo: string; valor: string }[];
 }
 
 export interface ExercicioPlanejado {
@@ -58,7 +58,7 @@ export interface MetaNutricional {
   gordurasG: number;
   fibrasG: number;
   estrategia: string;
-  refeicoes: Array<{
+  refeicoes: {
     nome: string;
     percentual: number;
     calorias: number;
@@ -68,9 +68,9 @@ export interface MetaNutricional {
      * `ItemPlanejado`. A fronteira do Cardápio é quem discrimina —
      * telas nunca fazem cast entre os dois formatos.
      */
-    itens: Array<string | ItemPlanejado>;
+    itens: (string | ItemPlanejado)[];
     explicacao?: ExplicacaoDecisao;
-  }>;
+  }[];
   explicacoes?: {
     calorias: ExplicacaoDecisao;
     proteinaG: ExplicacaoDecisao;

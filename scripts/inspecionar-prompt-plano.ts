@@ -92,7 +92,7 @@ async function main() {
   process.exit(0);
 }
 
-main().catch((e) => {
+main().catch((e: unknown) => {
   console.error(e);
   process.exit(1);
 });

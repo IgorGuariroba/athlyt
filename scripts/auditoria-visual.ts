@@ -107,10 +107,10 @@ async function main() {
       });
       const destino = new URL(pagina.url()).pathname;
       const redirecionou = destino !== rota ? ` (redirect -> ${destino})` : "";
-      console.log(`ok   ${nome} [${resposta?.status()}]${redirecionou}`);
+      console.log(`ok   ${nome} [${String(resposta?.status() ?? 0)}]${redirecionou}`);
     } catch (erro) {
       falhas.push(nome);
-      console.log(`FALHA ${nome}: ${(erro as Error).message.split("\n")[0]}`);
+      console.log(`FALHA ${nome}: ${(erro as Error).message.split("\n")[0] ?? ""}`);
     }
   }
 
@@ -119,4 +119,7 @@ async function main() {
   process.exit(0);
 }
 
-main();
+main().catch((erro: unknown) => {
+  console.error(erro);
+  process.exit(1);
+});

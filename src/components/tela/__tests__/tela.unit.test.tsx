@@ -271,11 +271,11 @@ describe("SeletorSegmentado", () => {
     renderizar();
 
     expect(
-      (screen.getByRole("radio", { name: "Descanso do plano: 1:30" }) as HTMLInputElement)
+      screen.getByRole<HTMLInputElement>("radio", { name: "Descanso do plano: 1:30" })
         .checked,
     ).toBe(true);
     expect(
-      (screen.getByRole("radio", { name: "Descanso curto: 1:00" }) as HTMLInputElement).checked,
+      screen.getByRole<HTMLInputElement>("radio", { name: "Descanso curto: 1:00" }).checked,
     ).toBe(false);
   });
 
@@ -410,8 +410,8 @@ describe("PorQueIsso", () => {
     expect(screen.getByText(/Estimei sua manutenção/)).toBeDefined();
     const dados = within(screen.getByRole("list")).getAllByRole("listitem");
     expect(dados).toHaveLength(2);
-    expect(dados[0].textContent).toContain("Peso");
-    expect(dados[0].textContent).toContain("80 kg");
+    expect(dados[0]!.textContent).toContain("Peso");
+    expect(dados[0]!.textContent).toContain("80 kg");
   });
 
   it("diz que a decisão veio de um plano anterior quando não há explicação", () => {

@@ -45,6 +45,7 @@ const plano: PlanoGerado = {
 
 async function contexto() {
   const [user] = await db.insert(users).values({ email: `sessao-${randomUUID()}@example.com` }).returning();
+  if (!user) throw new Error("Falha ao criar usuário de teste.");
   const [plan] = await db.insert(plans).values({
     userId: user.id,
     perfilVersao: 1,
@@ -55,7 +56,7 @@ async function contexto() {
     conteudo: plano,
     activatedAt: new Date(),
   }).returning();
-  return { userId: user.id, planoId: plan.id };
+  return { userId: user.id, planoId: plan!.id };
 }
 
 describe("jornada pública da Sessão de Treino", () => {
@@ -64,7 +65,7 @@ describe("jornada pública da Sessão de Treino", () => {
     const iniciada = await iniciarSessao(userId, "segunda-superior");
 
     expect(iniciada.estado).toBe("em_andamento");
-    expect(iniciada.exercicios[0].series).toEqual([
+    expect(iniciada.exercicios[0]!.series).toEqual([
       expect.objectContaining({ numero: 1, cargaKg: null, repeticoes: null, rir: 2 }),
       expect.objectContaining({ numero: 2, cargaKg: null, repeticoes: null, rir: 2 }),
     ]);
@@ -82,11 +83,11 @@ describe("jornada pública da Sessão de Treino", () => {
       "sessao_iniciada", "serie_registrada", "serie_registrada", "sessao_concluida",
     ]);
     expect(resumo.recordes).toContainEqual(expect.objectContaining({ exercicioId: "supino-reto-halteres", tipo: "e1rm", valor: 32.9 }));
-    expect((await listarHistoricoSessoes(userId))[0].id).toBe(iniciada.id);
+    expect((await listarHistoricoSessoes(userId))[0]!.id).toBe(iniciada.id);
 
     const segunda = await iniciarSessao(userId, "segunda-superior");
-    expect(segunda.exercicios[0].series[0]).toEqual(expect.objectContaining({ cargaKg: 24, cargaSugeridaKg: 24, repeticoes: 10, rir: 1 }));
-    expect(segunda.exercicios[0].marcaAnterior?.cargaKg).toBe(26);
+    expect(segunda.exercicios[0]!.series[0]!).toEqual(expect.objectContaining({ cargaKg: 24, cargaSugeridaKg: 24, repeticoes: 10, rir: 1 }));
+    expect(segunda.exercicios[0]!.marcaAnterior?.cargaKg).toBe(26);
     await registrarSerie(userId, segunda.id, { exercicioId: "supino-reto-halteres", numero: 1, cargaKg: 20, repeticoes: 10, rir: 2 });
     await registrarSerie(userId, segunda.id, { exercicioId: "supino-reto-halteres", numero: 2, cargaKg: 20, repeticoes: 8, rir: 2 });
     const segundoResumo = await concluirSessao(userId, segunda.id);
@@ -103,10 +104,10 @@ describe("jornada pública da Sessão de Treino", () => {
 
     const seguinte = await iniciarSessao(userId, "segunda-superior");
 
-    expect(seguinte.exercicios[0].series[0]).toEqual(expect.objectContaining({
+    expect(seguinte.exercicios[0]!.series[0]!).toEqual(expect.objectContaining({
       cargaKg: 22, repeticoes: 9, rir: 1,
     }));
-    expect(seguinte.exercicios[0].series[1]).toEqual(expect.objectContaining({
+    expect(seguinte.exercicios[0]!.series[1]!).toEqual(expect.objectContaining({
       cargaKg: null, repeticoes: null, rir: 2,
     }));
   });
@@ -129,7 +130,7 @@ describe("jornada pública da Sessão de Treino", () => {
     const iniciada = await iniciarSessao(userId, "segunda-superior");
 
     const relida = await obterSessao(userId, iniciada.id);
-    expect(relida?.exercicios[0].explicacao).toEqual({
+    expect(relida?.exercicios[0]?.explicacao).toEqual({
       porque: "Escolhi halteres porque poupam seu ombro direito e estão na sua academia.",
       dadosUsados: [{ campo: "lesoes", valor: "ombro direito" }],
     });

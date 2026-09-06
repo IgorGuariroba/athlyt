@@ -6,6 +6,7 @@ import type { OrigemDecisao } from "@/domain/ia/decidir";
 import { estimarMacrosDoAlimento } from "@/domain/ia/operacoes/alimento-macros";
 import { NOME_PROVEDOR } from "@/domain/ia/provedor";
 import { obterPerfilVigente } from "@/domain/triagem/perfil";
+import { campoTexto } from "@/lib/form-data";
 
 /**
  * Recálculo de **um** item cujo alimento o atleta corrigiu na revisão.
@@ -53,7 +54,7 @@ export async function recalcularMacrosDoItem(
   if (!session?.user?.id) return { ok: false, erro: "Sessão expirada. Entre novamente." };
   const userId = session.user.id;
 
-  const alimento = String(fd.get("alimento") ?? "").trim();
+  const alimento = campoTexto(fd, "alimento").trim();
   if (alimento.length === 0 || alimento.length > 80) {
     return { ok: false, erro: "Escreva o nome do alimento para recalcular." };
   }
@@ -61,7 +62,7 @@ export async function recalcularMacrosDoItem(
   // A unidade vem do item e é ecoada no erro: "1 a 3000 g" numa bebida
   // pediria ao atleta uma correção na unidade errada.
   const unidade: UnidadeEstimada = fd.get("unidade") === "ml" ? "ml" : "g";
-  const quantidade = Number(String(fd.get("quantidade") ?? "").replace(",", "."));
+  const quantidade = Number(campoTexto(fd, "quantidade").replace(",", "."));
   if (!Number.isFinite(quantidade) || quantidade <= 0 || quantidade > 3000) {
     return { ok: false, erro: `Quantidade fora do intervalo aceito (1 a 3000 ${unidade}).` };
   }

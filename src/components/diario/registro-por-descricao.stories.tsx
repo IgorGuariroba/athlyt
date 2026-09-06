@@ -48,13 +48,14 @@ const meta = {
     horaInicial: "12:30",
     nomeInicial: "Almoço",
     categorias: ["Café da manhã", "Almoço", "Lanche", "Jantar", "Ceia"],
-    estimar: async (): Promise<ResultadoEstimativa> => ({ ok: true, estimativa: ESTIMATIVA }),
-    transcrever: async (): Promise<ResultadoTranscricao> => ({
-      ok: true,
-      transcricao: "Duas colheres de arroz, um bife médio e salada de tomate.",
-      trechosIncertos: ["salada de tomate"],
-    }),
-    registrar: async (): Promise<ResultadoRegistro> => ({ ok: true }),
+    estimar: (): Promise<ResultadoEstimativa> => Promise.resolve({ ok: true, estimativa: ESTIMATIVA }),
+    transcrever: (): Promise<ResultadoTranscricao> =>
+      Promise.resolve({
+        ok: true,
+        transcricao: "Duas colheres de arroz, um bife médio e salada de tomate.",
+        trechosIncertos: ["salada de tomate"],
+      }),
+    registrar: (): Promise<ResultadoRegistro> => Promise.resolve({ ok: true }),
   },
 } satisfies Meta<typeof RegistroPorDescricao>;
 
@@ -79,9 +80,10 @@ export const SubstituindoConsumoExistente: Story = {
 
 export const EstimativaIndisponivel: Story = {
   args: {
-    estimar: async (): Promise<ResultadoEstimativa> => ({
-      ok: false,
-      erro: "A estimativa está indisponível agora. Sua descrição continua aqui — tente de novo em instantes.",
-    }),
+    estimar: (): Promise<ResultadoEstimativa> =>
+      Promise.resolve({
+        ok: false,
+        erro: "A estimativa está indisponível agora. Sua descrição continua aqui — tente de novo em instantes.",
+      }),
   },
 };

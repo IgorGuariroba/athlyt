@@ -225,13 +225,9 @@ export function RevisaoEstimativa({
                       variant="outline"
                       size="xs"
                       disabled={recalculando !== null}
-                      onClick={async () => {
+                      onClick={() => {
                         setRecalculando(indice);
-                        try {
-                          await aoRecalcularItem(indice);
-                        } finally {
-                          setRecalculando(null);
-                        }
+                        void aoRecalcularItem(indice).finally(() => setRecalculando(null));
                       }}
                     >
                       <RefreshCw

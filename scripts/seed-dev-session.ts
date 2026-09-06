@@ -17,6 +17,7 @@ async function main() {
       set: { name: "Atleta Dev" },
     })
     .returning({ id: users.id });
+  if (!user) throw new Error("Falha ao criar usuário dev.");
 
   await db
     .insert(sessions)
@@ -35,7 +36,7 @@ async function main() {
 
 main().then(
   () => process.exit(0),
-  (error) => {
+  (error: unknown) => {
     console.error("[dev] falha ao preparar sessão local", error);
     process.exit(1);
   },

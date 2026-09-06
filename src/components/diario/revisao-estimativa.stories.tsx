@@ -66,7 +66,7 @@ const meta = {
   },
   args: {
     itens: ITENS,
-    aoMudar: () => {},
+    aoMudar: () => undefined,
     limitacoes: ["A quantidade de arroz não foi informada; assumi uma porção usual."],
     confianca: "media" as const,
     origemEstimativa: "texto" as const,
@@ -126,21 +126,22 @@ export const ComAcrescimoPorEstimativa: Story = {
       origemEstimativa="texto"
       acrescimo={{
         dia: "2026-05-20",
-        estimarDescricao: async () => ({
-          ok: true,
-          estimativa: {
-            itens: [
-              itemEstimado({
-                descricao: "Pão de queijo",
-                quantidade: 90,
-                calorias: 270, proteinaG: 8, carboidratosG: 24, gordurasG: 16, fibrasG: 0,
-                confianca: "media",
-                modelo: "google/gemini-2.5-flash-lite",
-                origemEstimativa: "texto",
-              }),
-            ],
-          },
-        }),
+        estimarDescricao: () =>
+          Promise.resolve({
+            ok: true,
+            estimativa: {
+              itens: [
+                itemEstimado({
+                  descricao: "Pão de queijo",
+                  quantidade: 90,
+                  calorias: 270, proteinaG: 8, carboidratosG: 24, gordurasG: 16, fibrasG: 0,
+                  confianca: "media",
+                  modelo: "google/gemini-2.5-flash-lite",
+                  origemEstimativa: "texto",
+                }),
+              ],
+            },
+          }),
       }}
     />
   ),
@@ -156,7 +157,7 @@ export const AlimentoCorrigidoSemRecalculo: Story = {
   render: function Render() {
     const [itens, setItens] = useState<ItemPrato[]>([
       renomearItem(REFRIGERANTE, "Refrigerante de cola zero"),
-      ITENS[1],
+      ...(ITENS[1] ? [ITENS[1]] : []),
     ]);
     return (
       <RevisaoEstimativa

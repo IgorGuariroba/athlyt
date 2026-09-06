@@ -13,10 +13,13 @@ afterEach(cleanup);
  * arquivo.
  */
 describe("CapturaFoto", () => {
+  let revokeSpy: (url: string) => void;
+
   beforeEach(() => {
     let sequencia = 0;
+    revokeSpy = vi.fn<(url: string) => void>();
     globalThis.URL.createObjectURL = vi.fn(() => `blob:previa-${(sequencia += 1)}`);
-    globalThis.URL.revokeObjectURL = vi.fn();
+    globalThis.URL.revokeObjectURL = revokeSpy;
   });
 
   function seletores() {
@@ -25,18 +28,18 @@ describe("CapturaFoto", () => {
   }
 
   it("oferece um caminho direto de câmera, além da galeria", () => {
-    render(<CapturaFoto arquivo={null} aoEscolher={() => {}} />);
+    render(<CapturaFoto arquivo={null} aoEscolher={() => undefined} />);
 
     const capturas = seletores().filter((input) => input.hasAttribute("capture"));
     expect(capturas).toHaveLength(1);
-    expect(capturas[0].getAttribute("capture")).toBe("environment");
+    expect(capturas[0]!.getAttribute("capture")).toBe("environment");
     expect(seletores()).toHaveLength(2);
     expect(screen.getByRole("button", { name: /tirar foto/i })).toBeDefined();
   });
 
   it("mostra a prévia do que foi capturado, em vez de só o nome do arquivo", () => {
     const arquivo = new File(["x"], "prato.jpg", { type: "image/jpeg" });
-    render(<CapturaFoto arquivo={arquivo} aoEscolher={() => {}} />);
+    render(<CapturaFoto arquivo={arquivo} aoEscolher={() => undefined} />);
 
     expect(screen.getByAltText(/prévia/i).getAttribute("src")).toBe("blob:previa-1");
   });
@@ -46,10 +49,10 @@ describe("CapturaFoto", () => {
     // e esta é uma tela de uso repetido, várias vezes por dia.
     const primeira = new File(["a"], "a.jpg", { type: "image/jpeg" });
     const segunda = new File(["b"], "b.jpg", { type: "image/jpeg" });
-    const { rerender } = render(<CapturaFoto arquivo={primeira} aoEscolher={() => {}} />);
+    const { rerender } = render(<CapturaFoto arquivo={primeira} aoEscolher={() => undefined} />);
 
-    rerender(<CapturaFoto arquivo={segunda} aoEscolher={() => {}} />);
+    rerender(<CapturaFoto arquivo={segunda} aoEscolher={() => undefined} />);
 
-    expect(globalThis.URL.revokeObjectURL).toHaveBeenCalledWith("blob:previa-1");
+    expect(revokeSpy).toHaveBeenCalledWith("blob:previa-1");
   });
 });

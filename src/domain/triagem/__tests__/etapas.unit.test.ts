@@ -26,7 +26,7 @@ describe("posicaoNaCascata", () => {
   });
 
   it("última etapa é a posição = total", () => {
-    const ultima = ETAPAS_TRIAGEM[ETAPAS_TRIAGEM.length - 1].id;
+    const ultima = ETAPAS_TRIAGEM[ETAPAS_TRIAGEM.length - 1]!.id;
     expect(posicaoNaCascata(ultima)).toEqual({
       indice: ETAPAS_TRIAGEM.length,
       total: ETAPAS_TRIAGEM.length,
@@ -50,7 +50,7 @@ describe("etapaSeguinte", () => {
   });
 
   it("retorna null após a última etapa", () => {
-    const ultima = ETAPAS_TRIAGEM[ETAPAS_TRIAGEM.length - 1].id;
+    const ultima = ETAPAS_TRIAGEM[ETAPAS_TRIAGEM.length - 1]!.id;
     expect(etapaSeguinte(ultima)).toBeNull();
   });
 });

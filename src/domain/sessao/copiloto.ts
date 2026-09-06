@@ -44,7 +44,7 @@ export async function solicitarOrientacaoProximaSerie(
   const exercicio = sessao.exercicios.find((item) => item.exercicioId === gatilho.exercicioId);
   const registrada = exercicio?.series.find((serie) => serie.numero === gatilho.serieRegistrada);
   const proxima = exercicio?.series.find((serie) => !serie.concluida);
-  if (!exercicio || !registrada?.concluida || !proxima || proxima.numero !== gatilho.serieRegistrada + 1) {
+  if (!exercicio || !registrada?.concluida || proxima?.numero !== gatilho.serieRegistrada + 1) {
     return { status: "obsoleta", motivo: "A próxima série já não corresponde a esta orientação." };
   }
 

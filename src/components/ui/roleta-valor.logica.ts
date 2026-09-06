@@ -92,11 +92,12 @@ export function suavizarEncaixe(progresso: number) {
  * sozinho produz flings erráticos.
  */
 export function velocidadeDasAmostras(
-  amostras: Array<{ posicao: number; tempo: number }>,
+  amostras: { posicao: number; tempo: number }[],
 ) {
   if (amostras.length < 2) return 0;
   const primeira = amostras[0];
   const ultima = amostras[amostras.length - 1];
+  if (!primeira || !ultima) return 0;
   const dt = ultima.tempo - primeira.tempo;
   if (dt <= 0) return 0;
   return (ultima.posicao - primeira.posicao) / dt;

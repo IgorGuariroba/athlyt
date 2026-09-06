@@ -23,7 +23,8 @@ export function AjusteDescanso({ exercicioId, descansoPrescritoSeg }: {
 }) {
   const ritmo = useRitmoDescanso(exercicioId);
   const opcoes = opcoesDescanso(descansoPrescritoSeg);
-  const escolhida = opcoes.find((opcao) => opcao.ritmo === ritmo) ?? opcoes[1];
+  const escolhida = opcoes.find((opcao) => opcao.ritmo === ritmo) ?? opcoes[1] ?? opcoes[0];
+  if (!escolhida) return null;
 
   function escolher(novo: RitmoDescanso) {
     definirRitmoDescanso(exercicioId, novo);

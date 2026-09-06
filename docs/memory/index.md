@@ -4,6 +4,7 @@ okf_version: "0.2"
 
 # Memória de desenvolvimento
 
+- [Autofix de no-unnecessary-type-assertion remove cast que o teste precisava](autofix-de-assercao-quebra-testes-de-query.md) — o autofix apaga `as HTMLInputElement` de queries do Testing Library e o `lint` fica verde, mas `.checked`/`.value` quebram no `typecheck`; use o genérico da query (`getByRole<HTMLInputElement>`) e rode `typecheck` logo após o `--fix`. `[eslint, typescript, testing-library, vitest, lint, refatoracao]`
 - [Após mudanças, reconstruir e reiniciar a aplicação em produção](rebuild-restart-apos-mudanca.md) — a URL do Tailscale Funnel serve o Next.js em modo produção; use `npm run app:up` / `app:down`, que encapsulam `.next` limpo, `setsid`, o servidor do standalone e a cópia dos estáticos. `[deploy, nextjs, tailscale, producao]`
 - [npm ci exige lock gerado pela mesma versão de npm do runner](ci-lockfile-npm-runner.md) — regenerar `package-lock.json` com um npm diferente do usado no CI não corrige `EUSAGE`; é preciso casar a versão e fixar o patch do Node. `[ci, dependencias, npm]`
 - [Mudança de UI atualiza o E2E no mesmo conjunto](mudanca-ui-atualiza-e2e.md) — alterações de interação ou contrato acessível exigem atualizar e executar o cenário E2E equivalente antes do push. `[ui, e2e, acessibilidade, playwright]`

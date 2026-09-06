@@ -192,6 +192,7 @@ export async function confirmarRefeicao(
       set: { itens, macros, origem: editou ? "editado" : "planejado", consumidoEm },
     })
     .returning();
+  if (!linha) throw new Error("Falha ao registrar consumo: linha não retornada.");
   return mapear(linha, fuso);
 }
 
@@ -276,7 +277,7 @@ export async function registrarConsumoReal(
     refeicaoRef: entrada.refeicaoRef ?? null,
     diaAlimentar: entrada.dia,
     nome: planejada?.nome ?? (entrada.nome.trim() || "Registro retroativo"),
-    origem: (entrada.refeicaoRef ? "editado" : "avulso") as "editado" | "avulso",
+    origem: entrada.refeicaoRef ? ("editado" as const) : ("avulso" as const),
     itens: entrada.itens,
     macros,
     planejado: planejada?.macros ?? null,
@@ -308,6 +309,7 @@ export async function registrarConsumoReal(
         })
         .returning()
     : await db.insert(foodEntries).values(valores).returning();
+  if (!linha) throw new Error("Falha ao registrar consumo: linha não retornada.");
 
   return mapear(linha, fuso);
 }

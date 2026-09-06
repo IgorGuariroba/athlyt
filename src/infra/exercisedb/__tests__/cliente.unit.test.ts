@@ -8,28 +8,30 @@ import { criarClienteExerciseDB } from "../index";
  */
 describe("criarClienteExerciseDB", () => {
   it("busca exercícios usando o parâmetro search (não q) e normaliza o retorno", async () => {
-    const fetchFake = vi.fn(async (url: string | URL) => {
+    const fetchFake = vi.fn((url: string | URL) => {
       const alvo = new URL(url);
       expect(alvo.pathname).toBe("/api/v1/exercises/search");
       expect(alvo.searchParams.get("search")).toBe("bench press");
       expect(alvo.searchParams.get("q")).toBeNull();
-      return new Response(
-        JSON.stringify({
-          success: true,
-          data: [
-            {
-              exerciseId: "EIeI8Vf",
-              name: "barbell bench press",
-              gifUrl: "https://static.exercisedb.dev/media/EIeI8Vf.gif",
-              targetMuscles: ["pectorals"],
-              bodyParts: ["chest"],
-              equipments: ["barbell"],
-              secondaryMuscles: ["triceps", "shoulders"],
-              instructions: ["Step:1 Lie flat on a bench.", "Step:2 Grasp the barbell."],
-            },
-          ],
-        }),
-        { status: 200 },
+      return Promise.resolve(
+        new Response(
+          JSON.stringify({
+            success: true,
+            data: [
+              {
+                exerciseId: "EIeI8Vf",
+                name: "barbell bench press",
+                gifUrl: "https://static.exercisedb.dev/media/EIeI8Vf.gif",
+                targetMuscles: ["pectorals"],
+                bodyParts: ["chest"],
+                equipments: ["barbell"],
+                secondaryMuscles: ["triceps", "shoulders"],
+                instructions: ["Step:1 Lie flat on a bench.", "Step:2 Grasp the barbell."],
+              },
+            ],
+          }),
+          { status: 200 },
+        ),
       );
     });
 
@@ -50,10 +52,12 @@ describe("criarClienteExerciseDB", () => {
   });
 
   it("porId devolve null quando a API responde NOT_FOUND", async () => {
-    const fetchFake = vi.fn(async () =>
-      new Response(
-        JSON.stringify({ error: { code: "NOT_FOUND", message: "Exercise with ID xyz not found." } }),
-        { status: 404 },
+    const fetchFake = vi.fn(() =>
+      Promise.resolve(
+        new Response(
+          JSON.stringify({ error: { code: "NOT_FOUND", message: "Exercise with ID xyz not found." } }),
+          { status: 404 },
+        ),
       ),
     );
 
@@ -62,10 +66,12 @@ describe("criarClienteExerciseDB", () => {
   });
 
   it("porId lança em erro que não é NOT_FOUND", async () => {
-    const fetchFake = vi.fn(async () =>
-      new Response(JSON.stringify({ error: { code: "RATE_LIMITED", message: "Too many requests." } }), {
-        status: 429,
-      }),
+    const fetchFake = vi.fn(() =>
+      Promise.resolve(
+        new Response(JSON.stringify({ error: { code: "RATE_LIMITED", message: "Too many requests." } }), {
+          status: 429,
+        }),
+      ),
     );
 
     const cliente = criarClienteExerciseDB({ fetch: fetchFake as unknown as typeof fetch });

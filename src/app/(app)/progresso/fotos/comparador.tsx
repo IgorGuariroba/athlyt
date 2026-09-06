@@ -6,14 +6,14 @@ import { useMemo, useState } from "react";
 import { CampoSelecao, EstadoVazio } from "@/components/tela";
 import { ControleFaixa } from "@/components/ui/controle-faixa";
 
-type Foto = {
+interface Foto {
   id: string;
   pose: string;
   data: string;
   condicoes: string | null;
   protocoloVersao: string;
   url: string;
-};
+}
 
 /**
  * Comparação de duas fotos da mesma pose ao longo do tempo.
@@ -43,9 +43,10 @@ export function ComparadorFotos({ fotos }: { fotos: Foto[] }) {
       atual?.condicoes &&
       anterior.condicoes.toLowerCase() !== atual.condicoes.toLowerCase(),
   );
-  const protocoloDiferente = Boolean(
-    anterior && atual && anterior.protocoloVersao !== atual.protocoloVersao,
-  );
+  const protocoloDiferente =
+    anterior !== undefined &&
+    atual !== undefined &&
+    anterior.protocoloVersao !== atual.protocoloVersao;
 
   const opcoesPose = poses.map((item) => ({
     valor: item,
@@ -117,7 +118,7 @@ export function ComparadorFotos({ fotos }: { fotos: Foto[] }) {
                   style={{ width: `${zoom}%`, height: "auto" }}
                 />
                 <figcaption className="sticky bottom-0 bg-background/90 p-2 text-body-sm text-muted-foreground backdrop-blur">
-                  {foto.data} · {foto.condicoes || "condições não informadas"}
+                  {foto.data} · {foto.condicoes ?? "condições não informadas"}
                 </figcaption>
               </figure>
             ))}

@@ -30,6 +30,13 @@ const DESFECHOS_QUE_AVANCAM = new Set<TentativaModelo["desfecho"]>([
 ]);
 
 /** Executor da cadeia: dois chamados por rota, prazo compartilhado por rota e global. */
+function abortado(signal: AbortSignal): boolean {
+  // A propriedade `aborted` de um `AbortSignal` muda de forma assíncrona
+  // entre awaits. Uma função evita que a checagem anterior afine a
+  // variável local para `false` perpétuo no fluxo de controle estático.
+  return signal.aborted;
+}
+
 export async function executarFallbackDeModelo<T>(entrada: {
   rotas: readonly RotaModeloAprovada[];
   executar: (rota: RotaModeloAprovada, contexto: { chamada: number; signal: AbortSignal }) => Promise<ResultadoChamadaRota<T>>;
@@ -40,19 +47,21 @@ export async function executarFallbackDeModelo<T>(entrada: {
 }): Promise<ResultadoFallback<T>> {
   const tentativas: TentativaModelo[] = [];
   const externo = entrada.signal ?? new AbortController().signal;
-  if (externo.aborted) return { status: "cancelada", tentativas };
+  if (abortado(externo)) return { status: "cancelada", tentativas };
 
   const global = new AbortController();
-  const timerGlobal = setTimeout(() => global.abort("orcamento-global"), entrada.orcamentoTotalMs ?? 360_000);
+  const timerGlobal = setTimeout(() => {
+    global.abort("orcamento-global");
+  }, entrada.orcamentoTotalMs ?? 360_000);
   const signalGlobal = AbortSignal.any([externo, global.signal]);
   entrada.aoProgresso?.({ tipo: "inicio", total: entrada.rotas.length });
 
   try {
     for (const [indice, rota] of entrada.rotas.entries()) {
-      if (global.signal.aborted) {
+      if (abortado(global.signal)) {
         return { status: "indisponivel", motivo: "Orçamento global da decisão esgotado.", tentativas };
       }
-      if (externo.aborted) return { status: "cancelada", tentativas };
+      if (abortado(externo)) return { status: "cancelada", tentativas };
       if (indice > 0) {
         entrada.aoProgresso?.({
           tipo: indice === entrada.rotas.length - 1 ? "ultima-alternativa" : "alternativa",
@@ -62,7 +71,9 @@ export async function executarFallbackDeModelo<T>(entrada: {
       }
 
       const controladorRota = new AbortController();
-      const timerRota = setTimeout(() => controladorRota.abort("orcamento-rota"), entrada.orcamentoRotaMs ?? 120_000);
+      const timerRota = setTimeout(() => {
+        controladorRota.abort("orcamento-rota");
+      }, entrada.orcamentoRotaMs ?? 120_000);
       const signalRota = AbortSignal.any([signalGlobal, controladorRota.signal]);
       let resultado: ResultadoChamadaRota<T> | undefined;
       let chamadas = 0;
@@ -73,11 +84,11 @@ export async function executarFallbackDeModelo<T>(entrada: {
           try {
             resultado = await entrada.executar(rota, { chamada, signal: signalRota });
           } catch (erro) {
-            if (externo.aborted) {
+            if (abortado(externo)) {
               tentativas.push({ ordem: indice + 1, rota, chamadas, desfecho: "cancelada" });
               return { status: "cancelada", tentativas };
             }
-            if (global.signal.aborted) {
+            if (abortado(global.signal)) {
               tentativas.push({ ordem: indice + 1, rota, chamadas, desfecho: "timeout" });
               return { status: "indisponivel", motivo: "Orçamento global da decisão esgotado.", tentativas };
             }

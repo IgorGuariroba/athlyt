@@ -81,6 +81,7 @@ async function main() {
     .insert(users)
     .values({ email: `verificar-ia-${crypto.randomUUID()}@example.com` })
     .returning();
+  if (!usuario) throw new Error("Falha ao criar usuário de verificação.");
 
   try {
     const nucleo = montarNucleo({
@@ -182,7 +183,7 @@ async function main() {
     verificar(
       maisRecente?.modeloResolvido === modeloSolicitado,
       "trilha registra o modelo resolvido, não o nome lógico",
-      `${maisRecente?.modeloResolvido}`,
+      maisRecente?.modeloResolvido ?? "",
     );
     verificar(
       maisRecente?.recorteVersao === obterRecorte("copiloto-sessao").versao,
@@ -213,7 +214,7 @@ async function main() {
   process.exit(0);
 }
 
-main().catch((erro) => {
+main().catch((erro: unknown) => {
   console.error("\nFALHA:", erro instanceof Error ? erro.stack : erro);
   process.exit(1);
 });

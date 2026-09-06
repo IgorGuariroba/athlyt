@@ -33,11 +33,11 @@ describe("opções de descanso", () => {
   it("rotula cada opção pela duração e descreve o que ela é", () => {
     const [curto, prescrito, longo] = opcoesDescanso(90);
 
-    expect(curto.rotulo).toBe("1:00");
-    expect(prescrito.rotulo).toBe("1:30");
-    expect(longo.rotulo).toBe("2:15");
-    expect(prescrito.descricao).toBe("Descanso do plano: 1:30");
-    expect(longo.descricao).toBe("Descanso longo: 2:15");
+    expect(curto!.rotulo).toBe("1:00");
+    expect(prescrito!.rotulo).toBe("1:30");
+    expect(longo!.rotulo).toBe("2:15");
+    expect(prescrito!.descricao).toBe("Descanso do plano: 1:30");
+    expect(longo!.descricao).toBe("Descanso longo: 2:15");
   });
 
   it("formata como o timer da sessão", () => {

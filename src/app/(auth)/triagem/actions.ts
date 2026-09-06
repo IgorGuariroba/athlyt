@@ -68,7 +68,7 @@ export async function submeterEtapaTriagem(
   etapaAtual: string,
   proximaEtapa: string,
   formData: FormData,
-): Promise<{ erro: string } | void> {
+): Promise<{ erro: string } | undefined> {
   const session = await auth();
   const userId = session?.user?.id;
   if (!userId) {
@@ -88,8 +88,12 @@ export async function submeterEtapaTriagem(
 
   // O peso da triagem é a linha de base do gráfico do Progresso, e por
   // isso precisa existir como medição, não só como resposta do perfil.
-  if (etapaAtual === "peso" && "pesoKg" in resultado.dados) {
-    await garantirPesoInicial(userId, resultado.dados.pesoKg as number);
+  if (
+    etapaAtual === "peso" &&
+    "pesoKg" in resultado.dados &&
+    resultado.dados.pesoKg !== undefined
+  ) {
+    await garantirPesoInicial(userId, resultado.dados.pesoKg);
   }
 
   const retorno = formData.get("retorno");

@@ -13,6 +13,7 @@ import { aplicarReducaoVolumeAutomatica, ativarExperimentoPlano, desfazerAjusteA
 import { incorporarReavaliacaoSePropostaEstrutural, obterReavaliacaoPendente, rejeitarReavaliacaoDaRevisao } from "@/domain/plano/reavaliacao";
 import type { ExercicioSessao } from "@/domain/sessao/repositorio";
 import { obterPerfilVigente } from "@/domain/triagem/perfil";
+import { campoNumero, campoTexto, campoTextoOpcional } from "@/lib/form-data";
 
 const limitar = (valor: number) => Math.max(0, Math.min(100, Math.round(valor)));
 
@@ -41,9 +42,10 @@ export async function gerarRevisaoSemanal(fd: FormData) {
     { sentido: desempenhoScore >= 60 ? "favor" : "contra", descricao: seriesComBaseline.length ? `${desempenhoScore}% das séries comparáveis mantiveram ou superaram a melhor carga anterior` : "Sem séries com baseline comparável para concluir progressão de carga", fonte: "Sessão de Treino", qualidade: seriesComBaseline.length ? "alta" : "baixa", observadoEm: fim },
   ];
   const cinturas = panorama.medicoes.filter((item) => item.regiao === "cintura" && item.lado === "unico");
-  const deltaCinturaMm = cinturas.length >= 2 ? cinturas[0].valorMm - cinturas[1].valorMm : null;
+  const [cinturaAtual, cinturaAnterior] = cinturas;
+  const deltaCinturaMm = cinturaAtual && cinturaAnterior ? cinturaAtual.valorMm - cinturaAnterior.valorMm : null;
   const tendenciaScore = deltaCinturaMm === null ? 40 : Math.abs(deltaCinturaMm) <= 5 ? 60 : deltaCinturaMm < 0 ? 70 : 45;
-  if (deltaCinturaMm !== null) evidencias.push({ sentido: Math.abs(deltaCinturaMm) <= 5 || deltaCinturaMm < 0 ? "favor" : "contra", descricao: `Cintura variou ${(deltaCinturaMm / 10).toLocaleString("pt-BR")} cm entre as duas medições comparáveis mais recentes`, fonte: "circunferência", qualidade: cinturas[0].qualidade, observadoEm: cinturas[0].observadoEm, protocolo: "fita-v1" });
+  if (cinturaAtual && cinturaAnterior && deltaCinturaMm !== null) evidencias.push({ sentido: Math.abs(deltaCinturaMm) <= 5 || deltaCinturaMm < 0 ? "favor" : "contra", descricao: `Cintura variou ${(deltaCinturaMm / 10).toLocaleString("pt-BR")} cm entre as duas medições comparáveis mais recentes`, fonte: "circunferência", qualidade: cinturaAtual.qualidade, observadoEm: cinturaAtual.observadoEm, protocolo: "fita-v1" });
   const metodos = new Set(panorama.gorduras.slice(0, 4).map((item) => `${item.metodo}:${item.protocolo ?? "sem protocolo"}`));
   if (metodos.size > 1) evidencias.push({ sentido: "contra", descricao: "Medições recentes de gordura usam método ou protocolo diferente e não foram fundidas", fonte: "Medição de Gordura Corporal", qualidade: "alta" });
   if (panorama.medicoes.length >= 3) evidencias.push({ sentido: "favor", descricao: "Há pelo menos três circunferências com proveniência e protocolo registrados", fonte: "circunferência", qualidade: "moderada" });
@@ -51,15 +53,15 @@ export async function gerarRevisaoSemanal(fd: FormData) {
   const confiancas = avaliarConfiancaCorporal({ regioes, possuiGordura: panorama.gorduras.length > 0, possuiFotos: panorama.fotos.length > 0, triagemTreinoCompleta: Boolean(respostas.experienciaTreino && respostas.diasDisponiveis?.length), triagemNutricaoCompleta: Boolean(respostas.pesoKg && respostas.alturaCm), saudeInformada: respostas.lesoes !== undefined && respostas.condicoes !== undefined });
   const datas = [...panorama.medicoes.map((item) => item.observadoEm), ...panorama.pesos.map((item) => item.observadoEm)];
   const semanasObservadas = datas.length ? Math.max(1, Math.floor((fim.getTime() - Math.min(...datas.map(Number))) / (7 * 86_400_000))) : 0;
-  const recuperacaoInformada = limitar(Number(fd.get("recuperacao") ?? 3) * 20);
-  const utilidadeInformada = limitar(Number(fd.get("utilidade") ?? 3) * 20);
+  const recuperacaoInformada = limitar(campoNumero(fd, "recuperacao", 3) * 20);
+  const utilidadeInformada = limitar(campoNumero(fd, "utilidade", 3) * 20);
   evidencias.push({ sentido: recuperacaoInformada >= 60 ? "favor" : "contra", descricao: `Recuperação percebida: ${recuperacaoInformada}/100`, fonte: "relato da Revisão Semanal", qualidade: "moderada", observadoEm: fim });
   const revisao = produzirRevisaoCorporal({
     dimensoes: { aderencia: Math.round((aderenciaTreino + aderenciaNutricao) / 2), desempenho: desempenhoScore, tendenciaCorporal: tendenciaScore, recuperacao: recuperacaoInformada, utilidade: utilidadeInformada },
     confiancas,
     evidencias,
     semanasObservadas,
-    riscoSaude: Boolean(respostas.lesoes?.trim() || respostas.condicoes?.trim()),
+    riscoSaude: Boolean(respostas.lesoes?.trim()) || Boolean(respostas.condicoes?.trim()),
     reavaliacaoPendente: reavaliacaoPendente ? {
       gatilho: reavaliacaoPendente.gatilho,
       impacto: reavaliacaoPendente.impacto,
@@ -87,7 +89,7 @@ export async function gerarRevisaoSemanal(fd: FormData) {
 
 export async function decidirPropostaRevisao(fd: FormData) {
   const session = await auth(); if (!session?.user?.id) redirect("/");
-  const reviewId = String(fd.get("reviewId")); const decisao = String(fd.get("decisao"));
+  const reviewId = campoTexto(fd, "reviewId"); const decisao = campoTexto(fd, "decisao");
   if (decisao === "aprovar") {
     const perfil = await obterPerfilVigente(session.user.id); if (!perfil) redirect("/triagem");
     await obterOuGerarRascunho(session.user.id, perfil);
@@ -104,8 +106,16 @@ export async function decidirPropostaRevisao(fd: FormData) {
 
 export async function iniciarExperimento(fd: FormData) {
   const session = await auth(); if (!session?.user?.id) redirect("/");
-  const variaveis = fd.getAll("variaveis").map(String);
-  await ativarExperimentoPlano(session.user.id, { planoId: String(fd.get("planoId")), reavaliacaoId: String(fd.get("reavaliacaoId") ?? "") || undefined, hipotese: String(fd.get("hipotese") ?? ""), variaveis, criterioSucesso: String(fd.get("criterioSucesso") ?? ""), criterioInterrupcao: String(fd.get("criterioInterrupcao") ?? ""), janelaMinimaSemanas: Number(fd.get("janelaMinimaSemanas") ?? 2) });
+  const variaveis = fd.getAll("variaveis").filter((v): v is string => typeof v === "string");
+  await ativarExperimentoPlano(session.user.id, {
+    planoId: campoTexto(fd, "planoId"),
+    reavaliacaoId: campoTextoOpcional(fd, "reavaliacaoId") ?? undefined,
+    hipotese: campoTexto(fd, "hipotese"),
+    variaveis,
+    criterioSucesso: campoTexto(fd, "criterioSucesso"),
+    criterioInterrupcao: campoTexto(fd, "criterioInterrupcao"),
+    janelaMinimaSemanas: campoNumero(fd, "janelaMinimaSemanas", 2),
+  });
   const destino = "/progresso/revisao/experimento";
   invalidarLeituras([{ fato: "plano" }], { destino });
   redirect(destino);
@@ -113,7 +123,7 @@ export async function iniciarExperimento(fd: FormData) {
 
 export async function executarRollback(fd: FormData) {
   const session = await auth(); if (!session?.user?.id) redirect("/");
-  await reverterAoPlanoEstavel(session.user.id, String(fd.get("experimentId")));
+  await reverterAoPlanoEstavel(session.user.id, campoTexto(fd, "experimentId"));
   const destino = "/progresso/revisao/experimento?sucesso=Plano Estável restaurado como nova versão.";
   invalidarLeituras([{ fato: "plano" }], { destino });
   redirect(destino);
@@ -121,7 +131,7 @@ export async function executarRollback(fd: FormData) {
 
 export async function desfazerRevisao(fd: FormData) {
   const session = await auth(); if (!session?.user?.id) redirect("/");
-  const reviewId = String(fd.get("reviewId")); const revisao = await obterRevisaoCorporal(session.user.id, reviewId);
+  const reviewId = campoTexto(fd, "reviewId"); const revisao = await obterRevisaoCorporal(session.user.id, reviewId);
   if (!revisao) redirect("/progresso/revisao");
   if (revisao.baselinePlanId) {
     const rollback = await desfazerAjusteAutomatico(session.user.id, { reviewId, baselinePlanId: revisao.baselinePlanId });

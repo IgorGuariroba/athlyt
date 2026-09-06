@@ -10,6 +10,7 @@ import { consents } from "@/db/schema";
 import { LIMITE_FOTO_CORPORAL_BYTES, prepararFotoCorporal, TIPOS_FOTO_CORPORAL } from "@/domain/medicoes/fotos";
 import { excluirFotoProgresso, excluirFotosProgresso, obterOuCriarAvaliacaoInicial, obterPanoramaCorporal, registrarFotoProgresso } from "@/domain/medicoes/repositorio";
 import { criarStorageR2 } from "@/infra/storage";
+import { campoNumero, campoTexto, campoTextoOpcional } from "@/lib/form-data";
 
 const POSES_VALIDAS = ["frente", "costas", "lateral_direita", "lateral_esquerda"] as const;
 type PoseCorporal = (typeof POSES_VALIDAS)[number];
@@ -19,7 +20,7 @@ const ehPose = (valor: string): valor is PoseCorporal =>
 export async function excluirFotoCorporal(fd: FormData) {
   const session = await auth();
   if (!session?.user?.id) redirect("/");
-  const fotoId = String(fd.get("fotoId") ?? "");
+  const fotoId = campoTexto(fd, "fotoId");
   const panorama = await obterPanoramaCorporal(session.user.id);
   const foto = panorama.fotos.find((item) => item.id === fotoId);
   if (!foto) redirect("/triagem/avaliacao-corporal/fotos?erro=Foto não encontrada.");
@@ -64,7 +65,7 @@ export async function enviarFotoCorporal(
   if (fd.get("consentimentoArmazenamento") !== "sim")
     return { ok: false, erro: "Confirme o armazenamento privado para enviar as fotos." };
 
-  const pose = String(fd.get("pose") ?? "");
+  const pose = campoTexto(fd, "pose");
   if (!ehPose(pose)) return { ok: false, erro: "Pose inválida." };
 
   const arquivo = fd.get("foto");
@@ -90,7 +91,7 @@ export async function enviarFotoCorporal(
     });
   }
 
-  const retencaoDias = Number(fd.get("retencaoDias") ?? 0);
+  const retencaoDias = campoNumero(fd, "retencaoDias", 0);
   const excluirEm =
     Number.isFinite(retencaoDias) && retencaoDias > 0
       ? new Date(Date.now() + Math.min(retencaoDias, 3650) * 86_400_000)
@@ -113,7 +114,7 @@ export async function enviarFotoCorporal(
       assessmentId: avaliacao.id,
       pose,
       objectKey: chave,
-      condicoes: String(fd.get("condicoes") ?? "") || undefined,
+      condicoes: campoTextoOpcional(fd, "condicoes") ?? undefined,
       excluirEm,
     });
   } catch {

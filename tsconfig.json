@@ -5,6 +5,11 @@
     "allowJs": true,
     "skipLibCheck": true,
     "strict": true,
+    // Acessos indexados (`arr[i]`, `map.get(k)`) carregam `| undefined`:
+    // o compilador passa a exigir narrowing antes do uso. Foi o que
+    // revelou que os 103 achados restantes de no-unnecessary-condition
+    // eram checagens reais de linhas de banco que o compilador não via.
+    "noUncheckedIndexedAccess": true,
     "noEmit": true,
     "esModuleInterop": true,
     "module": "esnext",
@@ -24,6 +29,12 @@
   },
   "include": [
     "next-env.d.ts",
+    // Os globs do TypeScript pulam diretórios iniciados por ponto, então
+    // `**/*.ts` não alcança a configuração do Storybook. Sem estas duas
+    // entradas, as regras de lint type-aware não conseguem montar um
+    // programa para `.storybook/*` e falham com erro de parsing.
+    ".storybook/**/*.ts",
+    ".storybook/**/*.tsx",
     "**/*.ts",
     "**/*.tsx",
     ".next/types/**/*.ts",

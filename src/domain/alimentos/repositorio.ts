@@ -56,6 +56,7 @@ export async function registrarPrato(
       consumidoEm,
     })
     .returning();
+  if (!linha) throw new Error("Falha ao registrar consumo: linha não retornada.");
 
   return {
     id: linha.id,
@@ -72,13 +73,13 @@ export async function registrarPrato(
 
 /** Alterna o favorito de um alimento do catálogo. */
 export async function alternarFavorito(userId: string, alimentoId: string): Promise<boolean> {
-  const [existente] = await db
+  const existentes = await db
     .select()
     .from(foodLibrary)
     .where(and(eq(foodLibrary.userId, userId), eq(foodLibrary.alimentoId, alimentoId)))
     .limit(1);
-  if (existente) {
-    await db.delete(foodLibrary).where(eq(foodLibrary.id, existente.id));
+  if (existentes.length > 0 && existentes[0]) {
+    await db.delete(foodLibrary).where(eq(foodLibrary.id, existentes[0].id));
     return false;
   }
   await db.insert(foodLibrary).values({ userId, alimentoId, nome: alimentoId, favorito: true });
@@ -105,6 +106,7 @@ export async function salvarAlimentoProprio(
       porcoes: entrada.porcoes,
     })
     .returning();
+  if (!linha) throw new Error("Falha ao registrar alimento: linha não retornada.");
   return mapearBiblioteca(linha);
 }
 
@@ -163,14 +165,14 @@ export async function listarRecorrentes(userId: string, limite = 8): Promise<Rec
 
   const contagem = new Map<string, Recorrente>();
   for (const linha of linhas) {
-    for (const item of (linha.itens as ItemPrato[]) ?? []) {
-      if (!item?.alimentoId) continue;
+    for (const item of linha.itens as ItemPrato[]) {
+      if (!item.alimentoId) continue;
       const atual = contagem.get(item.alimentoId);
       contagem.set(item.alimentoId, {
         alimentoId: item.alimentoId,
         descricao: item.descricao,
-        quantidade: item.quantidade ?? 1,
-        unidade: item.unidade ?? "g",
+        quantidade: item.quantidade,
+        unidade: item.unidade,
         vezes: (atual?.vezes ?? 0) + 1,
       });
     }

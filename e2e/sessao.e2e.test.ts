@@ -34,10 +34,10 @@ const planoComExercicioDoCatalogo: PlanoGerado = {
   bloco: {
     ...plano.bloco,
     dias: [{
-      ...plano.bloco.dias[0],
+      ...plano.bloco.dias[0]!,
       // Id real do catálogo (`src/domain/plano/exercicios.ts`) — só
       // com um exercício conhecido a ficha (ícone ℹ) é renderizada.
-      exercicios: [{ ...plano.bloco.dias[0].exercicios[0], exercicioId: "supino-halteres", nome: "Supino reto com halteres" }],
+      exercicios: [{ ...plano.bloco.dias[0]!.exercicios[0]!, exercicioId: "supino-halteres", nome: "Supino reto com halteres" }],
     }],
   },
 };
@@ -47,8 +47,8 @@ const planoDescanso: PlanoGerado = {
   bloco: {
     ...plano.bloco,
     dias: [{
-      ...plano.bloco.dias[0],
-      exercicios: [{ ...plano.bloco.dias[0].exercicios[0], series: 3, descansoSeg: 90 }],
+      ...plano.bloco.dias[0]!,
+      exercicios: [{ ...plano.bloco.dias[0]!.exercicios[0]!, series: 3, descansoSeg: 90 }],
     }],
   },
 };
@@ -58,10 +58,10 @@ const planoNavegacao: PlanoGerado = {
   bloco: {
     ...plano.bloco,
     dias: [{
-      ...plano.bloco.dias[0],
+      ...plano.bloco.dias[0]!,
       exercicios: [
-        { ...plano.bloco.dias[0].exercicios[0], exercicioId: "supino-halteres", nome: "Supino reto com halteres", repeticoes: "8–10", rir: 2 },
-        { ...plano.bloco.dias[0].exercicios[0], exercicioId: "remada-curvada", nome: "Remada curvada com barra", padrao: "puxar-horizontal", repeticoes: "10–12", rir: 2 },
+        { ...plano.bloco.dias[0]!.exercicios[0]!, exercicioId: "supino-halteres", nome: "Supino reto com halteres", repeticoes: "8–10", rir: 2 },
+        { ...plano.bloco.dias[0]!.exercicios[0]!, exercicioId: "remada-curvada", nome: "Remada curvada com barra", padrao: "puxar-horizontal", repeticoes: "10–12", rir: 2 },
       ],
     }],
   },
@@ -137,10 +137,9 @@ test("escolhe o descanso entre séries e a escolha vale para o próximo timer", 
   await expect(seletor.getByRole("radio")).toHaveCount(3);
   const prescrito = page.getByRole("radio", { name: /Descanso do plano:/ });
   const longo = page.getByRole("radio", { name: /Descanso longo:/ });
-  const curto = page.getByRole("radio", { name: /Descanso curto:/ });
   await expect(prescrito).toBeChecked();
 
-  const tempoLongo = (await longo.getAttribute("aria-label"))!.match(/\d+:\d{2}$/)![0];
+  const tempoLongo = /\d+:\d{2}$/.exec(((await longo.getAttribute("aria-label"))!))![0];
   await longo.check();
   await registrarSerie(page, 1);
   const timer = page.getByRole("dialog", { name: "Timer de descanso" });

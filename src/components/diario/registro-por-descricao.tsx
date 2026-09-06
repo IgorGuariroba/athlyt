@@ -314,7 +314,7 @@ export function RegistroPorDescricao({
             <Button
               size="cta"
               className="w-full"
-              onClick={transcreverAudio}
+              onClick={() => void transcreverAudio()}
               disabled={!audio || ocupado}
             >
               <Sparkles className="size-5" aria-hidden="true" />
@@ -324,7 +324,7 @@ export function RegistroPorDescricao({
             <Button
               size="cta"
               className="w-full"
-              onClick={estimarDescricao}
+              onClick={() => void estimarDescricao()}
               disabled={descricao.trim().length < 3 || ocupado}
             >
               <Sparkles className="size-5" aria-hidden="true" />

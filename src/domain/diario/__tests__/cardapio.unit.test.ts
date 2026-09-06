@@ -22,27 +22,27 @@ describe("Cardápio Diário como Entradas Planejadas", () => {
     const entradas = entradasPlanejadas(nutricao);
     expect(entradas.map((e) => e.nome)).toEqual(["Café da manhã", "Almoço", "Jantar", "Lanche"]);
     expect(new Set(entradas.map((e) => e.refeicaoRef)).size).toBe(4);
-    expect(entradas[0].horaLocal).toBe("08:00");
-    expect(entradas[1].horaLocal).toBe("12:30");
+    expect(entradas[0]!.horaLocal).toBe("08:00");
+    expect(entradas[1]!.horaLocal).toBe("12:30");
   });
 
   it("macros da entrada são a soma da composição própria dos itens", () => {
     const [cafe] = entradasPlanejadas(nutricao);
 
-    expect(cafe.itens[0]).toMatchObject({
+    expect(cafe!.itens[0]).toMatchObject({
       descricao: "Aveia em flocos 60 g",
       quantidade: 60,
       unidade: "g",
       calorias: 236,
     });
-    expect(cafe.itens[1]).toMatchObject({
+    expect(cafe!.itens[1]).toMatchObject({
       descricao: "Ovo de galinha cozido 100 g",
       quantidade: 100,
       unidade: "g",
       calorias: 146,
     });
-    expect(cafe.macros).toEqual(somarMacros(cafe.itens));
-    expect(cafe.macros.calorias).toBe(382);
+    expect(cafe!.macros).toEqual(somarMacros(cafe!.itens));
+    expect(cafe!.macros.calorias).toBe(382);
   });
 
   it("não falsifica macros dos alimentos para fazer o cardápio fechar a meta", () => {
@@ -74,26 +74,26 @@ describe("Cardápio Diário como Entradas Planejadas", () => {
     };
     const [entrada] = entradasPlanejadas({
       ...nutricao,
-      refeicoes: [{ ...nutricao.refeicoes[0], explicacao }],
+      refeicoes: [{ ...nutricao.refeicoes[0]!, explicacao }],
     });
 
-    expect(entrada.explicacao).toEqual(explicacao);
+    expect(entrada!.explicacao).toEqual(explicacao);
   });
 
   it("item legado sem correspondência segura preserva a leitura histórica sem fingir tabela", () => {
     const [entrada] = entradasPlanejadas({
       ...nutricao,
       refeicoes: [{
-        ...nutricao.refeicoes[0],
+        ...nutricao.refeicoes[0]!,
         itens: ["Preparação da casa 1 porção", "Aveia"],
       }],
     });
 
-    expect(entrada.itens.map((item) => item.descricao)).toEqual([
+    expect(entrada!.itens.map((item) => item.descricao)).toEqual([
       "Preparação da casa 1 porção",
       "Aveia",
     ]);
-    expect(entrada.itens).not.toContainEqual(expect.objectContaining({ origemDado: "base" }));
+    expect(entrada!.itens).not.toContainEqual(expect.objectContaining({ origemDado: "base" }));
   });
 
   it("refeição de plano anterior, sem explicação, materializa sem inventá-la", () => {
@@ -101,6 +101,6 @@ describe("Cardápio Diário como Entradas Planejadas", () => {
     // continuam válidos e a entrada precisa admitir a lacuna.
     const [entrada] = entradasPlanejadas(nutricao);
 
-    expect(entrada.explicacao).toBeUndefined();
+    expect(entrada!.explicacao).toBeUndefined();
   });
 });

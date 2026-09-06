@@ -34,10 +34,10 @@ const plano: PlanoGerado = {
 async function usuarioComPlano() {
   const [u] = await db.insert(users).values({ email: `atalhos-${randomUUID()}@example.com` }).returning();
   await db.insert(plans).values({
-    userId: u.id, perfilVersao: 1, versao: 1, estado: "ativo",
+    userId: u!.id, perfilVersao: 1, versao: 1, estado: "ativo",
     regraVersao: plano.regraVersao, modoConservador: false, conteudo: plano, activatedAt: new Date(),
   });
-  return u.id;
+  return u!.id;
 }
 
 describe("registro avulso pelo Prato", () => {
@@ -89,11 +89,11 @@ describe("registro avulso pelo Prato", () => {
     const diario = await montarDiarioDoDia(userId, { dia: DIA, fuso: FUSO });
     const consumo = diario.linhaDoTempo.find((i) => i.tipo === "consumo");
     if (consumo?.tipo !== "consumo") throw new Error("Consumo ausente.");
-    const itens = consumo.consumo.itens as Array<{ fonte?: string; origemDado?: string; confianca?: string }>;
-    expect(itens[0].fonte).toMatch(/TBCA/);
-    expect(itens[0].origemDado).toBe("base");
-    expect(itens[1].origemDado).toBe("usuario");
-    expect(itens[1].confianca).toBe("baixa");
+    const itens = consumo.consumo.itens as { fonte?: string; origemDado?: string; confianca?: string }[];
+    expect(itens[0]!.fonte).toMatch(/TBCA/);
+    expect(itens[0]!.origemDado).toBe("base");
+    expect(itens[1]!.origemDado).toBe("usuario");
+    expect(itens[1]!.confianca).toBe("baixa");
   });
 });
 
@@ -135,8 +135,8 @@ describe("favoritos, alimentos próprios e recorrentes", () => {
     await registrarPrato(userId, { nome: "C", itens: [banana()], dia: DIA, fuso: FUSO });
 
     const recorrentes = await listarRecorrentes(userId);
-    expect(recorrentes[0].alimentoId).toBe("pao-frances");
-    expect(recorrentes[0].vezes).toBe(2);
+    expect(recorrentes[0]!.alimentoId).toBe("pao-frances");
+    expect(recorrentes[0]!.vezes).toBe(2);
     expect(recorrentes.map((r) => r.alimentoId)).toContain("banana-prata");
   });
 

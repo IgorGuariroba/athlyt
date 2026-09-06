@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 
-const decidir = vi.fn();
-vi.mock("../../decidir", () => ({ decidir: (...args: unknown[]) => decidir(...args) }));
+const decidir = vi.fn<(entrada: unknown) => Promise<unknown>>();
+vi.mock("../../decidir", () => ({ decidir: (entrada: unknown) => decidir(entrada) }));
 
 const { gerarPlanoTreinoComIA, planoTreinoSchema } = await import("../plano-treino");
 
@@ -84,7 +84,7 @@ describe("gerarPlanoTreinoComIA", () => {
 
     await gerarPlanoTreinoComIA({ userId: "u1", nucleo, triagemCompleta: {} });
 
-    const { instrucao } = decidir.mock.calls[0][0] as { instrucao: string };
+    const { instrucao } = decidir.mock.calls[0]![0] as { instrucao: string };
     expect(instrucao).toContain("supino-barra | empurrar-horizontal |");
     // O texto de execução vive no catálogo estático e a tela o usa direto.
     expect(instrucao).not.toContain("retraça as escápulas");

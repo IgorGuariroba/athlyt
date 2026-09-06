@@ -4,9 +4,9 @@ import { db } from "@/db/client";
 import { plans, profileVersions, users } from "@/db/schema";
 import type { PlanoGerado } from "@/domain/plano/tipos";
 
-const orientarProximaSerie = vi.fn();
+const orientarProximaSerie = vi.fn<(entrada: unknown) => Promise<unknown>>();
 vi.mock("@/domain/ia/operacoes/copiloto-sessao", () => ({
-  orientarProximaSerie: (...args: unknown[]) => orientarProximaSerie(...args),
+  orientarProximaSerie: (entrada: unknown) => orientarProximaSerie(entrada),
 }));
 
 const { iniciarSessao, registrarOverrideAlertaCautela, registrarSerie } = await import("../repositorio");
@@ -42,12 +42,12 @@ const plano: PlanoGerado = {
 async function contexto() {
   const [user] = await db.insert(users).values({ email: `copiloto-${randomUUID()}@example.com` }).returning();
   await db.insert(profileVersions).values({
-    userId: user.id,
+    userId: user!.id,
     version: 1,
     respostas: { experienciaTreino: "intermediario", equipamentos: ["halteres"] },
   });
   await db.insert(plans).values({
-    userId: user.id,
+    userId: user!.id,
     perfilVersao: 1,
     versao: 1,
     estado: "ativo",
@@ -56,7 +56,7 @@ async function contexto() {
     conteudo: plano,
     activatedAt: new Date(),
   });
-  return user.id;
+  return user!.id;
 }
 
 describe("Copiloto de Sessão", () => {

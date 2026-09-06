@@ -58,7 +58,7 @@ describe("metas e segurança", () => {
   it("gera meta de ciclo conservadora e versionada", () => {
     const [meta] = gerarMetasProporcao([{ regiao: "ombros", lado: "unico", leiturasMm: [1100, 1102], valorMm: 1102, qualidade: "alta", observadoEm: new Date() }], ["ombros"]);
     expect(meta).toMatchObject({ regiao: "ombros", direcao: "aumentar", metodologiaVersao: "trajetoria-v1" });
-    expect(meta.metaCicloMm).toBeGreaterThan(meta.atualMm);
+    expect(meta!.metaCicloMm).toBeGreaterThan(meta!.atualMm);
   });
 
   it("transforma assimetria com sintoma em cautela, não prioridade", () => {

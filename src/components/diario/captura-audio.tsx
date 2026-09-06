@@ -69,7 +69,7 @@ export function CapturaAudio({
 
   async function iniciar() {
     setErro(null);
-    if (typeof MediaRecorder === "undefined" || !navigator.mediaDevices?.getUserMedia) {
+    if (typeof MediaRecorder === "undefined" || !("mediaDevices" in navigator)) {
       setErro("Este navegador não grava áudio. Escreva a descrição no lugar.");
       return;
     }
@@ -84,8 +84,9 @@ export function CapturaAudio({
         for (const canal of trilha.getTracks()) canal.stop();
         const tipo = instancia.mimeType || "audio/webm";
         const blob = new Blob(partes, { type: tipo });
+        const extensao = tipo.split(";")[0]?.trim() ?? "webm";
         aoGravar(
-          new File([blob], "descricao-refeicao", { type: tipo.split(";")[0].trim() }),
+          new File([blob], "descricao-refeicao", { type: extensao }),
         );
         setGravando(false);
       };
@@ -117,7 +118,9 @@ export function CapturaAudio({
       <div className={cn("flex flex-col gap-3", className)}>
         {/* Sem legenda: é a fala que o próprio usuário acabou de gravar,
             e a transcrição dela é o passo seguinte do fluxo. */}
-        <audio src={previa.url} controls aria-label="Áudio gravado" className="w-full" />
+        <audio src={previa.url} controls aria-label="Áudio gravado" className="w-full">
+          <track kind="captions" />
+        </audio>
         <Button type="button" variant="ghost" size="sm" onClick={descartar} className="self-start">
           <Trash2 className="size-4" aria-hidden="true" /> Gravar de novo
         </Button>
@@ -132,7 +135,7 @@ export function CapturaAudio({
           <Square className="size-5" aria-hidden="true" /> Parar de gravar · {relogio}
         </Button>
       ) : (
-        <Button type="button" size="cta" className="w-full" onClick={iniciar}>
+        <Button type="button" size="cta" className="w-full" onClick={() => void iniciar()}>
           <Mic className="size-5" aria-hidden="true" /> Gravar descrição
         </Button>
       )}
