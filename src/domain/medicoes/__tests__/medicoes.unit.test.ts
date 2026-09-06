@@ -1,5 +1,21 @@
 import { describe, expect, it } from "vitest";
 import { avaliarConfiancaCorporal, calcularPendenciasCadencia, consolidarCircunferencia, detectarAssimetriaSuspeita, gerarMetasProporcao } from "../index";
+import type { RespostasTriagem } from "@/domain/triagem/etapas";
+
+const panoramaCompleto = {
+  medicoes: [
+    ...(["cintura", "pescoco", "quadril", "torax", "ombros"] as const).map((regiao) => ({ regiao, lado: "unico" as const })),
+    ...(["braco", "coxa", "panturrilha"] as const).flatMap((regiao) =>
+      (["direito", "esquerdo"] as const).map((lado) => ({ regiao, lado }))),
+  ],
+  gorduras: [{ percentualBasisPoints: 1800 }],
+  fotos: [{ pose: "frente" }],
+};
+const respostasCompletas: RespostasTriagem = {
+  experienciaTreino: "intermediario", diasDisponiveis: ["segunda"], duracaoSessaoMin: 60,
+  localTreino: "academia-completa", equipamentos: ["halteres"],
+  pesoKg: 80, alturaCm: 180, objetivoComposicao: "recomposicao", lesoes: "", condicoes: "",
+};
 
 describe("protocolo de circunferências", () => {
   // `fita-v2`: uma leitura basta. Leituras extras continuam
@@ -33,15 +49,60 @@ describe("protocolo de circunferências", () => {
 });
 
 describe("confiança granular", () => {
+  it("não confunde medidas completas com triagem respondida: sem equipamentos e objetivo são três confiáveis", () => {
+    const respostas = { ...respostasCompletas };
+    delete respostas.equipamentos;
+    delete respostas.objetivoComposicao;
+    expect(avaliarConfiancaCorporal({ ...panoramaCompleto, fotos: [] }, respostas)).toEqual({
+      composicaoCorporal: "confiavel", proporcoes: "confiavel", simetriaBilateral: "limitada",
+      treinamento: "indisponivel", nutricao: "indisponivel", saudeRecuperacao: "confiavel",
+    });
+  });
+
+  it.each(["duracaoSessaoMin", "localTreino"] as const)("exige %s para confiança de treinamento", (campo) => {
+    const respostas = { ...respostasCompletas, [campo]: undefined };
+    expect(avaliarConfiancaCorporal(panoramaCompleto, respostas).treinamento).toBe("indisponivel");
+  });
+
+  it("aceita nenhum dia, nenhum equipamento e nenhuma condição como respostas explícitas", () => {
+    expect(avaliarConfiancaCorporal(panoramaCompleto, {
+      ...respostasCompletas, diasDisponiveis: [], equipamentos: [], lesoes: "", condicoes: "",
+    })).toEqual({
+      composicaoCorporal: "confiavel", proporcoes: "confiavel", simetriaBilateral: "confiavel",
+      treinamento: "confiavel", nutricao: "confiavel", saudeRecuperacao: "confiavel",
+    });
+  });
+
+  it("respeita a confirmação de objetivo dos perfis legados", () => {
+    const respostas = { ...respostasCompletas, objetivoConfirmado: true };
+    delete respostas.objetivoComposicao;
+    expect(avaliarConfiancaCorporal(panoramaCompleto, respostas).nutricao).toBe("confiavel");
+  });
+
+  it.each([undefined, null, {}])("trata perfil ausente ou vazio sem fabricar respostas (%s)", (respostas) => {
+    expect(avaliarConfiancaCorporal(panoramaCompleto, respostas)).toEqual({
+      composicaoCorporal: "confiavel", proporcoes: "confiavel", simetriaBilateral: "confiavel",
+      treinamento: "indisponivel", nutricao: "indisponivel", saudeRecuperacao: "limitada",
+    });
+  });
+
+  it("não inventa cobertura bilateral a partir de medidas sem lado", () => {
+    expect(avaliarConfiancaCorporal({
+      ...panoramaCompleto,
+      medicoes: panoramaCompleto.medicoes.map((medicao) => ({ ...medicao, lado: "unico" })),
+    }, respostasCompletas).simetriaBilateral).toBe("indisponivel");
+  });
+
   it("não limita nutrição por ausência de fotos", () => {
     const confianca = avaliarConfiancaCorporal({
-      regioes: new Set(["cintura", "pescoco", "quadril"]),
-      possuiGordura: false,
-      possuiFotos: false,
-      triagemTreinoCompleta: true,
-      triagemNutricaoCompleta: true,
-      saudeInformada: true,
-    });
+      medicoes: [
+        { regiao: "cintura", lado: "unico" },
+        { regiao: "pescoco", lado: "unico" },
+        { regiao: "quadril", lado: "unico" },
+      ],
+      gorduras: [],
+      fotos: [],
+    }, { pesoKg: 80, alturaCm: 180, objetivoComposicao: "recomposicao" });
     expect(confianca.nutricao).toBe("confiavel");
     expect(confianca.simetriaBilateral).toBe("indisponivel");
   });

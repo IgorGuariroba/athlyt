@@ -112,16 +112,8 @@ export async function obterOuGerarRascunho(userId: string, perfil: { version: nu
   const [existente] = await db.select().from(plans).where(and(eq(plans.userId, userId), eq(plans.estado, "rascunho"), eq(plans.perfilVersao, perfil.version))).orderBy(desc(plans.createdAt)).limit(1);
   if (existente) return mapear(existente);
   const panorama = await obterPanoramaCorporal(userId);
-  const regioes = new Set(panorama.medicoes.flatMap((m) => [m.regiao, `${m.regiao}:${m.lado}`]));
   const respostas = perfil.respostas;
-  const confiancaCorporal = avaliarConfiancaCorporal({
-    regioes,
-    possuiGordura: panorama.gorduras.length > 0,
-    possuiFotos: panorama.fotos.length > 0,
-    triagemTreinoCompleta: Boolean(respostas.experienciaTreino && respostas.diasDisponiveis?.length && respostas.equipamentos),
-    triagemNutricaoCompleta: Boolean(respostas.pesoKg && respostas.alturaCm && respostas.objetivoComposicao),
-    saudeInformada: respostas.lesoes !== undefined && respostas.condicoes !== undefined,
-  });
+  const confiancaCorporal = avaliarConfiancaCorporal(panorama, respostas);
   const metasProporcao = panorama.metas.length
     ? panorama.metas.map((meta) => ({ ...meta, regiao: meta.regiao as import("@/domain/medicoes").RegiaoCorporal }))
     : gerarMetasProporcao(panorama.medicoes);

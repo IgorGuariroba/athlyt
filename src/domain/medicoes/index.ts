@@ -1,3 +1,6 @@
+import type { EtapaId, RespostasTriagem } from "@/domain/triagem/etapas";
+import { etapaRespondida } from "@/domain/triagem/suficiencia";
+
 /**
  * `fita-v2` registra uma leitura por região. A v1 exigia duas leituras
  * e uma terceira por divergência; medições gravadas sob ela continuam
@@ -86,24 +89,40 @@ export function consolidarCircunferencia(leiturasCm: number[]):
   };
 }
 
-export function avaliarConfiancaCorporal(entrada: {
-  regioes: ReadonlySet<string>;
-  possuiGordura: boolean;
-  possuiFotos: boolean;
-  triagemTreinoCompleta: boolean;
-  triagemNutricaoCompleta: boolean;
-  saudeInformada: boolean;
-}): ConfiancaCorporal {
-  const essenciais = ["cintura", "pescoco", "quadril"].every((r) => entrada.regioes.has(r));
-  const proporcoes = ["cintura", "torax", "ombros", "braco", "coxa", "panturrilha"].every((r) => entrada.regioes.has(r));
-  const bilateral = ["braco:direito", "braco:esquerdo", "coxa:direito", "coxa:esquerdo", "panturrilha:direito", "panturrilha:esquerdo"].every((r) => entrada.regioes.has(r));
+/**
+ * Treino depende de experiência, tempo e recursos para uma prescrição viável;
+ * nutrição, da linha de base e do objetivo; saúde, dos riscos declarados.
+ * As etapas (não listas de campos) também orientam o destino da pendência na UI.
+ * Campos e respostas explícitas vazias continuam sob o contrato da Triagem.
+ */
+export const ETAPAS_CONFIANCA_TRIAGEM = {
+  treinamento: ["experiencia", "disponibilidade", "duracao-sessao", "academia-equipamentos"],
+  nutricao: ["peso", "altura", "objetivo"],
+  saudeRecuperacao: ["saude-lesoes", "saude-condicoes"],
+} as const satisfies Partial<Record<keyof ConfiancaCorporal, readonly EtapaId[]>>;
+
+/** Panorama e respostas devem pertencer ao mesmo atleta no mesmo instante. */
+export function avaliarConfiancaCorporal(
+  panorama: {
+    medicoes: readonly Pick<MedicaoCorporal, "regiao" | "lado">[];
+    gorduras: readonly unknown[];
+    fotos: readonly unknown[];
+  },
+  respostas?: RespostasTriagem | null,
+): ConfiancaCorporal {
+  const regioes = new Set(panorama.medicoes.flatMap((m) => [m.regiao, `${m.regiao}:${m.lado}`]));
+  const respondidas = (etapas: readonly EtapaId[]) => etapas.every((etapa) => etapaRespondida(etapa, respostas ?? {}));
+  const essenciais = ["cintura", "pescoco", "quadril"].every((r) => regioes.has(r));
+  const proporcoes = ["cintura", "torax", "ombros", "braco", "coxa", "panturrilha"].every((r) => regioes.has(r));
+  const bilateral = ["braco:direito", "braco:esquerdo", "coxa:direito", "coxa:esquerdo", "panturrilha:direito", "panturrilha:esquerdo"].every((r) => regioes.has(r));
+  const possuiGordura = panorama.gorduras.length > 0;
   return {
-    composicaoCorporal: entrada.possuiGordura && essenciais ? "confiavel" : essenciais || entrada.possuiGordura ? "limitada" : "indisponivel",
+    composicaoCorporal: possuiGordura && essenciais ? "confiavel" : essenciais || possuiGordura ? "limitada" : "indisponivel",
     proporcoes: proporcoes ? "confiavel" : essenciais ? "limitada" : "indisponivel",
-    simetriaBilateral: bilateral && entrada.possuiFotos ? "confiavel" : bilateral ? "limitada" : "indisponivel",
-    treinamento: entrada.triagemTreinoCompleta ? (proporcoes ? "confiavel" : "limitada") : "indisponivel",
-    nutricao: entrada.triagemNutricaoCompleta ? (essenciais ? "confiavel" : "limitada") : "indisponivel",
-    saudeRecuperacao: entrada.saudeInformada ? "confiavel" : "limitada",
+    simetriaBilateral: bilateral && panorama.fotos.length > 0 ? "confiavel" : bilateral ? "limitada" : "indisponivel",
+    treinamento: respondidas(ETAPAS_CONFIANCA_TRIAGEM.treinamento) ? (proporcoes ? "confiavel" : "limitada") : "indisponivel",
+    nutricao: respondidas(ETAPAS_CONFIANCA_TRIAGEM.nutricao) ? (essenciais ? "confiavel" : "limitada") : "indisponivel",
+    saudeRecuperacao: respondidas(ETAPAS_CONFIANCA_TRIAGEM.saudeRecuperacao) ? "confiavel" : "limitada",
   };
 }
 

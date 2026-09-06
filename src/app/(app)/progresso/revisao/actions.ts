@@ -49,8 +49,8 @@ export async function gerarRevisaoSemanal(fd: FormData) {
   const metodos = new Set(panorama.gorduras.slice(0, 4).map((item) => `${item.metodo}:${item.protocolo ?? "sem protocolo"}`));
   if (metodos.size > 1) evidencias.push({ sentido: "contra", descricao: "Medições recentes de gordura usam método ou protocolo diferente e não foram fundidas", fonte: "Medição de Gordura Corporal", qualidade: "alta" });
   if (panorama.medicoes.length >= 3) evidencias.push({ sentido: "favor", descricao: "Há pelo menos três circunferências com proveniência e protocolo registrados", fonte: "circunferência", qualidade: "moderada" });
-  const respostas = perfil?.respostas ?? {}; const regioes = new Set(panorama.medicoes.flatMap((item) => [item.regiao, `${item.regiao}:${item.lado}`]));
-  const confiancas = avaliarConfiancaCorporal({ regioes, possuiGordura: panorama.gorduras.length > 0, possuiFotos: panorama.fotos.length > 0, triagemTreinoCompleta: Boolean(respostas.experienciaTreino && respostas.diasDisponiveis?.length), triagemNutricaoCompleta: Boolean(respostas.pesoKg && respostas.alturaCm), saudeInformada: respostas.lesoes !== undefined && respostas.condicoes !== undefined });
+  const respostas = perfil?.respostas;
+  const confiancas = avaliarConfiancaCorporal(panorama, respostas);
   const datas = [...panorama.medicoes.map((item) => item.observadoEm), ...panorama.pesos.map((item) => item.observadoEm)];
   const semanasObservadas = datas.length ? Math.max(1, Math.floor((fim.getTime() - Math.min(...datas.map(Number))) / (7 * 86_400_000))) : 0;
   const recuperacaoInformada = limitar(campoNumero(fd, "recuperacao", 3) * 20);
@@ -61,7 +61,7 @@ export async function gerarRevisaoSemanal(fd: FormData) {
     confiancas,
     evidencias,
     semanasObservadas,
-    riscoSaude: Boolean(respostas.lesoes?.trim()) || Boolean(respostas.condicoes?.trim()),
+    riscoSaude: Boolean(respostas?.lesoes?.trim()) || Boolean(respostas?.condicoes?.trim()),
     reavaliacaoPendente: reavaliacaoPendente ? {
       gatilho: reavaliacaoPendente.gatilho,
       impacto: reavaliacaoPendente.impacto,
