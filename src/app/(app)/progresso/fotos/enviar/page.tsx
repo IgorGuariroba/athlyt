@@ -1,6 +1,6 @@
 import { Lock } from "lucide-react";
 import { redirect } from "next/navigation";
-import { auth } from "@/auth";
+import { obterSessaoAtual } from "@/auth/sessao";
 import { EnvioFotos } from "@/components/fotos/envio-fotos";
 import {
   AvisoAcao,
@@ -17,7 +17,7 @@ export default async function EnviarFotosProgressoPage({
 }: {
   searchParams: Promise<{ sucesso?: string }>;
 }) {
-  const session = await auth();
+  const session = await obterSessaoAtual();
   if (!session?.user?.id) redirect("/");
 
   const aviso = await searchParams;

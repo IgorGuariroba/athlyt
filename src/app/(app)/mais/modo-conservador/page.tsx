@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { ShieldCheck } from "lucide-react";
-import { auth } from "@/auth";
+import { obterSessaoAtual } from "@/auth/sessao";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -9,7 +9,7 @@ import { obterPerfilVigente } from "@/domain/triagem/perfil";
 import { alterarModoConservador } from "./actions";
 
 export default async function ModoConservadorPage({ searchParams }: { searchParams: Promise<{ sucesso?: string }> }) {
-  const session = await auth();
+  const session = await obterSessaoAtual();
   if (!session?.user?.id) redirect("/");
   const [perfil, params] = await Promise.all([obterPerfilVigente(session.user.id), searchParams]);
   const ativo = perfil?.respostas.modoConservadorManual ?? false;

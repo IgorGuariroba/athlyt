@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { CheckCircle2, CircleSlash2, Dumbbell } from "lucide-react";
-import { auth } from "@/auth";
+import { obterSessaoAtual } from "@/auth/sessao";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -25,7 +25,7 @@ const APRESENTACAO = {
 } as const;
 
 export default async function HistoricoPage() {
-  const session = await auth();
+  const session = await obterSessaoAtual();
   const historico = session?.user?.id
     ? await listarHistoricoSessoes(session.user.id)
     : [];

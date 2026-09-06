@@ -10,7 +10,7 @@ import {
  */
 export default function CarregandoProgresso() {
   return (
-    <EsqueletoTela rotulo="Carregando progresso">
+    <EsqueletoTela className="min-h-full" rotulo="Carregando progresso">
       <EsqueletoCabecalho />
       <EsqueletoLista itens={3} />
     </EsqueletoTela>

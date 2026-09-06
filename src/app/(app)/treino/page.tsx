@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { ArrowRight, CalendarDays, Dumbbell, History, Ruler } from "lucide-react";
-import { auth } from "@/auth";
+import { obterSessaoAtual } from "@/auth/sessao";
 import { Button } from "@/components/ui/button";
 import {
   CORES_MACRO,
@@ -50,7 +50,7 @@ import { obterPanoramaCorporal } from "@/domain/medicoes/repositorio";
  * conceito não existe no domínio.
  */
 export default async function TreinoPage() {
-  const session = await auth();
+  const session = await obterSessaoAtual();
   const userId = session?.user?.id;
   const [perfil, planoAtivo, historico, panorama] = userId
     ? await Promise.all([

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { AlertCircle, ChevronDown, ChevronLeft, Info } from "lucide-react";
-import { auth } from "@/auth";
+import { obterSessaoAtual } from "@/auth/sessao";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -16,7 +16,7 @@ export default async function GorduraPage({
 }: {
   searchParams: Promise<Record<string, string | undefined>>;
 }) {
-  const session = await auth();
+  const session = await obterSessaoAtual();
   const userId = session?.user?.id;
   if (!userId) redirect("/");
 

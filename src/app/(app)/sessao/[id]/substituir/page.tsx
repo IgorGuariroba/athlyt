@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { Info, Repeat2, X } from "lucide-react";
-import { auth } from "@/auth";
+import { obterSessaoAtual } from "@/auth/sessao";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ExplicacaoAgent } from "@/components/tela";
@@ -19,7 +19,7 @@ export default async function SubstituirPage({ params, searchParams }: {
 }) {
   const { id } = await params;
   const { exercicio: exercicioId, motivo: motivoParam, relato } = await searchParams;
-  const session = await auth();
+  const session = await obterSessaoAtual();
   const userId = session?.user?.id;
   if (!userId) notFound();
 

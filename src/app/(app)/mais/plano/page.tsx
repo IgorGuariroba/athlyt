@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { Dumbbell } from "lucide-react";
 
-import { auth } from "@/auth";
+import { obterSessaoAtual } from "@/auth/sessao";
 import { Badge } from "@/components/ui/badge";
 import {
   AvisoAcao,
@@ -28,7 +28,7 @@ export default async function PlanoAtivoPage({
 }: {
   searchParams: Promise<{ erro?: string }>;
 }) {
-  const session = await auth();
+  const session = await obterSessaoAtual();
   if (!session?.user?.id) redirect("/");
 
   const [planoAtivo, rascunho, experimento, reavaliacao, { erro }] =

@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import { ChevronLeft, Check, Dumbbell, MoreHorizontal, Repeat2 } from "lucide-react";
 import Link from "next/link";
-import { auth } from "@/auth";
+import { obterSessaoAtual } from "@/auth/sessao";
 import { Button } from "@/components/ui/button";
 import { CampoSelecao, ExplicacaoAgent, FichaExercicio, Revelar, TelaConteudo } from "@/components/tela";
 import { encontrarExercicio, rotuloGrupoMuscular } from "@/domain/plano/exercicios";
@@ -30,7 +30,7 @@ const MOTIVOS_ABANDONO = [
 export default async function SessaoPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ exercicio?: string }> }) {
   const { id } = await params;
   const { exercicio: exercicioParam } = await searchParams;
-  const session = await auth();
+  const session = await obterSessaoAtual();
   const sessao = session?.user?.id ? await obterSessao(session.user.id, id) : null;
   if (!sessao) notFound();
   const concluidas = sessao.exercicios.flatMap((e) => e.series).filter((s) => s.concluida).length;

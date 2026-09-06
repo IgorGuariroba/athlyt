@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { AlertCircle, ChevronLeft } from "lucide-react";
-import { auth } from "@/auth";
+import { obterSessaoAtual } from "@/auth/sessao";
 import { Button } from "@/components/ui/button";
 import { obterMedidasDaAvaliacaoInicial } from "@/domain/medicoes/repositorio";
 import { salvarMedidasCompletas } from "../actions";
@@ -77,7 +77,7 @@ export default async function CompletasPage({
 }: {
   searchParams: Promise<Record<string, string | undefined>>;
 }) {
-  const session = await auth();
+  const session = await obterSessaoAtual();
   const userId = session?.user?.id;
   if (!userId) redirect("/");
 

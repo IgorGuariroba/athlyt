@@ -2,7 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { ChevronRight, Dumbbell, Repeat2 } from "lucide-react";
 
-import { auth } from "@/auth";
+import { obterSessaoAtual } from "@/auth/sessao";
 import { Button } from "@/components/ui/button";
 import {
   BarraAcaoFixa,
@@ -40,7 +40,7 @@ function descanso(descansoSeg: number): string {
 }
 
 export default async function RevisaoTreinoPage() {
-  const session = await auth();
+  const session = await obterSessaoAtual();
   if (!session?.user?.id) redirect("/");
   const [plano, perfil] = await Promise.all([
     obterRascunho(session.user.id),

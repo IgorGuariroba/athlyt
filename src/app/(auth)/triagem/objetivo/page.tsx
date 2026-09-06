@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { Dumbbell, Flame, RefreshCw } from "lucide-react";
-import { auth } from "@/auth";
+import { obterSessaoAtual } from "@/auth/sessao";
 import { RadioGroup } from "@/components/ui/radio-group";
 import { OBJETIVOS_COMPOSICAO, posicaoNaCascata, proximoDestinoCascata } from "@/domain/triagem/etapas";
 import { obterPerfilVigente } from "@/domain/triagem/perfil";
@@ -15,7 +15,7 @@ const ICONE_OBJETIVO = {
 } as const;
 
 export default async function ObjetivoPage() {
-  const session = await auth();
+  const session = await obterSessaoAtual();
   const userId = session?.user?.id;
   if (!userId) redirect("/");
 

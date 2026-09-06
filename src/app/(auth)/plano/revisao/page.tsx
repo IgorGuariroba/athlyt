@@ -8,7 +8,7 @@ import {
   Flame,
 } from "lucide-react";
 
-import { auth } from "@/auth";
+import { obterSessaoAtual } from "@/auth/sessao";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -27,7 +27,7 @@ export default async function RevisaoPlanoPage({
 }: {
   searchParams: Promise<{ erro?: string }>;
 }) {
-  const session = await auth();
+  const session = await obterSessaoAtual();
   if (!session?.user?.id) redirect("/");
   const plano = await obterRascunho(session.user.id);
   if (!plano) redirect("/plano/gerando");

@@ -12,7 +12,11 @@ export type { FatoMudado } from "./mapa";
  * sabe — e, quando vai redirecionar, para onde vai. O destino entra por
  * aqui de propósito: é o que garante, pela interface, a regra que
  * docs/memory/service-worker-serve-rsc-velho-apos-server-action.md
- * escreveu em prosa e que 14 autores precisavam lembrar.
+ * escreveu em prosa e que 14 autores precisavam lembrar. Em Server
+ * Actions, cada chamada também purga o Router Cache inteiro do cliente;
+ * `rota`/`alcance` não limitam essa purga ao caminho informado. Eles
+ * continuam relevantes para o Full Route Cache quando uma leitura deixar
+ * de ser dinâmica.
  *
  * ```ts
  * invalidarLeituras([{ fato: "sessao", sessaoId }], { destino: `/sessao/${sessaoId}/resumo` });

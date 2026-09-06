@@ -12,7 +12,7 @@ import {
  */
 export default function CarregandoAvaliacaoVisual() {
   return (
-    <EsqueletoTela rotulo="Carregando a avaliação visual">
+    <EsqueletoTela className="min-h-full" rotulo="Carregando a avaliação visual">
       <EsqueletoCabecalho />
       <div className="grid grid-cols-3 gap-3 px-6">
         {Array.from({ length: 6 }, (_, indice) => (

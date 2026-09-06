@@ -1,6 +1,6 @@
 import { CheckCircle2 } from "lucide-react";
 import { redirect } from "next/navigation";
-import { auth } from "@/auth";
+import { obterSessaoAtual } from "@/auth/sessao";
 import { Button } from "@/components/ui/button";
 import {
   CabecalhoSecao,
@@ -42,7 +42,7 @@ function Valores({ dados }: { dados: Record<string, unknown> }) {
 }
 
 export default async function SincronizacaoPage() {
-  const session = await auth();
+  const session = await obterSessaoAtual();
   if (!session?.user?.id) redirect("/");
   const conflitos = await listarConflitosPendentes(session.user.id);
 
