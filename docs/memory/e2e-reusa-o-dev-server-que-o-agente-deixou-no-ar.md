@@ -17,6 +17,9 @@ sources:
   - id: timer-descanso-falso-verde-2026-09-04
     resource: "src/components/sessao/registro-serie.tsx, e2e/safe-area-standalone.e2e.test.ts, .next/static/chunks/app/(app)/sessao/"
     title: "Teste novo passou verde, e passou verde também com a regressão revertida: build velho na porta"
+  - id: pre-push-rebuild-falso-vermelho-2026-09-06
+    resource: ".git/hooks/pre-push (via husky), e2e/avaliacao-corporal.e2e.test.ts, /proc/66680 (next-server iniciado 17:14 vs .next/BUILD_ID 17:33)"
+    title: "Pre-push rebuildou .next com o servidor de produção antigo no ar; ERR_ABORTED na suíte, 8/8 após app:down && app:up"
 ---
 
 # Contexto
@@ -106,6 +109,31 @@ não alterou resultado algum, porque `z-50` já vencia o `z-10` da nav — é
 mudança defensável, mas não era o defeito. Sem a contraprova, as duas
 teriam sido relatadas como "correção verificada".
 
+## O pre-push inverte o gatilho: reconstrói o artefato sob o servidor vivo, e o vermelho é falso
+
+Os episódios anteriores trocavam o ambiente **antes** do teste começar. Em
+2026-09-06 o próprio hook de `pre-push` criou a variante inversa: para validar
+um push, ele roda `next build` — reconstruindo `.next` por completo — e em
+seguida a suíte E2E, que adota com `reuseExistingServer` o servidor de
+produção que o agente havia deixado na porta 3000. O processo (iniciado às
+17:14) servia chunks de um diretório reconstruído às 17:33; a navegação abortou
+com `net::ERR_ABORTED` em `page.goto`, o hook bloqueou o push, e o vermelho
+parecia uma regressão da mudança.[^pre-push-rebuild-falso-vermelho-2026-09-06]
+
+O sintoma é distinto dos anteriores: não é timeout de clique nem botão
+desabilitado, é **aborto de navegação** — o servidor responde, o HTML chega,
+e os chunks que ele referencia não existem mais no disco. A prova é temporal,
+em dois comandos: `ps -o lstart -p <pid do servidor>` contra
+`stat -c %y .next/BUILD_ID`. Datas diferentes com o servidor no ar são falso
+vermelho garantido; `npm run app:down && npm run app:up` (rebuild completo +
+restart, já com cópia dos estáticos) fechou 8/8 no arquivo que falhava.
+
+A regra derivada complementa as anteriores: **todo vermelho obtido depois de
+qualquer `next build` é inconclusivo enquanto o servidor na porta não tiver
+sido reiniciado** — e o hook de pre-push é justamente o fluxo que builda com
+o app de pé, porque o agente valida a UI no servidor de produção antes de
+subir.
+
 # Aplicação futura
 
 Ao investigar falha de E2E, verifique primeiro **contra o que a suíte rodou**. `curl -s -o /dev/null -w "%{http_code}" http://localhost:3000/` antes de disparar a suíte; se responder, descubra qual processo é o dono antes de interpretar qualquer resultado.
@@ -150,6 +178,9 @@ grep -ro "bottom-\[calc(7rem" ".next/static/chunks/app/(app)/sessao/"
 
 Sem correspondência, a suíte está testando outro código, e tanto o verde
 quanto o vermelho são ruído.
+
+Falha de E2E com `net::ERR_ABORTED` em `page.goto` cai na mesma checagem: datas
+do processo e do `BUILD_ID` primeiro, interpretação depois.
 
 Ao bisseccionar com `git stash` para separar regressão de falha pré-existente, lembre que o resultado só é válido se ambas as execuções usaram o mesmo servidor. Nesta investigação, `registro-por-foto` foi classificado como "pré-existente" justamente porque as duas rodadas da bissecção usaram o dev server — e ele passa normalmente em produção.
 

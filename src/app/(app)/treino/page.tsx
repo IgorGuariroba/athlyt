@@ -26,8 +26,19 @@ import { montarResumoTriagem } from "@/domain/triagem/resumo";
 import { obterPlanoAtivo } from "@/domain/plano/repositorio";
 import { listarHistoricoSessoes } from "@/domain/sessao/repositorio";
 import { escolherTreinoDoDia } from "@/domain/sessao/treino-do-dia";
-import { avaliarConfiancaCorporal } from "@/domain/medicoes";
+import { avaliarConfiancaCorporal, ETAPAS_CONFIANCA_TRIAGEM, type ConfiancaCorporal } from "@/domain/medicoes";
+import { encontrarEtapa } from "@/domain/triagem/etapas";
+import { etapaRespondida } from "@/domain/triagem/suficiencia";
 import { obterPanoramaCorporal } from "@/domain/medicoes/repositorio";
+
+const DIMENSOES_PERSONALIZACAO = {
+  composicaoCorporal: { titulo: "Estratégia corporal", descricao: "Cintura, pescoço, quadril e gordura medida." },
+  proporcoes: { titulo: "Prioridades musculares", descricao: "O conjunto completo de medidas." },
+  simetriaBilateral: { titulo: "Simetria bilateral", descricao: "Medidas dos dois lados e fotos para avaliar simetrias." },
+  treinamento: { titulo: "Treinamento", descricao: "Complete as medidas para personalizar o treino." },
+  nutricao: { titulo: "Nutrição", descricao: "Complete as medidas essenciais para personalizar a nutrição." },
+  saudeRecuperacao: { titulo: "Saúde e recuperação", descricao: "Informe lesões, condições e medicamentos." },
+} satisfies Record<keyof ConfiancaCorporal, { titulo: string; descricao: string }>;
 
 /**
  * Aba Treino: tudo o que é treino, e só treino.
@@ -59,23 +70,30 @@ export default async function TreinoPage() {
         listarHistoricoSessoes(userId),
         obterPanoramaCorporal(userId),
       ])
-    : [null, null, [], { medicoes: [], pesos: [], gorduras: [], fotos: [], metas: [] }];
+    : [null, null, [], { medicoes: [], gorduras: [], fotos: [] }];
   const resumo = montarResumoTriagem(perfil?.respostas ?? {});
 
   // Dados essenciais pertencem ao onboarding: as abas do casco só são
   // liberadas depois que essa parte da cascata estiver concluída.
   if (resumo.modoConservador && !planoAtivo) redirect("/triagem?retomar=1");
 
-  const respostas = perfil?.respostas ?? {};
-  const regioes = new Set(panorama.medicoes.flatMap((m) => [m.regiao, `${m.regiao}:${m.lado}`]));
-  const confiancaCorporal = avaliarConfiancaCorporal({
-    regioes,
-    possuiGordura: panorama.gorduras.length > 0,
-    possuiFotos: panorama.fotos.length > 0,
-    triagemTreinoCompleta: Boolean(respostas.experienciaTreino && respostas.diasDisponiveis?.length && respostas.equipamentos),
-    triagemNutricaoCompleta: Boolean(respostas.pesoKg && respostas.alturaCm && respostas.objetivoComposicao),
-    saudeInformada: respostas.lesoes !== undefined && respostas.condicoes !== undefined,
-  });
+  const confiancaCorporal = avaliarConfiancaCorporal(panorama, perfil?.respostas);
+  const pendencias = (Object.keys(DIMENSOES_PERSONALIZACAO) as (keyof ConfiancaCorporal)[])
+    .filter((dimensao) => confiancaCorporal[dimensao] !== "confiavel")
+    .map((dimensao) => {
+      const etapas = dimensao === "treinamento" || dimensao === "nutricao" || dimensao === "saudeRecuperacao"
+        ? ETAPAS_CONFIANCA_TRIAGEM[dimensao]
+        : [];
+      const etapaPendente = etapas.find((etapa) => !etapaRespondida(etapa, perfil?.respostas ?? {}));
+      return {
+        dimensao,
+        ...DIMENSOES_PERSONALIZACAO[dimensao],
+        descricao: etapaPendente
+          ? `Responda: ${encontrarEtapa(etapaPendente).titulo}.`
+          : DIMENSOES_PERSONALIZACAO[dimensao].descricao,
+        href: etapaPendente ? `/triagem/${etapaPendente}` : "/triagem/avaliacao-corporal",
+      };
+    });
   const treinoDoDia = planoAtivo
     ? escolherTreinoDoDia(planoAtivo.conteudo.bloco.dias, historico)
     : null;
@@ -85,7 +103,7 @@ export default async function TreinoPage() {
       <CabecalhoTela titulo="Treino" className="pb-4" />
 
       <div className="flex flex-col gap-6 px-6">
-        {Object.values(confiancaCorporal).some((estado) => estado !== "confiavel") ? (
+        {pendencias.length > 0 ? (
           <PersonalizacaoPendente>
             <div className="flex gap-3 p-5 pb-4">
               <div className="flex size-11 shrink-0 items-center justify-center rounded-full bg-surface-container-high text-on-surface-strong">
@@ -108,49 +126,23 @@ export default async function TreinoPage() {
             </div>
 
             <ul className="grid gap-px bg-border">
-              {confiancaCorporal.composicaoCorporal !== "confiavel" ? (
-                <li className="bg-background px-5 py-4">
+              {pendencias.map((pendencia) => (
+                <li key={pendencia.dimensao} className="bg-background px-5 py-4">
                   <strong className="block text-label-lg text-on-surface-strong">
-                    Estratégia corporal
+                    {pendencia.titulo}
                   </strong>
-                  <span className="text-body-sm text-muted-foreground">
-                    Cintura, pescoço, quadril ou gordura medida.
-                  </span>
+                  <p className="text-body-sm text-muted-foreground">
+                    {pendencia.descricao}
+                  </p>
+                  <Button asChild variant="link" className="mt-2 h-auto p-0">
+                    <Link href={pendencia.href}>
+                      Completar: {pendencia.titulo}
+                      <ArrowRight className="size-4" aria-hidden="true" />
+                    </Link>
+                  </Button>
                 </li>
-              ) : null}
-              {confiancaCorporal.proporcoes !== "confiavel" ? (
-                <li className="bg-background px-5 py-4">
-                  <strong className="block text-label-lg text-on-surface-strong">
-                    Prioridades musculares
-                  </strong>
-                  <span className="text-body-sm text-muted-foreground">
-                    O conjunto completo de medidas.
-                  </span>
-                </li>
-              ) : null}
-              {confiancaCorporal.simetriaBilateral !== "confiavel" ? (
-                <li className="bg-background px-5 py-4">
-                  <strong className="block text-label-lg text-on-surface-strong">
-                    Simetria bilateral
-                  </strong>
-                  <span className="text-body-sm text-muted-foreground">
-                    Medidas dos dois lados confirmam assimetrias.
-                  </span>
-                </li>
-              ) : null}
+              ))}
             </ul>
-
-            <Button
-              asChild
-              size="lg"
-              variant="secondary"
-              className="h-14 w-full rounded-none text-label-lg font-bold"
-            >
-              <Link href="/triagem/avaliacao-corporal">
-                Continuar avaliação
-                <ArrowRight className="size-5" aria-hidden="true" />
-              </Link>
-            </Button>
           </PersonalizacaoPendente>
         ) : null}
 
