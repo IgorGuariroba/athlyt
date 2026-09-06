@@ -53,8 +53,11 @@ test("#197: confiança 3/6 mantém o Plano Ativo com recuperação baixa e pend�
   await expect(page.getByRole("main").getByText("1 de 1 Sessões de Treino planejadas foram concluídas", { exact: true })).toBeVisible();
   await abrirPropostaDaRevisao(page);
   await expect(page.getByRole("heading", { name: "Manter Plano Ativo" })).toBeVisible();
-  const justificativa = page.getByRole("listitem").filter({ hasText: "Justificativa" });
-  await expect(justificativa).toContainText("Ainda não há evidência comparável suficiente para mudar o Plano Ativo.");
+  // Escopo ao `main` voltou a ser o padrão seguro: com o casco
+  // dono do landmark, há um único `main` por página (issue #200).
+  await expect(page.getByRole("main")).toContainText(
+    "Ainda não há evidência comparável suficiente para mudar o Plano Ativo.",
+  );
   await expect(page.getByRole("button", { name: "Desfazer proposta" })).toHaveCount(0);
 
   await concluirRevisaoEVoltarAoTreino(page);

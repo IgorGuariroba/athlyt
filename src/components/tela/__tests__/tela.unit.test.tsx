@@ -180,18 +180,28 @@ describe("Revelar", () => {
 });
 
 describe("TelaConteudo", () => {
+  it("é moldura sem landmark: o `main` de cada rota vem de quem a envolve", () => {
+    // Um `main` aqui aninhava com o do casco (app) e quebrava o atalho
+    // "pular para o conteúdo" do leitor de tela, além de fazer
+    // `getByRole("main")` resolver em dois elementos no E2E (issue #200).
+    const { container } = render(<TelaConteudo>conteúdo</TelaConteudo>);
+
+    expect(container.querySelector("main")).toBeNull();
+    expect(container.firstElementChild?.tagName).toBe("DIV");
+  });
+
   it("reserva espaço inferior quando existe CTA fixo", () => {
     // Sem esta folga o último item fica sob a barra fixa: conteúdo
     // rolável não pode ficar escondido pelo CTA.
     const { container } = render(<TelaConteudo comAcaoFixa>conteúdo</TelaConteudo>);
 
-    expect(container.querySelector("main")?.className).toContain("pb-28");
+    expect(container.firstElementChild?.className).toContain("pb-28");
   });
 
   it("usa o padding padrão quando não há CTA fixo", () => {
     const { container } = render(<TelaConteudo>conteúdo</TelaConteudo>);
 
-    expect(container.querySelector("main")?.className).toContain("pb-8");
+    expect(container.firstElementChild?.className).toContain("pb-8");
   });
 });
 
