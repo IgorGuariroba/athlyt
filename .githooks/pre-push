@@ -3,7 +3,6 @@ set -euo pipefail
 
 BRANCH_PROTEGIDA="refs/heads/main"
 
-test_int_executado=0
 while read -r _local_ref local_sha remote_ref remote_sha; do
   [ "$remote_ref" = "$BRANCH_PROTEGIDA" ] && {
     if [ "$local_sha" = "0000000000000000000000000000000000000000" ]; then
@@ -18,22 +17,40 @@ while read -r _local_ref local_sha remote_ref remote_sha; do
     npm run typecheck
   }
 
+  if [ "$local_sha" = "0000000000000000000000000000000000000000" ]; then
+    echo "pre-push: exclusão de branch não protegida — nenhum teste executado."
+    continue
+  fi
+
   base_sha="$remote_sha"
   if [ "$base_sha" = "0000000000000000000000000000000000000000" ]; then
     if ! base_sha=$(git merge-base "$local_sha" refs/heads/main 2>/dev/null); then
-      echo "pre-push: base Git indisponível — executando todos os unitários." >&2
+      echo "pre-push: modo=completo; base/head/arquivos selecionados=indisponíveis" >&2
+      echo "pre-push: testes selecionados=todos os unitários" >&2
+      echo "pre-push: motivo=base Git indisponível" >&2
       npm run test:unit
-      continue
+      base_sha=$(git rev-parse "$local_sha^" 2>/dev/null || printf '%s' "$local_sha")
+    else
+      # O seletor recusa a árvore suja: testar o commit enviado contra
+      # alterações locais faria o resultado deixar de ser evidência publicada.
+      npx tsx scripts/testes-impactados.ts --base "$base_sha" --head "$local_sha"
     fi
+  else
+    npx tsx scripts/testes-impactados.ts --base "$base_sha" --head "$local_sha"
   fi
 
-  # O seletor recusa a árvore suja: testar o commit enviado contra alterações
-  # locais faria o resultado deixar de ser evidência do que será publicado.
-  npx tsx scripts/testes-impactados.ts --base "$base_sha" --head "$local_sha"
+  # Configuração, lockfile e schema exigem integração em qualquer ref; não
+  # apenas quando o destino é main.
+  integracao_necessaria=0
+  while IFS= read -r -d '' arquivo; do
+    if [[ "$arquivo" =~ ^(package(-lock)?\.json|vitest\.config\.|vitest\.setup\.|tsconfig(\..+)?\.json|drizzle/|drizzle\.config\.|src/db/schema\.) ]]; then
+      integracao_necessaria=1
+      break
+    fi
+  done < <(git diff --name-only -z "$base_sha" "$local_sha")
 
-  if [ "$remote_ref" = "$BRANCH_PROTEGIDA" ] && [ "$test_int_executado" = 0 ]; then
+  if [ "$integracao_necessaria" = 1 ]; then
     npm run test:int
-    test_int_executado=1
   fi
 
   # Em vez de uma allowlist de UI, só alterações inequivocamente não-produto

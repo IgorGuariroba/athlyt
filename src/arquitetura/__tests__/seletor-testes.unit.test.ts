@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { decidir, parsearMudancasGit } from "../../../scripts/seletor-testes";
+import { decidir, determinarCamadas, parsearMudancasGit } from "../../../scripts/seletor-testes";
 
 describe("seletor conservador de testes", () => {
   it("preserva caminhos com espaços e renomeações do diff NUL-delimitado", () => {
@@ -20,5 +20,17 @@ describe("seletor conservador de testes", () => {
     expect(decidir([{ status: "M", caminhos: ["package-lock.json"] }]).modo).toBe("completo");
     expect(decidir([{ status: "D", caminhos: ["src/domain/antigo.ts"] }]).modo).toBe("completo");
     expect(decidir([{ status: "M", caminhos: ["public/logo.svg"] }]).modo).toBe("completo");
+    expect(decidir([{ status: "T", caminhos: ["src/domain/prato.ts"] }]).modo).toBe("completo");
+  });
+
+  it("mantém integração para mudanças sensíveis mesmo fora da main", () => {
+    expect(determinarCamadas([{ status: "M", caminhos: ["drizzle.config.ts"] }])).toEqual({
+      integracao: true,
+      e2e: true,
+    });
+    expect(determinarCamadas([{ status: "M", caminhos: ["docs/decisao.md"] }])).toEqual({
+      integracao: false,
+      e2e: false,
+    });
   });
 });
