@@ -48,7 +48,7 @@ export type UnidadeEstimada = "g" | "ml";
  * bastava o modelo declarar um líquido para o nome do item aparecer
  * com a quantidade grudada.
  */
-const SUFIXO_QUANTIDADE = /\s\d+\s?(?:g|ml)$/i;
+const SUFIXO_QUANTIDADE = /\s\d+(?:[.,]\d+)?\s+.+$/i;
 
 /** Sufixo canônico da descrição, para as unidades que o item conhece. */
 function sufixoDe(item: Pick<ItemPrato, "quantidade" | "unidade">): string {
@@ -273,7 +273,7 @@ export function macrosDesatualizados(item: ItemPrato, nomeEstimado: string): boo
 }
 
 /**
- * Descrição sem o sufixo de gramas que `itemEstimado` acrescenta.
+ * Descrição sem o sufixo de quantidade que `itemEstimado` ou `itemManual` acrescenta.
  *
  * **Não apara as pontas**: o retorno alimenta o `value` do campo de
  * correção do alimento, e aparar ali apaga o espaço no keystroke em que
@@ -285,11 +285,12 @@ export function nomeDoItem(item: Pick<ItemPrato, "descricao">): string {
 }
 
 /**
- * Remove o sufixo de quantidade de uma descrição solta.
+ * Remove o sufixo de quantidade de uma descrição solta, inclusive
+ * unidades livres de entradas manuais ("porção", "marmita").
  *
  * Serve a fronteira que reidrata item já persistido, onde só existe a
  * string gravada — sem isto, cada chamador reescreveria o padrão e
- * voltaria a esquecer `ml`.
+ * voltaria a esquecer uma unidade.
  */
 export function descricaoSemQuantidade(descricao: string): string {
   return descricao.replace(SUFIXO_QUANTIDADE, "");

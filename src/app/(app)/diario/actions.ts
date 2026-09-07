@@ -5,13 +5,8 @@ import { auth } from "@/auth";
 import { invalidarLeituras } from "@/app/_invalidacao";
 import { escalarMacros } from "@/domain/diario/cardapio";
 import { alternarFavorito, registrarPrato, salvarAlimentoProprio } from "@/domain/alimentos/repositorio";
-import {
-  descricaoSemQuantidade,
-  itemDeAlimento,
-  itemEstimado,
-  itemManual,
-  type ItemPrato,
-} from "@/domain/alimentos/prato";
+import type { ItemPrato } from "@/domain/alimentos/prato";
+import { reconstruirPratoRevisado } from "@/domain/alimentos/prato-revisado";
 import {
   confirmarRefeicao,
   desfazerConfirmacao,
@@ -86,44 +81,23 @@ export async function confirmarRefeicaoEditadaAction(formData: FormData) {
  * Registra o Prato inteiro de uma vez.
  *
  * Os itens chegam serializados porque o Prato é montado no cliente. O
- * servidor não confia neles cegamente: itens vindos da base são
- * recalculados a partir do catálogo, de modo que um payload adulterado
- * não consiga inventar macros para um alimento conhecido.
+ * servidor não confia neles cegamente: a reconstrução passa pelo
+ * portão único do domínio (`reconstruirPratoRevisado`), o mesmo que
+ * `registrarConsumoRealAction` usa — nenhuma action monta `ItemPrato`
+ * por conta própria (ver issue #203).
  */
 export async function registrarPratoAction(formData: FormData) {
   const dia = campoTexto(formData, "dia");
   const fuso = campoTexto(formData, "fuso");
   const nome = campoTexto(formData, "nome").trim();
   const bruto: unknown = JSON.parse(campoTexto(formData, "itens", "[]"));
-  if (!Array.isArray(bruto) || bruto.length === 0) {
+  if (!Array.isArray(bruto)) {
     throw new Error("Um registro precisa de ao menos um item no Prato.");
   }
-  const itens = (bruto as ItemPrato[]).map((item) => {
-    if (item.alimentoId) {
-      return itemDeAlimento(item.alimentoId, { quantidade: item.quantidade, unidade: item.unidade });
-    }
-    // Estimativa de foto preserva a origem: reconstruir como entrada
-    // manual apagaria da auditoria que aquele número veio de uma foto,
-    // e a ponderação de fontes trata as duas com credenciais distintas.
-    if (item.origemDado === "estimativa-ia") {
-      return itemEstimado({
-        descricao: descricaoSemQuantidade(item.descricao),
-        quantidade: item.quantidade,
-        unidade: item.unidade === "ml" ? "ml" : "g",
-        calorias: item.calorias, proteinaG: item.proteinaG,
-        carboidratosG: item.carboidratosG, gordurasG: item.gordurasG, fibrasG: item.fibrasG,
-        confianca: item.confianca,
-        modelo: item.versaoFonte,
-      });
-    }
-    return itemManual({
-      nome: item.descricao,
-      quantidade: item.quantidade,
-      unidade: item.unidade,
-      calorias: item.calorias, proteinaG: item.proteinaG,
-      carboidratosG: item.carboidratosG, gordurasG: item.gordurasG, fibrasG: item.fibrasG,
-    });
-  });
+  // Foto e Atalhos/Manual não têm origem de estimativa própria como
+  // descrição/áudio têm; "foto" é o default histórico dos itens
+  // gravados antes deste campo existir, preservado aqui pelo portão.
+  const itens = reconstruirPratoRevisado(bruto as ItemPrato[], "foto");
 
   const userId = await usuario();
   const hora = campoTexto(formData, "hora");
