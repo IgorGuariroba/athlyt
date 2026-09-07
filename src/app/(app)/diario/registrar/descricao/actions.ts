@@ -14,12 +14,9 @@ import {
   validarAudioRefeicao,
   validarDescricaoRefeicao,
 } from "@/domain/alimentos/audio-refeicao";
-import {
-  itemEstimado,
-  type ItemPrato,
-  type OrigemEstimativa,
-} from "@/domain/alimentos/prato";
-import { reconstruirItemParaRegistro } from "../item-para-registro";
+import type { ItemPrato, OrigemEstimativa } from "@/domain/alimentos/prato";
+import { reconstruirPratoRevisado } from "@/domain/alimentos/prato-revisado";
+import { itensDaEstimativa } from "./mapear-estimativa";
 import {
   recalcularMacrosDoItem,
   type MacrosRecalculados,
@@ -207,13 +204,7 @@ export async function estimarPorDescricaoAction(fd: FormData): Promise<Resultado
     ok: true,
     estimativa: {
       nome: resultado.valor.nome,
-      itens: resultado.valor.itens.map((item) =>
-        itemEstimado({
-          ...item,
-          modelo: resultado.modeloResolvido,
-          origemEstimativa: origem,
-        }),
-      ),
+      itens: itensDaEstimativa(resultado.valor.itens, resultado.modeloResolvido, origem),
       porcoesDescritas: resultado.valor.itens.map((item) => item.porcaoDescrita),
       limitacoes: resultado.valor.limitacoes,
       confianca: resultado.valor.confianca,
@@ -285,9 +276,7 @@ export async function registrarConsumoRealAction(fd: FormData): Promise<Resultad
 
   let itens: ItemPrato[];
   try {
-    itens = (bruto as ItemPrato[]).map((item) =>
-      reconstruirItemParaRegistro(item, origem),
-    );
+    itens = reconstruirPratoRevisado(bruto as ItemPrato[], origem);
   } catch (erro) {
     return { ok: false, erro: erro instanceof Error ? erro.message : "Itens inválidos." };
   }

@@ -77,6 +77,14 @@ test("busca, monta o Prato e registra consumo fora do plano", async ({ page, con
   const linha = page.getByRole("list", { name: "Linha do tempo do dia" });
   await expect(linha.getByText("Planejada")).toHaveCount(4);
 
+  // O nome digitado na entrada manual chega à linha do tempo sem o
+  // sufixo de quantidade duplicado (issue #203: o portão de gravação
+  // chegou a duplicá-lo, gravando "Marmita da firma 1 porção 1 porção").
+  // Expandir o cartão do consumo revela a lista de itens.
+  const cartaoConsumo = linha.locator("li", { has: page.getByText("Almoço na rua") });
+  await cartaoConsumo.getByRole("button", { name: "Ver mais" }).click();
+  await expect(cartaoConsumo.getByText("Marmita da firma 1 porção", { exact: true })).toBeVisible();
+
   // Persistência visível após voltar por navegação real.
   await page.goto("/treino");
   await page.getByRole("link", { name: "Dieta" }).click();
