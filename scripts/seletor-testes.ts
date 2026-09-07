@@ -113,10 +113,11 @@ function arquivoDoTeste(teste: unknown): string {
     throw new Error("Vitest retornou um teste inválido");
   }
   const registro = teste as Record<string, unknown>;
-  if (typeof registro.file !== "string") {
+  const arquivo = registro.file ?? registro.filepath;
+  if (typeof arquivo !== "string") {
     throw new Error("Vitest retornou um teste sem arquivo");
   }
-  return registro.file;
+  return arquivo;
 }
 
 function listarTestesRelacionados(base: string): string[] {
@@ -131,7 +132,9 @@ function listarTestesRelacionados(base: string): string[] {
     base,
     "--json",
   ]);
-  const testes: unknown = JSON.parse(saida);
+  const inicioJson = saida.indexOf("[");
+  if (inicioJson < 0) throw new Error("Vitest não retornou JSON de testes");
+  const testes: unknown = JSON.parse(saida.slice(inicioJson));
   if (!Array.isArray(testes)) throw new Error("Vitest retornou uma lista de testes inválida");
   const arquivos = [...new Set(testes.map(arquivoDoTeste))];
   if (arquivos.length === 0) throw new Error("nenhum teste relacionado encontrado; seleção ambígua");
