@@ -67,8 +67,8 @@ async function main() {
   if (!usuario) throw new Error("Falha ao criar usuário de verificação.");
 
   try {
-    // --- 1. Sem consentimento: o dado sensível não pode ser enviado ---
-    console.log("1. Chamada sem consentimento (deve degradar, não omitir em silêncio)");
+    // --- 1. Sem consentimento explícito: o executor deriva a concessão ---
+    console.log("1. Chamada sem consentimento explícito (o executor deriva a concessão)");
 
     const semConsentimento = await orientarProximaSerie({
       userId: usuario.id,
@@ -77,13 +77,14 @@ async function main() {
     });
 
     verificar(
-      semConsentimento.contexto.camposOmitidos.includes("prontidao-hoje"),
-      "prontidão omitida por falta de consentimento",
+      semConsentimento.status === "ok" &&
+        !semConsentimento.contexto.camposOmitidos.includes("prontidao-hoje"),
+      "prontidão enviada após concessão derivada",
       JSON.stringify(semConsentimento.contexto.camposOmitidos),
     );
     verificar(
-      semConsentimento.contexto.degradado,
-      "contexto marcado como degradado",
+      semConsentimento.status === "ok" && !semConsentimento.contexto.degradado,
+      "contexto completo, sem degradação",
     );
     verificar(
       semConsentimento.status === "ok",
@@ -93,8 +94,8 @@ async function main() {
         : "",
     );
 
-    // --- 2. Com consentimento: o dado sensível é enviado ---
-    console.log("\n2. Chamada com consentimento concedido");
+    // --- 2. Com consentimento explícito: o dado sensível continua enviado ---
+    console.log("\n2. Chamada com consentimento explícito");
 
     await conceder(usuario.id, "copiloto-sessao", NOME_PROVEDOR);
 
@@ -165,10 +166,10 @@ async function main() {
       JSON.stringify(maisRecente?.camposEnviados),
     );
     verificar(
-      Array.isArray(maisAntiga?.camposOmitidos) &&
-        (maisAntiga.camposOmitidos as string[]).includes("prontidao-hoje"),
-      "trilha da chamada sem consentimento registra a omissão",
-      JSON.stringify(maisAntiga?.camposOmitidos),
+      Array.isArray(maisAntiga?.camposEnviados) &&
+        (maisAntiga.camposEnviados as string[]).includes("prontidao-hoje"),
+      "trilha da chamada com concessão derivada registra o envio",
+      JSON.stringify(maisAntiga?.camposEnviados),
     );
   } finally {
     await db.delete(users).where(eq(users.id, usuario.id));
