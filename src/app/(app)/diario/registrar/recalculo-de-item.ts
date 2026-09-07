@@ -1,11 +1,7 @@
 import { auth } from "@/auth";
 import type { UnidadeEstimada } from "@/domain/alimentos/prato";
-import { conceder } from "@/domain/ia/consentimento";
-import { montarNucleo } from "@/domain/ia/contexto/nucleo";
 import type { OrigemDecisao } from "@/domain/ia/decidir";
 import { estimarMacrosDoAlimento } from "@/domain/ia/operacoes/alimento-macros";
-import { NOME_PROVEDOR } from "@/domain/ia/provedor";
-import { obterPerfilVigente } from "@/domain/triagem/perfil";
 import { campoTexto } from "@/lib/form-data";
 
 /**
@@ -67,19 +63,8 @@ export async function recalcularMacrosDoItem(
     return { ok: false, erro: `Quantidade fora do intervalo aceito (1 a 3000 ${unidade}).` };
   }
 
-  const perfil = await obterPerfilVigente(userId);
-  const nucleo = montarNucleo({
-    perfilVersao: perfil?.version ?? 0,
-    respostas: perfil?.respostas ?? {},
-    respondidoEm: perfil?.createdAt ?? new Date(),
-    agora: new Date(),
-  });
-
-  await conceder(userId, "alimento-macros", ["alimento-corrigido"], NOME_PROVEDOR);
-
   const resultado = await estimarMacrosDoAlimento({
     userId,
-    nucleo,
     alimento,
     quantidade: Math.round(quantidade),
     unidade,

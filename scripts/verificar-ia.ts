@@ -22,28 +22,11 @@ import "./carregar-env";
 import { eq } from "drizzle-orm";
 import { db } from "../src/db/client";
 import { users } from "../src/db/schema";
-import { montarNucleo } from "../src/domain/ia/contexto/nucleo";
 import { obterRecorte } from "../src/domain/ia/contexto/recortes";
 import { conceder, consentimentosVigentes } from "../src/domain/ia/consentimento";
 import { orientarProximaSerie } from "../src/domain/ia/operacoes/copiloto-sessao";
 import { ambienteIA, modeloDe, NOME_PROVEDOR } from "../src/domain/ia/provedor";
 import { listarTrilhas } from "../src/domain/ia/trilha";
-import type { DiaSemana } from "../src/domain/triagem/etapas";
-
-const RESPOSTAS = {
-  dataNascimento: "1995-03-10",
-  sexoBiologico: "masculino" as const,
-  alturaCm: 178,
-  pesoKg: 82,
-  objetivoConfirmado: true,
-  experienciaTreino: "intermediario" as const,
-  diasDisponiveis: ["segunda", "quarta", "sexta"] as DiaSemana[],
-  duracaoSessaoMin: 60,
-  localTreino: "academia-completa" as const,
-  equipamentos: ["Barra e anilhas", "Halteres"],
-  lesoes: "",
-};
-
 const EXERCICIO = {
   nome: "Supino reto com barra",
   seriesHoje: [{ cargaKg: 60, repeticoes: 10, rir: 2 }],
@@ -84,20 +67,12 @@ async function main() {
   if (!usuario) throw new Error("Falha ao criar usuário de verificação.");
 
   try {
-    const nucleo = montarNucleo({
-      perfilVersao: 1,
-      respostas: RESPOSTAS,
-      respondidoEm: new Date(),
-      agora: new Date(),
-    });
-
     // --- 1. Sem consentimento: o dado sensível não pode ser enviado ---
     console.log("1. Chamada sem consentimento (deve degradar, não omitir em silêncio)");
 
     const semConsentimento = await orientarProximaSerie({
       userId: usuario.id,
-      nucleo,
-      exercicio: EXERCICIO,
+        exercicio: EXERCICIO,
       prontidaoHoje: PRONTIDAO,
     });
 
@@ -121,12 +96,7 @@ async function main() {
     // --- 2. Com consentimento: o dado sensível é enviado ---
     console.log("\n2. Chamada com consentimento concedido");
 
-    await conceder(
-      usuario.id,
-      "copiloto-sessao",
-      ["prontidao-hoje"],
-      NOME_PROVEDOR,
-    );
+    await conceder(usuario.id, "copiloto-sessao", NOME_PROVEDOR);
 
     const consentimentos = await consentimentosVigentes(
       usuario.id,
@@ -139,8 +109,7 @@ async function main() {
 
     const comConsentimento = await orientarProximaSerie({
       userId: usuario.id,
-      nucleo,
-      exercicio: EXERCICIO,
+        exercicio: EXERCICIO,
       prontidaoHoje: PRONTIDAO,
       historicoExercicio: [
         { data: "2026-07-23", melhorSerie: { cargaKg: 57.5, repeticoes: 10, rir: 2 } },

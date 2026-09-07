@@ -7,7 +7,6 @@ import type { RespostasTriagem } from "@/domain/triagem/etapas";
 import { gerarPlano, substituirExercicio } from "./gerador";
 import { refeicoesPlanejadasValidas } from "./item-planejado";
 import type { PlanoGerado } from "./tipos";
-import { montarNucleo } from "@/domain/ia/contexto/nucleo";
 import { gerarPlanoInicialComIA } from "@/domain/ia/operacoes/plano-inicial";
 import { criarStorageR2 } from "@/infra/storage";
 
@@ -51,12 +50,6 @@ export async function obterOuGerarRascunhoComIA(
   }
 
   const panorama = await obterPanoramaCorporal(userId);
-  const nucleo = montarNucleo({
-    perfilVersao: perfil.version,
-    respostas: perfil.respostas,
-    respondidoEm: perfil.createdAt,
-    agora: new Date(),
-  });
   const fotosAutorizadas = panorama.fotos.length > 0
     ? [...panorama.fotos]
         .sort((a, b) => b.observadoEm.getTime() - a.observadoEm.getTime())
@@ -77,7 +70,6 @@ export async function obterOuGerarRascunhoComIA(
   );
   const resultado = await gerarPlanoInicialComIA({
     userId,
-    nucleo,
     triagemCompleta: perfil.respostas,
     fotosCorporais,
     linhaBaseCorporal: {

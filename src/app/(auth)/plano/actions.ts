@@ -6,7 +6,6 @@ import { invalidarLeituras } from "@/app/_invalidacao";
 import { obterPerfilVigente } from "@/domain/triagem/perfil";
 import { ativarPlano, obterOuGerarRascunhoComIA, substituirNoRascunho } from "@/domain/plano/repositorio";
 import { conceder, estadoConsentimento } from "@/domain/ia/consentimento";
-import { obterRecorte } from "@/domain/ia/contexto/recortes";
 import { NOME_PROVEDOR } from "@/domain/ia/provedor";
 import type { OperacaoIA } from "@/domain/ia/contexto/tipos";
 import { campoTexto } from "@/lib/form-data";
@@ -37,7 +36,6 @@ export async function gerarPlanoInicialAction(formData: FormData) {
     await conceder(
       userId,
       operacao,
-      obterRecorte(operacao).campos.map((campo) => campo.id),
       NOME_PROVEDOR,
     );
   }

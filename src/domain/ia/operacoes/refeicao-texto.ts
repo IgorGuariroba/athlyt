@@ -1,5 +1,4 @@
 import { z } from "zod";
-import type { NucleoContexto } from "../contexto/nucleo";
 import { decidir, type ResultadoDecisao } from "../decidir";
 
 /**
@@ -69,20 +68,17 @@ Regras obrigatórias:
 
 export async function estimarRefeicaoPorDescricao(entrada: {
   userId: string;
-  nucleo: NucleoContexto;
   /** Texto escrito pelo atleta ou transcrição revisada do áudio. */
   descricao: string;
   /** Como a descrição chegou; entra no prompt porque áudio transcrito erra palavras. */
   origemDescricao: "texto" | "audio";
   /** Energia e macros que ainda faltam no dia; ajuda a calibrar porções plausíveis. */
   metasRestantes?: unknown;
-  restricoes?: readonly string[];
 }): Promise<ResultadoDecisao<RefeicaoDescrita>> {
   return decidir({
     userId: entrada.userId,
     operacao: "refeicao-texto",
-    nucleo: entrada.nucleo,
-    dados: {
+    dados: (nucleo) => ({
       "descricao-livre": {
         texto: entrada.descricao.trim(),
         origem:
@@ -91,8 +87,8 @@ export async function estimarRefeicaoPorDescricao(entrada: {
             : "texto escrito pelo atleta",
       },
       "metas-restantes": entrada.metasRestantes,
-      restricoes: entrada.restricoes?.length ? [...entrada.restricoes] : undefined,
-    },
+      restricoes: nucleo.restricoesAlimentares?.valor,
+    }),
     instrucao: INSTRUCAO,
     schema: refeicaoTextoSchema,
     origem: {

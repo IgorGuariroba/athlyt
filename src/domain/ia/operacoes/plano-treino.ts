@@ -90,7 +90,6 @@ export function gerarPlanoTreinoComIA(entrada: EntradaPlano): Promise<ResultadoD
   return decidir({
     userId: entrada.userId,
     operacao: "plano-treino",
-    nucleo: entrada.nucleo,
     dados: montarDadosPlano(entrada),
     imagens: entrada.fotosCorporais?.map(({ dados, mediaType }) => ({ dados, mediaType })),
     instrucao: INSTRUCAO,

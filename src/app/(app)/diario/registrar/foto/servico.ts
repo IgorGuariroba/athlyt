@@ -6,15 +6,9 @@ import {
 } from "@/domain/alimentos/foto-refeicao";
 import { FUSO_PADRAO } from "@/domain/diario/dia-alimentar";
 import { hojeDoUsuario, montarDiarioDoDia } from "@/domain/diario/repositorio";
-import { conceder } from "@/domain/ia/consentimento";
-import { montarNucleo } from "@/domain/ia/contexto/nucleo";
 import type { EventoProgressoFallback } from "@/domain/ia/fallback-modelo";
 import { estimarRefeicaoPorFoto } from "@/domain/ia/operacoes/refeicao-foto";
-import { NOME_PROVEDOR } from "@/domain/ia/provedor";
-import { obterPerfilVigente } from "@/domain/triagem/perfil";
 import { campoTexto } from "@/lib/form-data";
-
-const CAMPOS = ["foto-refeicao", "metas-restantes", "restricoes"];
 
 export interface RefeicaoEstimadaNaTela {
   nome: string;
@@ -59,22 +53,12 @@ export async function estimarRefeicao(
 
   if (opcoes.signal?.aborted) return { ok: false, erro: "Estimativa cancelada.", cancelada: true };
 
-  const perfil = await obterPerfilVigente(opcoes.userId);
-  const nucleo = montarNucleo({
-    perfilVersao: perfil?.version ?? 0,
-    respostas: perfil?.respostas ?? {},
-    respondidoEm: perfil?.createdAt ?? new Date(),
-    agora: new Date(),
-  });
   const diario = await montarDiarioDoDia(opcoes.userId, { dia, fuso: FUSO_PADRAO });
-  await conceder(opcoes.userId, "refeicao-foto", CAMPOS, NOME_PROVEDOR);
 
   const resultado = await estimarRefeicaoPorFoto({
     userId: opcoes.userId,
-    nucleo,
     foto: { dados: new Uint8Array(foto.corpo), mediaType: foto.contentType },
     metasRestantes: diario.painel.restante,
-    restricoes: nucleo.restricoesAlimentares?.valor,
     observacao,
     signal: opcoes.signal,
     aoProgresso: opcoes.aoProgresso,

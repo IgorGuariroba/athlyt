@@ -1,5 +1,4 @@
 import { z } from "zod";
-import type { NucleoContexto } from "../contexto/nucleo";
 import { decidir, type ResultadoDecisao } from "../decidir";
 
 export const avaliacaoVisualSchema = z.object({
@@ -27,14 +26,12 @@ Regras obrigatórias:
 
 export async function analisarFotosCorporais(entrada: {
   userId: string;
-  nucleo: NucleoContexto;
   fotos: readonly { id: string; pose: string; condicoes?: string | null; dados: Uint8Array; mediaType: string }[];
   medicoesComparaveis: unknown;
 }): Promise<ResultadoDecisao<z.infer<typeof avaliacaoVisualSchema>>> {
   const decisao = {
     userId: entrada.userId,
     operacao: "avaliacao-visual",
-    nucleo: entrada.nucleo,
     dados: {
       "fotos-corporais": entrada.fotos.map(({ id, pose }) => ({ id, pose })),
       "medicoes-comparaveis": entrada.medicoesComparaveis,

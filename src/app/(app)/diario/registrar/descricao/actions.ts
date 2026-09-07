@@ -29,12 +29,8 @@ import {
   montarDiarioDoDia,
   registrarConsumoReal,
 } from "@/domain/diario/repositorio";
-import { conceder } from "@/domain/ia/consentimento";
-import { montarNucleo } from "@/domain/ia/contexto/nucleo";
 import { transcreverAudioDaRefeicao } from "@/domain/ia/operacoes/refeicao-audio";
 import { estimarRefeicaoPorDescricao } from "@/domain/ia/operacoes/refeicao-texto";
-import { NOME_PROVEDOR } from "@/domain/ia/provedor";
-import { obterPerfilVigente } from "@/domain/triagem/perfil";
 
 export interface RefeicaoDescritaNaTela {
   nome: string;
@@ -84,16 +80,6 @@ async function converterAudioParaProvedor(bytes: Uint8Array) {
   }
 }
 
-async function contextoDoAtleta(userId: string) {
-  const perfil = await obterPerfilVigente(userId);
-  return montarNucleo({
-    perfilVersao: perfil?.version ?? 0,
-    respostas: perfil?.respostas ?? {},
-    respondidoEm: perfil?.createdAt ?? new Date(),
-    agora: new Date(),
-  });
-}
-
 /**
  * Transcreve o áudio e devolve o texto **sem estimar nada**.
  *
@@ -134,11 +120,7 @@ export async function transcreverAudioAction(fd: FormData): Promise<ResultadoTra
     return { ok: false, erro: erro instanceof Error ? erro.message : "Áudio inválido." };
   }
 
-  const nucleo = await contextoDoAtleta(userId);
-
-  await conceder(userId, "refeicao-audio", ["audio-refeicao"], NOME_PROVEDOR);
-
-  const resultado = await transcreverAudioDaRefeicao({ userId, nucleo, audio });
+  const resultado = await transcreverAudioDaRefeicao({ userId, audio });
   if (resultado.status !== "ok") {
     return {
       ok: false,
@@ -152,8 +134,6 @@ export async function transcreverAudioAction(fd: FormData): Promise<ResultadoTra
     trechosIncertos: resultado.valor.trechosIncertos,
   };
 }
-
-const CAMPOS_TEXTO = ["descricao-livre", "metas-restantes", "restricoes"];
 
 /**
  * Estima a refeição a partir da descrição e devolve o resultado **sem
@@ -179,18 +159,13 @@ export async function estimarPorDescricaoAction(fd: FormData): Promise<Resultado
   const fuso = FUSO_PADRAO;
   const dia = campoTexto(fd, "dia") || hojeDoUsuario(fuso);
 
-  const nucleo = await contextoDoAtleta(userId);
   const diario = await montarDiarioDoDia(userId, { dia, fuso });
-
-  await conceder(userId, "refeicao-texto", CAMPOS_TEXTO, NOME_PROVEDOR);
 
   const resultado = await estimarRefeicaoPorDescricao({
     userId,
-    nucleo,
     descricao,
     origemDescricao: origem,
     metasRestantes: diario.painel.restante,
-    restricoes: nucleo.restricoesAlimentares?.valor,
   });
 
   if (resultado.status !== "ok") {
