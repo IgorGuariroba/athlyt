@@ -1,18 +1,10 @@
 #!/usr/bin/env bash
-# Paliativo local enquanto o repositório não tem branch protection
-# (privado em plano Free — rulesets exigem GitHub Pro/Team).
-#
-# Não substitui proteção no servidor: qualquer clone sem
-# core.hooksPath configurado ignora este arquivo.
-#
-# Ative com: git config core.hooksPath .githooks
 set -euo pipefail
 
 BRANCH_PROTEGIDA="refs/heads/main"
 
-while read -r _local_ref local_sha remote_ref _remote_sha; do
+while read -r _local_ref local_sha remote_ref remote_sha; do
   [ "$remote_ref" = "$BRANCH_PROTEGIDA" ] && {
-    # Deleção de branch
     if [ "$local_sha" = "0000000000000000000000000000000000000000" ]; then
       echo "pre-push: recusado — deleção da main." >&2
       exit 1
@@ -21,34 +13,59 @@ while read -r _local_ref local_sha remote_ref _remote_sha; do
     echo "pre-push: push direto para main detectado."
     echo "pre-push: o fluxo esperado é pull request com CI verde."
     echo "pre-push: rodando os portões rápidos localmente..."
-
     npm run lint
     npm run typecheck
-    npm test
   }
 
-  # Em um branch novo, compare com main; nos demais, use o SHA remoto que o
-  # Git passa ao hook. Assim o teste cobre todos os commits enviados, não só o último.
-  base_sha="$_remote_sha"
-  if [ "$base_sha" = "0000000000000000000000000000000000000000" ]; then
-    base_sha=$(git merge-base "$local_sha" refs/heads/main 2>/dev/null || git rev-parse "$local_sha^")
+  if [ "$local_sha" = "0000000000000000000000000000000000000000" ]; then
+    echo "pre-push: exclusão de branch não protegida — nenhum teste executado."
+    continue
   fi
 
-  arquivos_alterados=$(git diff --name-only "$base_sha" "$local_sha")
-  if printf '%s\n' "$arquivos_alterados" | grep -Eq '^(src/app/|src/components/|src/app/globals\.css$)'; then
-    echo "pre-push: alteração de UI detectada — executando E2E..."
-    # Serve o build em vez de `next dev`, que é o padrão do
-    # playwright.config.ts. Com o Fast Refresh ativo, um clique que cai
-    # na janela de rebuild tem a navegação descartada e o teste falha
-    # esperando uma tela que não vai montar — o arquivo atingido mudava
-    # a cada push com o mesmo commit (`fotos-r2`, depois
-    # `navbar-visivel`), sintoma que imita teste frágil.
-    #
-    # O comando é o servidor standalone, não `next start`: o
-    # `output: "standalone"` do next.config.ts torna `next start`
-    # inválido, e usar o comando do CI aqui derruba a suite inteira com
-    # ERR_CONNECTION_REFUSED. Mesma sequência de scripts/app-local.sh,
-    # incluindo a cópia dos estáticos que o standalone não emite.
+  base_sha="$remote_sha"
+  if [ "$base_sha" = "0000000000000000000000000000000000000000" ]; then
+    if ! base_sha=$(git merge-base "$local_sha" refs/heads/main 2>/dev/null); then
+      echo "pre-push: modo=completo; base/head/arquivos selecionados=indisponíveis" >&2
+      echo "pre-push: testes selecionados=todos os unitários" >&2
+      echo "pre-push: motivo=base Git indisponível" >&2
+      npm run test:unit
+      base_sha=$(git rev-parse "$local_sha^" 2>/dev/null || printf '%s' "$local_sha")
+    else
+      # O seletor recusa a árvore suja: testar o commit enviado contra
+      # alterações locais faria o resultado deixar de ser evidência publicada.
+      npx tsx scripts/testes-impactados.ts --base "$base_sha" --head "$local_sha"
+    fi
+  else
+    npx tsx scripts/testes-impactados.ts --base "$base_sha" --head "$local_sha"
+  fi
+
+  # Configuração, lockfile e schema exigem integração em qualquer ref; não
+  # apenas quando o destino é main.
+  integracao_necessaria=0
+  while IFS= read -r -d '' arquivo; do
+    if [[ "$arquivo" =~ ^(package(-lock)?\.json|vitest\.config\.|vitest\.setup\.|tsconfig(\..+)?\.json|drizzle/|drizzle\.config\.|src/db/schema\.) ]]; then
+      integracao_necessaria=1
+      break
+    fi
+  done < <(git diff --name-only -z "$base_sha" "$local_sha")
+
+  if [ "$integracao_necessaria" = 1 ]; then
+    npm run test:int
+  fi
+
+  # Em vez de uma allowlist de UI, só alterações inequivocamente não-produto
+  # dispensam E2E. Mudanças em auth, serviços, configuração ou scripts ficam
+  # no lado seguro e executam a jornada completa.
+  e2e_necessario=0
+  while IFS= read -r -d '' arquivo; do
+    if [[ "$arquivo" != docs/* && "$arquivo" != .vscode/* && "$arquivo" != *.md ]]; then
+      e2e_necessario=1
+      break
+    fi
+  done < <(git diff --name-only -z "$base_sha" "$local_sha")
+
+  if [ "$e2e_necessario" = 1 ]; then
+    echo "pre-push: alteração de produto ou infraestrutura — executando E2E..."
     echo "pre-push: compilando o build de produção para o E2E..."
     npm run build
     mkdir -p .next/standalone/.next
@@ -56,11 +73,8 @@ while read -r _local_ref local_sha remote_ref _remote_sha; do
     cp -r public .next/standalone/public
     E2E_COMANDO="node .next/standalone/server.js" PORT=3000 npm run test:e2e
   else
-    echo "pre-push: nenhuma alteração de UI detectada — E2E não executado."
+    echo "pre-push: somente documentação/configuração visual — E2E não executado."
   fi
-
 done
 
-if [ "${remote_ref:-}" = "$BRANCH_PROTEGIDA" ]; then
-  echo "pre-push: portões locais OK."
-fi
+echo "pre-push: portões locais OK."
