@@ -27,6 +27,7 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:unit": "vitest run --project unidade",
+    "test:impactados": "tsx scripts/testes-impactados.ts",
     "test:int": "vitest run --project integracao",
     "test:watch": "vitest --project unidade",
     "test:e2e": "playwright test",
