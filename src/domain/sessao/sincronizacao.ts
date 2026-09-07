@@ -1,7 +1,7 @@
 import { and, asc, desc, eq, isNull } from "drizzle-orm";
 import { db } from "@/db/client";
 import { syncConflicts, workoutEvents, workoutSessions } from "@/db/schema";
-import { mesclarEventos, ordenarEventos, type ConflitoSincronizacao, type EstadoLocalSessao, type EventoOutbox, type RegistroInadmissivel } from "./outbox";
+import { aplicarRegistroSerie, mesclarEventos, ordenarEventos, type ConflitoSincronizacao, type EstadoLocalSessao, type EventoOutbox, type RegistroInadmissivel, type SerieRegistrada } from "./outbox";
 import { logger } from "@/observabilidade/logger";
 import type { ExercicioSessao } from "./repositorio";
 
@@ -105,6 +105,23 @@ export async function sincronizarEventos(userId: string, sessionId: string, even
 
 type Executor = Parameters<Parameters<typeof db.transaction>[0]>[0] | typeof db;
 
+/**
+ * Aplica um registro de série já julgado aplicável à sessão persistida.
+ *
+ * Único ponto de escrita da regra: delega a `aplicarRegistroSerie` do
+ * módulo `outbox` a decisão de *como* o registro muda o estado —
+ * inclusive a regra de exercício interrompido —, e só cuida de ler e
+ * gravar a linha. `sincronizarEventos` e `resolverConflito` chamam
+ * aqui em vez de reescrever `exercicios` cada um do seu jeito.
+ */
+async function aplicarSerieNaSessao(tx: Executor, sessionId: string, registro: SerieRegistrada): Promise<ExercicioSessao[]> {
+  const [linha] = await tx.select().from(workoutSessions).where(eq(workoutSessions.id, sessionId)).limit(1).for("update");
+  if (!linha) throw new Error("Sessão do conflito não encontrada.");
+  const { exercicios } = aplicarRegistroSerie(estadoDe(linha), registro);
+  await tx.update(workoutSessions).set({ exercicios }).where(eq(workoutSessions.id, sessionId));
+  return exercicios;
+}
+
 async function listarConflitosDaSessao(executor: Executor, sessionId: string): Promise<ConflitoPendente[]> {
   const linhas = await executor.select().from(syncConflicts)
     .where(and(eq(syncConflicts.sessionId, sessionId), isNull(syncConflicts.resolvidoEm)))
@@ -141,18 +158,15 @@ export async function resolverConflito(userId: string, conflitoId: string, escol
     if (!conflito || conflito.resolvidoEm) throw new Error("Conflito não encontrado ou já resolvido.");
 
     if (escolha === "dispositivo" && conflito.motivo === "serie_divergente") {
-      const [linha] = await tx.select().from(workoutSessions).where(eq(workoutSessions.id, conflito.sessionId)).limit(1).for("update");
-      if (!linha) throw new Error("Sessão do conflito não encontrada.");
-      const dados = conflito.dispositivo as { exercicioId?: string; numero?: number; cargaKg: number; repeticoes: number; rir: number };
-      const exercicios = (linha.exercicios as ExercicioSessao[]).map((exercicio) => {
-        if (exercicio.exercicioId !== dados.exercicioId) return exercicio;
-        return { ...exercicio, series: exercicio.series.map((serie) => serie.numero === dados.numero
-          ? { ...serie, cargaKg: dados.cargaKg, repeticoes: dados.repeticoes, rir: dados.rir, concluida: true }
-          : serie) };
-      });
-      await tx.update(workoutSessions).set({ exercicios }).where(eq(workoutSessions.id, conflito.sessionId));
+      // O veredito já foi decidido pelo atleta: `dispositivo` é a mesma
+      // forma de `SerieRegistrada` que `avaliarRegistroSerie` teria
+      // aprovado se não houvesse conflito. A aplicação ao estado é a
+      // mesma do módulo `outbox` — inclusive a regra de exercício
+      // interrompido, que uma reescrita manual aqui perderia.
+      const registro = conflito.dispositivo as SerieRegistrada;
+      await aplicarSerieNaSessao(tx, conflito.sessionId, registro);
       await tx.insert(workoutEvents).values({
-        sessionId: conflito.sessionId, userId, tipo: "serie_registrada", dados,
+        sessionId: conflito.sessionId, userId, tipo: "serie_registrada", dados: registro,
         clientEventId: conflito.clientEventId, ordem: null,
       }).onConflictDoNothing({ target: workoutEvents.clientEventId });
     }

@@ -3,14 +3,33 @@ import { describe, expect, it } from "vitest";
 import { db } from "@/db/client";
 import { plans, users } from "@/db/schema";
 import type { PlanoGerado } from "@/domain/plano/tipos";
+import type { EventoOutbox } from "../outbox";
 import {
   abandonarSessao,
   concluirSessao,
   iniciarSessao,
   listarHistoricoSessoes,
   obterSessao,
-  registrarSerie,
 } from "../repositorio";
+import { sincronizarEventos } from "../sincronizacao";
+
+/**
+ * Produção não chama `registrarSerie`: o registro de série atravessa
+ * sempre a fila offline (`RegistroSerie` -> `useConexao().registrar`
+ * -> `sincronizarEventos`), mesmo com o aparelho online. A jornada
+ * pública exercita esse mesmo caminho.
+ */
+let ordemLocal = 0;
+function serieRegistrada(sessionId: string, dados: Record<string, unknown>): EventoOutbox {
+  ordemLocal += 1;
+  return { id: randomUUID(), sessionId, tipo: "serie_registrada", ordem: ordemLocal, ocorridoEm: new Date().toISOString(), dados };
+}
+async function registrarSerie(userId: string, sessionId: string, dados: Record<string, unknown>) {
+  const resultado = await sincronizarEventos(userId, sessionId, [serieRegistrada(sessionId, dados)]);
+  if (resultado.conflitos.length > 0 || resultado.inadmissiveis.length > 0) {
+    throw new Error(`Registro de série recusado: ${JSON.stringify(resultado)}`);
+  }
+}
 
 const plano: PlanoGerado = {
   regraVersao: "motor-plano-v1",
