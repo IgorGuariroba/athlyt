@@ -108,37 +108,26 @@ function executarComSaida(comando: string, args: string[]): string {
   });
 }
 
-function arquivoDoTeste(teste: unknown): string {
-  if (typeof teste !== "object" || teste === null) {
-    throw new Error("Vitest retornou um teste inválido");
-  }
-  const registro = teste as Record<string, unknown>;
-  const arquivo = registro.file ?? registro.filepath;
-  if (typeof arquivo !== "string") {
-    throw new Error("Vitest retornou um teste sem arquivo");
-  }
-  return arquivo;
-}
-
-function listarTestesRelacionados(base: string): string[] {
-  const saida = executarComSaida("npm", [
-    "exec",
-    "--",
-    "vitest",
-    "list",
-    "--project",
-    "unidade",
-    "--changed",
-    base,
-    "--json",
-  ]);
+export function parsearListaVitest(saida: string): string[] {
   const inicioJson = saida.indexOf("[");
   if (inicioJson < 0) throw new Error("Vitest não retornou JSON de testes");
   const testes: unknown = JSON.parse(saida.slice(inicioJson));
-  if (!Array.isArray(testes)) throw new Error("Vitest retornou uma lista de testes inválida");
-  const arquivos = [...new Set(testes.map(arquivoDoTeste))];
-  if (arquivos.length === 0) throw new Error("nenhum teste relacionado encontrado; seleção ambígua");
-  return arquivos;
+  if (!Array.isArray(testes)) throw new Error("Vitest retornou uma lista inválida");
+  return [...new Set(testes.map((teste: unknown) => {
+    if (typeof teste !== "object" || teste === null || !("file" in teste)
+      || typeof teste.file !== "string" || teste.file.length === 0) {
+      throw new Error("Vitest retornou um teste sem arquivo");
+    }
+    return resolve(teste.file);
+  }))];
+}
+
+export function listarTestes(base?: string): string[] {
+  // filesOnly inclui arquivos com apenas skip/todo e não depende da coleta de casos.
+  return parsearListaVitest(executarComSaida("npm", [
+    "exec", "--", "vitest", "list", "--project", "unidade", "--filesOnly",
+    ...(base === undefined ? [] : ["--changed", base]), "--json",
+  ]));
 }
 
 export function determinarCamadas(mudancas: Mudanca[]): Camadas {
@@ -154,65 +143,66 @@ export function determinarCamadas(mudancas: Mudanca[]): Camadas {
 
 class EstadoEnviadoIndisponivel extends Error {}
 
-function executarFallback(motivo: unknown, base: string, head: string): void {
-  const mensagem = motivo instanceof Error ? motivo.message : String(motivo);
-  console.error(`pre-push: modo=completo; base=${base}; head=${head}; arquivos selecionados=indisponíveis`);
-  console.error("pre-push: testes selecionados=todos os unitários");
-  console.error(`pre-push: motivo=${mensagem}`);
-  executar("npm", ["run", "test:unit"]);
+export interface PlanoSelecao {
+  modo: Decisao["modo"];
+  motivo: string;
+  base: string;
+  head: string;
+  arquivosAlterados: string[];
+  // null significa executar a suíte inteira, mesmo se a listagem estiver indisponível.
+  testesSelecionados: string[] | null;
 }
 
-export function executarSelecao(base: string, head: string): void {
-  let testesIniciados = false;
+export function planejarSelecao(base: string, head: string): PlanoSelecao {
+  // Estas recusas precedem a resolução da base: uma base ausente nunca pode
+  // autorizar testes sobre a árvore suja ou sobre outro commit.
+  if (!existsSync(resolve("package.json"))) {
+    throw new EstadoEnviadoIndisponivel("package.json não encontrado; seletor executado fora do repositório");
+  }
+  const headResolvido = git(["rev-parse", "--verify", `${head}^{commit}`]).trim();
+  if (headResolvido !== git(["rev-parse", "HEAD"]).trim()) {
+    throw new EstadoEnviadoIndisponivel("o head enviado não é o commit atualmente verificado; recusando testar outro estado");
+  }
+  if (git(["status", "--porcelain=v1", "--untracked-files=all"]) !== "") {
+    throw new EstadoEnviadoIndisponivel("a árvore de trabalho não está limpa; commit ou guarde as alterações antes do pre-push");
+  }
+
+  let baseResolvida = base;
+  let arquivosAlterados: string[] = [];
   try {
-    if (!existsSync(resolve("package.json"))) {
-      throw new Error("package.json não encontrado; seletor executado fora do repositório");
+    baseResolvida = git(["rev-parse", "--verify", `${base}^{commit}`]).trim();
+    try {
+      git(["merge-base", "--is-ancestor", baseResolvida, headResolvido]);
+    } catch {
+      throw new Error("base não ancestral ou histórico indisponível; seleção insegura");
     }
-    const baseResolvida = git(["rev-parse", "--verify", base]).trim();
-    const headResolvido = git(["rev-parse", "--verify", head]).trim();
-    const headAtual = git(["rev-parse", "HEAD"]).trim();
-    if (headResolvido !== headAtual) {
-      throw new EstadoEnviadoIndisponivel("o head enviado não é o commit atualmente verificado; recusando testar outro estado");
-    }
-    if (execFileSync("git", ["merge-base", "--is-ancestor", baseResolvida, headResolvido], { encoding: "utf8" }) !== "") {
-      throw new Error("a base enviada não é ancestral do head; estado não-fast-forward exige fallback completo");
-    }
-
-    const status = git(["status", "--porcelain=v1", "--untracked-files=all"]);
-    if (status !== "") {
-      throw new EstadoEnviadoIndisponivel("a árvore de trabalho não está limpa; commit ou guarde as alterações antes do pre-push");
-    }
-
     const mudancas = parsearMudancasGit(
       git(["diff", "--name-status", "-z", "--find-renames", baseResolvida, headResolvido]),
     );
+    arquivosAlterados = mudancas.flatMap(({ caminhos }) => caminhos);
     const decisao = decidir(mudancas);
-    const arquivos = mudancas.flatMap(({ caminhos }) => caminhos);
-    console.log(`pre-push: modo=${decisao.modo}; base=${baseResolvida}; head=${headResolvido}`);
-    console.log(`pre-push: arquivos alterados=${arquivos.length ? arquivos.join(", ") : "(nenhum)"}`);
-    console.log(`pre-push: motivo=${decisao.motivo}`);
-
-    if (decisao.modo === "completo") {
-      console.log("pre-push: executando todos os testes unitários (fallback conservador).");
-      testesIniciados = true;
-      executar("npm", ["run", "test:unit"]);
-      return;
-    }
-
-    // A validação de ancestralidade acima garante que --changed use exatamente
-    // o conjunto de commits enviado, e não uma comparação divergente com HEAD.
-    const testesRelacionados = listarTestesRelacionados(baseResolvida);
-    const testesSelecionados = [...new Set([
-      ...testesRelacionados,
-      ...TESTES_OBRIGATORIOS.map((arquivo) => resolve(arquivo)),
-    ])];
-    console.log(`pre-push: testes selecionados=${testesSelecionados.join(", ")}`);
-    console.log("pre-push: executando unitários relacionados e obrigatórios pelo Vitest.");
-    testesIniciados = true;
-    executar("npm", ["exec", "--", "vitest", "run", "--project", "unidade", ...testesSelecionados]);
+    if (decisao.modo === "completo") throw new Error(decisao.motivo);
+    const relacionados = listarTestes(baseResolvida);
+    if (relacionados.length === 0) throw new Error("nenhum teste relacionado encontrado; seleção ambígua");
+    return {
+      ...decisao, base: baseResolvida, head: headResolvido, arquivosAlterados,
+      testesSelecionados: [...new Set([...relacionados, ...TESTES_OBRIGATORIOS.map((teste) => resolve(teste))])],
+    };
   } catch (erro) {
-    if (testesIniciados || erro instanceof EstadoEnviadoIndisponivel) throw erro;
-    executarFallback(erro, base, head);
+    return {
+      modo: "completo", motivo: erro instanceof Error ? erro.message : String(erro),
+      base: baseResolvida, head: headResolvido, arquivosAlterados, testesSelecionados: null,
+    };
   }
 }
 
+export function executarSelecao(base: string, head: string): void {
+  const plano = planejarSelecao(base, head);
+  console.log(`pre-push: modo=${plano.modo}; base=${plano.base}; head=${plano.head}`);
+  console.log(`pre-push: arquivos alterados=${plano.arquivosAlterados.join(", ") || "(nenhum)"}`);
+  console.log(`pre-push: motivo=${plano.motivo}`);
+  console.log(`pre-push: testes selecionados=${plano.testesSelecionados?.join(", ") ?? "todos os unitários"}`);
+  // Falhas de execução propagam: nunca são confundidas com falhas de seleção.
+  if (plano.testesSelecionados === null) executar("npm", ["run", "test:unit"]);
+  else executar("npm", ["exec", "--", "vitest", "run", "--project", "unidade", ...plano.testesSelecionados]);
+}

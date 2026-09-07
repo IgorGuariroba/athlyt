@@ -73,6 +73,7 @@ jobs:
           HEAD_SHA: ${{ github.sha }}
         run: npm run test:sombra -- --base "$BASE_SHA" --head "$HEAD_SHA" --output relatorio-testes-sombra.json
       - name: Executar suíte completa e seleção
+        if: ${{ !cancelled() }}
         shell: bash
         run: |
           set +e
@@ -82,13 +83,12 @@ jobs:
           status_completo=$?
           fim=$(date +%s%3N)
           completo_ms=$((fim - inicio))
-          node -e 'const r=require("./relatorio-testes-sombra.json"); require("node:fs").writeFileSync("testes-selecionados.txt", r.testesSelecionados.join("\n"));'
           inicio=$(date +%s%3N)
-          xargs -r -a testes-selecionados.txt npm exec -- vitest run --project unidade --reporter=json --outputFile=unitarios-selecionados.json
+          npm exec -- tsx scripts/executar-testes-sombra.ts relatorio-testes-sombra.json
           status_selecionado=$?
           fim=$(date +%s%3N)
           selecionado_ms=$((fim - inicio))
-          printf '{"completoMs":%s,"selecionadoMs":%s}\n' "$completo_ms" "$selecionado_ms" > tempos-testes-sombra.json
+          printf '{"completoMs":%s,"selecionadoMs":%s,"statusCompleto":%s,"statusSelecionado":%s}\n' "$completo_ms" "$selecionado_ms" "$status_completo" "$status_selecionado" > tempos-testes-sombra.json
           npm run --silent test:sombra:comparar -- relatorio-testes-sombra.json unitarios-completos.json unitarios-selecionados.json tempos-testes-sombra.json | tee comparacao-testes-sombra.json
           status_comparacao=$?
           echo "status_completo=$status_completo" >> "$GITHUB_STEP_SUMMARY"
