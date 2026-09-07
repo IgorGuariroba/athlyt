@@ -1,10 +1,11 @@
 import { randomUUID } from "node:crypto";
+import { eq } from "drizzle-orm";
 import { describe, expect, it } from "vitest";
 import { db } from "@/db/client";
-import { plans, users } from "@/db/schema";
+import { plans, users, workoutSessions } from "@/db/schema";
 import type { PlanoGerado } from "@/domain/plano/tipos";
 import type { EventoOutbox } from "../outbox";
-import { iniciarSessao, obterSessao, registrarSerie } from "../repositorio";
+import { iniciarSessao, obterSessao, registrarSerie, type ExercicioSessao } from "../repositorio";
 import { listarConflitosPendentes, resolverConflito, sincronizarEventos } from "../sincronizacao";
 
 const plano: PlanoGerado = {
@@ -160,5 +161,34 @@ describe("sincronização da fila offline", () => {
     const [outro] = await db.insert(users).values({ email: `intruso-${randomUUID()}@example.com` }).returning();
     if (!outro) throw new Error("Falha ao criar usuário de teste.");
     await expect(sincronizarEventos(outro.id, sessionId, [])).rejects.toThrow("Sessão não encontrada");
+  });
+
+  it("resolver conflito pelo dispositivo não reescreve série de exercício interrompido", async () => {
+    // A regra é do módulo `outbox` (`aplicarRegistroSerie` ignora
+    // exercício interrompido) e precisa valer também quando a
+    // aplicação vem da resolução manual de conflito, não só da fila.
+    // Com o código antigo (map manual sem checar `interrompido`),
+    // resolver pelo dispositivo sobrescreveria a série com os valores
+    // do aparelho mesmo o exercício já tendo sido substituído.
+    const { userId, sessionId } = await contexto();
+    await registrarSerie(userId, sessionId, { exercicioId: "supino-reto-halteres", numero: 1, cargaKg: 40, repeticoes: 10, rir: 2 });
+
+    const offline = evento(sessionId, 1, { exercicioId: "supino-reto-halteres", numero: 1, cargaKg: 60, repeticoes: 6, rir: 0 });
+    const { conflitos } = await sincronizarEventos(userId, sessionId, [offline]);
+
+    // O exercício foi interrompido (troca no meio da execução) depois
+    // do registro online e antes da resolução do conflito.
+    const [linha] = await db.select().from(workoutSessions).where(eq(workoutSessions.id, sessionId)).limit(1);
+    const exercicios = (linha!.exercicios as ExercicioSessao[]).map((exercicio) =>
+      exercicio.exercicioId === "supino-reto-halteres" ? { ...exercicio, interrompido: true } : exercicio);
+    await db.update(workoutSessions).set({ exercicios }).where(eq(workoutSessions.id, sessionId));
+
+    await resolverConflito(userId, conflitos[0]!.id, "dispositivo");
+
+    // Nada muda: o exercício interrompido não recebe a escrita, e a
+    // série continua com o valor gravado online (servidor), não o do
+    // dispositivo.
+    const serie = (await obterSessao(userId, sessionId))?.exercicios[0]?.series[0];
+    expect(serie).toEqual(expect.objectContaining({ cargaKg: 40, repeticoes: 10, rir: 2 }));
   });
 });

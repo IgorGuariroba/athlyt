@@ -4,8 +4,8 @@ import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { invalidarLeituras } from "@/app/_invalidacao";
 import type { MotivoSubstituicao } from "@/domain/plano/substituicoes";
-import { abandonarSessao, concluirSessao, iniciarSessao, registrarSerie, substituirExercicioNaSessao, type MotivoAbandono } from "@/domain/sessao/repositorio";
-import { campoNumero, campoTexto } from "@/lib/form-data";
+import { abandonarSessao, concluirSessao, iniciarSessao, substituirExercicioNaSessao, type MotivoAbandono } from "@/domain/sessao/repositorio";
+import { campoTexto } from "@/lib/form-data";
 
 async function usuario() {
   const session = await auth();
@@ -18,17 +18,6 @@ export async function iniciarSessaoAction(formData: FormData) {
   const destino = `/sessao/${sessao.id}`;
   invalidarLeituras([{ fato: "sessao", sessaoId: sessao.id }], { destino });
   redirect(destino);
-}
-
-export async function registrarSerieAction(sessionId: string, formData: FormData) {
-  await registrarSerie(await usuario(), sessionId, {
-    exercicioId: campoTexto(formData, "exercicioId"),
-    numero: campoNumero(formData, "numero"),
-    cargaKg: campoNumero(formData, "cargaKg"),
-    repeticoes: campoNumero(formData, "repeticoes"),
-    rir: campoNumero(formData, "rir"),
-  });
-  invalidarLeituras([{ fato: "sessao", sessaoId: sessionId }]);
 }
 
 export async function substituirExercicioAction(sessionId: string, formData: FormData) {
