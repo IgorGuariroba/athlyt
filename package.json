@@ -28,8 +28,6 @@
     "test": "vitest run",
     "test:unit": "vitest run --project unidade",
     "test:impactados": "tsx scripts/testes-impactados.ts",
-    "test:sombra": "tsx scripts/relatorio-testes-sombra.ts",
-    "test:sombra:comparar": "tsx scripts/comparar-testes-sombra.ts",
     "test:int": "vitest run --project integracao",
     "test:watch": "vitest --project unidade",
     "test:e2e": "playwright test",

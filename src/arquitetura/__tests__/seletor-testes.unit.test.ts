@@ -2,7 +2,6 @@ import { execFileSync } from "node:child_process";
 import { resolve } from "node:path";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { decidir, determinarCamadas, executarSelecao, parsearListaVitest, parsearMudancasGit, planejarSelecao, TESTES_OBRIGATORIOS } from "../../../scripts/seletor-testes";
-import { gerarRelatorioSombra } from "../../../scripts/relatorio-testes-sombra";
 
 vi.mock("node:child_process", () => {
   const mock = { execFileSync: vi.fn() };
@@ -11,7 +10,7 @@ vi.mock("node:child_process", () => {
 afterEach(() => vi.resetAllMocks());
 
 const arquivoRelacionado = resolve('src/arquivo com espaço e "aspas".unit.test.ts');
-function simularComandos(opcoes: { baseAusente?: boolean; suja?: boolean; head?: string; selecaoFalha?: boolean; execucaoFalha?: boolean; inventarioFalha?: boolean; naoAncestral?: boolean; vazio?: boolean } = {}) {
+function simularComandos(opcoes: { baseAusente?: boolean; suja?: boolean; head?: string; selecaoFalha?: boolean; execucaoFalha?: boolean; naoAncestral?: boolean; vazio?: boolean } = {}) {
   vi.mocked(execFileSync).mockImplementation((comando, args) => {
     if (comando === "git") {
       if (args?.[0] === "rev-parse") {
@@ -28,12 +27,8 @@ function simularComandos(opcoes: { baseAusente?: boolean; suja?: boolean; head?:
       return "";
     }
     if (args?.includes("list")) {
-      if (args.includes("--changed")) {
-        if (opcoes.selecaoFalha) throw new Error("Vitest list falhou");
-        return JSON.stringify(opcoes.vazio ? [] : [{ file: arquivoRelacionado }]);
-      }
-      if (opcoes.inventarioFalha) throw new Error("inventário falhou");
-      return JSON.stringify([arquivoRelacionado, ...TESTES_OBRIGATORIOS].map((file) => ({ file })));
+      if (opcoes.selecaoFalha) throw new Error("Vitest list falhou");
+      return JSON.stringify(opcoes.vazio ? [] : [{ file: arquivoRelacionado }]);
     }
     if (opcoes.execucaoFalha) throw new Error("teste falhou");
     return "";
@@ -74,13 +69,12 @@ describe("seletor conservador de testes", () => {
   });
 });
 
-describe("planejamento compartilhado pelo pre-push e sombra", () => {
+describe("planejamento do pre-push", () => {
   it("preserva relacionados, obrigatórios e argumentos com espaços/aspas", () => {
     simularComandos();
     const plano = planejarSelecao("base", "head");
     expect(plano.modo).toBe("relacionados");
     expect(plano.testesSelecionados).toEqual([arquivoRelacionado, ...TESTES_OBRIGATORIOS.map((teste) => resolve(teste))]);
-    expect(gerarRelatorioSombra("base", "head")).toMatchObject(plano);
     executarSelecao("base", "head");
     expect(execFileSync).toHaveBeenLastCalledWith("npm", ["exec", "--", "vitest", "run", "--project", "unidade", ...plano.testesSelecionados!], { stdio: "inherit" });
   });
@@ -93,20 +87,13 @@ describe("planejamento compartilhado pelo pre-push e sombra", () => {
   ] as const)("faz fallback completo para %j", (opcoes, motivo) => {
     simularComandos(opcoes);
     expect(planejarSelecao("base", "head")).toMatchObject({ modo: "completo", testesSelecionados: null, motivo: expect.stringContaining(motivo) });
-    expect(gerarRelatorioSombra("base", "head")).toMatchObject({ modo: "completo", totalTestes: 5, motivo: expect.stringContaining(motivo) });
     executarSelecao("base", "head");
     expect(execFileSync).toHaveBeenLastCalledWith("npm", ["run", "test:unit"], { stdio: "inherit" });
-  });
-
-  it("mantém plano completo e evidência explícita se inventário falhar", () => {
-    simularComandos({ inventarioFalha: true });
-    expect(gerarRelatorioSombra("base", "head")).toMatchObject({ modo: "completo", inventarioCompleto: null, erroInventario: "inventário falhou", totalTestes: null });
   });
 
   it.each([{ suja: true }, { head: "outro-commit" }])("recusa estado incorreto antes mesmo de resolver base ausente: %j", (opcoes) => {
     simularComandos({ ...opcoes, baseAusente: true });
     expect(() => { executarSelecao("base", "head"); }).toThrow(/árvore de trabalho|head enviado/);
-    expect(() => gerarRelatorioSombra("base", "head")).toThrow(/árvore de trabalho|head enviado/);
     expect(vi.mocked(execFileSync).mock.calls.every(([comando]) => comando === "git")).toBe(true);
   });
 

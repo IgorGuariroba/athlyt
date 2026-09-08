@@ -122,11 +122,11 @@ export function parsearListaVitest(saida: string): string[] {
   }))];
 }
 
-export function listarTestes(base?: string): string[] {
+export function listarTestes(base: string): string[] {
   // filesOnly inclui arquivos com apenas skip/todo e não depende da coleta de casos.
   return parsearListaVitest(executarComSaida("npm", [
     "exec", "--", "vitest", "list", "--project", "unidade", "--filesOnly",
-    ...(base === undefined ? [] : ["--changed", base]), "--json",
+    "--changed", base, "--json",
   ]));
 }
 
