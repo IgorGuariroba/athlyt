@@ -245,6 +245,13 @@ async function decidirInternamente<T>(
       tools: entrada.ferramentas,
       stopWhen: stepCountIs(entrada.maxPassos ?? 5),
       ...(rota ? { maxOutputTokens: 4_096 } : {}),
+      // `executarFallbackDeModelo` já retenta cada rota até duas vezes e
+      // avança para a próxima ao esgotar; sem isto, o retry embutido do
+      // AI SDK (2 tentativas, backoff 2s/4s) duplicava a espera por baixo
+      // do fallback do domínio — ~12s parados numa rota com limite de
+      // taxa antes mesmo de tentar a próxima. Fora do fallback (sem
+      // `rota`), o retry do SDK continua sendo a única rede de segurança.
+      ...(rota ? { maxRetries: 0 } : {}),
       providerOptions: rota ? opcoesDaRota(rota) : OPCOES_PROVEDOR,
       onStepFinish: ({ toolCalls, toolResults }) => {
         for (const [indice, chamada] of toolCalls.entries()) {
