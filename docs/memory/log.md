@@ -2,6 +2,7 @@
 
 ## 2026-09-08
 
+- Criada [retry-duplicado-entre-fallback-e-sdk.md](retry-duplicado-entre-fallback-e-sdk.md): investigando por que `E2E mobile` concentrava 44s em 3 testes de `registro-por-foto`, a causa era `generateText` sem `maxRetries` aplicando o retry default do AI SDK (2 tentativas, backoff 2s/4s) por baixo de `executarFallbackDeModelo`, que já retenta cada rota 2 vezes. `maxRetries: 0` só na chamada com `rota` cortou os 3 testes de 44,5s para 7,7s (9/9 estável em `--repeat-each=3`) e a suíte E2E completa de 2,0min para 1,6min, sem mudar o que é retryable fora do fallback. Bug de produção, não só lentidão de teste: um rate limit real esperava ~12s redundantes antes do fallback trocar de modelo.
 - Atualizada [e2e-trava-no-health-check-do-webserver.md](e2e-trava-no-health-check-do-webserver.md): health check também pode travar ao reutilizar standalone antigo sem resposta; instância isolada desbloqueou a suíte da issue #208. Substituída orientação de polling por processo observado via evento.
 
 ## 2026-07-30
