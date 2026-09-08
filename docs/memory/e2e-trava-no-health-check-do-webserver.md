@@ -84,10 +84,27 @@ Três detalhes que custaram tentativas e não estão no `playwright.config.ts`:
   reconhecida e o teste falha na tela de login — a armadilha já registrada em
   `docs/memory/e2e-auth-url-local.md`, que aparece igual em produção.
 
-Ao rodar comandos longos no harness, use `setsid ... > log 2>&1 &` e leia o log
-por polling. Um comando abortado deixa processos órfãos que seguram porta e
-disputam o `.next/dev/lock`, produzindo um segundo travamento que já não tem
-relação com a causa original.
+Ao rodar comandos longos no harness, use `watch_processo_iniciar` e registre
+`watch_registrar` para retomar no término, sem polling. Um comando abortado
+pode deixar processos órfãos que seguram portas e disputam o `.next/dev/lock`.
+
+## Servidor antigo sem resposta também bloqueia antes dos testes
+
+Na entrega da issue #208, o runner ficou mais de dez horas no health check:
+`/api/saude` não respondeu a uma requisição com limite de três segundos,
+enquanto o mock de IA respondeu 200. O Next antigo consumia CPU e seu
+`/proc/<pid>/cwd` apontava para `.next/standalone (deleted)`. O timeout de
+30 segundos configurado no `webServer` não encerrou essa espera inicial.
+
+Uma instância nova na porta 3108 respondeu em menos de um segundo e a suíte
+terminou em 2,2 minutos. Isso confirma o bloqueio na reutilização do servidor,
+não identifica a causa interna do travamento do processo antigo. Repetir o
+push ou adicionar keepalive SSH não resolve esse health check.
+
+Verifique a saúde com timeout explícito e use uma porta livre, mantendo
+`PORT` e `PLAYWRIGHT_BASE_URL` coerentes. O hook respeita `PORT` informado;
+não desative os testes para conseguir publicar. Preserve processos de outras
+sessões e use o evento de término para acompanhar a execução.
 
 # Evidência
 
