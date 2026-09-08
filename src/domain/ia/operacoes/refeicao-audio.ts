@@ -1,5 +1,4 @@
 import { z } from "zod";
-import type { NucleoContexto } from "../contexto/nucleo";
 import { decidir, type ResultadoDecisao } from "../decidir";
 import { LIMITE_DESCRICAO } from "@/domain/alimentos/audio-refeicao";
 
@@ -35,13 +34,11 @@ Regras obrigatórias:
 
 export async function transcreverAudioDaRefeicao(entrada: {
   userId: string;
-  nucleo: NucleoContexto;
   audio: { dados: Uint8Array; mediaType: string };
 }): Promise<ResultadoDecisao<TranscricaoRefeicao>> {
   return decidir({
     userId: entrada.userId,
     operacao: "refeicao-audio",
-    nucleo: entrada.nucleo,
     dados: { "audio-refeicao": { enviado: true } },
     audios: [entrada.audio],
     instrucao: INSTRUCAO,

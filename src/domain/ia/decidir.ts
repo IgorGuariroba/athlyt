@@ -14,14 +14,15 @@ import {
   type ContextoDoAtleta,
   type DadosRecorte,
 } from "./contexto/montagem";
-import type { NucleoContexto } from "./contexto/nucleo";
+import { montarNucleo } from "./contexto/nucleo";
+import { obterPerfilVigente } from "@/domain/triagem/perfil";
 import type { OperacaoIA } from "./contexto/tipos";
 import { detalhesErroProvedor } from "./detalhes-erro-provedor";
 import { detalhesErroGeracao } from "./detalhes-erro-geracao";
 import { executarComTimeout } from "./timeout-geracao";
 import { logger } from "@/observabilidade/logger";
 import { observarOperacao } from "@/observabilidade/operacao";
-import { estadoConsentimento } from "./consentimento";
+import { conceder, estadoConsentimento } from "./consentimento";
 import {
   modeloDe,
   NOME_PROVEDOR,
@@ -58,8 +59,7 @@ import {
 export interface EntradaDecisao<T> {
   userId: string;
   operacao: OperacaoIA;
-  nucleo: NucleoContexto;
-  dados: DadosRecorte;
+  dados: DadosRecorte | ((nucleo: ReturnType<typeof montarNucleo>) => DadosRecorte);
   instrucao: string;
   schema: z.ZodType<T>;
   ferramentas?: ToolSet;
@@ -177,11 +177,22 @@ async function decidirInternamente<T>(
   // Consentimento é um fato persistido, não uma afirmação do adapter.
   // Consultá-lo aqui garante que revogação e versão do Recorte valham para
   // toda operação que atravessa este executor.
+  // A decisão é a última fronteira: mesmo adapters que esquecerem o
+  // consentimento derivam a concessão do recorte vigente, sem duplicar a
+  // lista de campos no chamador.
+  await conceder(entrada.userId, entrada.operacao, NOME_PROVEDOR);
   const estado = await estadoConsentimento(entrada.userId, entrada.operacao);
+  const perfil = await obterPerfilVigente(entrada.userId);
+  const nucleo = montarNucleo({
+    perfilVersao: perfil?.version ?? 0,
+    respostas: perfil?.respostas ?? {},
+    respondidoEm: perfil?.createdAt ?? new Date(),
+    agora: new Date(),
+  });
   const contexto = montarContexto({
     operacao: entrada.operacao,
-    nucleo: entrada.nucleo,
-    dados: entrada.dados,
+    nucleo,
+    dados: typeof entrada.dados === "function" ? entrada.dados(nucleo) : entrada.dados,
     consentimentos: estado.vigentes,
   });
 

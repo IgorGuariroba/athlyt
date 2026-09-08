@@ -71,7 +71,9 @@ while read -r _local_ref local_sha remote_ref remote_sha; do
     mkdir -p .next/standalone/.next
     cp -r .next/static .next/standalone/.next/static
     cp -r public .next/standalone/public
-    E2E_COMANDO="node .next/standalone/server.js" PORT=3000 npm run test:e2e
+    # Permite isolar o servidor sem reutilizar uma instância antiga na 3000.
+    # PLAYWRIGHT_BASE_URL deve apontar para a mesma porta.
+    E2E_COMANDO="node .next/standalone/server.js" PORT="${PORT:-3000}" npm run test:e2e
   else
     echo "pre-push: somente documentação/configuração visual — E2E não executado."
   fi

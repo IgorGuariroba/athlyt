@@ -1,5 +1,4 @@
 import { z } from "zod";
-import type { NucleoContexto } from "../contexto/nucleo";
 import { decidir, type ResultadoDecisao } from "../decidir";
 import type { EventoProgressoFallback } from "../fallback-modelo";
 import { ROTAS_REFEICAO_FOTO } from "../provedor";
@@ -66,7 +65,6 @@ Regras obrigatórias:
 
 export async function estimarRefeicaoPorFoto(entrada: {
   userId: string;
-  nucleo: NucleoContexto;
   foto: { dados: Uint8Array; mediaType: string };
   /** Energia e macros que ainda faltam no dia; ajuda a calibrar porções plausíveis. */
   metasRestantes?: unknown;
@@ -80,16 +78,15 @@ export async function estimarRefeicaoPorFoto(entrada: {
   return decidir({
     userId: entrada.userId,
     operacao: "refeicao-foto",
-    nucleo: entrada.nucleo,
-    dados: {
+    dados: (nucleo) => ({
       "foto-refeicao": {
         enviada: true,
         observacaoDoAtleta:
           observacao !== undefined && observacao.length > 0 ? observacao : undefined,
       },
       "metas-restantes": entrada.metasRestantes,
-      restricoes: entrada.restricoes?.length ? [...entrada.restricoes] : undefined,
-    },
+      restricoes: nucleo.restricoesAlimentares?.valor,
+    }),
     imagens: [entrada.foto],
     instrucao: INSTRUCAO,
     schema: refeicaoFotoSchema,

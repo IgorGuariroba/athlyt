@@ -101,6 +101,9 @@ test.describe("Avaliação Corporal Inicial", () => {
     await expect(page.getByLabel("Medida salva")).toBeVisible();
 
     await page.goto("/treino");
+    // Sem triagem completa, /treino redireciona para a primeira etapa.
+    // Aguarda o destino para não disputar com o redirect em streaming.
+    await expect(page).toHaveURL("/triagem/idade");
     await page.goto("/triagem/avaliacao-corporal/essenciais");
     await expect(page.getByLabel("Cintura")).toHaveValue("86.5");
     await expect(page.getByLabel("Pescoço")).toHaveValue("");

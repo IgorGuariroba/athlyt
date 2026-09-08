@@ -1,9 +1,7 @@
-import { montarNucleo } from "@/domain/ia/contexto/nucleo";
 import {
   orientarProximaSerie,
   type Orientacao,
 } from "@/domain/ia/operacoes/copiloto-sessao";
-import { obterPerfilVigente } from "@/domain/triagem/perfil";
 import { obterSessao } from "./repositorio";
 
 export interface GatilhoCopiloto {
@@ -33,11 +31,8 @@ export async function solicitarOrientacaoProximaSerie(
   sessionId: string,
   gatilho: GatilhoCopiloto,
 ): Promise<ResultadoCopiloto> {
-  const [sessao, perfil] = await Promise.all([
-    obterSessao(userId, sessionId),
-    obterPerfilVigente(userId),
-  ]);
-  if (!sessao || !perfil) {
+  const sessao = await obterSessao(userId, sessionId);
+  if (!sessao) {
     return { status: "indisponivel", motivo: "Sessão ou perfil não encontrado." };
   }
 
@@ -50,12 +45,6 @@ export async function solicitarOrientacaoProximaSerie(
 
   const resultado = await orientarProximaSerie({
     userId,
-    nucleo: montarNucleo({
-      perfilVersao: perfil.version,
-      respostas: perfil.respostas,
-      respondidoEm: perfil.createdAt,
-      agora: new Date(),
-    }),
     exercicio: {
       nome: exercicio.nome,
       seriesHoje: exercicio.series

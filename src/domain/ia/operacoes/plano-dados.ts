@@ -1,5 +1,3 @@
-import type { NucleoContexto } from "../contexto/nucleo";
-
 /**
  * Recorte de dados das operações do plano, isolado da chamada ao
  * provedor para que uma inspeção do que é enviado use o mesmo código
@@ -18,7 +16,6 @@ export interface FotoCorporalPlano {
 
 export interface EntradaPlano {
   userId: string;
-  nucleo: NucleoContexto;
   triagemCompleta: unknown;
   fotosCorporais?: readonly FotoCorporalPlano[];
   linhaBaseCorporal?: unknown;

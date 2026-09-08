@@ -5,7 +5,6 @@ vi.mock("../../decidir", () => ({ decidir: (entrada: unknown) => decidir(entrada
 
 const { gerarPlanoTreinoComIA, planoTreinoSchema } = await import("../plano-treino");
 
-const nucleo = { perfilVersao: 7, modoConservador: false };
 
 const exercicioValido = {
   exercicioId: "supino-barra",
@@ -53,7 +52,7 @@ describe("gerarPlanoTreinoComIA", () => {
 
     await gerarPlanoTreinoComIA({
       userId: "u1",
-      nucleo,
+
       triagemCompleta: { horasSono: 8, nivelAtividade: "moderado", objetivoComposicao: "ganhar-massa" },
       fotosCorporais: [{ id: "f1", pose: "frente", observadoEm: "2026-08-13", dados: new Uint8Array([1, 2, 3]), mediaType: "image/jpeg" }],
       origem: { tela: "resumo-triagem", rota: "/triagem/resumo", gatilho: "clique-gerar-meu-plano" },
@@ -70,7 +69,7 @@ describe("gerarPlanoTreinoComIA", () => {
 
     await gerarPlanoTreinoComIA({
       userId: "u1",
-      nucleo,
+
       triagemCompleta: {},
     });
 
@@ -82,7 +81,7 @@ describe("gerarPlanoTreinoComIA", () => {
   it("envia o catálogo em linhas, sem instruções de execução", async () => {
     decidir.mockResolvedValue({ status: "ok", valor: treinoValido, contexto: {}, modeloResolvido: "openai/gpt-5.6-luna", degradado: false });
 
-    await gerarPlanoTreinoComIA({ userId: "u1", nucleo, triagemCompleta: {} });
+    await gerarPlanoTreinoComIA({ userId: "u1",  triagemCompleta: {} });
 
     const { instrucao } = decidir.mock.calls[0]![0] as { instrucao: string };
     expect(instrucao).toContain("supino-barra | empurrar-horizontal |");

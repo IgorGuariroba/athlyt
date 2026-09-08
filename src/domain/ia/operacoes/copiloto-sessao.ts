@@ -1,6 +1,5 @@
 import { z } from "zod";
 import { decidir, type ResultadoDecisao } from "../decidir";
-import type { NucleoContexto } from "../contexto/nucleo";
 
 /**
  * Copiloto de Sessão — orientação entre séries.
@@ -55,7 +54,6 @@ export interface SerieRegistrada {
 
 export interface EntradaCopiloto {
   userId: string;
-  nucleo: NucleoContexto;
   exercicio: {
     nome: string;
     seriesHoje: SerieRegistrada[];
@@ -90,7 +88,6 @@ export async function orientarProximaSerie(
   return decidir({
     userId: entrada.userId,
     operacao: "copiloto-sessao",
-    nucleo: entrada.nucleo,
     dados: {
       exercicio: entrada.exercicio,
       "historico-exercicio": entrada.historicoExercicio,

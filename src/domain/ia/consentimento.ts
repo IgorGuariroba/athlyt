@@ -114,20 +114,10 @@ export async function consentimentosVigentes(
 export async function conceder(
   userId: string,
   operacao: OperacaoIA,
-  campos: readonly string[],
   provedor: string,
 ): Promise<void> {
   const recorte = obterRecorte(operacao);
-  const declarados = new Set(recorte.campos.map((c) => c.id));
-
-  for (const campo of campos) {
-    if (!declarados.has(campo)) {
-      throw new Error(
-        `Campo "${campo}" não é declarado pelo recorte "${operacao}".`,
-      );
-    }
-  }
-
+  const campos = recorte.campos.map((campo) => campo.id);
   if (campos.length === 0) return;
 
   // Conceder é idempotente: uma confirmação repetida não cria linhas

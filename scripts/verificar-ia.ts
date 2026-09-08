@@ -22,28 +22,11 @@ import "./carregar-env";
 import { eq } from "drizzle-orm";
 import { db } from "../src/db/client";
 import { users } from "../src/db/schema";
-import { montarNucleo } from "../src/domain/ia/contexto/nucleo";
 import { obterRecorte } from "../src/domain/ia/contexto/recortes";
 import { conceder, consentimentosVigentes } from "../src/domain/ia/consentimento";
 import { orientarProximaSerie } from "../src/domain/ia/operacoes/copiloto-sessao";
 import { ambienteIA, modeloDe, NOME_PROVEDOR } from "../src/domain/ia/provedor";
 import { listarTrilhas } from "../src/domain/ia/trilha";
-import type { DiaSemana } from "../src/domain/triagem/etapas";
-
-const RESPOSTAS = {
-  dataNascimento: "1995-03-10",
-  sexoBiologico: "masculino" as const,
-  alturaCm: 178,
-  pesoKg: 82,
-  objetivoConfirmado: true,
-  experienciaTreino: "intermediario" as const,
-  diasDisponiveis: ["segunda", "quarta", "sexta"] as DiaSemana[],
-  duracaoSessaoMin: 60,
-  localTreino: "academia-completa" as const,
-  equipamentos: ["Barra e anilhas", "Halteres"],
-  lesoes: "",
-};
-
 const EXERCICIO = {
   nome: "Supino reto com barra",
   seriesHoje: [{ cargaKg: 60, repeticoes: 10, rir: 2 }],
@@ -84,31 +67,24 @@ async function main() {
   if (!usuario) throw new Error("Falha ao criar usuário de verificação.");
 
   try {
-    const nucleo = montarNucleo({
-      perfilVersao: 1,
-      respostas: RESPOSTAS,
-      respondidoEm: new Date(),
-      agora: new Date(),
-    });
-
-    // --- 1. Sem consentimento: o dado sensível não pode ser enviado ---
-    console.log("1. Chamada sem consentimento (deve degradar, não omitir em silêncio)");
+    // --- 1. Sem consentimento explícito: o executor deriva a concessão ---
+    console.log("1. Chamada sem consentimento explícito (o executor deriva a concessão)");
 
     const semConsentimento = await orientarProximaSerie({
       userId: usuario.id,
-      nucleo,
-      exercicio: EXERCICIO,
+        exercicio: EXERCICIO,
       prontidaoHoje: PRONTIDAO,
     });
 
     verificar(
-      semConsentimento.contexto.camposOmitidos.includes("prontidao-hoje"),
-      "prontidão omitida por falta de consentimento",
+      semConsentimento.status === "ok" &&
+        !semConsentimento.contexto.camposOmitidos.includes("prontidao-hoje"),
+      "prontidão enviada após concessão derivada",
       JSON.stringify(semConsentimento.contexto.camposOmitidos),
     );
     verificar(
-      semConsentimento.contexto.degradado,
-      "contexto marcado como degradado",
+      semConsentimento.status === "ok" && !semConsentimento.contexto.degradado,
+      "contexto completo, sem degradação",
     );
     verificar(
       semConsentimento.status === "ok",
@@ -118,15 +94,10 @@ async function main() {
         : "",
     );
 
-    // --- 2. Com consentimento: o dado sensível é enviado ---
-    console.log("\n2. Chamada com consentimento concedido");
+    // --- 2. Com consentimento explícito: o dado sensível continua enviado ---
+    console.log("\n2. Chamada com consentimento explícito");
 
-    await conceder(
-      usuario.id,
-      "copiloto-sessao",
-      ["prontidao-hoje"],
-      NOME_PROVEDOR,
-    );
+    await conceder(usuario.id, "copiloto-sessao", NOME_PROVEDOR);
 
     const consentimentos = await consentimentosVigentes(
       usuario.id,
@@ -139,8 +110,7 @@ async function main() {
 
     const comConsentimento = await orientarProximaSerie({
       userId: usuario.id,
-      nucleo,
-      exercicio: EXERCICIO,
+        exercicio: EXERCICIO,
       prontidaoHoje: PRONTIDAO,
       historicoExercicio: [
         { data: "2026-07-23", melhorSerie: { cargaKg: 57.5, repeticoes: 10, rir: 2 } },
@@ -196,10 +166,10 @@ async function main() {
       JSON.stringify(maisRecente?.camposEnviados),
     );
     verificar(
-      Array.isArray(maisAntiga?.camposOmitidos) &&
-        (maisAntiga.camposOmitidos as string[]).includes("prontidao-hoje"),
-      "trilha da chamada sem consentimento registra a omissão",
-      JSON.stringify(maisAntiga?.camposOmitidos),
+      Array.isArray(maisAntiga?.camposEnviados) &&
+        (maisAntiga.camposEnviados as string[]).includes("prontidao-hoje"),
+      "trilha da chamada com concessão derivada registra o envio",
+      JSON.stringify(maisAntiga?.camposEnviados),
     );
   } finally {
     await db.delete(users).where(eq(users.id, usuario.id));

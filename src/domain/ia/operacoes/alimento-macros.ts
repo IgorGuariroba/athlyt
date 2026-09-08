@@ -1,6 +1,5 @@
 import { z } from "zod";
 import type { UnidadeEstimada } from "@/domain/alimentos/prato";
-import type { NucleoContexto } from "../contexto/nucleo";
 import { decidir, type OrigemDecisao, type ResultadoDecisao } from "../decidir";
 
 /**
@@ -54,7 +53,6 @@ Regras obrigatórias:
 
 export async function estimarMacrosDoAlimento(entrada: {
   userId: string;
-  nucleo: NucleoContexto;
   /** Nome do alimento como o atleta o corrigiu na revisão. */
   alimento: string;
   quantidade: number;
@@ -65,7 +63,6 @@ export async function estimarMacrosDoAlimento(entrada: {
   return decidir({
     userId: entrada.userId,
     operacao: "alimento-macros",
-    nucleo: entrada.nucleo,
     dados: {
       "alimento-corrigido": {
         alimento: entrada.alimento.trim(),

@@ -1,5 +1,9 @@
 # Histórico da memória
 
+## 2026-09-08
+
+- Atualizada [e2e-trava-no-health-check-do-webserver.md](e2e-trava-no-health-check-do-webserver.md): health check também pode travar ao reutilizar standalone antigo sem resposta; instância isolada desbloqueou a suíte da issue #208. Substituída orientação de polling por processo observado via evento.
+
 ## 2026-07-30
 
 - Criada [rebuild-restart-apos-mudanca.md](rebuild-restart-apos-mudanca.md): a aplicação acessada pelo Tailscale Funnel roda como build de produção; registrado que toda mudança deve terminar com `npm run build` e reinício por `npm start` na porta 3000. Fonte: instrução do responsável pelo ambiente.

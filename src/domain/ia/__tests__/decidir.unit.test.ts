@@ -3,8 +3,16 @@ import { z } from "zod";
 
 const decisoesGravadas: unknown[] = [];
 const estadoConsentimento = vi.fn();
+const conceder = vi.fn();
 
-vi.mock("../consentimento", () => ({ estadoConsentimento }));
+vi.mock("../consentimento", () => ({ estadoConsentimento, conceder }));
+vi.mock("@/domain/triagem/perfil", () => ({
+  obterPerfilVigente: vi.fn().mockResolvedValue({
+    version: 4,
+    respostas: { pesoKg: 80 },
+    createdAt: new Date("2026-07-01T00:00:00Z"),
+  }),
+}));
 
 vi.mock("@/domain/ia/trilha", async () => {
   const real = await vi.importActual<typeof import("../trilha")>("../trilha");
@@ -66,24 +74,16 @@ vi.mock("../provedor", () => ({
 }));
 
 const { decidir } = await import("../decidir");
-const { montarNucleo } = await import("../contexto/nucleo");
+const { RECORTES } = await import("../contexto/recortes");
 const { NoObjectGeneratedError, NoOutputGeneratedError, TypeValidationError } =
   await import("ai");
 
 const schema = z.object({ carga: z.number() });
 
-const nucleo = montarNucleo({
-  perfilVersao: 4,
-  respostas: { pesoKg: 80 },
-  respondidoEm: new Date("2026-07-01T00:00:00Z"),
-  agora: new Date("2026-07-30T00:00:00Z"),
-});
-
 function chamar() {
   return decidir({
     userId: "u1",
     operacao: "copiloto-sessao",
-    nucleo,
     dados: {
       exercicio: { nome: "Supino" },
       "prontidao-hoje": { energia: 3 },
@@ -310,8 +310,7 @@ describe("decidir", () => {
     const resultado = await decidir({
       userId: "u1",
       operacao: "copiloto-sessao",
-      nucleo,
-      dados: { exercicio: { nome: "Supino" }, "prontidao-hoje": { energia: 3 } },
+        dados: { exercicio: { nome: "Supino" }, "prontidao-hoje": { energia: 3 } },
       instrucao: "instrução",
       schema,
       rotas: [
@@ -340,6 +339,26 @@ describe("decidir", () => {
     });
   });
 
+  it("deriva concessão e trilha do recorte quando um campo novo é adicionado", async () => {
+    const recorte = RECORTES["copiloto-sessao"];
+    const original = recorte.campos;
+    recorte.campos = [...original, { id: "campo-novo", descricao: "Campo novo", sensivel: false }];
+    estadoConsentimento.mockResolvedValueOnce({ vigentes: ["campo-novo", "prontidao-hoje"] });
+    gerar.mockResolvedValue({ output: { carga: 60 }, response: { modelId: "m" }, steps: [] });
+
+    try {
+      await decidir({
+        userId: "u1", operacao: "copiloto-sessao",
+        dados: { exercicio: { nome: "Supino" }, "prontidao-hoje": { energia: 3 }, "campo-novo": "presente" },
+        instrucao: "instrução", schema,
+      });
+      expect(conceder).toHaveBeenCalledWith("u1", "copiloto-sessao", "OpenRouter");
+      expect(decisoesGravadas[0]).toMatchObject({ camposEnviados: expect.arrayContaining(["campo-novo"]) });
+    } finally {
+      recorte.campos = original;
+    }
+  });
+
   it("registra na trilha os campos omitidos por falta de consentimento", async () => {
     estadoConsentimento.mockResolvedValueOnce({ vigentes: [] });
     gerar.mockResolvedValue({
@@ -351,8 +370,7 @@ describe("decidir", () => {
     await decidir({
       userId: "u1",
       operacao: "copiloto-sessao",
-      nucleo,
-      dados: {
+        dados: {
         exercicio: { nome: "Supino" },
         "prontidao-hoje": { energia: 3 },
       },
