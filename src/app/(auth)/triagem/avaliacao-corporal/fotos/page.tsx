@@ -4,6 +4,7 @@ import { ChevronLeft, Lock } from "lucide-react";
 import { AvisoAcao } from "@/components/tela/aviso-acao";
 import { obterSessaoAtual } from "@/auth/sessao";
 import { Button } from "@/components/ui/button";
+import { listarFotosCorporais } from "@/domain/medicoes/fotos";
 import { obterPanoramaCorporal } from "@/domain/medicoes/repositorio";
 import { configuracaoR2 } from "@/infra/storage";
 import {
@@ -37,8 +38,9 @@ export default async function FotosAvaliacaoPage({
 
   const mensagens = await searchParams;
   const config = configuracaoR2();
-  const panorama = await obterPanoramaCorporal(session.user.id);
-  const urls = config ? panorama.fotos.slice(0, 4).map((foto) => ({ foto, url: foto.url })).filter((item): item is { foto: (typeof panorama.fotos)[number]; url: string } => item.url !== null) : [];
+  const panorama = config ? await obterPanoramaCorporal(session.user.id) : null;
+  const pendentes = config ? (await listarFotosCorporais(session.user.id, undefined, true)).filter((foto) => foto.exclusaoPendente) : [];
+  const urls = panorama ? panorama.fotos.slice(0, 4).map((foto) => ({ foto, url: foto.url })).filter((item): item is { foto: (typeof panorama.fotos)[number]; url: string } => item.url !== null) : [];
 
   return (
     <main className="flex flex-1 flex-col gap-6 bg-background px-6 py-8">
@@ -127,6 +129,24 @@ export default async function FotosAvaliacaoPage({
                   >
                     Excluir
                   </Button>
+                </form>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
+
+      {pendentes.length ? (
+        <section className="rounded-2xl border border-warning bg-surface-container px-5 py-4">
+          <strong className="text-title text-on-surface-strong">Exclusões pendentes</strong>
+          <p className="mt-1 text-body-sm text-muted-foreground">Estas fotos estão sendo removidas. Tente novamente para concluir.</p>
+          <ul className="mt-3 grid gap-2">
+            {pendentes.map((foto) => (
+              <li key={foto.id} className="flex items-center justify-between gap-3">
+                <span className="text-body-sm">{foto.pose.replaceAll("_", " ")}</span>
+                <form action={excluirFotoCorporal}>
+                  <input type="hidden" name="fotoId" value={foto.id} />
+                  <Button type="submit" size="sm" variant="ghost">Tentar novamente</Button>
                 </form>
               </li>
             ))}

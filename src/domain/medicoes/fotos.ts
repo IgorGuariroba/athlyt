@@ -63,11 +63,11 @@ async function buscarLinhas(userId: string, ids?: readonly string[], incluirPend
   return db.select().from(progressPhotos).where(and(...filtros));
 }
 
-export async function listarFotosCorporais(userId: string, storage?: StoragePrivado): Promise<FotoCorporal[]> {
-  const linhas = await buscarLinhas(userId);
+export async function listarFotosCorporais(userId: string, storage?: StoragePrivado, incluirPendentes = false): Promise<FotoCorporal[]> {
+  const linhas = await buscarLinhas(userId, undefined, incluirPendentes);
   if (!linhas.length) return [];
-  const privado = storagePadrao(storage);
-  return Promise.all(linhas.map(async (linha) => mapear(linha, await privado.urlLeitura(linha.objectKey, 600))));
+  const privadas = storagePadrao(storage);
+  return Promise.all(linhas.map(async (linha) => mapear(linha, linha.exclusaoPendenteEm === null ? await privadas.urlLeitura(linha.objectKey, 600) : null)));
 }
 
 export async function lerFotosCorporais(userId: string, ids: readonly string[], storage?: StoragePrivado) {

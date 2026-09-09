@@ -9,7 +9,7 @@ function arquivosDeFonte(cwd: string) {
     for (const entrada of readdirSync(dir, { withFileTypes: true })) {
       const caminho = join(dir, entrada.name);
       if (entrada.isDirectory()) visitar(caminho);
-      else if (/\.(ts|tsx)$/.test(entrada.name) && !/\.(test|spec)\.(ts|tsx)$/.test(entrada.name)) resultado.push({ caminho: caminho.slice(cwd.length + 1).replaceAll("\\", "/"), fonte: readFileSync(caminho, "utf8") });
+      else if (/\.(ts|tsx|js|jsx|mjs|cjs)$/.test(entrada.name) && !/\.(test|spec)\.(ts|tsx|js|jsx|mjs|cjs)$/.test(entrada.name)) resultado.push({ caminho: caminho.slice(cwd.length + 1).replaceAll("\\", "/"), fonte: readFileSync(caminho, "utf8") });
     }
   };
   visitar(join(cwd, "src/app"));

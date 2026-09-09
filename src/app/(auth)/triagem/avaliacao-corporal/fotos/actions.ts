@@ -7,7 +7,6 @@ import { invalidarLeituras } from "@/app/_invalidacao";
 import { db } from "@/db/client";
 import { consents } from "@/db/schema";
 import { excluirFotoCorporal as excluirFotoNoDominio, excluirTodasFotosCorporais as excluirTodasNoDominio } from "@/domain/medicoes/fotos";
-import { obterPanoramaCorporal } from "@/domain/medicoes/repositorio";
 import { campoTexto } from "@/lib/form-data";
 
 export { enviarFotoCorporal } from "@/app/_fotos/enviar-action";
@@ -16,10 +15,8 @@ export async function excluirFotoCorporal(fd: FormData) {
   const session = await auth();
   if (!session?.user?.id) redirect("/");
   const fotoId = campoTexto(fd, "fotoId");
-  const panorama = await obterPanoramaCorporal(session.user.id);
-  const foto = panorama.fotos.find((item) => item.id === fotoId);
-  if (!foto) redirect("/triagem/avaliacao-corporal/fotos?erro=Foto não encontrada.");
-  const resultado = await excluirFotoNoDominio(session.user.id, foto.id);
+  const resultado = await excluirFotoNoDominio(session.user.id, fotoId);
+  if (!resultado.concluidas.length && !resultado.pendentes.length && !resultado.falhas.length) redirect("/triagem/avaliacao-corporal/fotos?erro=Foto não encontrada.");
   if (resultado.pendentes.length || resultado.falhas.length) redirect("/triagem/avaliacao-corporal/fotos?erro=Exclusão pendente; tente novamente.");
   const destino = "/triagem/avaliacao-corporal/fotos?sucesso=Foto excluída do storage privado.";
   invalidarLeituras([{ fato: "medicoes" }], { destino });
