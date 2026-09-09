@@ -1,3 +1,4 @@
+import "./carregar-env";
 import { aplicarRetencaoFotos } from "../src/domain/medicoes/fotos";
 
 async function main() {

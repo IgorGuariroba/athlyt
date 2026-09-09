@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto";
 import { describe, expect, it } from "vitest";
 import { db } from "@/db/client";
 import { users } from "@/db/schema";
-import { atualizarEstadoRevisaoCorporal, garantirPesoInicial, listarFotosExpiradas, obterOuCriarAvaliacaoInicial, obterPanoramaCorporal, obterPesoEMetaAtuais, obterSerieDePeso, recalcularMetasProporcao, registrarAvaliacaoVisual, registrarCircunferencia, registrarFotoProgresso, registrarGorduraCorporal, registrarPeso, registrarPesoEMeta, registrarRevisaoCorporal, revogarAvaliacoesVisuais, salvarCircunferenciaDaAvaliacaoInicial } from "../repositorio";
+import { atualizarEstadoRevisaoCorporal, garantirPesoInicial, obterOuCriarAvaliacaoInicial, obterPanoramaCorporal, obterPesoEMetaAtuais, obterSerieDePeso, recalcularMetasProporcao, registrarAvaliacaoVisual, registrarCircunferencia, registrarGorduraCorporal, registrarPeso, registrarPesoEMeta, registrarRevisaoCorporal, revogarAvaliacoesVisuais, salvarCircunferenciaDaAvaliacaoInicial } from "../repositorio";
 import { produzirRevisaoCorporal } from "../revisao-corporal";
 
 async function usuario() { const [u] = await db.insert(users).values({ email: `medicoes-${randomUUID()}@example.com` }).returning(); return u!.id; }
@@ -100,14 +100,5 @@ describe("jornada persistida de medições", () => {
     const panorama = await obterPanoramaCorporal(userId);
     expect(panorama.avaliacoesVisuais[0]!.ativa).toBe(false);
     expect(panorama.revisoes[0]!.estado).toBe("aplicada");
-  });
-
-  it("seleciona para retenção somente fotos cujo prazo venceu", async () => {
-    const userId = await usuario();
-    const vencida = await registrarFotoProgresso(userId, { pose: "frente", objectKey: `teste/${randomUUID()}.webp`, excluirEm: new Date("2020-01-01T00:00:00Z") });
-    await registrarFotoProgresso(userId, { pose: "costas", objectKey: `teste/${randomUUID()}.webp`, excluirEm: new Date("2090-01-01T00:00:00Z") });
-    const expiradas = await listarFotosExpiradas(new Date("2026-01-01T00:00:00Z"));
-    expect(expiradas.some((foto) => foto.id === vencida!.id)).toBe(true);
-    expect(expiradas.filter((foto) => foto.userId === userId)).toHaveLength(1);
   });
 });

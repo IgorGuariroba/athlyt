@@ -84,6 +84,7 @@ export interface ResultadoExclusaoFoto { concluidas: string[]; pendentes: string
 
 export async function excluirFotosCorporais(userId: string, ids: readonly string[], storage?: StoragePrivado): Promise<ResultadoExclusaoFoto> {
   const resultado: ResultadoExclusaoFoto = { concluidas: [], pendentes: [], falhas: [] };
+  if (!ids.length) return resultado;
   const privado = storagePadrao(storage);
   const linhas = await buscarLinhas(userId, ids, true);
   for (const linha of linhas) {
@@ -101,6 +102,11 @@ export async function excluirFotosCorporais(userId: string, ids: readonly string
 
 export async function excluirFotoCorporal(userId: string, id: string, storage?: StoragePrivado) {
   return excluirFotosCorporais(userId, [id], storage);
+}
+
+export async function excluirTodasFotosCorporais(userId: string, storage?: StoragePrivado) {
+  const linhas = await buscarLinhas(userId, undefined, true);
+  return excluirFotosCorporais(userId, linhas.map((linha) => linha.id), storage);
 }
 
 export async function aplicarRetencaoFotos(agora = new Date(), storage?: StoragePrivado) {

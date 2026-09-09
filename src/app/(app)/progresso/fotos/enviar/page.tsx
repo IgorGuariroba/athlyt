@@ -10,7 +10,7 @@ import {
   TelaConteudo,
 } from "@/components/tela";
 import { configuracaoR2 } from "@/infra/storage";
-import { enviarFotoCorporal } from "../../../../(auth)/triagem/avaliacao-corporal/fotos/actions";
+import { enviarFotoCorporal } from "@/app/_fotos/enviar-action";
 
 export default async function EnviarFotosProgressoPage({
   searchParams,

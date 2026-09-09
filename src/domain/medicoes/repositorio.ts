@@ -1,6 +1,6 @@
-import { and, desc, eq, inArray, lt } from "drizzle-orm";
+import { and, desc, eq } from "drizzle-orm";
 import { db } from "@/db/client";
-import { bodyAssessments, bodyFatMeasurements, bodyMeasurements, bodyProportionGoals, bodyVisualAnalyses, decisionTrails, progressPhotos, weeklyBodyReviews, weightGoals, weightMeasurements } from "@/db/schema";
+import { bodyAssessments, bodyFatMeasurements, bodyMeasurements, bodyProportionGoals, bodyVisualAnalyses, decisionTrails, weeklyBodyReviews, weightGoals, weightMeasurements } from "@/db/schema";
 import { consolidarCircunferencia, gerarMetasProporcao, PROTOCOLO_CIRCUNFERENCIAS_VERSAO, type LadoCorporal, type MedicaoCorporal, type RegiaoCorporal } from "./index";
 import type { CriteriosVisuais } from "./avaliacao-visual";
 import type { produzirRevisaoCorporal } from "./revisao-corporal";
@@ -249,25 +249,6 @@ export async function listarMedicoesCorporais(userId: string): Promise<MedicaoCo
     qualidade: linha.qualidade,
     observadoEm: linha.observadoEm,
   }));
-}
-
-export async function registrarFotoProgresso(userId: string, entrada: { assessmentId?: string; pose: "frente" | "costas" | "lateral_direita" | "lateral_esquerda"; objectKey: string; condicoes?: string; excluirEm?: Date }) {
-  const [linha] = await db.insert(progressPhotos).values({ userId, ...entrada }).returning();
-  return linha;
-}
-
-export async function excluirFotoProgresso(userId: string, fotoId: string) {
-  const [linha] = await db.delete(progressPhotos).where(and(eq(progressPhotos.id, fotoId), eq(progressPhotos.userId, userId))).returning();
-  return linha ?? null;
-}
-
-export async function excluirFotosProgresso(userId: string, fotoIds: string[]) {
-  if (!fotoIds.length) return [];
-  return db.delete(progressPhotos).where(and(eq(progressPhotos.userId, userId), inArray(progressPhotos.id, fotoIds))).returning();
-}
-
-export async function listarFotosExpiradas(agora = new Date()) {
-  return db.select().from(progressPhotos).where(lt(progressPhotos.excluirEm, agora));
 }
 
 export async function registrarAvaliacaoVisual(userId: string, entrada: { photoIds: string[]; criterios: CriteriosVisuais; gorduraMinBasisPoints: number; gorduraMaxBasisPoints: number; observacoes: string[]; limitacoes: string[]; confianca: "alta" | "moderada" | "baixa"; metodologiaVersao: string; modeloResolvido: string }) {

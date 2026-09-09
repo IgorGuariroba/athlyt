@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 import { db } from "@/db/client";
 import { users } from "@/db/schema";
 import type { StoragePrivado } from "@/infra/storage";
-import { excluirFotosCorporais, listarFotosCorporais, registrarFotoCorporal } from "../fotos";
+import { aplicarRetencaoFotos, excluirFotosCorporais, lerFotosCorporais, listarFotosCorporais, registrarFotoCorporal } from "../fotos";
 
 function storageFake(opcoes: { falharExclusao?: boolean } = {}): StoragePrivado {
   const objetos = new Map<string, Uint8Array>();
@@ -48,5 +48,17 @@ describe("ciclo de vida de fotos corporais", () => {
     const sucesso = await excluirFotosCorporais(userId, [foto.id], armazenamento);
     expect(sucesso.concluidas).toEqual([foto.id]);
     expect(await listarFotosCorporais(userId, armazenamento)).toEqual([]);
+  });
+
+  it("lê conteúdo autorizado e aplica retenção apenas às fotos vencidas", async () => {
+    const userId = await usuario();
+    const armazenamento = storageFake();
+    const vencida = await registrarFotoCorporal(userId, { pose: "frente", bytes: await imagem(), contentType: "image/jpeg", excluirEm: new Date("2020-01-01T00:00:00Z") }, armazenamento);
+    const vigente = await registrarFotoCorporal(userId, { pose: "costas", bytes: await imagem(), contentType: "image/jpeg", excluirEm: new Date("2090-01-01T00:00:00Z") }, armazenamento);
+    expect((await lerFotosCorporais(userId, [vigente.id], armazenamento))?.[0]?.dados.byteLength).toBeGreaterThan(0);
+    const resultado = await aplicarRetencaoFotos(new Date("2026-01-01T00:00:00Z"), armazenamento);
+    expect(resultado.concluidas).toContain(vencida.id);
+    expect(resultado.concluidas).not.toContain(vigente.id);
+    expect((await listarFotosCorporais(userId, armazenamento)).map((foto) => foto.id)).toEqual([vigente.id]);
   });
 });

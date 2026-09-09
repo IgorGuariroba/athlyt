@@ -7,8 +7,8 @@ import { invalidarLeituras } from "@/app/_invalidacao";
 import { db } from "@/db/client";
 import { consents } from "@/db/schema";
 import { revogar } from "@/domain/ia/consentimento";
-import { excluirFotosCorporais } from "@/domain/medicoes/fotos";
-import { obterPanoramaCorporal, revogarAvaliacoesVisuais } from "@/domain/medicoes/repositorio";
+import { excluirTodasFotosCorporais } from "@/domain/medicoes/fotos";
+import { revogarAvaliacoesVisuais } from "@/domain/medicoes/repositorio";
 
 const CAMPOS_VISUAIS = ["fotos-corporais", "medicoes-comparaveis", "condicoes-captura"];
 export async function revogarIAVisual() {
@@ -23,8 +23,7 @@ export async function revogarIAVisual() {
 
 export async function revogarStorageFotos() {
   const session = await auth(); if (!session?.user?.id) redirect("/");
-  const panorama = await obterPanoramaCorporal(session.user.id);
-  const resultado = await excluirFotosCorporais(session.user.id, panorama.fotos.map((foto) => foto.id));
+  const resultado = await excluirTodasFotosCorporais(session.user.id);
   if (resultado.pendentes.length || resultado.falhas.length) redirect("/mais/consentimentos?erro=Algumas fotos ficaram pendentes; tente novamente.");
   await db.update(consents).set({ revogadoEm: new Date() }).where(and(eq(consents.userId, session.user.id), eq(consents.operacao, "foto-corporal-armazenamento"), isNull(consents.revogadoEm)));
   const destino = "/mais/consentimentos?sucesso=Consentimento de armazenamento revogado e fotos excluídas.";
