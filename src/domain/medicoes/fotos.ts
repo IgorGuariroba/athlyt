@@ -32,7 +32,7 @@ export async function prepararFotoCorporal(entrada: { bytes: Uint8Array; content
 }
 
 function mapear(linha: LinhaFoto, url: string | null): FotoCorporal {
-  return { id: linha.id, assessmentId: linha.assessmentId, userId: linha.userId, pose: linha.pose, condicoes: linha.condicoes, protocoloVersao: linha.protocoloVersao, excluirEm: linha.excluirEm, observadoEm: linha.observadoEm, createdAt: linha.createdAt, url, exclusaoPendente: linha.exclusaoPendenteEm !== null || linha.uploadPendenteEm !== null };
+  return { id: linha.id, assessmentId: linha.assessmentId, userId: linha.userId, pose: linha.pose, condicoes: linha.condicoes, protocoloVersao: linha.protocoloVersao, excluirEm: linha.excluirEm, observadoEm: linha.observadoEm, createdAt: linha.createdAt, url, exclusaoPendente: linha.exclusaoPendenteEm !== null };
 }
 
 function storagePadrao(storage?: StoragePrivado) { return storage ?? criarStorageR2(); }
@@ -47,10 +47,15 @@ export async function registrarFotoCorporal(
   const privado = storagePadrao(storage);
   const [linha] = await db.insert(progressPhotos).values({ userId, assessmentId: entrada.assessmentId, pose: entrada.pose, objectKey: chave, condicoes: entrada.condicoes, excluirEm: entrada.excluirEm, uploadPendenteEm: new Date() }).returning();
   if (!linha) throw new Error("Falha ao registrar foto: linha não retornada.");
-  await privado.gravar({ chave, ...preparada });
-  const [concluida] = await db.update(progressPhotos).set({ uploadPendenteEm: null }).where(and(eq(progressPhotos.id, linha.id), eq(progressPhotos.userId, userId))).returning();
-  if (!concluida) throw new Error("Falha ao concluir registro da foto.");
-  return mapear(concluida, null);
+  try {
+    await privado.gravar({ chave, ...preparada });
+    const [concluida] = await db.update(progressPhotos).set({ uploadPendenteEm: null }).where(and(eq(progressPhotos.id, linha.id), eq(progressPhotos.userId, userId))).returning();
+    if (!concluida) throw new Error("Falha ao concluir registro da foto.");
+    return mapear(concluida, null);
+  } catch (erro) {
+    await db.update(progressPhotos).set({ exclusaoPendenteEm: new Date(), uploadPendenteEm: null }).where(and(eq(progressPhotos.id, linha.id), eq(progressPhotos.userId, userId))).catch(() => undefined);
+    throw erro;
+  }
 }
 
 async function buscarLinhas(userId: string, ids?: readonly string[], incluirPendentes = false) {

@@ -1,5 +1,6 @@
 "use server";
 
+import { sql } from "drizzle-orm";
 import { auth } from "@/auth";
 import { invalidarLeituras } from "@/app/_invalidacao";
 import { db } from "@/db/client";
@@ -25,9 +26,7 @@ export async function enviarFotoCorporal(fd: FormData): Promise<{ ok: true } | {
 
   const userId = session.user.id;
   const avaliacao = await obterOuCriarAvaliacaoInicial(userId);
-  if (fd.get("registrarConsentimento") === "sim") {
-    await db.insert(consents).values({ userId, operacao: "foto-corporal-armazenamento", campo: "foto-corporal", recorteVersao: 1, provedor: "Cloudflare R2" }).onConflictDoNothing({ target: [consents.userId, consents.operacao, consents.campo, consents.recorteVersao] });
-  }
+  await db.insert(consents).values({ userId, operacao: "foto-corporal-armazenamento", campo: "foto-corporal", recorteVersao: 1, provedor: "Cloudflare R2" }).onConflictDoNothing({ target: [consents.userId, consents.operacao, consents.campo, consents.recorteVersao], where: sql`${consents.revogadoEm} IS NULL` });
   const retencaoDias = campoNumero(fd, "retencaoDias", 0);
   const excluirEm = Number.isFinite(retencaoDias) && retencaoDias > 0 ? new Date(Date.now() + Math.min(retencaoDias, 3650) * 86_400_000) : undefined;
   try {

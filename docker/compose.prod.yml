@@ -141,6 +141,27 @@ services:
       # `networks`.
       - dokploy-network
 
+  # Worker diário de retenção das fotos. Usa o mesmo domínio do app,
+  # mantém pendências retomáveis e não depende da disponibilidade de uma
+  # requisição web para cumprir exclusões de privacidade.
+  retencao-fotos:
+    build:
+      context: ..
+      dockerfile: docker/retencao/Dockerfile
+    image: athlyt-retencao:${APP_TAG:-latest}
+    environment:
+      DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@athlyt-db:5432/${POSTGRES_DB}
+      R2_ACCOUNT_ID: ${R2_ACCOUNT_ID:?defina R2_ACCOUNT_ID}
+      R2_ACCESS_KEY_ID: ${R2_ACCESS_KEY_ID:?defina R2_ACCESS_KEY_ID}
+      R2_SECRET_ACCESS_KEY: ${R2_SECRET_ACCESS_KEY:?defina R2_SECRET_ACCESS_KEY}
+      R2_BUCKET: ${R2_BUCKET:?defina R2_BUCKET}
+    depends_on:
+      athlyt-db:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - interna
+
   # Dump diário do Postgres para o bucket S3/R2, com expurgo por
   # idade. Serviço separado do app porque seu ciclo de vida é outro:
   # um redeploy da aplicação não deve interromper a janela de backup.
