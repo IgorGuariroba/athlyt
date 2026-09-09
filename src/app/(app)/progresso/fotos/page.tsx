@@ -14,7 +14,6 @@ import {
   TelaConteudo,
 } from "@/components/tela";
 import { obterPanoramaCorporal } from "@/domain/medicoes/repositorio";
-import { criarStorageR2 } from "@/infra/storage";
 import { ComparadorFotos } from "./comparador";
 
 export default async function FotosProgressoPage() {
@@ -22,20 +21,16 @@ export default async function FotosProgressoPage() {
   if (!session?.user?.id) redirect("/");
 
   const panorama = await obterPanoramaCorporal(session.user.id);
-  const storage = criarStorageR2();
-  const fotos = await Promise.all(
-    panorama.fotos.map(async (foto) => ({
+  const fotos = panorama.fotos
+    .filter((foto): foto is Omit<typeof foto, "url"> & { url: string } => foto.url !== null)
+    .map((foto) => ({
       id: foto.id,
       pose: foto.pose,
-      data: foto.observadoEm.toLocaleString("pt-BR", {
-        dateStyle: "short",
-        timeStyle: "short",
-      }),
+      data: foto.observadoEm.toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" }),
       condicoes: foto.condicoes,
       protocoloVersao: foto.protocoloVersao,
-      url: await storage.urlLeitura(foto.objectKey, 600),
-    })),
-  );
+      url: foto.url,
+    }));
 
   return (
     <TelaConteudo>

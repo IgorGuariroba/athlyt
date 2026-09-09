@@ -307,11 +307,12 @@ export async function atualizarEstadoRevisaoCorporal(userId: string, reviewId: s
 }
 
 export async function obterPanoramaCorporal(userId: string) {
+  const { listarFotosCorporais } = await import("@/domain/medicoes/fotos");
   const [medicoes, pesos, gorduras, fotos, metas, avaliacoesVisuais, revisoes] = await Promise.all([
     listarMedicoesCorporais(userId),
     db.select().from(weightMeasurements).where(eq(weightMeasurements.userId, userId)).orderBy(desc(weightMeasurements.observadoEm)),
     db.select().from(bodyFatMeasurements).where(eq(bodyFatMeasurements.userId, userId)).orderBy(desc(bodyFatMeasurements.observadoEm)),
-    db.select().from(progressPhotos).where(eq(progressPhotos.userId, userId)).orderBy(desc(progressPhotos.observadoEm)),
+    listarFotosCorporais(userId),
     db.select().from(bodyProportionGoals).where(and(eq(bodyProportionGoals.userId, userId), eq(bodyProportionGoals.ativa, true))).orderBy(desc(bodyProportionGoals.createdAt)),
     db.select().from(bodyVisualAnalyses).where(eq(bodyVisualAnalyses.userId, userId)).orderBy(desc(bodyVisualAnalyses.createdAt)),
     db.select().from(weeklyBodyReviews).where(eq(weeklyBodyReviews.userId, userId)).orderBy(desc(weeklyBodyReviews.periodoFim)),

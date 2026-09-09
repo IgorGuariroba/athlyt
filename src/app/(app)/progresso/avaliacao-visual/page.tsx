@@ -25,7 +25,6 @@ import { textoConsentimento } from "@/domain/ia/contexto/montagem";
 import { obterRecorte } from "@/domain/ia/contexto/recortes";
 import { NOME_PROVEDOR } from "@/domain/ia/provedor";
 import { obterPanoramaCorporal } from "@/domain/medicoes/repositorio";
-import { criarStorageR2 } from "@/infra/storage";
 import { executarAvaliacaoVisual, revogarConsentimentoVisual } from "./actions";
 
 /**
@@ -44,13 +43,7 @@ export default async function AvaliacaoVisualPage({
 
   const aviso = await searchParams;
   const panorama = await obterPanoramaCorporal(session.user.id);
-  const storage = criarStorageR2();
-  const fotos = await Promise.all(
-    panorama.fotos.slice(0, 12).map(async (foto) => ({
-      ...foto,
-      url: await storage.urlLeitura(foto.objectKey),
-    })),
-  );
+  const fotos = panorama.fotos.slice(0, 12).filter((foto): foto is Omit<typeof foto, "url"> & { url: string } => foto.url !== null);
   const ativa = panorama.avaliacoesVisuais.find((item) => item.ativa);
   const criterios = ativa ? Object.entries(ativa.criterios) : [];
 

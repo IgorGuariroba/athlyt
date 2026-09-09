@@ -7,8 +7,8 @@ import { invalidarLeituras } from "@/app/_invalidacao";
 import { db } from "@/db/client";
 import { consents } from "@/db/schema";
 import { revogar } from "@/domain/ia/consentimento";
-import { excluirFotosProgresso, obterPanoramaCorporal, revogarAvaliacoesVisuais } from "@/domain/medicoes/repositorio";
-import { criarStorageR2 } from "@/infra/storage";
+import { excluirFotosCorporais } from "@/domain/medicoes/fotos";
+import { obterPanoramaCorporal, revogarAvaliacoesVisuais } from "@/domain/medicoes/repositorio";
 
 const CAMPOS_VISUAIS = ["fotos-corporais", "medicoes-comparaveis", "condicoes-captura"];
 export async function revogarIAVisual() {
@@ -23,10 +23,9 @@ export async function revogarIAVisual() {
 
 export async function revogarStorageFotos() {
   const session = await auth(); if (!session?.user?.id) redirect("/");
-  const panorama = await obterPanoramaCorporal(session.user.id); const storage = criarStorageR2();
-  const resultados = await Promise.allSettled(panorama.fotos.map((foto) => storage.excluir(foto.objectKey)));
-  if (resultados.some((item) => item.status === "rejected")) redirect("/mais/consentimentos?erro=Não foi possível excluir todos os objetos; o consentimento permanece ativo para preservar a reconciliação.");
-  await excluirFotosProgresso(session.user.id, panorama.fotos.map((foto) => foto.id));
+  const panorama = await obterPanoramaCorporal(session.user.id);
+  const resultado = await excluirFotosCorporais(session.user.id, panorama.fotos.map((foto) => foto.id));
+  if (resultado.pendentes.length || resultado.falhas.length) redirect("/mais/consentimentos?erro=Algumas fotos ficaram pendentes; tente novamente.");
   await db.update(consents).set({ revogadoEm: new Date() }).where(and(eq(consents.userId, session.user.id), eq(consents.operacao, "foto-corporal-armazenamento"), isNull(consents.revogadoEm)));
   const destino = "/mais/consentimentos?sucesso=Consentimento de armazenamento revogado e fotos excluídas.";
   invalidarLeituras([{ fato: "consentimento" }, { fato: "medicoes" }], { destino });

@@ -161,6 +161,7 @@ export const progressPhotos = pgTable("progress_photo", {
   condicoes: text("condicoes"),
   protocoloVersao: text("protocolo_versao").notNull().default("foto-v1"),
   excluirEm: timestamp("excluir_em", { mode: "date", withTimezone: true }),
+  exclusaoPendenteEm: timestamp("exclusao_pendente_em", { mode: "date", withTimezone: true }),
   observadoEm: timestamp("observado_em", { mode: "date", withTimezone: true }).notNull().defaultNow(),
   createdAt: timestamp("created_at", { mode: "date", withTimezone: true }).notNull().defaultNow(),
 }, (t) => [index("progress_photo_user_date_idx").on(t.userId, t.observadoEm)]);

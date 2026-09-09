@@ -1,0 +1,1 @@
+ALTER TABLE "progress_photo" ADD COLUMN "exclusao_pendente_em" timestamp with time zone;

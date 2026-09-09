@@ -5,7 +5,7 @@ import { AvisoAcao } from "@/components/tela/aviso-acao";
 import { obterSessaoAtual } from "@/auth/sessao";
 import { Button } from "@/components/ui/button";
 import { obterPanoramaCorporal } from "@/domain/medicoes/repositorio";
-import { configuracaoR2, criarStorageR2 } from "@/infra/storage";
+import { configuracaoR2 } from "@/infra/storage";
 import {
   enviarFotoCorporal,
   excluirFotoCorporal,
@@ -38,14 +38,7 @@ export default async function FotosAvaliacaoPage({
   const mensagens = await searchParams;
   const config = configuracaoR2();
   const panorama = await obterPanoramaCorporal(session.user.id);
-  const urls = config
-    ? await Promise.all(
-        panorama.fotos.slice(0, 4).map(async (foto) => ({
-          foto,
-          url: await criarStorageR2(config).urlLeitura(foto.objectKey),
-        })),
-      )
-    : [];
+  const urls = config ? panorama.fotos.slice(0, 4).map((foto) => ({ foto, url: foto.url })).filter((item): item is { foto: (typeof panorama.fotos)[number]; url: string } => item.url !== null) : [];
 
   return (
     <main className="flex flex-1 flex-col gap-6 bg-background px-6 py-8">

@@ -8,7 +8,7 @@ import { gerarPlano, substituirExercicio } from "./gerador";
 import { refeicoesPlanejadasValidas } from "./item-planejado";
 import type { PlanoGerado } from "./tipos";
 import { gerarPlanoInicialComIA } from "@/domain/ia/operacoes/plano-inicial";
-import { criarStorageR2 } from "@/infra/storage";
+import { lerFotosCorporais } from "@/domain/medicoes/fotos";
 
 export interface PlanoPersistido {
   id: string;
@@ -55,19 +55,9 @@ export async function obterOuGerarRascunhoComIA(
         .sort((a, b) => b.observadoEm.getTime() - a.observadoEm.getTime())
         .slice(0, 4)
     : [];
-  const fotosCorporais = await Promise.all(
-    fotosAutorizadas.map(async (foto) => {
-      const storage = criarStorageR2();
-      const arquivo = await storage.ler(foto.objectKey);
-      return {
-        id: foto.id,
-        pose: foto.pose,
-        observadoEm: foto.observadoEm,
-        dados: arquivo.corpo,
-        mediaType: arquivo.contentType,
-      };
-    }),
-  );
+  const imagens = await lerFotosCorporais(userId, fotosAutorizadas.map((foto) => foto.id));
+  if (!imagens) return { status: "indisponivel", motivo: "Fotos corporais indisponíveis." };
+  const fotosCorporais = imagens.map((foto) => ({ id: foto.id, pose: foto.pose, observadoEm: foto.observadoEm, dados: foto.dados, mediaType: foto.mediaType }));
   const resultado = await gerarPlanoInicialComIA({
     userId,
     triagemCompleta: perfil.respostas,
