@@ -1,0 +1,1 @@
+ALTER TABLE "progress_photo" ADD COLUMN "upload_pendente_em" timestamp with time zone;

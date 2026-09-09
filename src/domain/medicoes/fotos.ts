@@ -32,7 +32,7 @@ export async function prepararFotoCorporal(entrada: { bytes: Uint8Array; content
 }
 
 function mapear(linha: LinhaFoto, url: string | null): FotoCorporal {
-  return { id: linha.id, assessmentId: linha.assessmentId, userId: linha.userId, pose: linha.pose, condicoes: linha.condicoes, protocoloVersao: linha.protocoloVersao, excluirEm: linha.excluirEm, observadoEm: linha.observadoEm, createdAt: linha.createdAt, url, exclusaoPendente: linha.exclusaoPendenteEm !== null };
+  return { id: linha.id, assessmentId: linha.assessmentId, userId: linha.userId, pose: linha.pose, condicoes: linha.condicoes, protocoloVersao: linha.protocoloVersao, excluirEm: linha.excluirEm, observadoEm: linha.observadoEm, createdAt: linha.createdAt, url, exclusaoPendente: linha.exclusaoPendenteEm !== null || linha.uploadPendenteEm !== null };
 }
 
 function storagePadrao(storage?: StoragePrivado) { return storage ?? criarStorageR2(); }
@@ -45,21 +45,21 @@ export async function registrarFotoCorporal(
   const preparada = await prepararFotoCorporal({ bytes: entrada.bytes, contentType: entrada.contentType });
   const chave = `usuarios/${userId}/progresso/${randomUUID()}.webp`;
   const privado = storagePadrao(storage);
+  const [linha] = await db.insert(progressPhotos).values({ userId, assessmentId: entrada.assessmentId, pose: entrada.pose, objectKey: chave, condicoes: entrada.condicoes, excluirEm: entrada.excluirEm, uploadPendenteEm: new Date() }).returning();
+  if (!linha) throw new Error("Falha ao registrar foto: linha não retornada.");
   await privado.gravar({ chave, ...preparada });
-  try {
-    const [linha] = await db.insert(progressPhotos).values({ userId, assessmentId: entrada.assessmentId, pose: entrada.pose, objectKey: chave, condicoes: entrada.condicoes, excluirEm: entrada.excluirEm }).returning();
-    if (!linha) throw new Error("Falha ao registrar foto: linha não retornada.");
-    return mapear(linha, null);
-  } catch (erro) {
-    await Promise.allSettled([privado.excluir(chave)]);
-    throw erro;
-  }
+  const [concluida] = await db.update(progressPhotos).set({ uploadPendenteEm: null }).where(and(eq(progressPhotos.id, linha.id), eq(progressPhotos.userId, userId))).returning();
+  if (!concluida) throw new Error("Falha ao concluir registro da foto.");
+  return mapear(concluida, null);
 }
 
 async function buscarLinhas(userId: string, ids?: readonly string[], incluirPendentes = false) {
   const filtros = [eq(progressPhotos.userId, userId)];
   if (ids) filtros.push(inArray(progressPhotos.id, ids));
-  if (!incluirPendentes) filtros.push(isNull(progressPhotos.exclusaoPendenteEm));
+  if (!incluirPendentes) {
+    filtros.push(isNull(progressPhotos.exclusaoPendenteEm));
+    filtros.push(isNull(progressPhotos.uploadPendenteEm));
+  }
   return db.select().from(progressPhotos).where(and(...filtros));
 }
 
@@ -67,7 +67,7 @@ export async function listarFotosCorporais(userId: string, storage?: StoragePriv
   const linhas = await buscarLinhas(userId, undefined, incluirPendentes);
   if (!linhas.length) return [];
   const privadas = storagePadrao(storage);
-  return Promise.all(linhas.map(async (linha) => mapear(linha, linha.exclusaoPendenteEm === null ? await privadas.urlLeitura(linha.objectKey, 600) : null)));
+  return Promise.all(linhas.map(async (linha) => mapear(linha, linha.exclusaoPendenteEm === null && linha.uploadPendenteEm === null ? await privadas.urlLeitura(linha.objectKey, 600) : null)));
 }
 
 export async function lerFotosCorporais(userId: string, ids: readonly string[], storage?: StoragePrivado) {
@@ -110,9 +110,9 @@ export async function excluirTodasFotosCorporais(userId: string, storage?: Stora
 }
 
 export async function aplicarRetencaoFotos(agora = new Date(), storage?: StoragePrivado) {
-  const linhas = await db.select().from(progressPhotos).where(or(isNotNull(progressPhotos.exclusaoPendenteEm), lt(progressPhotos.excluirEm, agora)));
+  const linhas = await db.select().from(progressPhotos).where(or(isNotNull(progressPhotos.exclusaoPendenteEm), isNotNull(progressPhotos.uploadPendenteEm), lt(progressPhotos.excluirEm, agora)));
   const agrupadas = new Map<string, string[]>();
-  for (const linha of linhas) if (linha.exclusaoPendenteEm !== null || (linha.excluirEm !== null && linha.excluirEm < agora)) agrupadas.set(linha.userId, [...(agrupadas.get(linha.userId) ?? []), linha.id]);
+  for (const linha of linhas) if (linha.exclusaoPendenteEm !== null || linha.uploadPendenteEm !== null || (linha.excluirEm !== null && linha.excluirEm < agora)) agrupadas.set(linha.userId, [...(agrupadas.get(linha.userId) ?? []), linha.id]);
   const resultado: ResultadoExclusaoFoto = { concluidas: [], pendentes: [], falhas: [] };
   for (const [userId, ids] of agrupadas) { const parcial = await excluirFotosCorporais(userId, ids, storage); resultado.concluidas.push(...parcial.concluidas); resultado.pendentes.push(...parcial.pendentes); resultado.falhas.push(...parcial.falhas); }
   return resultado;
