@@ -7,8 +7,8 @@ import { Button } from "@/components/ui/button";
 import { listarFotosCorporais } from "@/domain/medicoes/fotos";
 import { obterPanoramaCorporal } from "@/domain/medicoes/repositorio";
 import { configuracaoR2 } from "@/infra/storage";
+import { enviarFotoCorporal } from "@/app/_fotos/enviar-action";
 import {
-  enviarFotoCorporal,
   excluirFotoCorporal,
   excluirTodasFotosCorporais,
 } from "./actions";

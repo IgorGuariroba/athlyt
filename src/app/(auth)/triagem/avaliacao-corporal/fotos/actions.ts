@@ -9,8 +9,6 @@ import { consents } from "@/db/schema";
 import { excluirFotoCorporal as excluirFotoNoDominio, excluirTodasFotosCorporais as excluirTodasNoDominio } from "@/domain/medicoes/fotos";
 import { campoTexto } from "@/lib/form-data";
 
-export { enviarFotoCorporal } from "@/app/_fotos/enviar-action";
-
 export async function excluirFotoCorporal(fd: FormData) {
   const session = await auth();
   if (!session?.user?.id) redirect("/");
