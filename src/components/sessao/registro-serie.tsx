@@ -179,14 +179,18 @@ export function RegistroSerie({ sessionId, exercicioId, numero, repeticoesSugeri
         * `7rem` do pill é essa reserva mais uma folga, medida a partir da
         * mesma origem — por isso soma `--safe-bottom`, e não um valor fixo.
         *
-        * Camada: a nav é `z-10` e o menu do kit é `z-50`. Como o descanso
-        * deve permanecer visível sobre a sessão, o pill fica acima de ambos
-        * (`z-[60]`) e o modal bloqueante ocupa a camada seguinte (`z-[70]`).
+        * Camada: o pill fica acima da nav (`z-10`) e do menu do kit
+        * (`z-50`), em `z-[60]`.
+        *
+        * Painel e fundo escuro terminam acima da nav, usando a reserva
+        * de `5.25rem` do casco. Recuar só o painel deixaria o overlay
+        * escurecendo a barra e interceptando seus cliques. Em telas baixas,
+        * o painel rola dentro da área disponível sem esconder controles.
       */}
       {restante !== null && timerMinimizado ? <button type="button" onClick={() => setTimerMinimizado(false)} className="fixed right-4 bottom-[calc(7rem+var(--safe-bottom))] z-[60] flex h-14 items-center gap-2 rounded-full bg-success px-5 font-bold text-background shadow-xl"><TimerReset className="size-5" /> {Math.floor(Math.max(restante, 0) / 60)}:{String(Math.max(restante, 0) % 60).padStart(2, "0")}</button> : null}
       {restante !== null && !timerMinimizado ? (
-        <div role="dialog" aria-label="Timer de descanso" className="fixed inset-0 z-[70] flex items-end bg-black/60 backdrop-blur-sm">
-          <section className="w-full rounded-t-2xl border-t border-border bg-surface-container p-6 pb-8 text-center">
+        <div role="dialog" aria-label="Timer de descanso" className="fixed inset-x-0 top-[var(--safe-top)] bottom-[calc(5.25rem+var(--safe-bottom))] z-[70] flex items-end bg-black/60 backdrop-blur-sm">
+          <section className="max-h-full w-full overflow-y-auto rounded-t-2xl border-t border-border bg-surface-container p-6 pb-8 text-center">
             <div className="mb-6 flex items-center justify-between">
               <div className="flex items-center gap-2 text-label-lg text-muted-foreground"><TimerReset className="size-5" /> Descanso</div>
               <div className="flex gap-1"><Button variant="ghost" size="icon" onClick={() => setTimerMinimizado(true)} aria-label="Minimizar timer"><ChevronDown /></Button><Button variant="ghost" size="icon" onClick={() => setRestante(null)} aria-label="Fechar timer"><X /></Button></div>
