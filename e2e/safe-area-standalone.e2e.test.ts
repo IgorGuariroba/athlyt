@@ -126,10 +126,9 @@ const planoDoTimer = {
  * dela. O descanso é a informação que o atleta está olhando entre
  * séries — ficar sob a nav o torna inútil justo quando importa.
  *
- * A checagem é geométrica e de empilhamento, com os insets do iPhone
- * aplicados: `z-index` declarado não prova ordem de pintura (um
- * ancestral com contexto de empilhamento próprio anularia o valor), por
- * isso o teste pergunta ao navegador quem ocupa o pixel.
+ * Painel e overlay devem terminar acima da navegação, sem ocultá-la
+ * ou interceptar seus cliques. A geometria cobre os dois estados do
+ * timer; o hit-test garante que os links da nav seguem alcançáveis.
  */
 test("o timer de descanso fica acima da barra de navegação", async ({ page, context }) => {
   const email = `e2e-timer-camada-${Date.now()}@example.com`;
@@ -144,15 +143,26 @@ test("o timer de descanso fica acima da barra de navegação", async ({ page, co
   await registrarSerie(page, 1);
   await expect(page.getByRole("dialog", { name: "Timer de descanso" })).toBeVisible();
 
-  // 1) Aberto, o timer cobre a nav: quem ocupa o centro da bolha é o
-  //    diálogo, não a barra.
-  const noCentroDaNav = await page.evaluate(() => {
-    const bolha = document.querySelector('nav[aria-label="Navegação principal"]')!.firstElementChild!;
-    const caixa = bolha.getBoundingClientRect();
-    const pilha = document.elementsFromPoint(caixa.x + caixa.width / 2, caixa.y + caixa.height / 2);
-    return pilha.some((elemento) => elemento.closest('[aria-label="Timer de descanso"]') !== null);
-  });
-  expect(noCentroDaNav, "a barra de navegação cobre o timer aberto").toBe(true);
+  // 1) Aberto, o painel termina acima da nav. Era o sintoma no iPhone:
+  //    a barra pintava sobre o painel e comia os botões de ±15s e o
+  //    "Pular descanso", justamente os controles do descanso.
+  const caixaPainel = (await page.getByRole("dialog", { name: "Timer de descanso" }).locator("section").boundingBox())!;
+  const caixaDaNav = (await page.getByRole("navigation", { name: "Navegação principal" }).boundingBox())!;
+  expect(
+    caixaPainel.y + caixaPainel.height,
+    "o painel do timer divide espaço com a barra de navegação",
+  ).toBeLessThanOrEqual(caixaDaNav.y);
+
+  const caixaOverlay = (await page.getByRole("dialog", { name: "Timer de descanso" }).boundingBox())!;
+  expect(caixaOverlay.y + caixaOverlay.height, "o overlay cobre a navegação").toBeLessThanOrEqual(caixaDaNav.y);
+  const navAcessivel = await page.getByRole("navigation", { name: "Navegação principal" }).evaluate((nav) =>
+    Array.from(nav.querySelectorAll("a")).every((link) => {
+      const caixa = link.getBoundingClientRect();
+      return link.contains(document.elementFromPoint(caixa.x + caixa.width / 2, caixa.y + caixa.height / 2));
+    }),
+  );
+  expect(navAcessivel, "o overlay intercepta os links da navegação").toBe(true);
+  await page.getByRole("button", { name: "Pular descanso" }).click({ trial: true });
 
   // 2) Minimizado, o pill fica inteiramente acima da nav — não basta
   //    vencer no empilhamento, ele não pode encostar nela.
