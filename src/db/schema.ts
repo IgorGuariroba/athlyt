@@ -341,7 +341,7 @@ export const workoutEvents = pgTable("workout_event", {
   id: uuid("id").primaryKey().defaultRandom(),
   sessionId: uuid("session_id").notNull().references(() => workoutSessions.id, { onDelete: "cascade" }),
   userId: uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
-  tipo: text("tipo").$type<"sessao_iniciada" | "serie_registrada" | "sessao_concluida" | "sessao_abandonada" | "exercicio_substituido" | "alerta_cautela_ignorado">().notNull(),
+  tipo: text("tipo").$type<"sessao_iniciada" | "serie_registrada" | "serie_corrigida" | "sessao_concluida" | "sessao_abandonada" | "exercicio_substituido" | "alerta_cautela_ignorado">().notNull(),
   dados: jsonb("dados").notNull(),
   createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
   /**

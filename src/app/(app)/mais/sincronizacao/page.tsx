@@ -28,7 +28,9 @@ const ROTULO_MOTIVO: Record<string, string> = {
 };
 
 function Valores({ dados }: { dados: Record<string, unknown> }) {
-  const entradas = Object.entries(dados).filter(([chave]) => !["exercicioId", "numero"].includes(chave));
+  // `anterior` é o valor que o aparelho viu ao corrigir — contexto do
+  // conflito, não uma alternativa para o atleta escolher.
+  const entradas = Object.entries(dados).filter(([chave]) => !["exercicioId", "numero", "anterior"].includes(chave));
   return (
     <dl className="flex flex-col gap-1 text-body-sm">
       {entradas.map(([chave, valor]) => (

@@ -117,6 +117,70 @@ describe("sincronização da fila offline", () => {
     expect(await listarConflitosPendentes(userId)).toEqual([]);
   });
 
+  it("aplica a correção de série registrada pela fila, mantendo a conclusão", async () => {
+    const { userId, sessionId } = await contexto();
+    await registrarSerie(userId, sessionId, { exercicioId: "supino-reto-halteres", numero: 1, cargaKg: 48, repeticoes: 10, rir: 2 });
+
+    const correcao = evento(sessionId, 1, { exercicioId: "supino-reto-halteres", numero: 1, cargaKg: 56, repeticoes: 10, rir: 2, anterior: { cargaKg: 48, repeticoes: 10, rir: 2 } }, "serie_corrigida");
+    const resultado = await sincronizarEventos(userId, sessionId, [correcao]);
+
+    expect(resultado.aplicados).toEqual([correcao.id]);
+    expect(resultado.conflitos).toEqual([]);
+    const sessao = await obterSessao(userId, sessionId);
+    expect(sessao?.exercicios[0]?.series[0]).toMatchObject({ cargaKg: 56, repeticoes: 10, rir: 2, concluida: true });
+    expect(sessao?.eventos.filter((e) => e.tipo === "serie_corrigida")).toHaveLength(1);
+  });
+
+  it("corrige série de exercício interrompido pela fila sem reativá-lo", async () => {
+    const { userId, sessionId } = await contexto();
+    await registrarSerie(userId, sessionId, { exercicioId: "supino-reto-halteres", numero: 1, cargaKg: 48, repeticoes: 10, rir: 2 });
+
+    const [linha] = await db.select().from(workoutSessions).where(eq(workoutSessions.id, sessionId)).limit(1);
+    const exercicios = (linha!.exercicios as ExercicioSessao[]).map((exercicio) =>
+      exercicio.exercicioId === "supino-reto-halteres" ? { ...exercicio, interrompido: true } : exercicio);
+    await db.update(workoutSessions).set({ exercicios }).where(eq(workoutSessions.id, sessionId));
+
+    const correcao = evento(sessionId, 1, { exercicioId: "supino-reto-halteres", numero: 1, cargaKg: 56, repeticoes: 10, rir: 2, anterior: { cargaKg: 48, repeticoes: 10, rir: 2 } }, "serie_corrigida");
+    const resultado = await sincronizarEventos(userId, sessionId, [correcao]);
+
+    expect(resultado.aplicados).toEqual([correcao.id]);
+    expect((await obterSessao(userId, sessionId))?.exercicios[0]?.series[0]).toMatchObject({ cargaKg: 56, concluida: true });
+  });
+
+  it("escala edição concorrente para conflito e aplica a correção escolhida", async () => {
+    // Dois aparelhos corrigiram a mesma série partindo do mesmo valor:
+    // quem sincronizou por último não sobrescreve o primeiro em
+    // silêncio — o atleta escolhe.
+    const { userId, sessionId } = await contexto();
+    await registrarSerie(userId, sessionId, { exercicioId: "supino-reto-halteres", numero: 1, cargaKg: 48, repeticoes: 10, rir: 2 });
+    const primeiro = evento(sessionId, 1, { exercicioId: "supino-reto-halteres", numero: 1, cargaKg: 60, repeticoes: 10, rir: 2, anterior: { cargaKg: 48, repeticoes: 10, rir: 2 } }, "serie_corrigida");
+    const segundo = evento(sessionId, 2, { exercicioId: "supino-reto-halteres", numero: 1, cargaKg: 56, repeticoes: 10, rir: 2, anterior: { cargaKg: 48, repeticoes: 10, rir: 2 } }, "serie_corrigida");
+
+    const primeira = await sincronizarEventos(userId, sessionId, [primeiro]);
+    expect(primeira.aplicados).toEqual([primeiro.id]);
+
+    const segunda = await sincronizarEventos(userId, sessionId, [segundo]);
+    expect(segunda.conflitos).toHaveLength(1);
+    expect((await obterSessao(userId, sessionId))?.exercicios[0]?.series[0]?.cargaKg).toBe(60);
+
+    await resolverConflito(userId, segunda.conflitos[0]!.id, "dispositivo");
+    const sessao = await obterSessao(userId, sessionId);
+    expect(sessao?.exercicios[0]?.series[0]).toMatchObject({ cargaKg: 56, repeticoes: 10, rir: 2, concluida: true });
+    expect(sessao?.eventos.filter((e) => e.tipo === "serie_corrigida")).toHaveLength(2);
+    expect(await listarConflitosPendentes(userId)).toEqual([]);
+  });
+
+  it("recusa correção de série não concluída", async () => {
+    const { userId, sessionId } = await contexto();
+    const correcao = evento(sessionId, 1, { exercicioId: "supino-reto-halteres", numero: 1, cargaKg: 56, repeticoes: 10, rir: 2, anterior: { cargaKg: 48, repeticoes: 10, rir: 2 } }, "serie_corrigida");
+
+    const resultado = await sincronizarEventos(userId, sessionId, [correcao]);
+
+    expect(resultado.aplicados).toEqual([]);
+    expect(resultado.conflitos).toHaveLength(1);
+    expect((await obterSessao(userId, sessionId))?.exercicios[0]?.series[0]?.concluida).toBe(false);
+  });
+
   it("não deixa série tardia alterar a sessão já concluída", async () => {
     const { userId, sessionId } = await contexto();
     // A ordem é a do dispositivo: o atleta encerrou e só depois

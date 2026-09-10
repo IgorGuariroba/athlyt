@@ -18,6 +18,7 @@ import type { EstadoSessao, ExercicioSessao } from "./repositorio";
 export type TipoEventoOutbox =
   | "sessao_iniciada"
   | "serie_registrada"
+  | "serie_corrigida"
   | "exercicio_substituido"
   | "sessao_concluida"
   | "sessao_abandonada";
@@ -28,6 +29,17 @@ export interface SerieRegistrada {
   cargaKg: number;
   repeticoes: number;
   rir: number;
+}
+
+/**
+ * Correção de uma série já registrada: erro de digitação em carga,
+ * repetições ou RIR. `anterior` é o que o aparelho viu ao corrigir — é
+ * ele que distingue uma correção intencional do reenvio de um
+ * registro antigo, e o que expõe edição concorrente de outro aparelho
+ * como conflito em vez de sobrescrever em silêncio.
+ */
+export interface CorrecaoSerie extends SerieRegistrada {
+  anterior: Pick<SerieRegistrada, "cargaKg" | "repeticoes" | "rir">;
 }
 
 export interface EventoOutbox {
@@ -94,6 +106,62 @@ function lerRegistro(dados: Record<string, unknown>): SerieRegistrada | null {
   return { exercicioId, numero, cargaKg, repeticoes, rir };
 }
 
+/** Forma de uma `serie_corrigida`, conferida uma vez e consumida pelos dois caminhos de escrita. */
+function lerCorrecao(dados: Record<string, unknown>): CorrecaoSerie | null {
+  const registro = lerRegistro(dados);
+  if (!registro) return null;
+  const anterior = dados.anterior;
+  if (typeof anterior !== "object" || anterior === null) return null;
+  const { cargaKg, repeticoes, rir } = anterior as Record<string, unknown>;
+  if (!numeroFinito(cargaKg) || !numeroFinito(repeticoes) || !numeroFinito(rir)) return null;
+  return { ...registro, anterior: { cargaKg, repeticoes, rir } };
+}
+
+/**
+ * Veredito sobre uma correção de série já registrada.
+ *
+ * Diferenças para o registro: vale também para exercício interrompido
+ * (o atleta executou a série, e corrigi-la não reativa o exercício),
+ * exige série concluída (corrigir o que não existe é registrar) e
+ * compara `anterior` com o que o servidor tem — divergência aqui é
+ * edição concorrente de outro aparelho, não erro do atleta.
+ */
+export function avaliarCorrecaoSerie(estado: EstadoLocalSessao, dados: Record<string, unknown>): VereditoRegistroSerie {
+  const correcao = lerCorrecao(dados);
+  if (!correcao) return { situacao: "inadmissivel", motivo: "forma_invalida" };
+  if (correcao.cargaKg < 0 || correcao.repeticoes < 0 || correcao.rir < 0 || correcao.rir > RIR_MAXIMO) {
+    return { situacao: "inadmissivel", motivo: "valor_fora_de_faixa" };
+  }
+
+  if (estado.estado !== "em_andamento") {
+    return { situacao: "conflito", motivo: "sessao_ja_encerrada", servidor: { estado: estado.estado }, dispositivo: { ...correcao } };
+  }
+
+  // Diferente do registro: o exercício interrompido conserva as séries
+  // que o atleta executou, e elas continuam corrigíveis.
+  const exercicio = estado.exercicios.find((item) => item.exercicioId === correcao.exercicioId);
+  const serie = exercicio?.series.find((item) => item.numero === correcao.numero);
+  if (!serie?.concluida) {
+    // Sem série concluída não há o que corrigir: ou o plano divergiu,
+    // ou o registro original de outro aparelho ainda não chegou.
+    return { situacao: "conflito", motivo: "serie_divergente", servidor: { existe: false }, dispositivo: { ...correcao } };
+  }
+  if (!mesmaSerie(serie, correcao) && mesmaSerie(serie, correcao.anterior)) {
+    // O aparelho viu exatamente o que o servidor tem: correção legítima.
+    return { situacao: "aplicavel", registro: correcao };
+  }
+  if (mesmaSerie(serie, correcao)) {
+    // A correção já está refletida: reenvio benigno, aplicar de novo
+    // leva ao mesmo estado.
+    return { situacao: "aplicavel", registro: correcao };
+  }
+  return {
+    situacao: "conflito", motivo: "serie_divergente",
+    servidor: { exercicioId: correcao.exercicioId, numero: correcao.numero, cargaKg: serie.cargaKg, repeticoes: serie.repeticoes, rir: serie.rir },
+    dispositivo: { ...correcao },
+  };
+}
+
 /**
  * Veredito sobre um registro de série contra o estado persistido da
  * sessão.
@@ -135,6 +203,27 @@ export function avaliarRegistroSerie(estado: EstadoLocalSessao, dados: Record<st
     };
   }
   return { situacao: "aplicavel", registro };
+}
+
+/**
+ * Aplica uma correção já julgada aplicável. Diferente do registro, não
+ * muda a conclusão (a série já estava registrada) e vale para exercício
+ * interrompido.
+ */
+export function aplicarCorrecaoSerie(estado: EstadoLocalSessao, registro: CorrecaoSerie): EstadoLocalSessao {
+  return {
+    ...estado,
+    exercicios: estado.exercicios.map((exercicio) => {
+      if (exercicio.exercicioId !== registro.exercicioId) return exercicio;
+      return {
+        ...exercicio,
+        series: exercicio.series.map((serie) =>
+          serie.numero === registro.numero
+            ? { ...serie, cargaKg: registro.cargaKg, repeticoes: registro.repeticoes, rir: registro.rir }
+            : serie),
+      };
+    }),
+  };
 }
 
 /** Aplica um registro já julgado aplicável. */
@@ -190,12 +279,12 @@ export function ordenarEventos(eventos: readonly EventoOutbox[]): EventoOutbox[]
     a.id.localeCompare(b.id));
 }
 
-function mesmaSerie(serie: { cargaKg: number | null; repeticoes: number | null; rir: number }, dados: SerieRegistrada): boolean {
+function mesmaSerie(serie: { cargaKg: number | null; repeticoes: number | null; rir: number }, dados: Pick<SerieRegistrada, "cargaKg" | "repeticoes" | "rir">): boolean {
   return serie.cargaKg === dados.cargaKg && serie.repeticoes === dados.repeticoes && serie.rir === dados.rir;
 }
 
-function aplicarSerie(estado: EstadoLocalSessao, evento: EventoOutbox, resultado: ResultadoMerge): EstadoLocalSessao {
-  const veredito = avaliarRegistroSerie(estado, evento.dados);
+function aplicarSerie(estado: EstadoLocalSessao, evento: EventoOutbox, resultado: ResultadoMerge, correcao = false): EstadoLocalSessao {
+  const veredito = correcao ? avaliarCorrecaoSerie(estado, evento.dados) : avaliarRegistroSerie(estado, evento.dados);
   if (veredito.situacao === "inadmissivel") {
     resultado.inadmissiveis.push({ eventoId: evento.id, motivo: veredito.motivo });
     return estado;
@@ -208,7 +297,9 @@ function aplicarSerie(estado: EstadoLocalSessao, evento: EventoOutbox, resultado
     return estado;
   }
   resultado.aplicados.push(evento.id);
-  return aplicarRegistroSerie(estado, veredito.registro);
+  return correcao
+    ? aplicarCorrecaoSerie(estado, veredito.registro as CorrecaoSerie)
+    : aplicarRegistroSerie(estado, veredito.registro);
 }
 
 function aplicarEncerramento(estado: EstadoLocalSessao, evento: EventoOutbox, resultado: ResultadoMerge): EstadoLocalSessao {
@@ -264,6 +355,9 @@ export function mesclarEventos(
     switch (evento.tipo) {
       case "serie_registrada":
         estado = aplicarSerie(estado, evento, resultado);
+        break;
+      case "serie_corrigida":
+        estado = aplicarSerie(estado, evento, resultado, true);
         break;
       case "sessao_concluida":
       case "sessao_abandonada":

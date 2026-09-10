@@ -81,8 +81,11 @@ export async function recarregarFila(sessionId?: string): Promise<EventoOutbox[]
 
 export async function registrarNaFila(sessionId: string, tipo: TipoEventoOutbox, dados: Record<string, unknown>): Promise<void> {
   await enfileirar(sessionId, tipo, dados);
-  if (tipo === "serie_registrada") {
-    const serie = dados as unknown as SerieRegistrada;
+  if (tipo === "serie_registrada" || tipo === "serie_corrigida") {
+    // Correção substitui os valores no espelho: a série continua a
+    // mesma (mesma identidade), mas o atleta precisa ver o valor
+    // corrigido antes de o servidor revalidar a página.
+    const { anterior: _anterior, ...serie } = dados as unknown as SerieRegistrada & { anterior?: unknown };
     definir({
       registrosLocais: [
         ...estado.registrosLocais.filter((r) => !(r.exercicioId === serie.exercicioId && r.numero === serie.numero)),

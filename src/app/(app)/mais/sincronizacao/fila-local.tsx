@@ -17,6 +17,7 @@ import { useOnline } from "@/lib/use-online";
 
 const ROTULO_TIPO: Record<string, string> = {
   serie_registrada: "Série registrada",
+  serie_corrigida: "Série corrigida",
   sessao_concluida: "Sessão concluída",
   sessao_abandonada: "Sessão abandonada",
   sessao_iniciada: "Sessão iniciada",

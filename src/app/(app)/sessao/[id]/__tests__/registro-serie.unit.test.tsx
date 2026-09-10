@@ -151,4 +151,46 @@ describe("RegistroSerie", () => {
     expect((await screen.findByRole("alert")).textContent).toContain("A série não foi salva");
     expect(screen.getByRole("button", { name: "Registrar série 1" }).hasAttribute("disabled")).toBe(false);
   });
+
+  it("corrige a série registrada pelo mesmo botão, sem reiniciar o descanso", async () => {
+    // O atleta errou a carga (48 em vez de 56): o ✓ vira lápis, os
+    // campos abrem com o valor registrado e o mesmo botão salva — sem
+    // abrir o timer, porque corrigir não é realizar a série de novo.
+    registrarEvento.mockResolvedValue();
+    render(<RegistroSerie {...propriedades} concluida cargaInicial={48} repeticoesIniciais={10} />);
+
+    const kg = screen.getByRole("spinbutton", { name: "KG" });
+    expect(kg.hasAttribute("disabled")).toBe(true);
+    expect(screen.queryByRole("dialog", { name: "Timer de descanso" })).toBeNull();
+
+    fireEvent.click(screen.getByRole("button", { name: "Editar série 1" }));
+    expect(screen.getByText("Editando — confirme no ✓ para salvar")).toBeDefined();
+    expect(kg.hasAttribute("disabled")).toBe(false);
+    expect((kg as HTMLInputElement).value).toBe("48");
+
+    fireEvent.change(kg, { target: { value: "56" } });
+    fireEvent.click(screen.getByRole("button", { name: "Salvar correção da série 1" }));
+
+    await waitFor(() => expect(registrarEvento).toHaveBeenCalledWith("serie_corrigida", {
+      exercicioId: "supino",
+      numero: 1,
+      cargaKg: 56,
+      repeticoes: 10,
+      rir: 2,
+      anterior: { cargaKg: 48, repeticoes: 10, rir: 2 },
+    }));
+    expect(screen.queryByRole("dialog", { name: "Timer de descanso" })).toBeNull();
+    expect(screen.queryByText("Editando — confirme no ✓ para salvar")).toBeNull();
+  });
+
+  it("falha ao salvar a correção e mantém a edição aberta", async () => {
+    registrarEvento.mockRejectedValueOnce(new Error("IndexedDB indisponível"));
+    render(<RegistroSerie {...propriedades} concluida cargaInicial={48} repeticoesIniciais={10} />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Editar série 1" }));
+    fireEvent.click(screen.getByRole("button", { name: "Salvar correção da série 1" }));
+
+    expect((await screen.findByRole("alert")).textContent).toContain("A correção não foi salva");
+    expect(screen.getByText("Editando — confirme no ✓ para salvar")).toBeDefined();
+  });
 });
