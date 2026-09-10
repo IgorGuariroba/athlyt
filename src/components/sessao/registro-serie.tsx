@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState, type SyntheticEvent } from "react";
-import { Check, ChevronDown, Minus, Plus, TimerReset, Trophy, X } from "lucide-react";
+import { useEffect, useState, type MouseEvent, type SyntheticEvent } from "react";
+import { Check, ChevronDown, Minus, Pencil, Plus, TimerReset, Trophy, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { segundosDeDescanso } from "@/domain/sessao/descanso";
@@ -35,6 +35,14 @@ export function RegistroSerie({ sessionId, exercicioId, numero, repeticoesSugeri
   const [timerMinimizado, setTimerMinimizado] = useState(false);
   const [enviando, setEnviando] = useState(false);
   const [erroRegistro, setErroRegistro] = useState<string | null>(null);
+  /**
+   * Correção da série registrada, em dois passos no mesmo botão: o
+   * lápis libera os campos e o ✓ salva. Enquanto edita, a série segue
+   * concluída e o registro anterior vale; sair sem salvar (trocar de
+   * exercício desmonta este componente) descarta o rascunho.
+   */
+  const [editando, setEditando] = useState(false);
+  const [correcao, setCorrecao] = useState<{ cargaKg: string; repeticoes: string; rir: string } | null>(null);
   const { registrar: enfileirarEvento, registrosLocais, encerradaLocalmente } = useConexao();
   // O descanso que vale é o escolhido para este exercício; sem escolha,
   // o prescrito pelo plano.
@@ -48,10 +56,14 @@ export function RegistroSerie({ sessionId, exercicioId, numero, repeticoesSugeri
   const bloqueada = encerradaLocalmente && !registrada;
   const carga = local?.cargaKg ?? cargaInicial;
   const reps = local?.repeticoes ?? repeticoesIniciais;
+  // O que o aparelho viu ao corrigir: o espelho local, ou o que o
+  // servidor já gravou. É o `anterior` que distingue correção
+  // intencional de reenvio divergente no domínio.
+  const anterior = { cargaKg: local?.cargaKg ?? cargaInicial ?? 0, repeticoes: local?.repeticoes ?? repeticoesIniciais ?? 0, rir: local?.rir ?? rirInicial };
   const rascunho = useRascunhoSerie(sessionId, exercicioId, numero);
-  const cargaExibida = local ? String(local.cargaKg) : rascunho?.cargaKg ?? (carga === null ? "" : String(carga));
-  const repeticoesExibidas = local ? String(local.repeticoes) : rascunho?.repeticoes ?? String(reps ?? Number.parseInt(repeticoesSugeridas));
-  const rirExibido = local ? String(local.rir) : rascunho?.rir ?? String(rirInicial);
+  const cargaExibida = correcao?.cargaKg ?? (local ? String(local.cargaKg) : rascunho?.cargaKg ?? (carga === null ? "" : String(carga)));
+  const repeticoesExibidas = correcao?.repeticoes ?? (local ? String(local.repeticoes) : rascunho?.repeticoes ?? String(reps ?? Number.parseInt(repeticoesSugeridas)));
+  const rirExibido = correcao?.rir ?? (local ? String(local.rir) : rascunho?.rir ?? String(rirInicial));
 
   useEffect(() => {
     const fechar = () => setRestante(null);
@@ -118,6 +130,48 @@ export function RegistroSerie({ sessionId, exercicioId, numero, repeticoesSugeri
     }
   }
 
+  /**
+   * Correção sem tocar no descanso: nada de fechar timers nem abrir
+   * este. A série continua concluída — a correção muda o registro, não
+   * realiza a série de novo.
+   */
+  function corrigir(evento: SyntheticEvent<HTMLFormElement>) {
+    evento.preventDefault();
+    if (!correcao) return;
+    setEnviando(true);
+    setErroRegistro(null);
+    const promessa = enfileirarEvento("serie_corrigida", {
+      exercicioId, numero,
+      cargaKg: Number(correcao.cargaKg),
+      repeticoes: Number(correcao.repeticoes),
+      rir: Number(correcao.rir),
+      anterior,
+    });
+    void promessa.then(
+      () => {
+        setEditando(false);
+        setCorrecao(null);
+        setEnviando(false);
+      },
+      () => {
+        setEnviando(false);
+        setErroRegistro("A correção não foi salva. Confira os dados e tente novamente.");
+      },
+    );
+  }
+
+  /**
+   * `preventDefault` é obrigatório: o mesmo botão vira submit ao abrir
+   * a edição, e a ação padrão do clique — avaliada depois do handler —
+   * submeteria o formulário no estado novo, salvando a correção
+   * igualzinha e fechando a edição sem o atleta tocar em nada.
+   */
+  function iniciarCorrecao(evento: MouseEvent<HTMLButtonElement>) {
+    evento.preventDefault();
+    setCorrecao({ cargaKg: cargaExibida, repeticoes: repeticoesExibidas, rir: rirExibido });
+    setEditando(true);
+  }
+
   // Uma série está registrada via `concluida` (servidor) ou via
   // `registrosLocais` (recém enviada, ainda não refletida no HTML).
   // Combinar as duas fontes *antes* de perguntar ao domínio é o que faz
@@ -141,7 +195,7 @@ export function RegistroSerie({ sessionId, exercicioId, numero, repeticoesSugeri
 
   return (
     <>
-      <form onSubmit={registrar} className="grid grid-cols-[2rem_1fr_1fr_4rem_3rem] items-end gap-2 py-3">
+      <form onSubmit={editando ? corrigir : registrar} className="grid grid-cols-[2rem_1fr_1fr_4rem_3rem] items-end gap-2 py-3">
         <span className="mb-3 flex size-8 items-center justify-center rounded-full bg-surface-container-high text-label-lg font-bold">{registrada ? <Check className="size-4 text-success" /> : numero}</span>
         <input type="hidden" name="exercicioId" value={exercicioId} />
         <input type="hidden" name="numero" value={numero} />
@@ -149,23 +203,27 @@ export function RegistroSerie({ sessionId, exercicioId, numero, repeticoesSugeri
           <input type="hidden" name="cargaKg" value="0" />
         ) : (
           <label className="text-caption text-muted-foreground">KG
-            <Input name="cargaKg" type="number" inputMode="decimal" step="0.5" min="0" value={cargaExibida} onChange={(evento) => atualizarRascunhoSerie(sessionId, exercicioId, numero, "cargaKg", evento.target.value)} placeholder={String(cargaSugerida)} required disabled={registrada || bloqueada} className="mt-1 h-12 text-center text-lg font-bold tabular-nums" />
+            <Input name="cargaKg" type="number" inputMode="decimal" step="0.5" min="0" value={cargaExibida} onChange={(evento) => (editando ? setCorrecao((rascunho) => rascunho && { ...rascunho, cargaKg: evento.target.value }) : atualizarRascunhoSerie(sessionId, exercicioId, numero, "cargaKg", evento.target.value))} placeholder={String(cargaSugerida)} required disabled={bloqueada || (registrada && !editando)} className="mt-1 h-12 text-center text-lg font-bold tabular-nums" />
           </label>
         )}
         <label className="text-caption text-muted-foreground">{rotulos[modoEfetivo]} <span className="sr-only">sugeridas {repeticoesSugeridas}</span>
-          <Input name="repeticoes" type="number" inputMode="numeric" min="0" value={repeticoesExibidas} onChange={(evento) => atualizarRascunhoSerie(sessionId, exercicioId, numero, "repeticoes", evento.target.value)} required disabled={registrada || bloqueada} className="mt-1 h-12 text-center text-lg font-bold tabular-nums" />
+          <Input name="repeticoes" type="number" inputMode="numeric" min="0" value={repeticoesExibidas} onChange={(evento) => (editando ? setCorrecao((rascunho) => rascunho && { ...rascunho, repeticoes: evento.target.value }) : atualizarRascunhoSerie(sessionId, exercicioId, numero, "repeticoes", evento.target.value))} required disabled={bloqueada || (registrada && !editando)} className="mt-1 h-12 text-center text-lg font-bold tabular-nums" />
         </label>
         {modoEfetivo === "repeticoes" || modoEfetivo === "unilateral" ? <label className="text-caption text-muted-foreground">RIR <span className="sr-only">prescrito {rirSugerido}</span>
-          <Input name="rir" type="number" inputMode="numeric" min="0" max="10" value={rirExibido} onChange={(evento) => atualizarRascunhoSerie(sessionId, exercicioId, numero, "rir", evento.target.value)} required disabled={registrada || bloqueada} className="mt-1 h-12 text-center text-lg font-bold tabular-nums" />
+          <Input name="rir" type="number" inputMode="numeric" min="0" max="10" value={rirExibido} onChange={(evento) => (editando ? setCorrecao((rascunho) => rascunho && { ...rascunho, rir: evento.target.value }) : atualizarRascunhoSerie(sessionId, exercicioId, numero, "rir", evento.target.value))} required disabled={bloqueada || (registrada && !editando)} className="mt-1 h-12 text-center text-lg font-bold tabular-nums" />
         </label> : <input type="hidden" name="rir" value="0" />}
         {/* O espaço do botão é preservado para a grade das séries não
             se reorganizar ao encerrar o treino. */}
-        {bloqueada ? <span aria-hidden className="mb-0 size-12" /> : (
-          <Button type="submit" size="icon" disabled={enviando || registrada} aria-label={`Registrar série ${numero}`} className="mb-0 size-12 rounded-full">
+        {bloqueada ? <span aria-hidden className="mb-0 size-12" /> : registrada && !editando && !encerradaLocalmente ? (
+          <Button type="button" size="icon" onClick={iniciarCorrecao} aria-label={`Editar série ${numero}`} className="mb-0 size-12 rounded-full">
+            <Pencil className="size-5" />
+          </Button>
+        ) : (
+          <Button type="submit" size="icon" disabled={enviando || (registrada && !editando)} aria-label={editando ? `Salvar correção da série ${numero}` : `Registrar série ${numero}`} className="mb-0 size-12 rounded-full">
             <Check className="size-5" />
           </Button>
         )}
-        {registrada ? <div className="col-span-5 flex items-center justify-between pl-10 text-caption text-muted-foreground"><span>10RM estimado: {estimativa10Rm ?? "—"} kg</span>{recorde ? <strong className="flex items-center gap-1 text-warning"><Trophy className="size-3" /> {recorde.rotulo}</strong> : null}</div> : null}
+        {editando ? <p className="col-span-5 pl-10 text-caption font-semibold text-warning">Editando — confirme no ✓ para salvar</p> : registrada ? <div className="col-span-5 flex items-center justify-between pl-10 text-caption text-muted-foreground"><span>10RM estimado: {estimativa10Rm ?? "—"} kg</span>{recorde ? <strong className="flex items-center gap-1 text-warning"><Trophy className="size-3" /> {recorde.rotulo}</strong> : null}</div> : null}
       </form>
       {erroRegistro ? <p role="alert" className="pb-3 pl-10 text-body-sm font-semibold text-error">{erroRegistro}</p> : null}
 

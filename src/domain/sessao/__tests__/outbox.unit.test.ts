@@ -126,6 +126,95 @@ describe("merge idempotente do outbox", () => {
   });
 });
 
+describe("correção de série registrada", () => {
+  function correcao(numero: number, extra: Partial<EventoOutbox> = {}): EventoOutbox {
+    return {
+      id: `corr-${numero}`,
+      sessionId: "s1",
+      tipo: "serie_corrigida",
+      ocorridoEm: new Date(1_700_000_000_000 + numero * 1000).toISOString(),
+      ordem: numero + 100,
+      dados: { exercicioId: "supino-reto-halteres", numero, cargaKg: 56, repeticoes: 10, rir: 2, anterior: { cargaKg: 48, repeticoes: 10, rir: 2 } },
+      ...extra,
+    };
+  }
+
+  function estadoComSerieRegistrada(dados = { cargaKg: 48, repeticoes: 10, rir: 2 }): EstadoLocalSessao {
+    return mesclarEventos(estadoInicial(), [evento(1, { dados: { exercicioId: "supino-reto-halteres", numero: 1, ...dados } })]).estado;
+  }
+
+  it("corrige os valores mantendo a série concluída", () => {
+    const { estado, aplicados, conflitos } = mesclarEventos(estadoComSerieRegistrada(), [correcao(1)]);
+    expect(aplicados).toEqual(["corr-1"]);
+    expect(conflitos).toEqual([]);
+    expect(estado.exercicios[0]!.series[0]).toMatchObject({ cargaKg: 56, repeticoes: 10, rir: 2, concluida: true });
+  });
+
+  it("corrige série de exercício interrompido sem reativá-lo", () => {
+    const registrado = mesclarEventos(estadoInicial(), [evento(1, { dados: { exercicioId: "supino-reto-halteres", numero: 1, cargaKg: 48, repeticoes: 10, rir: 2 } })]).estado;
+    const interrompido = { ...registrado, exercicios: registrado.exercicios.map((e) => ({ ...e, interrompido: true as const, motivoSubstituicao: "dor" as const })) };
+    const { estado, aplicados, conflitos } = mesclarEventos(interrompido, [correcao(1)]);
+    expect(aplicados).toEqual(["corr-1"]);
+    expect(conflitos).toEqual([]);
+    expect(estado.exercicios[0]!.series[0]).toMatchObject({ cargaKg: 56, concluida: true });
+    expect(estado.exercicios[0]!.interrompido).toBe(true);
+  });
+
+  it("escala para conflito a edição concorrente de outro aparelho", () => {
+    // O servidor já tem 60 kg (outro aparelho corrigiu antes); este
+    // aparelho viu 48 kg ao editar. Sobrescrever em silêncio perderia
+    // a correção do primeiro.
+    const servidor = mesclarEventos(estadoComSerieRegistrada(), [correcao(1, { id: "outro-aparelho", dados: { exercicioId: "supino-reto-halteres", numero: 1, cargaKg: 60, repeticoes: 10, rir: 2, anterior: { cargaKg: 48, repeticoes: 10, rir: 2 } } })]).estado;
+    const { estado, aplicados, conflitos } = mesclarEventos(servidor, [correcao(1)]);
+
+    expect(aplicados).toEqual([]);
+    expect(conflitos).toEqual([{
+      eventoId: "corr-1",
+      motivo: "serie_divergente",
+      servidor: { exercicioId: "supino-reto-halteres", numero: 1, cargaKg: 60, repeticoes: 10, rir: 2 },
+      dispositivo: { exercicioId: "supino-reto-halteres", numero: 1, cargaKg: 56, repeticoes: 10, rir: 2, anterior: { cargaKg: 48, repeticoes: 10, rir: 2 } },
+    }]);
+    expect(estado.exercicios[0]!.series[0]!.cargaKg).toBe(60);
+  });
+
+  it("reconhece a mesma correção reenviada como aplicável sem mudar o estado", () => {
+    const primeiro = mesclarEventos(estadoComSerieRegistrada(), [correcao(1)]);
+    const segundo = mesclarEventos(primeiro.estado, [correcao(1)], new Set(primeiro.aplicados));
+    expect(segundo.duplicados).toEqual(["corr-1"]);
+    expect(segundo.estado).toEqual(primeiro.estado);
+  });
+
+  it("escala para conflito a correção de série não concluída", () => {
+    const { conflitos, estado } = mesclarEventos(estadoInicial(), [correcao(1)]);
+    expect(conflitos[0]).toMatchObject({ motivo: "serie_divergente", servidor: { existe: false } });
+    expect(estado.exercicios[0]!.series[0]!.concluida).toBe(false);
+  });
+
+  it("escala para conflito a correção sobre sessão encerrada", () => {
+    const encerrada = { ...estadoComSerieRegistrada(), estado: "concluida" as const };
+    const { aplicados, conflitos } = mesclarEventos(encerrada, [correcao(1)]);
+    expect(aplicados).toEqual([]);
+    expect(conflitos[0]).toMatchObject({ motivo: "sessao_ja_encerrada", servidor: { estado: "concluida" } });
+  });
+
+  it("recusa como inadmissível a correção sem o valor anterior", () => {
+    const semAnterior = correcao(1, { dados: { exercicioId: "supino-reto-halteres", numero: 1, cargaKg: 56, repeticoes: 10, rir: 2 } });
+    const { inadmissiveis, aplicados, conflitos } = mesclarEventos(estadoComSerieRegistrada(), [semAnterior]);
+    expect(aplicados).toEqual([]);
+    expect(conflitos).toEqual([]);
+    expect(inadmissiveis).toEqual([{ eventoId: "corr-1", motivo: "forma_invalida" }]);
+  });
+
+  it("registra a série e corrige no mesmo lote offline", () => {
+    // Registro e correção partem do mesmo aparelho sem rede: a correção
+    // tem ordem maior e o `anterior` é o valor recém-registrado.
+    const { estado, aplicados, conflitos } = mesclarEventos(estadoInicial(), [evento(1, { dados: { exercicioId: "supino-reto-halteres", numero: 1, cargaKg: 48, repeticoes: 10, rir: 2 } }), correcao(1)]);
+    expect(aplicados).toEqual(["evt-1", "corr-1"]);
+    expect(conflitos).toEqual([]);
+    expect(estado.exercicios[0]!.series[0]).toMatchObject({ cargaKg: 56, repeticoes: 10, rir: 2, concluida: true });
+  });
+});
+
 /**
  * Gera o que o servidor de fato recebe, e não só o que um cliente
  * correto envia: carga negativa, `rir` fora de faixa e campo com tipo

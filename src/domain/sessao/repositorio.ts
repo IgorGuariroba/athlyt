@@ -65,7 +65,7 @@ export interface Substituicao {
   diaId: string; exercicioOriginalId: string; exercicioNovoId: string;
   motivo: MotivoSubstituicao; persistente: boolean; observacao: string | null; createdAt: Date;
 }
-export interface EventoSessao { id: string; tipo: "sessao_iniciada" | "serie_registrada" | "sessao_concluida" | "sessao_abandonada" | "exercicio_substituido" | "alerta_cautela_ignorado"; dados: unknown; createdAt: Date }
+export interface EventoSessao { id: string; tipo: "sessao_iniciada" | "serie_registrada" | "serie_corrigida" | "sessao_concluida" | "sessao_abandonada" | "exercicio_substituido" | "alerta_cautela_ignorado"; dados: unknown; createdAt: Date }
 export interface SessaoTreino {
   id: string; diaId: string; nome: string; estado: EstadoSessao; exercicios: ExercicioSessao[];
   startedAt: Date; endedAt: Date | null; motivoAbandono: string | null; eventos: EventoSessao[];

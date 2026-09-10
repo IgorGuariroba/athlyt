@@ -1,7 +1,7 @@
 import { and, asc, desc, eq, isNull } from "drizzle-orm";
 import { db } from "@/db/client";
 import { syncConflicts, workoutEvents, workoutSessions } from "@/db/schema";
-import { aplicarRegistroSerie, mesclarEventos, ordenarEventos, type ConflitoSincronizacao, type EstadoLocalSessao, type EventoOutbox, type RegistroInadmissivel, type SerieRegistrada } from "./outbox";
+import { aplicarCorrecaoSerie, aplicarRegistroSerie, mesclarEventos, ordenarEventos, type ConflitoSincronizacao, type CorrecaoSerie, type EstadoLocalSessao, type EventoOutbox, type RegistroInadmissivel, type SerieRegistrada } from "./outbox";
 import { logger } from "@/observabilidade/logger";
 import type { ExercicioSessao } from "./repositorio";
 
@@ -106,18 +106,19 @@ export async function sincronizarEventos(userId: string, sessionId: string, even
 type Executor = Parameters<Parameters<typeof db.transaction>[0]>[0] | typeof db;
 
 /**
- * Aplica um registro de série já julgado aplicável à sessão persistida.
+ * Aplica uma mudança já julgada aplicável à sessão persistida.
  *
- * Único ponto de escrita da regra: delega a `aplicarRegistroSerie` do
- * módulo `outbox` a decisão de *como* o registro muda o estado —
- * inclusive a regra de exercício interrompido —, e só cuida de ler e
- * gravar a linha. `sincronizarEventos` e `resolverConflito` chamam
- * aqui em vez de reescrever `exercicios` cada um do seu jeito.
+ * Único ponto de escrita da regra: delega a `aplicarRegistroSerie` e
+ * `aplicarCorrecaoSerie` do módulo `outbox` a decisão de *como* a
+ * mudança altera o estado — inclusive a regra de exercício
+ * interrompido —, e só cuida de ler e gravar a linha.
+ * `sincronizarEventos` e `resolverConflito` chamam aqui em vez de
+ * reescrever `exercicios` cada um do seu jeito.
  */
-async function aplicarSerieNaSessao(tx: Executor, sessionId: string, registro: SerieRegistrada): Promise<ExercicioSessao[]> {
+async function aplicarNaSessao(tx: Executor, sessionId: string, transformar: (estado: EstadoLocalSessao) => EstadoLocalSessao): Promise<ExercicioSessao[]> {
   const [linha] = await tx.select().from(workoutSessions).where(eq(workoutSessions.id, sessionId)).limit(1).for("update");
   if (!linha) throw new Error("Sessão do conflito não encontrada.");
-  const { exercicios } = aplicarRegistroSerie(estadoDe(linha), registro);
+  const { exercicios } = transformar(estadoDe(linha));
   await tx.update(workoutSessions).set({ exercicios }).where(eq(workoutSessions.id, sessionId));
   return exercicios;
 }
@@ -158,17 +159,27 @@ export async function resolverConflito(userId: string, conflitoId: string, escol
     if (!conflito || conflito.resolvidoEm) throw new Error("Conflito não encontrado ou já resolvido.");
 
     if (escolha === "dispositivo" && conflito.motivo === "serie_divergente") {
-      // O veredito já foi decidido pelo atleta: `dispositivo` é a mesma
-      // forma de `SerieRegistrada` que `avaliarRegistroSerie` teria
-      // aprovado se não houvesse conflito. A aplicação ao estado é a
-      // mesma do módulo `outbox` — inclusive a regra de exercício
-      // interrompido, que uma reescrita manual aqui perderia.
-      const registro = conflito.dispositivo as SerieRegistrada;
-      await aplicarSerieNaSessao(tx, conflito.sessionId, registro);
-      await tx.insert(workoutEvents).values({
-        sessionId: conflito.sessionId, userId, tipo: "serie_registrada", dados: registro,
-        clientEventId: conflito.clientEventId, ordem: null,
-      }).onConflictDoNothing({ target: workoutEvents.clientEventId });
+      // A correção de série marca a divergência com o valor que o
+      // aparelho viu (`anterior`); sua resolução mantém a série
+      // concluída e vale também para exercício interrompido. Sem
+      // `anterior`, é o `serie_registrada` que `avaliarRegistroSerie`
+      // teria aprovado se não houvesse conflito. Em ambos os casos a
+      // aplicação é a mesma do módulo `outbox` — uma reescrita manual
+      // aqui perderia essas regras.
+      const { anterior, ...registro } = conflito.dispositivo as SerieRegistrada & { anterior?: unknown };
+      if (anterior !== undefined) {
+        await aplicarNaSessao(tx, conflito.sessionId, (estado) => aplicarCorrecaoSerie(estado, registro as CorrecaoSerie));
+        await tx.insert(workoutEvents).values({
+          sessionId: conflito.sessionId, userId, tipo: "serie_corrigida", dados: conflito.dispositivo,
+          clientEventId: conflito.clientEventId, ordem: null,
+        }).onConflictDoNothing({ target: workoutEvents.clientEventId });
+      } else {
+        await aplicarNaSessao(tx, conflito.sessionId, (estado) => aplicarRegistroSerie(estado, registro));
+        await tx.insert(workoutEvents).values({
+          sessionId: conflito.sessionId, userId, tipo: "serie_registrada", dados: registro,
+          clientEventId: conflito.clientEventId, ordem: null,
+        }).onConflictDoNothing({ target: workoutEvents.clientEventId });
+      }
     }
 
     await tx.update(syncConflicts).set({ resolucao: escolha, resolvidoEm: new Date() }).where(eq(syncConflicts.id, conflitoId));

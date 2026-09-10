@@ -15,7 +15,7 @@ import { sincronizarEventos } from "@/domain/sessao/sincronizacao";
 const eventoSchema = z.object({
   id: z.uuid(),
   sessionId: z.uuid(),
-  tipo: z.enum(["sessao_iniciada", "serie_registrada", "exercicio_substituido", "sessao_concluida", "sessao_abandonada"]),
+  tipo: z.enum(["sessao_iniciada", "serie_registrada", "serie_corrigida", "exercicio_substituido", "sessao_concluida", "sessao_abandonada"]),
   ocorridoEm: z.iso.datetime(),
   ordem: z.number().int().nonnegative(),
   // A forma do conteúdo continua aberta aqui: quem decide se um
