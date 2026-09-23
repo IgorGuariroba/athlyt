@@ -110,6 +110,20 @@ services:
     depends_on:
       migracao:
         condition: service_completed_successfully
+    # Rolling update estilo Swarm: o container novo sobe ao lado do
+    # antigo (`start-first`) e só passa a receber tráfego do Traefik
+    # quando o healthcheck acima o declara saudável; falha no health
+    # reverte sozinho para a imagem anterior (`failure_action:
+    # rollback`). Sem `ports` publicados, o overlap não disputa porta.
+    deploy:
+      replicas: 1
+      update_config:
+        parallelism: 1
+        delay: 10s
+        order: start-first
+        failure_action: rollback
+      rollback_config:
+        order: stop-first
     # Sem `ports`: no Dokploy quem alcança o container é o Traefik,
     # pela dokploy-network, e publicar a porta no host só cria
     # conflito — o próprio painel do Dokploy ocupa a 3000, e o deploy
