@@ -61,13 +61,18 @@ fi
 
 echo "[backup] dump gerado (${tamanho} bytes); enviando ao bucket"
 
-mc alias set destino \
-  "$BACKUP_S3_ENDPOINT" \
-  "$BACKUP_S3_ACCESS_KEY_ID" \
-  "$BACKUP_S3_SECRET_ACCESS_KEY" \
-  --api S3v4 >/dev/null
+# O remote é configurado por variável de ambiente, sem `rclone config`
+# (que é interativo) e sem arquivo de credenciais em disco. O nome do
+# remote (`destino`) vira o prefixo `RCLONE_CONFIG_DESTINO_*`; `auto`
+# é a região que o R2 exige.
+export RCLONE_CONFIG_DESTINO_TYPE=s3
+export RCLONE_CONFIG_DESTINO_PROVIDER=Cloudflare
+export RCLONE_CONFIG_DESTINO_ENDPOINT="$BACKUP_S3_ENDPOINT"
+export RCLONE_CONFIG_DESTINO_REGION=auto
+export RCLONE_CONFIG_DESTINO_ACCESS_KEY_ID="$BACKUP_S3_ACCESS_KEY_ID"
+export RCLONE_CONFIG_DESTINO_SECRET_ACCESS_KEY="$BACKUP_S3_SECRET_ACCESS_KEY"
 
-mc cp "$destino" "destino/${BACKUP_S3_BUCKET}/${PREFIXO}/${arquivo}"
+rclone copyto "$destino" "destino:${BACKUP_S3_BUCKET}/${PREFIXO}/${arquivo}"
 
 echo "[backup] enviado: ${PREFIXO}/${arquivo}"
 
@@ -75,8 +80,8 @@ echo "[backup] enviado: ${PREFIXO}/${arquivo}"
 # terminou por `set -e` e nenhum backup antigo é removido — nunca se
 # fica sem cópia por causa de uma falha de rede.
 echo "[backup] expurgando cópias com mais de ${RETENCAO_DIAS} dias"
-mc rm --recursive --force \
-  --older-than "${RETENCAO_DIAS}d" \
-  "destino/${BACKUP_S3_BUCKET}/${PREFIXO}/" || true
+rclone delete \
+  --min-age "${RETENCAO_DIAS}d" \
+  "destino:${BACKUP_S3_BUCKET}/${PREFIXO}/" || true
 
 echo "[backup] concluído"

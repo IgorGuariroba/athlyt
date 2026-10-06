@@ -25,8 +25,8 @@ AGENDA="${BACKUP_CRON:-0 3 * * *}"
 chmod 600 /etc/backup.env
 
 # O PATH do cron é mínimo (/usr/bin:/bin) e não inclui
-# /usr/local/bin, onde mora o `mc`. Sem esta linha o job faria o dump
-# e falharia no upload — silenciosamente, de madrugada.
+# /usr/local/bin, onde mora o `rclone`. Sem esta linha o job faria o
+# dump e falharia no upload — silenciosamente, de madrugada.
 #
 # Saída redirecionada para o stdout do PID 1, para que os logs do job
 # apareçam em `docker compose logs backup`.
