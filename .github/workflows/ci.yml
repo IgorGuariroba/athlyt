@@ -219,6 +219,31 @@ jobs:
             test-results/
           retention-days: 14
 
+  # O artefato que o Dokploy roda é a imagem Docker (`docker/compose.prod.yml`),
+  # não o `next build` do job `build`. Dois contextos são buildados em produção:
+  # o app (raiz) e o serviço `backup` (`docker/backup`). Sem este job, uma quebra
+  # que só existe no Dockerfile fica verde no CI e aparece só no deploy — foi o
+  # que aconteceu em 24/09/2026, quando o MinIO apagou `minio/mc` do Docker Hub e
+  # três deploys seguidos falharam em `target backup: pull access denied` com o CI
+  # verde. Ver `docker/backup/Dockerfile`.
+  imagem-docker:
+    name: Imagem Docker
+    runs-on: ubuntu-latest
+    needs: [escopo]
+    if: needs.escopo.outputs.codigo == 'true'
+    steps:
+      - uses: actions/checkout@v4
+      # O build do standalone importa `src/db/client.ts`, que lança se
+      # `DATABASE_URL` faltar — por isso o valor existe também aqui, igual ao
+      # `args` de `docker/compose.prod.yml`.
+      - name: Imagem do app
+        run: |
+          docker build \
+            --build-arg DATABASE_URL=postgres://athlyt:athlyt@localhost:5432/athlyt \
+            -t athlyt:ci .
+      - name: Imagem do backup
+        run: docker build -t athlyt-backup:ci ./docker/backup
+
   # A auditoria saiu do PR: o resultado de `npm audit` muda por
   # publicação de CVE, não por commit, então bloquear cada PR com ela
   # gera falha alheia à mudança. Ver `.github/workflows/auditoria.yml`.
