@@ -12,7 +12,13 @@
 # `minio/mc` e `minio/minio` do Docker Hub em 2026-09-11 (e fechou o
 # Quay em 2026-09-24), então o build passou a falhar com
 # `pull access denied, repository does not exist`.
-FROM rclone/rclone:latest AS rclone
+#
+# Versão fixa, não `latest`: tag flutuante de terceiro só se descobre
+# quebrada no deploy — foi exatamente o que aconteceu naquele incidente,
+# com o CI verde. `1.75.1` é a release para onde `latest` aponta hoje
+# (mesmo digest sha256:45401ad7410db1d67ffdb58e19059ad20b0d8e0285a60e38bbec55cc1019c7a5),
+# então o pin não muda o que roda agora, só tira a surpresa.
+FROM rclone/rclone:1.75.1 AS rclone
 
 FROM postgres:16
 
