@@ -8,6 +8,7 @@ import { PeriodicExportingMetricReader } from "@opentelemetry/sdk-metrics";
 import {
   ATTR_DEPLOYMENT_ENVIRONMENT_NAME,
   ATTR_SERVICE_NAME,
+  ATTR_SERVICE_VERSION,
 } from "@opentelemetry/semantic-conventions";
 import {
   ambienteDaAplicacao,
@@ -23,12 +24,13 @@ export function iniciarObservabilidade(): void {
   sdk = new NodeSDK({
     resource: resourceFromAttributes({
       [ATTR_SERVICE_NAME]: nomeDoServico(),
+      [ATTR_SERVICE_VERSION]: process.env.SERVICE_VERSION ?? "unknown",
       [ATTR_DEPLOYMENT_ENVIRONMENT_NAME]: ambienteDaAplicacao(),
     }),
     traceExporter: new OTLPTraceExporter(),
     metricReader: new PeriodicExportingMetricReader({
       exporter: new OTLPMetricExporter(),
-      exportIntervalMillis: 10_000,
+      exportIntervalMillis: 60_000,
     }),
     instrumentations: [new HttpInstrumentation(), new UndiciInstrumentation()],
   });

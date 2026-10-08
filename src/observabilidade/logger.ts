@@ -49,6 +49,7 @@ function opcoesLogger(): pino.LoggerOptions {
     level: nivel,
     base: {
       service: nomeDoServico(),
+      version: process.env.SERVICE_VERSION ?? "unknown",
       environment: ambienteDaAplicacao(),
     },
     serializers: { err: serializarExcecao, error: serializarExcecao },

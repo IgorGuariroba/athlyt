@@ -36,6 +36,8 @@ RUN npm run build
 
 # -------------------------------------------------------------- runner
 FROM node:24-alpine AS runner
+ARG SERVICE_VERSION=unknown
+ENV SERVICE_VERSION=$SERVICE_VERSION
 WORKDIR /app
 
 ENV NODE_ENV=production

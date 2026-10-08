@@ -50,6 +50,7 @@ services:
       context: ..
       dockerfile: Dockerfile
       args:
+        SERVICE_VERSION: ${SERVICE_VERSION:-unknown}
         DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@athlyt-db:5432/${POSTGRES_DB}
     image: athlyt-app:${APP_TAG:-latest}
     command: ["node", "scripts/migrar.mjs"]
@@ -75,6 +76,7 @@ services:
         # O build importa `src/db/client.ts`, que exige a variável.
         # O valor não precisa ser alcançável em build time — o cliente
         # do postgres.js só abre conexão na primeira query.
+        SERVICE_VERSION: ${SERVICE_VERSION:-unknown}
         DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@athlyt-db:5432/${POSTGRES_DB}
     image: athlyt-app:${APP_TAG:-latest}
     environment:
@@ -105,6 +107,9 @@ services:
       APP_ENV: ${APP_ENV:-producao}
       LOG_LEVEL: ${LOG_LEVEL:-info}
       OBSERVABILITY_ENABLED: ${OBSERVABILITY_ENABLED:-false}
+      SERVICE_VERSION: ${SERVICE_VERSION:-unknown}
+      OTEL_BSP_MAX_QUEUE_SIZE: "512"
+      OTEL_BSP_EXPORT_TIMEOUT: "5000"
       OTEL_SERVICE_NAME: ${OTEL_SERVICE_NAME:-athlyt}
       OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT:-}
     depends_on:
