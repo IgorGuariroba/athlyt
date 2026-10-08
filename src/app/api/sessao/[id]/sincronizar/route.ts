@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { auth } from "@/auth";
 import { sincronizarEventos } from "@/domain/sessao/sincronizacao";
+import { observarOperacao } from "@/observabilidade/operacao";
 
 /**
  * Endpoint idempotente da fila offline.
@@ -38,8 +39,13 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     return NextResponse.json({ erro: "Evento não pertence à sessão." }, { status: 400 });
   }
 
+  const userId = session.user.id;
   try {
-    const resultado = await sincronizarEventos(session.user.id, id, corpo.data.eventos);
+    const resultado = await observarOperacao(
+      "sessao.sincronizar",
+      {},
+      () => sincronizarEventos(userId, id, corpo.data.eventos),
+    );
     return NextResponse.json({
       aplicados: resultado.aplicados,
       duplicados: resultado.duplicados,
