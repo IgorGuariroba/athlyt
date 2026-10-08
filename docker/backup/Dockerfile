@@ -19,7 +19,7 @@ FROM postgres:16
 # A imagem oficial do Postgres não traz agendador (é feita para rodar
 # o servidor em primeiro plano), então o cron vem do apt.
 RUN apt-get update \
-  && apt-get install -y --no-install-recommends cron \
+  && apt-get install -y --no-install-recommends cron ca-certificates \
   && rm -rf /var/lib/apt/lists/*
 
 # `rclone` é um binário estático (Go, sem dependências dinâmicas):
