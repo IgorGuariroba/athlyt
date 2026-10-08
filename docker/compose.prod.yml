@@ -164,6 +164,9 @@ services:
   # idade. Serviço separado do app porque seu ciclo de vida é outro:
   # um redeploy da aplicação não deve interromper a janela de backup.
   backup:
+    # Opcional: em produção, backups são agendados no Dokploy para B2.
+    # Ativar explicitamente com --profile backup-custom apenas se necessário.
+    profiles: [backup-custom]
     build:
       context: ./backup
       dockerfile: Dockerfile
